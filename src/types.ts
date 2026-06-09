@@ -186,6 +186,12 @@ export const TestPlanStep = z.object({
   weight: z.number().positive().default(1),
   /** Bonus steps (OPTIONAL/RECOMMENDED spec items) never count toward the Graded Score. */
   bonus: z.boolean().default(false),
+  /**
+   * Fatal steps halt test-plan execution on failure (ViBench §3.1 semantics);
+   * remaining steps score 0. Non-fatal failures allow execution to continue
+   * for granular partial credit.
+   */
+  fatal: z.boolean().default(false),
 });
 export type TestPlanStep = z.infer<typeof TestPlanStep>;
 

@@ -15,6 +15,12 @@ basePrompt: |
   - Section 17's test matrix is your guide for what must be verifiable.
   - Section 18.2/18.3 items are optional; do not prioritize them over 18.1.
 
+  Deliverables (evaluated cold in a fresh environment with no state from
+  this session):
+  - `setup.sh` — installs all dependencies for your implementation.
+  - `start.sh` — launches the service against a WORKFLOW.md in the
+    workspace root, honoring the environment variables SPEC.md defines.
+
   You may use any tooling, commands, or workflow available in this
   environment. Choose the implementation language and structure yourself
   unless SPEC.md constrains it. When you consider the work complete, stop.

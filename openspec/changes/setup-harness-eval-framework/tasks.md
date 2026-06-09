@@ -43,6 +43,8 @@
 - [ ] 6.5 Implement code-quality judge (pinned non-Opus-4.6 model, temp 0, tools: test runner/linter/type-checker/coverage/PRD; 3 samples, median; criterion scores with evidence)
 - [ ] 6.6 Implement objective scoring: speed and token-spend normalization across candidate means, capped-trial flagging
 - [ ] 6.7 Implement weighted composite scoring with config-driven weights (40/25/17.5/17.5 defaults), re-weightable from stored scores
+- [ ] 6.8 Author the frozen fixture issue set (5–8 tiny deterministic coding tasks with mechanically checkable outcomes) in the "Symphony Eval Fixtures" Linear project (Jazkarta workspace, JAZ team) and record the fixture manifest hash
+- [ ] 6.9 Implement the real-integration bonus tier: fixture state reset to baseline, scoped Linear credentials for the candidate service, per-fixture outcome recording, manifest integrity check
 
 ## 7. Reporting
 

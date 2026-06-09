@@ -24,6 +24,21 @@ The system SHALL evaluate PRD adherence by executing the test plan against the c
 - **WHEN** the candidate workspace fails to build or start after the evaluator's documented bounded setup attempts
 - **THEN** functional steps are scored fail with evidence, static steps (file/config presence) are still evaluated, and the trial is flagged toward Complete Failure Rate
 
+### Requirement: Real Integration Profile (bonus tier)
+The system SHALL support an optional real-integration evaluation tier per Symphony spec §17.8: the built artifact is configured against a dedicated real Linear project ("Symphony Eval Fixtures" in the Jazkarta workspace) containing a frozen set of 5–8 tiny, deterministic fixture coding tasks with mechanically checkable outcomes. This tier SHALL be scored as a non-composite bonus signal (reported alongside, not inside, the weighted composite), and fixture issue states MUST be reset to an identical baseline before each trial.
+
+#### Scenario: Real-tracker evaluation run
+- **WHEN** the real-integration tier is enabled for a trial
+- **THEN** the evaluator resets the fixture project's issue states to baseline, starts the candidate's built service against the real Linear API with scoped credentials, and records per-fixture outcomes (polled, dispatched, workspace created, agent run completed, handoff state reached) as bonus-tier evidence
+
+#### Scenario: Tier disabled by default
+- **WHEN** a run config does not enable the real-integration tier
+- **THEN** all PRD-adherence scoring derives from the mock-tracker test plan, and the report marks the bonus tier as not run
+
+#### Scenario: Fixture set integrity
+- **WHEN** the real-integration tier starts and the fixture project's issue set does not match the frozen fixture manifest (content hash)
+- **THEN** the tier is skipped for that trial with an integrity error recorded, rather than grading against a drifted fixture set
+
 ### Requirement: Code-quality judge with tools
 The system SHALL grade code quality with an LLM judge given tool access (test runner, linter, type-checker, coverage, and the PRD text) and a fixed criterion list covering at minimum: meaningful and passing tests, architectural conformance to the spec's §3.2 abstraction layers, error-handling robustness, absence of dead/duplicated code, and documentation adequacy. Each criterion SHALL yield a 0–10 score with written justification citing evidence.
 

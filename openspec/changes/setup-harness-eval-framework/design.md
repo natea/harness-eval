@@ -49,6 +49,8 @@ Grading-framework research compared LangChain DeepAgents `RubricMiddleware` (bin
 
 **Rationale:** §18.1 is the spec's own Definition of Done — grading against it is the least arbitrary possible operationalization of "adherence to the PRD." Freezing the plan before runs prevents grader drift between candidates.
 
+**Evaluator mechanics (per Replit's automated self-testing design, the lineage of ViBench's evaluator — replit.com/blog/automated-self-testing):** the evaluator agent operates a persistent REPL-style execution context rather than discrete tool calls — it writes and runs code to start/stop the candidate daemon, mutate mock-tracker state, and poll logs/filesystem, with variables and process handles persisting across steps. Evidence for each step verdict comes from observed cause-and-effect (tracker state change → workspace appearance → log fields), not from reading the candidate's source. The evaluator runs as its own agent with only the test plan and the workspace — never the build transcript — mirroring Replit's subagent isolation to avoid context pollution.
+
 ### D3. Isolation: Daytona sandboxes primary, git worktrees fallback
 
 **Decision:** Each trial runs in a fresh Daytona sandbox (via Daytona TypeScript SDK, `DAYTONA_API_KEY` from env) provisioned from a pinned snapshot containing Node 18+, Bun, git, and Claude Code CLI with the framework pre-installed. Fallback mode runs trials in local git worktrees under `runs/<run-id>/` with per-trial `CLAUDE_CONFIG_DIR` to isolate plugin installs.

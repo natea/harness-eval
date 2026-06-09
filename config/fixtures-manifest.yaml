@@ -1,0 +1,70 @@
+# Frozen fixture manifest for the real-integration bonus tier (task 6.8).
+# Source of truth for integrity checks: before each bonus-tier trial, the
+# live "Symphony Eval Fixtures" Linear project (Jazkarta workspace) is
+# compared against this manifest; drift skips the tier with an error.
+#
+# Baseline state for all fixtures: Todo. Handoff state: In Review.
+# JAZ-10 is deliberately blocked by JAZ-7 (dispatch-eligibility check).
+
+project: Symphony Eval Fixtures
+projectId: 28f2e69c-1e16-4a05-89b0-c2fc5a2b1e67
+teamKey: JAZ
+baselineState: Todo
+handoffState: In Review
+
+fixtures:
+  - identifier: JAZ-5
+    fixture: SYMFIX-1
+    title: "[SYMFIX-1] Add --version flag to the hello CLI"
+    priority: 1
+    blockedBy: []
+    workspaceSeed: seeds/hello-cli
+    acceptance:
+      - cmd: "bun hello.ts --version"
+        stdout: "1.0.0"
+      - cmd: "bun hello.ts"
+        stdout: "Hello, world!"
+  - identifier: JAZ-6
+    fixture: SYMFIX-2
+    title: "[SYMFIX-2] Fix the failing subtract test in math-utils"
+    priority: 2
+    blockedBy: []
+    workspaceSeed: seeds/math-utils
+    acceptance:
+      - cmd: "bun test"
+        exitCode: 0
+  - identifier: JAZ-7
+    fixture: SYMFIX-3
+    title: "[SYMFIX-3] Add --json output to the greet command"
+    priority: 3
+    blockedBy: []
+    workspaceSeed: seeds/greet
+    acceptance:
+      - cmd: "bun greet.ts --json Ada"
+        stdoutJson: '{"greeting":"Hello, Ada!"}'
+  - identifier: JAZ-8
+    fixture: SYMFIX-4
+    title: "[SYMFIX-4] Add an MIT LICENSE file"
+    priority: 3
+    blockedBy: []
+    workspaceSeed: seeds/no-license
+    acceptance:
+      - fileContains: { path: LICENSE, strings: ["MIT License", "Copyright (c) 2026 Jazkarta"] }
+  - identifier: JAZ-9
+    fixture: SYMFIX-5
+    title: "[SYMFIX-5] Bump package version to 1.1.0 and add changelog entry"
+    priority: 4
+    blockedBy: []
+    workspaceSeed: seeds/versioned-pkg
+    acceptance:
+      - cmd: "jq -r .version package.json"
+        stdout: "1.1.0"
+      - fileContains: { path: CHANGELOG.md, strings: ["## 1.1.0"] }
+  - identifier: JAZ-10
+    fixture: SYMFIX-6
+    title: "[SYMFIX-6] Blocked: rename greet to salute (blocked by SYMFIX-3)"
+    priority: 1
+    blockedBy: ["JAZ-7"]
+    workspaceSeed: seeds/greet
+    acceptance:
+      - notDispatchedWhileBlocked: true

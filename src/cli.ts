@@ -112,31 +112,46 @@ async function cmdRun(): Promise<void> {
 	);
 
 	if (flag("grade")) {
+		// Each trial gets a fresh mock tracker on its own port.
+		let mockPort = 4280;
 		for (const trial of trials) {
 			const trialDir = join(runDir, "trials", trial.provenance.trialId);
 			const workspace = join(trialDir, "workspace");
 			if (!existsSync(workspace)) continue;
 			console.log(`grading ${trial.provenance.trialId}…`);
+			mockPort++;
+			const mock = Bun.spawn(
+				["bun", join(import.meta.dir, "fixtures", "mock-linear.ts"), String(mockPort)],
+				{ stdout: "ignore", stderr: "ignore" },
+			);
+			await new Promise((r) => setTimeout(r, 500));
 			writeFileSync(
 				join(workspace, "SPEC-REFERENCE.md"),
 				readFileSync(PRD_PATH),
 			);
-			const adherence = await runEvaluator(plan, {
-				model: config.judgeModel,
-				workspaceDir: workspace,
-				mockLinearUrl: process.env.MOCK_LINEAR_URL ?? "http://localhost:4280",
-				stubAppServerPath: join(
-					import.meta.dir,
-					"fixtures",
-					"stub-app-server.ts",
-				),
-			});
-			const blindDir = join(trialDir, "workspace-blind");
-			scrubWorkspace(workspace, blindDir, registry.candidates);
-			const quality = await judgeQuality({
-				model: config.judgeModel,
-				blindWorkspaceDir: blindDir,
-			});
+			let adherence: Awaited<ReturnType<typeof runEvaluator>>;
+			let quality: Awaited<ReturnType<typeof judgeQuality>>;
+			try {
+				adherence = await runEvaluator(plan, {
+					model: config.judgeModel,
+					workspaceDir: workspace,
+					mockLinearUrl:
+						process.env.MOCK_LINEAR_URL ?? `http://localhost:${mockPort}`,
+					stubAppServerPath: join(
+						import.meta.dir,
+						"fixtures",
+						"stub-app-server.ts",
+					),
+				});
+				const blindDir = join(trialDir, "workspace-blind");
+				scrubWorkspace(workspace, blindDir, registry.candidates);
+				quality = await judgeQuality({
+					model: config.judgeModel,
+					blindWorkspaceDir: blindDir,
+				});
+			} finally {
+				mock.kill();
+			}
 			trial.grades = {
 				trialId: trial.provenance.trialId,
 				adherence,

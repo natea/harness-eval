@@ -105,7 +105,9 @@ TypeScript on Bun (per stack preferences): orchestrator CLI, Daytona SDK client,
 
 ## Open Questions
 
-- Trial count vs. budget: 3 trials × 4 candidates at Opus 4.6 pricing — confirm acceptable spend ceiling before first full run (suggest a single-candidate smoke run first).
-- Should Compound Engineering's `/ce-compound` learning step count inside the timed run (it's part of the methodology) or be excluded (it benefits future runs, not this artifact)? Default: included in time/tokens, since the user invokes it as part of the prescribed loop.
-- Claude Code version pin: pin to one exact version in the sandbox snapshot (current local: 2.1.170) — confirm before snapshot build.
-- Whether the OPTIONAL §13.7 HTTP server is in scope for the test plan (it is RECOMMENDED-only; default: excluded from REQUIRED scoring, reported as bonus signal).
+All resolved with the operator (2026-06-09):
+
+- **Budget:** $50/trial cap, $400/run ceiling; smoke run (task 8.3) approved on GSD first; full run 3 trials × 4 candidates.
+- **`/ce-compound`:** excluded from Compound Engineering's session script — it benefits future runs, not the artifact under grading.
+- **Claude Code pin:** 2.1.170 (baked into Daytona snapshot `harness-eval-base:v1`).
+- **§13.7 HTTP server:** non-composite bonus signal only (test-plan step B-1).

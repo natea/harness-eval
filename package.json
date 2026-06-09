@@ -1,0 +1,25 @@
+{
+  "name": "harness-eval",
+  "module": "src/cli.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "cli": "bun run src/cli.ts",
+    "check": "bunx tsc --noEmit && bunx biome check src tests",
+    "lint": "bunx biome check src tests",
+    "format": "bunx biome format --write src tests",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@daytonaio/sdk": "^0.185.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  }
+}

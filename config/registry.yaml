@@ -1,0 +1,100 @@
+# Candidate registry — frameworks under test.
+# Fairness rules (candidate-registry spec):
+#   - basePrompt is the ONLY task content; identical for all candidates.
+#   - Session scripts may add only framework-prescribed command wrappers.
+#   - Continuation allowlist entries are generic and content-free.
+# Versions pinned 2026-06-09; verify at sandbox snapshot build.
+
+basePrompt: |
+  Build the service defined in SPEC.md (in this workspace root) so that it
+  meets every REQUIRED item in section 18.1 "REQUIRED for Conformance".
+  Treat SPEC.md as the complete product requirements document.
+
+  Completion criteria:
+  - The implementation builds and its own test suite passes.
+  - Section 17's test matrix is your guide for what must be verifiable.
+  - Section 18.2/18.3 items are optional; do not prioritize them over 18.1.
+
+  You may use any tooling, commands, or workflow available in this
+  environment. Choose the implementation language and structure yourself
+  unless SPEC.md constrains it. When you consider the work complete, stop.
+
+candidates:
+  - id: superpowers
+    name: Superpowers
+    repo: https://github.com/obra/superpowers
+    pinnedVersion: v5.1.0
+    markerPaths:
+      - docs/plans/
+      - .worktrees/
+    harnesses:
+      claude-code:
+        install:
+          - claude plugin install superpowers@claude-plugins-official --version 5.1.0
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 10
+
+  - id: compound-engineering
+    name: Compound Engineering
+    repo: https://github.com/EveryInc/compound-engineering-plugin
+    pinnedVersion: 4719dc509fdc
+    markerPaths:
+      - docs/brainstorms/
+      - docs/plans/
+      - docs/solutions/
+      - AGENTS.md
+    harnesses:
+      claude-code:
+        install:
+          - claude plugin marketplace add EveryInc/compound-engineering-plugin
+          - claude plugin install compound-engineering@compound-engineering-plugin
+        session:
+          - prompt: "/ce-setup"
+          - prompt: "/ce-plan {{BASE_PROMPT}}"
+          - prompt: "/ce-work"
+          - prompt: "/ce-code-review"
+        continuation:
+          allowlist: ["proceed", "continue with the plan", "approve"]
+          maxContinuations: 15
+
+  - id: agent-skills
+    name: Agent Skills
+    repo: https://github.com/addyosmani/agent-skills
+    pinnedVersion: 0427b5b1281b
+    markerPaths: []
+    harnesses:
+      claude-code:
+        install:
+          - claude plugin marketplace add addyosmani/agent-skills
+          - claude plugin install agent-skills@addy-agent-skills
+        session:
+          - prompt: "/spec {{BASE_PROMPT}}"
+          - prompt: "/plan"
+          - prompt: "/build"
+          - prompt: "/test"
+          - prompt: "/review"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 15
+
+  - id: gsd
+    name: GSD (Open GSD)
+    repo: https://github.com/open-gsd/gsd-core
+    pinnedVersion: 1.4.3
+    markerPaths:
+      - .planning/
+    harnesses:
+      claude-code:
+        install:
+          - npx --yes @opengsd/gsd-core@1.4.3 --runtime=claude-code --scope=project --profile=standard --non-interactive
+        session:
+          - prompt: "/gsd-new-project --auto {{BASE_PROMPT}}"
+          - prompt: "/gsd-plan-phase"
+          - prompt: "/gsd-execute-phase"
+          - prompt: "/gsd-verify-work"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 20

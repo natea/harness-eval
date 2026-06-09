@@ -2,23 +2,23 @@
 
 ## 1. Project Scaffolding
 
-- [ ] 1.1 Initialize Bun + TypeScript project (`bun init`), lint/format config, `runs/` and `config/` directories, `.gitignore` for `runs/` artifacts and env files
-- [ ] 1.2 Pin and vendor the PRD: record content hash of `prd/symphony-SPEC.md` and the upstream commit it was fetched from
-- [ ] 1.3 Define shared types/schemas (zod): trial, provenance record, telemetry record, registry entry, test plan, grading record, report JSON
+- [x] 1.1 Initialize Bun + TypeScript project (`bun init`), lint/format config, `runs/` and `config/` directories, `.gitignore` for `runs/` artifacts and env files
+- [x] 1.2 Pin and vendor the PRD: record content hash of `prd/symphony-SPEC.md` and the upstream commit it was fetched from
+- [x] 1.3 Define shared types/schemas (zod): trial, provenance record, telemetry record, registry entry, test plan, grading record, report JSON
 
 ## 2. Candidate Registry
 
-- [ ] 2.1 Implement registry loader with schema validation (fail-fast on missing pinned version or missing harness section)
-- [ ] 2.2 Author registry entries for the four candidates with pinned versions: Superpowers (plugin), Compound Engineering (plugin + `/ce-setup`), Agent Skills (plugin), GSD (`npx @opengsd/gsd-core@<pinned>` non-interactive)
-- [ ] 2.3 Author the shared base task prompt template (PRD location, §18.1 conformance target, completion criteria) and per-candidate session scripts with content-free continuation allowlist
-- [ ] 2.4 Record framework marker paths per candidate (e.g., `.planning/`, `docs/brainstorms/`) for later scrubbing
+- [x] 2.1 Implement registry loader with schema validation (fail-fast on missing pinned version or missing harness section)
+- [x] 2.2 Author registry entries for the four candidates with pinned versions: Superpowers (plugin), Compound Engineering (plugin + `/ce-setup`), Agent Skills (plugin), GSD (`npx @opengsd/gsd-core@<pinned>` non-interactive)
+- [x] 2.3 Author the shared base task prompt template (PRD location, §18.1 conformance target, completion criteria) and per-candidate session scripts with content-free continuation allowlist
+- [x] 2.4 Record framework marker paths per candidate (e.g., `.planning/`, `docs/brainstorms/`) for later scrubbing
 
 ## 3. Isolation Providers
 
-- [ ] 3.1 Define `SandboxProvider` interface (provision, exec, copyOut, destroy)
-- [ ] 3.2 Implement Daytona provider using the Daytona TypeScript SDK (`DAYTONA_API_KEY` from env); build and pin the snapshot image (Node 18+, Bun, git, pinned Claude Code version)
-- [ ] 3.3 Implement git-worktree fallback provider with per-trial `CLAUDE_CONFIG_DIR`
-- [ ] 3.4 Verify cross-trial contamination scenarios (plugins/skills/npm globals invisible across concurrent trials)
+- [x] 3.1 Define `SandboxProvider` interface (provision, exec, copyOut, destroy)
+- [x] 3.2 Implement Daytona provider using the Daytona TypeScript SDK (`DAYTONA_API_KEY` from env); build and pin the snapshot image (Node 18+, Bun, git, pinned Claude Code version)
+- [x] 3.3 Implement git-worktree fallback provider with per-trial `CLAUDE_CONFIG_DIR`
+- [x] 3.4 Verify cross-trial contamination scenarios (plugins/skills/npm globals invisible across concurrent trials)
 
 ## 4. Harness Driver
 

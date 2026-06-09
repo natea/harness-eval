@@ -36,13 +36,13 @@
 
 ## 6. Grading Pipeline
 
-- [ ] 6.1 Author the frozen PRD-adherence test plan YAML from Symphony §17 and §18.1 (every REQUIRED item mapped to ≥1 weighted step; OPTIONAL items as non-scoring bonus); validate coverage programmatically
-- [ ] 6.2 Build the evaluation fixtures: mock Linear tracker API server and stub app-server binary speaking the JSON-line protocol (per §17 test matrix)
-- [ ] 6.3 Implement the adaptive functional evaluator agent (runs service against mocks, executes test-plan steps, records pass/partial/fail with evidence) producing Graded Score, Pass@1, Complete Failure Rate
-- [ ] 6.4 Implement workspace scrubbing of framework markers for blind judging
-- [ ] 6.5 Implement code-quality judge (pinned non-Opus-4.6 model, temp 0, tools: test runner/linter/type-checker/coverage/PRD; 3 samples, median; criterion scores with evidence)
-- [ ] 6.6 Implement objective scoring: speed and token-spend normalization across candidate means, capped-trial flagging
-- [ ] 6.7 Implement weighted composite scoring with config-driven weights (40/25/17.5/17.5 defaults), re-weightable from stored scores
+- [x] 6.1 Author the frozen PRD-adherence test plan YAML from Symphony §17 and §18.1 (every REQUIRED item mapped to ≥1 weighted step; OPTIONAL items as non-scoring bonus); validate coverage programmatically
+- [x] 6.2 Build the evaluation fixtures: mock Linear tracker API server and stub app-server binary speaking the JSON-line protocol (per §17 test matrix)
+- [x] 6.3 Implement the adaptive functional evaluator agent (runs service against mocks, executes test-plan steps, records pass/partial/fail with evidence) producing Graded Score, Pass@1, Complete Failure Rate
+- [x] 6.4 Implement workspace scrubbing of framework markers for blind judging
+- [x] 6.5 Implement code-quality judge (pinned non-Opus-4.6 model, temp 0, tools: test runner/linter/type-checker/coverage/PRD; 3 samples, median; criterion scores with evidence)
+- [x] 6.6 Implement objective scoring: speed and token-spend normalization across candidate means, capped-trial flagging
+- [x] 6.7 Implement weighted composite scoring with config-driven weights (40/25/17.5/17.5 defaults), re-weightable from stored scores
 - [ ] 6.8 Author the frozen fixture issue set (5–8 tiny deterministic coding tasks with mechanically checkable outcomes) in the "Symphony Eval Fixtures" Linear project (Jazkarta workspace, JAZ team) and record the fixture manifest hash
 - [ ] 6.9 Implement the real-integration bonus tier: fixture state reset to baseline, scoped Linear credentials for the candidate service, per-fixture outcome recording, manifest integrity check
 

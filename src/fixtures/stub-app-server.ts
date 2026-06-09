@@ -21,14 +21,14 @@ const mode = process.env.STUB_MODE ?? "normal";
 const logFile = process.env.STUB_LOG_FILE ?? "/tmp/stub-app-server.log";
 
 function log(entry: Record<string, unknown>) {
-  appendFileSync(
-    logFile,
-    `${JSON.stringify({ at: new Date().toISOString(), cwd: process.cwd(), pid: process.pid, ...entry })}\n`,
-  );
+	appendFileSync(
+		logFile,
+		`${JSON.stringify({ at: new Date().toISOString(), cwd: process.cwd(), pid: process.pid, ...entry })}\n`,
+	);
 }
 
 function send(obj: Record<string, unknown>) {
-  process.stdout.write(`${JSON.stringify(obj)}\n`);
+	process.stdout.write(`${JSON.stringify(obj)}\n`);
 }
 
 log({ event: "started", mode, argv: process.argv.slice(2) });
@@ -40,64 +40,73 @@ let handshaken = false;
 process.stdin.setEncoding("utf8");
 let buffer = "";
 process.stdin.on("data", (chunk: string) => {
-  buffer += chunk;
-  let nl = buffer.indexOf("\n");
-  while (nl !== -1) {
-    const line = buffer.slice(0, nl).trim();
-    buffer = buffer.slice(nl + 1);
-    nl = buffer.indexOf("\n");
-    if (!line) continue;
-    let msg: Record<string, unknown>;
-    try {
-      msg = JSON.parse(line) as Record<string, unknown>;
-    } catch {
-      log({ event: "non-json-line", line: line.slice(0, 500) });
-      continue;
-    }
-    log({ event: "received", msg });
-    if (stalled) continue;
-    handle(msg);
-  }
+	buffer += chunk;
+	let nl = buffer.indexOf("\n");
+	while (nl !== -1) {
+		const line = buffer.slice(0, nl).trim();
+		buffer = buffer.slice(nl + 1);
+		nl = buffer.indexOf("\n");
+		if (!line) continue;
+		let msg: Record<string, unknown>;
+		try {
+			msg = JSON.parse(line) as Record<string, unknown>;
+		} catch {
+			log({ event: "non-json-line", line: line.slice(0, 500) });
+			continue;
+		}
+		log({ event: "received", msg });
+		if (stalled) continue;
+		handle(msg);
+	}
 });
 
 function handle(msg: Record<string, unknown>) {
-  const id = msg.id ?? null;
-  const method = String(msg.method ?? msg.type ?? "");
+	const id = msg.id ?? null;
+	const method = String(msg.method ?? msg.type ?? "");
 
-  // Generic handshake: respond to the first initialize/start-shaped request.
-  if (!handshaken && (/initialize|session|start|thread/i.test(method) || true)) {
-    handshaken = true;
-    send({ id, result: { session_id: `stub-${process.pid}`, thread_id: `thread-${process.pid}` } });
-    send({ type: "session_started", session_id: `stub-${process.pid}` });
-    if (mode === "stall") {
-      stalled = true;
-      log({ event: "stalling" });
-      return;
-    }
-  }
+	// Generic handshake: respond to the first initialize/start-shaped request.
+	if (
+		!handshaken &&
+		(/initialize|session|start|thread/i.test(method) || true)
+	) {
+		handshaken = true;
+		send({
+			id,
+			result: {
+				session_id: `stub-${process.pid}`,
+				thread_id: `thread-${process.pid}`,
+			},
+		});
+		send({ type: "session_started", session_id: `stub-${process.pid}` });
+		if (mode === "stall") {
+			stalled = true;
+			log({ event: "stalling" });
+			return;
+		}
+	}
 
-  if (/turn|prompt|input|message/i.test(method)) {
-    turnCount++;
-    if (mode === "crash") {
-      log({ event: "crashing" });
-      process.exit(3);
-    }
-    send({ type: "agent_event", event: "task_started", turn: turnCount });
-    send({
-      type: "usage",
-      usage: { input_tokens: 1200, output_tokens: 340, total_tokens: 1540 },
-      rate_limits: { remaining: 99 },
-    });
-    send({ type: "agent_event", event: "task_completed", turn: turnCount });
-    send({ id, result: { status: "completed", turn: turnCount } });
-    if (mode === "normal" && turnCount >= 1) {
-      log({ event: "normal-exit" });
-      setTimeout(() => process.exit(0), 100);
-    }
-  }
+	if (/turn|prompt|input|message/i.test(method)) {
+		turnCount++;
+		if (mode === "crash") {
+			log({ event: "crashing" });
+			process.exit(3);
+		}
+		send({ type: "agent_event", event: "task_started", turn: turnCount });
+		send({
+			type: "usage",
+			usage: { input_tokens: 1200, output_tokens: 340, total_tokens: 1540 },
+			rate_limits: { remaining: 99 },
+		});
+		send({ type: "agent_event", event: "task_completed", turn: turnCount });
+		send({ id, result: { status: "completed", turn: turnCount } });
+		if (mode === "normal" && turnCount >= 1) {
+			log({ event: "normal-exit" });
+			setTimeout(() => process.exit(0), 100);
+		}
+	}
 }
 
 process.stdin.on("end", () => {
-  log({ event: "stdin-closed" });
-  process.exit(0);
+	log({ event: "stdin-closed" });
+	process.exit(0);
 });

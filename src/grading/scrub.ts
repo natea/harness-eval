@@ -10,26 +10,26 @@ import type { CandidateEntry } from "../types";
  * from every workspace, so absence of a marker is not itself a signal.
  */
 export function scrubWorkspace(
-  workspaceDir: string,
-  blindDir: string,
-  allCandidates: CandidateEntry[],
+	workspaceDir: string,
+	blindDir: string,
+	allCandidates: CandidateEntry[],
 ): string[] {
-  rmSync(blindDir, { recursive: true, force: true });
-  cpSync(workspaceDir, blindDir, { recursive: true });
-  const removed: string[] = [];
-  const markers = new Set<string>([
-    ...allCandidates.flatMap((c) => c.markerPaths),
-    // Harness-level traces that could identify tooling, not just framework:
-    ".claude/",
-    "CLAUDE.md",
-    ".planning/",
-  ]);
-  for (const marker of markers) {
-    const target = join(blindDir, marker.replace(/\/$/, ""));
-    if (existsSync(target)) {
-      rmSync(target, { recursive: true, force: true });
-      removed.push(marker);
-    }
-  }
-  return removed;
+	rmSync(blindDir, { recursive: true, force: true });
+	cpSync(workspaceDir, blindDir, { recursive: true });
+	const removed: string[] = [];
+	const markers = new Set<string>([
+		...allCandidates.flatMap((c) => c.markerPaths),
+		// Harness-level traces that could identify tooling, not just framework:
+		".claude/",
+		"CLAUDE.md",
+		".planning/",
+	]);
+	for (const marker of markers) {
+		const target = join(blindDir, marker.replace(/\/$/, ""));
+		if (existsSync(target)) {
+			rmSync(target, { recursive: true, force: true });
+			removed.push(marker);
+		}
+	}
+	return removed;
 }

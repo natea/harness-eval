@@ -48,13 +48,13 @@
 
 ## 7. Reporting
 
-- [ ] 7.1 Implement JSON results emitter (stable schema keyed by candidate/harness/model)
-- [ ] 7.2 Implement markdown scorecard generator (ranking, dimension breakdowns, variance stats with inconclusive-ordering flags, provenance section, exclusions)
+- [x] 7.1 Implement JSON results emitter (stable schema keyed by candidate/harness/model)
+- [x] 7.2 Implement markdown scorecard generator (ranking, dimension breakdowns, variance stats with inconclusive-ordering flags, provenance section, exclusions)
 
 ## 8. Validation and First Run
 
-- [ ] 8.1 Unit tests for registry validation, telemetry aggregation, normalization math, composite scoring, redaction
-- [ ] 8.2 End-to-end dry run: one candidate, worktree provider, tiny stand-in PRD, assert full artifact/report chain
+- [x] 8.1 Unit tests for registry validation, telemetry aggregation, normalization math, composite scoring, redaction
+- [x] 8.2 End-to-end dry run: one candidate, worktree provider, tiny stand-in PRD, assert full artifact/report chain
 - [ ] 8.3 Single-candidate smoke run against the real Symphony PRD (confirm spend ceiling with operator first)
 - [ ] 8.4 Full 4-candidate × 3-trial run on Daytona; generate scorecard
 - [ ] 8.5 Review Open Questions from design.md with operator (trial count/budget, `/ce-compound` inclusion, Claude Code version pin, §13.7 scope) and record decisions in the run config

@@ -57,4 +57,4 @@
 - [x] 8.2 End-to-end dry run: one candidate, worktree provider, tiny stand-in PRD, assert full artifact/report chain
 - [ ] 8.3 Single-candidate smoke run against the real Symphony PRD (confirm spend ceiling with operator first)
 - [ ] 8.4 Full 4-candidate × 3-trial run on Daytona; generate scorecard
-- [ ] 8.5 Review Open Questions from design.md with operator (trial count/budget, `/ce-compound` inclusion, Claude Code version pin, §13.7 scope) and record decisions in the run config
+- [x] 8.5 Review Open Questions from design.md with operator (trial count/budget, `/ce-compound` inclusion, Claude Code version pin, §13.7 scope) and record decisions in the run config

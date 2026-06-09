@@ -16,6 +16,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { parse } from "yaml";
 import { runEvaluator } from "./grading/evaluator";
 import { loadManifest } from "./grading/integration";
 import { judgeQuality } from "./grading/judge";
@@ -33,6 +34,7 @@ const PRD_PATH = "prd/symphony-SPEC.md";
 const REGISTRY_PATH = "config/registry.yaml";
 const TESTPLAN_PATH = "config/testplan.yaml";
 const MANIFEST_PATH = "config/fixtures-manifest.yaml";
+const DEFAULTS_PATH = "config/run.defaults.yaml";
 
 function arg(name: string): string | undefined {
 	const i = process.argv.indexOf(`--${name}`);
@@ -64,13 +66,22 @@ async function cmdValidate(): Promise<void> {
 
 async function cmdRun(): Promise<void> {
 	const registry = loadRegistry(REGISTRY_PATH);
+	const defaults = existsSync(DEFAULTS_PATH)
+		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
+		: {};
 	const config = RunConfig.parse({
+		...defaults,
 		candidates: (
 			arg("candidates") ?? registry.candidates.map((c) => c.id).join(",")
 		).split(","),
-		trialsPerCandidate: Number(arg("trials") ?? 3),
-		provider: arg("provider") ?? "daytona",
-		concurrency: Number(arg("concurrency") ?? 2),
+		trialsPerCandidate: Number(
+			arg("trials") ?? (defaults.trialsPerCandidate as number | undefined) ?? 3,
+		),
+		provider:
+			arg("provider") ?? (defaults.provider as string | undefined) ?? "daytona",
+		concurrency: Number(
+			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
+		),
 	});
 	const candidates = resolveCandidates(
 		registry,
@@ -121,7 +132,11 @@ async function cmdRun(): Promise<void> {
 			console.log(`grading ${trial.provenance.trialId}…`);
 			mockPort++;
 			const mock = Bun.spawn(
-				["bun", join(import.meta.dir, "fixtures", "mock-linear.ts"), String(mockPort)],
+				[
+					"bun",
+					join(import.meta.dir, "fixtures", "mock-linear.ts"),
+					String(mockPort),
+				],
 				{ stdout: "ignore", stderr: "ignore" },
 			);
 			await new Promise((r) => setTimeout(r, 500));

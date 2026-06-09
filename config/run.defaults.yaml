@@ -1,0 +1,31 @@
+# Default run configuration — operator decisions recorded 2026-06-09 (task 8.5).
+# CLI flags override these per run.
+
+harness: claude-code
+model: claude-opus-4-6
+judgeModel: claude-sonnet-4-6   # pinned non-worker model (judge independence)
+
+trialsPerCandidate: 3
+provider: daytona
+snapshot: harness-eval-base:v1   # Claude Code pinned at 2.1.170 (decision b)
+concurrency: 2
+
+budget:
+  trialWallClockMs: 7200000      # 2h
+  trialCostUsd: 50               # operator-approved cap (decision: smoke run Q1)
+  runCostUsd: 400
+
+weights:
+  prdAdherence: 0.4
+  codeQuality: 0.25
+  speed: 0.175
+  tokenSpend: 0.175
+
+# Decision (a): /ce-compound is EXCLUDED from Compound Engineering's session
+#   script — it benefits future runs, not the artifact under grading.
+#   (Enforced in config/registry.yaml: no /ce-compound step.)
+# Decision (c): §13.7 HTTP server is a non-composite bonus signal only
+#   (test-plan step B-1, bonus: true).
+# Smoke-run order (task 8.3): GSD first, 1 trial, then review before 8.4.
+
+realIntegrationTier: false       # enable explicitly per run after smoke passes

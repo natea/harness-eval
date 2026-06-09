@@ -22,17 +22,17 @@
 
 ## 4. Harness Driver
 
-- [ ] 4.1 Implement Claude Code headless driver: `claude -p --output-format stream-json --model claude-opus-4-6 --dangerously-skip-permissions`, session resume support, stream capture
-- [ ] 4.2 Implement session-script executor (ordered prompts, continuation policy, per-trial wall-clock and cost caps with `capped` status)
-- [ ] 4.3 Implement telemetry extraction from result JSON (duration, token breakdown, cost, turns) with per-session records and per-trial aggregation
-- [ ] 4.4 Implement artifact archival (workspace + transcripts) before sandbox teardown, with secret-pattern redaction
+- [x] 4.1 Implement Claude Code headless driver: `claude -p --output-format stream-json --model claude-opus-4-6 --dangerously-skip-permissions`, session resume support, stream capture
+- [x] 4.2 Implement session-script executor (ordered prompts, continuation policy, per-trial wall-clock and cost caps with `capped` status)
+- [x] 4.3 Implement telemetry extraction from result JSON (duration, token breakdown, cost, turns) with per-session records and per-trial aggregation
+- [x] 4.4 Implement artifact archival (workspace + transcripts) before sandbox teardown, with secret-pattern redaction
 
 ## 5. Orchestrator
 
-- [ ] 5.1 Implement run matrix scheduler (candidates × trials, bounded concurrency, subset/smoke-run support)
-- [ ] 5.2 Implement infra-failure retry vs. candidate-failure no-retry classification
-- [ ] 5.3 Implement run-level budget ceiling with `skipped:budget` handling
-- [ ] 5.4 Write provenance records at every trial terminal state
+- [x] 5.1 Implement run matrix scheduler (candidates × trials, bounded concurrency, subset/smoke-run support)
+- [x] 5.2 Implement infra-failure retry vs. candidate-failure no-retry classification
+- [x] 5.3 Implement run-level budget ceiling with `skipped:budget` handling
+- [x] 5.4 Write provenance records at every trial terminal state
 
 ## 6. Grading Pipeline
 

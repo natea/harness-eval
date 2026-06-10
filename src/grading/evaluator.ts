@@ -69,6 +69,10 @@ export interface EvaluatorOptions {
 	stubAppServerPath: string;
 	maxIterations?: number;
 	apiKey?: string;
+	/** Called after each step verdict — checkpoint hook for crash resilience. */
+	onRecord?: (r: StepResult) => void;
+	/** Pre-recorded verdicts from a prior interrupted run (skipped steps). */
+	preRecorded?: StepResult[];
 	/** Injectable transport for tests. */
 	client?: Anthropic;
 }
@@ -92,10 +96,13 @@ export async function runEvaluator(
 		opts.client ??
 		new Anthropic({ apiKey: opts.apiKey ?? process.env.ANTHROPIC_API_KEY });
 	const maxIterations = opts.maxIterations ?? 120;
-	const recorded = new Map<string, StepResult>();
+	const recorded = new Map<string, StepResult>(
+		(opts.preRecorded ?? []).map((r) => [r.stepId, r]),
+	);
 	let halted: string | null = null;
 
 	const planText = plan.steps
+		.filter((st) => !recorded.has(st.id))
 		.map(
 			(s) =>
 				`[${s.id}] (weight ${s.weight}${s.fatal ? ", FATAL" : ""}${s.bonus ? ", BONUS" : ""}) ${s.description}\n  Check: ${s.check}`,
@@ -218,6 +225,7 @@ export async function runEvaluator(
 					continue;
 				}
 				recorded.set(record.stepId, record);
+				opts.onRecord?.(record);
 				results.push({
 					type: "tool_result",
 					tool_use_id: use.id,

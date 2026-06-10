@@ -34,11 +34,22 @@ await new Promise((r) => setTimeout(r, 500));
 try {
 	writeFileSync(join(workspace, "SPEC-REFERENCE.md"), readFileSync("prd/symphony-SPEC.md"));
 	console.log(`[grade] evaluator starting (model ${judgeModel}, mock :${mockPort})`);
+	const checkpointPath = join(trialDir, "evaluator-checkpoint.json");
+	const checkpoint: unknown[] = existsSync(checkpointPath)
+		? JSON.parse(readFileSync(checkpointPath, "utf8"))
+		: [];
+	if (checkpoint.length) console.log(`[grade] resuming with ${checkpoint.length} checkpointed verdicts`);
 	const adherence = await runEvaluator(plan, {
 		model: judgeModel,
 		workspaceDir: workspace,
 		mockLinearUrl: `http://localhost:${mockPort}`,
 		stubAppServerPath: join(import.meta.dir, "..", "src", "fixtures", "stub-app-server.ts"),
+		preRecorded: checkpoint as never,
+		onRecord: (r) => {
+			checkpoint.push(r);
+			writeFileSync(checkpointPath, JSON.stringify(checkpoint, null, 2));
+			console.log(`[grade] step ${r.stepId}: ${r.outcome} (credit ${r.credit})`);
+		},
 	});
 	console.log(
 		`[grade] adherence: graded=${adherence.gradedScore} pass@1=${adherence.passAt1} completeFailure=${adherence.completeFailure}`,

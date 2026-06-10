@@ -100,6 +100,7 @@ export function scoreRun(input: ScoringInput): CandidateScore[] {
 	>();
 	for (const [candidate, trials] of byCandidate) {
 		const usable = countable(trials);
+		if (usable.length === 0) continue; // no gradeable trials: exclude from scoring/normalization
 		perCandidate.set(candidate, {
 			adherence: usable.map((t) => t.grades?.adherence?.gradedScore ?? 0),
 			quality: usable.map((t) => t.grades?.quality?.score ?? 0),

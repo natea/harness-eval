@@ -58,7 +58,7 @@ export function buildMatrix(
 /** Classify a thrown error: infra failures are retried, candidate failures are not. */
 export function isInfraFailure(err: unknown): boolean {
 	const msg = String(err).toLowerCase();
-	return /provision|sandbox|network|econnre|etimedout|enotfound|rate.?limit|5\d\d|snapshot/.test(
+	return /provision|sandbox|network|econnre|etimedout|enotfound|rate.?limit|5\d\d|snapshot|memory limit|quota|daytona(validation|connection|timeout)error|request timeout/.test(
 		msg,
 	);
 }

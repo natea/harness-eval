@@ -323,3 +323,13 @@ describe("misc (8.1)", () => {
 		);
 	});
 });
+
+test("provider quota errors classify as infra failures", () => {
+	expect(
+		isInfraFailure(
+			new Error(
+				"DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.",
+			),
+		),
+	).toBe(true);
+});

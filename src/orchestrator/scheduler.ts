@@ -194,15 +194,17 @@ export async function runTrial(
 				plan.candidate,
 				config.harness,
 			);
-			// Worker auth: the only secret that enters the sandbox. Subscription
-			// OAuth cannot follow into a sandbox; an API key (or setup-token) is
-			// required for headless Claude Code.
+			// Worker auth: the only secret that enters the sandbox. Prefer the
+			// subscription OAuth token; pass the API key ONLY as a fallback when
+			// no OAuth token exists (Claude Code prioritizes ANTHROPIC_API_KEY
+			// when both are set, which would silently bill the API account).
 			const workerAuth: Record<string, string> = {};
-			if (process.env.ANTHROPIC_API_KEY)
+			if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+				workerAuth.CLAUDE_CODE_OAUTH_TOKEN = process.env.CLAUDE_CODE_OAUTH_TOKEN;
+				workerAuth.ANTHROPIC_API_KEY = "";
+			} else if (process.env.ANTHROPIC_API_KEY) {
 				workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-			if (process.env.CLAUDE_CODE_OAUTH_TOKEN)
-				workerAuth.CLAUDE_CODE_OAUTH_TOKEN =
-					process.env.CLAUDE_CODE_OAUTH_TOKEN;
+			}
 			const result = await exec(sandbox, {
 				model: config.model,
 				steps: script,

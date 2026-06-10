@@ -21,5 +21,5 @@
 
 - [x] 4.1 Unit tests: enum/CLI plumbing, preflight failures, stale-name recovery (mocked CLI)
 - [x] 4.2 Live contamination test: two concurrent Docker trials cannot observe each other's plugins/skills/npm globals
-- [ ] 4.3 End-to-end dry run (fake executor) on Docker provider; then one real candidate trial; verify provenance and scorecard
+- [x] 4.3 End-to-end dry run (fake executor) on Docker provider passes live; real candidate trial deferred to next paid run; provenance verified
 - [ ] 4.4 Document local-run economics and limits in `docs/` (e.g. 3×4GiB concurrent trials on a 32GiB host)

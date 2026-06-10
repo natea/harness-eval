@@ -125,3 +125,84 @@ describe.if(hasDocker)("docker provider end-to-end (live)", () => {
 		}
 	}, 120_000);
 });
+
+describe.if(hasDocker)("scheduler e2e dry run on docker (live)", () => {
+	test("full trial chain with fake executor", async () => {
+		const { mkdtempSync, existsSync, readFileSync, rmSync, mkdirSync } =
+			await import("node:fs");
+		const { tmpdir } = await import("node:os");
+		const { join } = await import("node:path");
+		const { buildMatrix, runMatrix } = await import(
+			"../src/orchestrator/scheduler"
+		);
+		const { loadRegistry } = await import("../src/registry");
+		const { RunConfig } = await import("../src/types");
+
+		const base = mkdtempSync(join(tmpdir(), "he-dk-e2e-"));
+		const runDir = join(base, "run-docker-dry");
+		mkdirSync(join(runDir, "trials"), { recursive: true });
+		const registry = loadRegistry("config/registry.yaml");
+		const candidate = registry.candidates.find((c) => c.id === "superpowers");
+		if (!candidate) throw new Error("missing candidate");
+		const dry = {
+			...candidate,
+			harnesses: {
+				"claude-code": {
+					...candidate.harnesses["claude-code"]!,
+					install: ["claude --version"],
+				},
+			},
+		};
+		const config = RunConfig.parse({
+			candidates: ["superpowers"],
+			trialsPerCandidate: 1,
+			provider: "docker",
+			concurrency: 1,
+		});
+		const fakeExec = async (sandbox: {
+			writeFile: (p: string, c: string) => Promise<void>;
+		}) => {
+			await sandbox.writeFile("artifact.txt", "built-in-docker");
+			return {
+				records: [
+					{
+						sessionId: "dk-dry",
+						stepIndex: 0,
+						durationMs: 1000,
+						numTurns: 1,
+						costUsd: 0,
+						usage: {
+							inputTokens: 1,
+							outputTokens: 1,
+							cacheReadTokens: 0,
+							cacheCreationTokens: 0,
+						},
+						isError: false,
+					},
+				],
+				transcripts: ["{}"],
+				status: "completed" as const,
+				cappedBy: null,
+				notes: [],
+			};
+		};
+		const trials = await runMatrix(config, buildMatrix([dry], 1), {
+			provider: createDockerProvider(IMAGE),
+			registry: { ...registry, candidates: [dry] },
+			runDir,
+			prdContent: "# tiny PRD",
+			prdSha256: "x",
+			testPlanSha256: null,
+			harnessVersion: "2.1.170",
+			executeScript: fakeExec as never,
+		});
+		expect(trials[0]?.provenance.status).toBe("completed");
+		expect(trials[0]?.provenance.provider).toBe("docker");
+		const trialDir = join(runDir, "trials", "superpowers-t1");
+		expect(existsSync(join(trialDir, "provenance.json"))).toBe(true);
+		expect(
+			readFileSync(join(trialDir, "workspace", "artifact.txt"), "utf8"),
+		).toBe("built-in-docker");
+		rmSync(base, { recursive: true, force: true });
+	}, 180_000);
+});

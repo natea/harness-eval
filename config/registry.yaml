@@ -84,11 +84,11 @@ candidates:
           - claude plugin install agent-skills@addy-agent-skills
           - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 5e262b20e0cd'"
         session:
-          - prompt: "/spec {{BASE_PROMPT}}"
-          - prompt: "/plan"
-          - prompt: "/build"
-          - prompt: "/test"
-          - prompt: "/review"
+          - prompt: "/agent-skills:spec {{BASE_PROMPT}}"
+          - prompt: "/agent-skills:plan"
+          - prompt: "/agent-skills:build"
+          - prompt: "/agent-skills:test"
+          - prompt: "/agent-skills:review"
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 15

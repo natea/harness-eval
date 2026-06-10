@@ -63,29 +63,35 @@ process.stdin.on("data", (chunk: string) => {
 function handle(msg: Record<string, unknown>) {
 	const id = msg.id ?? null;
 	const method = String(msg.method ?? msg.type ?? "");
+	const isTurn = /turn|prompt|input|message|run|task/i.test(method);
 
-	// Generic handshake: respond to the first initialize/start-shaped request.
-	if (
-		!handshaken &&
-		(/initialize|session|start|thread/i.test(method) || true)
-	) {
-		handshaken = true;
-		send({
-			id,
-			result: {
-				session_id: `stub-${process.pid}`,
-				thread_id: `thread-${process.pid}`,
-			},
-		});
-		send({ type: "session_started", session_id: `stub-${process.pid}` });
-		if (mode === "stall") {
-			stalled = true;
-			log({ event: "stalling" });
-			return;
+	// Multi-stage protocols (client/init → thread/create → turn/...) are
+	// common: ACK every non-turn request that carries an id, and emit
+	// session_started once. (A handshake-only stub starves the later stages
+	// and falsely times out conforming clients.)
+	if (!isTurn) {
+		if (id !== null) {
+			send({
+				id,
+				result: {
+					session_id: `stub-${process.pid}`,
+					thread_id: `thread-${process.pid}`,
+					ok: true,
+				},
+			});
 		}
+		if (!handshaken) {
+			handshaken = true;
+			send({ type: "session_started", session_id: `stub-${process.pid}` });
+			if (mode === "stall") {
+				stalled = true;
+				log({ event: "stalling" });
+			}
+		}
+		return;
 	}
 
-	if (/turn|prompt|input|message/i.test(method)) {
+	if (isTurn) {
 		turnCount++;
 		if (mode === "crash") {
 			log({ event: "crashing" });

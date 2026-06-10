@@ -58,14 +58,33 @@ try {
 	const blindDir = join(trialDir, "workspace-blind");
 	const removed = scrubWorkspace(workspace, blindDir, registry.candidates);
 	console.log(`[grade] scrubbed markers: ${removed.join(", ") || "none"}`);
-	const quality = await judgeQuality({ model: judgeModel, blindWorkspaceDir: blindDir });
-	console.log(`[grade] quality: ${quality.score} (${quality.criteria.map((c) => `${c.criterion}=${c.score}`).join(", ")})`);
+	const judgeCkptPath = join(trialDir, "judge-checkpoint.json");
+	const judgeCkpt: unknown[] = existsSync(judgeCkptPath)
+		? JSON.parse(readFileSync(judgeCkptPath, "utf8"))
+		: [];
+	if (judgeCkpt.length) console.log(`[grade] judge resuming with ${judgeCkpt.length} criteria scored`);
+	let quality = null;
+	try {
+		quality = await judgeQuality({
+			model: judgeModel,
+			blindWorkspaceDir: blindDir,
+			preScored: judgeCkpt as never,
+			onCriterion: (c) => {
+				judgeCkpt.push(c);
+				writeFileSync(judgeCkptPath, JSON.stringify(judgeCkpt, null, 2));
+				console.log(`[grade] criterion ${c.criterion}: ${c.score} (samples ${c.samples})`);
+			},
+		});
+		console.log(`[grade] quality: ${quality.score}`);
+	} catch (err) {
+		console.log(`[grade] judge failed (${String(err).slice(0, 120)}); writing partial grades`);
+	}
 
 	writeFileSync(
 		join(trialDir, "grades.json"),
 		JSON.stringify({ trialId, adherence, quality, integration: null }, null, 2),
 	);
-	console.log(`[grade] wrote ${join(trialDir, "grades.json")}`);
+	console.log(`[grade] wrote ${join(trialDir, "grades.json")} (quality ${quality ? "complete" : "PENDING — rerun to finish judge"})`);
 } finally {
 	mock.kill();
 }

@@ -95,7 +95,7 @@ export async function runEvaluator(
 	const client =
 		opts.client ??
 		new Anthropic({ apiKey: opts.apiKey ?? process.env.ANTHROPIC_API_KEY });
-	const maxIterations = opts.maxIterations ?? 120;
+	const maxIterations = opts.maxIterations ?? 400;
 	const recorded = new Map<string, StepResult>(
 		(opts.preRecorded ?? []).map((r) => [r.stepId, r]),
 	);

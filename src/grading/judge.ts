@@ -45,6 +45,10 @@ export interface JudgeOptions {
 	samples?: number;
 	maxIterationsPerSample?: number;
 	apiKey?: string;
+	/** Called after each criterion is scored — checkpoint hook. */
+	onCriterion?: (c: CriterionScore) => void;
+	/** Criteria already scored in a prior interrupted run. */
+	preScored?: CriterionScore[];
 	client?: Anthropic;
 }
 
@@ -160,8 +164,10 @@ export async function judgeQuality(opts: JudgeOptions): Promise<QualityResult> {
 		opts.client ??
 		new Anthropic({ apiKey: opts.apiKey ?? process.env.ANTHROPIC_API_KEY });
 	const samples = opts.samples ?? 3;
-	const criteria: CriterionScore[] = [];
+	const criteria: CriterionScore[] = [...(opts.preScored ?? [])];
+	const done = new Set(criteria.map((c) => c.criterion));
 	for (const criterion of CRITERIA) {
+		if (done.has(criterion.key)) continue;
 		const runs: { score: number; justification: string }[] = [];
 		for (let s = 0; s < samples; s++) {
 			runs.push(await judgeOneSample(client, opts, criterion));
@@ -169,12 +175,14 @@ export async function judgeQuality(opts: JudgeOptions): Promise<QualityResult> {
 		const scores = runs.map((r) => r.score);
 		const med = median(scores);
 		const medianRun = runs.find((r) => r.score === med) ?? runs[0];
-		criteria.push({
+		const scored: CriterionScore = {
 			criterion: criterion.key,
 			samples: scores,
 			score: med,
 			justification: medianRun?.justification ?? "",
-		});
+		};
+		criteria.push(scored);
+		opts.onCriterion?.(scored);
 	}
 	const mean = criteria.reduce((a, c) => a + c.score, 0) / criteria.length;
 	return {

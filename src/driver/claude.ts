@@ -33,10 +33,14 @@ export async function runClaudeSession(
 	opts: ClaudeRunOptions,
 ): Promise<ClaudeResult> {
 	const promptFile = `/tmp/he-prompt-${opts.stepIndex}.txt`;
+	const outFile = `/tmp/he-out-${opts.stepIndex}.jsonl`;
 	await sandbox.writeFile(promptFile, opts.prompt);
 	const resume = opts.resumeSessionId
 		? `--resume ${JSON.stringify(opts.resumeSessionId)}`
 		: "";
+	// Output goes to a FILE, not the exec stream: agents routinely spawn
+	// daemons (e.g. the service they just built) that inherit stdout and
+	// would otherwise hold the exec stream open forever after claude exits.
 	const cmd = [
 		`cat ${promptFile} |`,
 		"claude -p",
@@ -44,7 +48,7 @@ export async function runClaudeSession(
 		"--output-format stream-json --verbose",
 		"--dangerously-skip-permissions",
 		resume,
-		"2>&1",
+		`> ${outFile} 2>&1 < /dev/null`,
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -53,7 +57,8 @@ export async function runClaudeSession(
 		timeoutMs: opts.timeoutMs,
 		env: opts.env,
 	});
-	return parseStreamJson(res.stdout, opts.stepIndex, res.exitCode);
+	const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
+	return parseStreamJson(read.stdout, opts.stepIndex, res.exitCode);
 }
 
 export function parseStreamJson(

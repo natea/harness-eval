@@ -20,6 +20,8 @@ ENV PATH="/root/.bun/bin:${PATH}"
 ARG CLAUDE_CODE_VERSION=2.1.170
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
-RUN useradd -m -s /bin/bash daytona && mkdir -p /home/daytona/workspace
-USER daytona
-WORKDIR /home/daytona/workspace
+# Daytona's toolbox daemon runs as uid 1000 — use the base image's
+# built-in 'ubuntu' user (uid 1000) so exec/upload share the workspace owner.
+RUN mkdir -p /home/ubuntu/workspace && chown -R ubuntu:ubuntu /home/ubuntu
+USER ubuntu
+WORKDIR /home/ubuntu/workspace

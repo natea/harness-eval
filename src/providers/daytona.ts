@@ -9,7 +9,7 @@ import type {
 	SandboxProvider,
 } from "./types";
 
-const WORKSPACE = "/home/daytona/workspace";
+const WORKSPACE = "/home/ubuntu/workspace";
 
 /**
  * Daytona-backed isolation. Each trial gets a fresh sandbox created from a
@@ -33,7 +33,11 @@ export class DaytonaProvider implements SandboxProvider {
 			snapshot: this.snapshotId,
 			labels: { "harness-eval/trial": trialId },
 		});
-		await sandbox.process.executeCommand(`mkdir -p ${WORKSPACE}`);
+		// The snapshot's USER owns the workspace, but Daytona's upload daemon
+		// may run as a different uid — open permissions so fs.uploadFile works.
+		await sandbox.process.executeCommand(
+			`sudo mkdir -p ${WORKSPACE} && sudo chmod -R 0777 ${WORKSPACE} || (mkdir -p ${WORKSPACE} && chmod -R 0777 ${WORKSPACE})`,
+		);
 		return new DaytonaTrialSandbox(sandbox, trialId);
 	}
 }
@@ -50,12 +54,16 @@ class DaytonaTrialSandbox implements Sandbox {
 	}
 
 	async exec(command: string, opts: ExecOptions = {}): Promise<ExecResult> {
-		const env = opts.env
+		// Export vars then run via bash -c so env reaches EVERY command in a
+		// pipeline (plain `env K=V cmd1 | cmd2` only affects cmd1).
+		const exports = opts.env
 			? Object.entries(opts.env)
-					.map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+					.map(([k, v]) => `export ${k}=${JSON.stringify(v)};`)
 					.join(" ")
 			: "";
-		const wrapped = env ? `env ${env} ${command}` : command;
+		const wrapped = exports
+			? `bash -lc ${JSON.stringify(`${exports} ${command}`)}`
+			: command;
 		const timeoutSec = opts.timeoutMs
 			? Math.ceil(opts.timeoutMs / 1000)
 			: undefined;

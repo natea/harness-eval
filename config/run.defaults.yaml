@@ -7,7 +7,7 @@ judgeModel: claude-sonnet-4-6   # pinned non-worker model (judge independence)
 
 trialsPerCandidate: 3
 provider: daytona
-snapshot: harness-eval-base:v1   # Claude Code pinned at 2.1.170 (decision b)
+snapshot: harness-eval-base:v2   # Claude Code pinned at 2.1.170 (decision b)
 concurrency: 2
 
 budget:

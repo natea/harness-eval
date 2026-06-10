@@ -6,7 +6,7 @@
  *       Validate registry + test plan + PRD hash + fixture manifest.
  *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
- *       [--provider worktree|daytona] [--snapshot harness-eval-base:v1] [--grade]
+ *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] [--grade]
  *       Execute the matrix. Builds happen with real Claude Code sessions —
  *       REAL SPEND. --grade additionally runs evaluator+judge (API spend).
  *
@@ -97,7 +97,7 @@ async function cmdRun(): Promise<void> {
 
 	const provider =
 		config.provider === "daytona"
-			? new DaytonaProvider(arg("snapshot") ?? "harness-eval-base:v1")
+			? new DaytonaProvider(arg("snapshot") ?? "harness-eval-base:v2")
 			: new WorktreeProvider(join(runDir, "sandboxes"));
 
 	console.log(

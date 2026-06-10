@@ -10,7 +10,7 @@ set -a; source .env; set +a
 echo "=== [$(date -u +%FT%TZ)] BUILD PHASE ==="
 bun run src/cli.ts run \
   --candidates superpowers,compound-engineering,agent-skills \
-  --trials 1 --provider daytona --concurrency 2
+  --trials 1 --provider daytona --concurrency 1
 
 D=$(ls -dt runs/run-* | head -1)
 echo "=== [$(date -u +%FT%TZ)] GRADE PHASE ($D) ==="

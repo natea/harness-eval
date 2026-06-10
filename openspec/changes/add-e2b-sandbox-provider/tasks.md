@@ -7,11 +7,11 @@
 
 ## 2. Provider
 
-- [ ] 2.1 Add `e2b` SDK dependency; extend provider enums (`IsolationProviderId`, provenance) and CLI `--provider e2b`
-- [ ] 2.2 Implement `src/providers/e2b.ts` (`Sandbox.create` with budget-derived `timeoutMs`, `commands.run` with per-exec envs, tar-based copyOut, `files.write`, `kill`)
-- [ ] 2.3 Implement preflight validation: template exists, tier max-lifetime ≥ trial wall-clock budget (hard fail with tier guidance)
-- [ ] 2.4 Add lifetime heartbeat extension between session-script steps
-- [ ] 2.5 Add `E2B_API_KEY` to `.env.example` and the secret-redaction list
+- [x] 2.1 Add `e2b` SDK dependency; extend provider enums (`IsolationProviderId`, provenance) and CLI `--provider e2b`
+- [x] 2.2 Implement `src/providers/e2b.ts` (`Sandbox.create` with budget-derived `timeoutMs`, `commands.run` with per-exec envs, tar-based copyOut, `files.write`, `kill`)
+- [x] 2.3 Implement preflight validation: template exists, tier max-lifetime ≥ trial wall-clock budget (hard fail with tier guidance)
+- [x] 2.4 Add lifetime heartbeat extension between session-script steps
+- [x] 2.5 Add `E2B_API_KEY` to `.env.example` and the secret-redaction list
 
 ## 3. Validation
 

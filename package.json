@@ -20,6 +20,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.0",
     "@daytonaio/sdk": "^0.185.0",
+    "e2b": "^2.29.0",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   }

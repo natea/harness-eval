@@ -48,7 +48,7 @@ export async function runClaudeSession(
 		"--output-format stream-json --verbose",
 		"--dangerously-skip-permissions",
 		resume,
-		`> ${outFile} 2>&1 < /dev/null`,
+		`> ${outFile} 2>&1`,
 	]
 		.filter(Boolean)
 		.join(" ");

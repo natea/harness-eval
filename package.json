@@ -8,7 +8,7 @@
     "check": "bunx tsc --noEmit && bunx biome check src tests",
     "lint": "bunx biome check src tests",
     "format": "bunx biome format --write src tests",
-    "test": "bun test"
+    "test": "bun test tests"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",

@@ -29,14 +29,17 @@ candidates:
   - id: superpowers
     name: Superpowers
     repo: https://github.com/obra/superpowers
-    pinnedVersion: v5.1.0
+    pinnedVersion: 5.1.0
     markerPaths:
       - docs/plans/
       - .worktrees/
     harnesses:
       claude-code:
         install:
-          - claude plugin install superpowers@claude-plugins-official --version 5.1.0
+          - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
+          - claude plugin marketplace add obra/superpowers-marketplace
+          - claude plugin install superpowers@superpowers-marketplace
+          - "claude plugin list | grep -A1 'superpowers@' | grep -q 'Version: 5.1.0'"
         session:
           - prompt: "{{BASE_PROMPT}}"
         continuation:
@@ -46,7 +49,7 @@ candidates:
   - id: compound-engineering
     name: Compound Engineering
     repo: https://github.com/EveryInc/compound-engineering-plugin
-    pinnedVersion: 4719dc509fdc
+    pinnedVersion: 3.12.0
     markerPaths:
       - docs/brainstorms/
       - docs/plans/
@@ -55,8 +58,10 @@ candidates:
     harnesses:
       claude-code:
         install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add EveryInc/compound-engineering-plugin
           - claude plugin install compound-engineering@compound-engineering-plugin
+          - "claude plugin list | grep -A1 'compound-engineering@' | grep -q 'Version: 3.12.0'"
         session:
           - prompt: "/ce-setup"
           - prompt: "/ce-plan {{BASE_PROMPT}}"
@@ -69,13 +74,15 @@ candidates:
   - id: agent-skills
     name: Agent Skills
     repo: https://github.com/addyosmani/agent-skills
-    pinnedVersion: 0427b5b1281b
+    pinnedVersion: 5e262b20e0cd
     markerPaths: []
     harnesses:
       claude-code:
         install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add addyosmani/agent-skills
           - claude plugin install agent-skills@addy-agent-skills
+          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 5e262b20e0cd'"
         session:
           - prompt: "/spec {{BASE_PROMPT}}"
           - prompt: "/plan"

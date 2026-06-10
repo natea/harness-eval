@@ -233,6 +233,9 @@ export async function runTrial(
 				provenance.notes.push(
 					`infra retry ${attempt + 1}: ${String(err).slice(0, 200)}`,
 				);
+				// Provider-side resource accounting (e.g. Daytona memory quota)
+				// can lag sandbox deletion by tens of seconds — back off.
+				await new Promise((r) => setTimeout(r, 60_000 * (attempt + 1)));
 				continue;
 			}
 			provenance.status = "infra-failed";

@@ -32,6 +32,8 @@ export class DaytonaProvider implements SandboxProvider {
 		const sandbox = await this.client.create({
 			snapshot: this.snapshotId,
 			labels: { "harness-eval/trial": trialId },
+			// Long unattended builds: never auto-stop mid-trial.
+			autoStopInterval: 0,
 		});
 		// The snapshot's USER owns the workspace, but Daytona's upload daemon
 		// may run as a different uid — open permissions so fs.uploadFile works.

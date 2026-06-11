@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { loadTarget } from "../targets";
 import { getRun, loadRunIndex } from "./data";
 /**
  * harness-eval results dashboard (read-only, localhost by default).
@@ -17,6 +18,26 @@ const server = Bun.serve({
 		"/": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
+		"/api/steps": {
+			GET: () => {
+				// Step descriptions for hover tooltips. Runs predate target
+				// recording in provenance; default target is correct for all
+				// current artifacts.
+				try {
+					const t = loadTarget("symphony-daemon");
+					const out: Record<string, string> = {};
+					for (const step of t.plan.steps) {
+						out[step.id] =
+							`${step.description}\n\nCheck: ${step.check.trim()}` +
+							(step.fatal ? "\n(FATAL gate)" : "") +
+							(step.bonus ? "\n(bonus — not scored)" : "");
+					}
+					return Response.json(out);
+				} catch {
+					return Response.json({});
+				}
+			},
+		},
 		"/api/runs": {
 			GET: () => {
 				// Leaderboard payload: index without per-trial step evidence (kept

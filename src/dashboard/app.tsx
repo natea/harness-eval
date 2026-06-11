@@ -94,7 +94,14 @@ function WeightControls({
 				{(Object.keys(DIM_LABELS) as (keyof Weights)[]).map((k) => (
 					<label key={k}>
 						{DIM_LABELS[k]}{" "}
-						<span className="mono" style={{ display: "inline-block", width: "3.2em", textAlign: "right" }}>
+						<span
+							className="mono"
+							style={{
+								display: "inline-block",
+								width: "3.2em",
+								textAlign: "right",
+							}}
+						>
 							{(weights[k] * 100).toFixed(1)}%
 						</span>
 						<input
@@ -331,12 +338,43 @@ function RunView({ runId }: { runId: string }) {
 		);
 	const r = entry.results;
 	const rows = reweight(r.scores, weights);
+	const combined = runId.startsWith("combined:");
+	const parts = combined ? runId.slice("combined:".length).split("+") : [];
+	const fmt = (iso: string | null) =>
+		iso ? new Date(iso).toLocaleString() : "—";
+	const spanMin =
+		r.endedAt && r.startedAt
+			? (new Date(r.endedAt).getTime() - new Date(r.startedAt).getTime()) /
+				60000
+			: null;
 	return (
 		<>
 			<p>
 				<a href="/">← leaderboard</a>
 			</p>
-			<h1>{runId}</h1>
+			<h1>{combined ? `Combined run (${parts.length} runs)` : runId}</h1>
+			<p className="muted">
+				🗓 {fmt(r.startedAt)} → {fmt(r.endedAt)}
+				{spanMin !== null &&
+					` (${spanMin >= 90 ? `${(spanMin / 60).toFixed(1)}h` : `${spanMin.toFixed(0)}m`} span)`}
+				{" · "}
+				{String(r.config.harness)} / {String(r.config.model)} on{" "}
+				{String(r.config.provider)}
+				{" · "}judge {String(r.config.judgeModel)}
+				{" · "}
+				{r.trials.length} trial(s)
+			</p>
+			{combined && (
+				<p className="muted">
+					merged from:{" "}
+					{parts.map((pp, i) => (
+						<span key={pp}>
+							{i > 0 && " + "}
+							<a href={`/runs/${pp}`}>{pp}</a>
+						</span>
+					))}
+				</p>
+			)}
 			{r.inconclusive && (
 				<p>
 					<span className="badge warn">
@@ -456,6 +494,7 @@ function RunView({ runId }: { runId: string }) {
 /* ------------------------------------------------- criterion comparison */
 
 function StepComparison({ trials }: { trials: TrialResult[] }) {
+	const stepInfo = useFetch<Record<string, string>>("/api/steps");
 	const graded = trials.filter((t) => t.grades?.adherence);
 	if (graded.length < 2) return null;
 	const stepIds = [
@@ -467,12 +506,19 @@ function StepComparison({ trials }: { trials: TrialResult[] }) {
 	];
 	const cell = (t: TrialResult, id: string) => {
 		const s = t.grades?.adherence?.stepResults.find((x) => x.stepId === id);
-		if (!s) return "·";
-		return s.outcome === "pass"
-			? "✅"
-			: s.outcome === "partial"
-				? `🟡${s.credit}`
-				: "❌";
+		if (!s) return <>·</>;
+		const icon =
+			s.outcome === "pass"
+				? "✅"
+				: s.outcome === "partial"
+					? `🟡${s.credit}`
+					: "❌";
+		// Hover shows the recorded evidence — why credit was docked.
+		return (
+			<span title={s.evidence} style={{ cursor: "help" }}>
+				{icon}
+			</span>
+		);
 	};
 	return (
 		<>
@@ -494,7 +540,13 @@ function StepComparison({ trials }: { trials: TrialResult[] }) {
 				<tbody>
 					{stepIds.map((id) => (
 						<tr key={id}>
-							<td className="mono">{id}</td>
+							<td
+								className="mono"
+								title={stepInfo?.[id]}
+								style={{ cursor: "help" }}
+							>
+								{id}
+							</td>
 							{graded.map((t) => (
 								<td key={t.provenance.trialId}>{cell(t, id)}</td>
 							))}

@@ -39,9 +39,9 @@
       "originalText": "Harness Eval \u2014 Agentic Coding Framework Evaluator",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "subtitle",
@@ -79,9 +79,9 @@
       "originalText": "4 frameworks x N trials build the Symphony daemon from one PRD \u2014 isolated builds, frozen-rubric grading",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-inputs",
@@ -110,9 +110,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-inputs-label",
@@ -150,9 +150,9 @@
       "originalText": "Config & Inputs",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-build",
@@ -181,9 +181,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-build-label",
@@ -221,9 +221,9 @@
       "originalText": "Build phase \u2014 src/cli.ts \u00b7 src/orchestrator \u00b7 src/driver \u00b7 src/providers",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-ext",
@@ -252,9 +252,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-ext-label",
@@ -292,9 +292,9 @@
       "originalText": "External systems",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-grade",
@@ -323,9 +323,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-grade-label",
@@ -363,9 +363,9 @@
       "originalText": "Grading phase \u2014 src/grading \u00b7 scripts/grade-trial.ts",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-report",
@@ -394,9 +394,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "z-report-label",
@@ -434,9 +434,9 @@
       "originalText": "Reports \u2014 src/report",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "in-prd",
@@ -474,9 +474,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "in-reg",
@@ -514,9 +514,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "in-plan",
@@ -550,9 +550,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "in-fix",
@@ -586,9 +586,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "cli",
@@ -630,9 +630,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "sched",
@@ -674,9 +674,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "prov",
@@ -722,9 +722,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "sess",
@@ -766,9 +766,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "tel",
@@ -810,9 +810,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "ext-cc",
@@ -846,9 +846,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "ext-day",
@@ -882,9 +882,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "ext-api",
@@ -918,9 +918,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "ext-lin",
@@ -954,9 +954,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "art",
@@ -1002,9 +1002,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "fix",
@@ -1042,9 +1042,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "evl",
@@ -1086,9 +1086,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "scrub",
@@ -1126,9 +1126,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "jdg",
@@ -1170,9 +1170,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "drv",
@@ -1206,9 +1206,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "scr",
@@ -1250,9 +1250,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "rep-json",
@@ -1294,9 +1294,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "rep-md",
@@ -1334,9 +1334,9 @@
       "updated": 1781144392319,
       "link": null,
       "locked": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbmm7g1lqci3",
@@ -1389,9 +1389,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbxdrje1qci0r",
@@ -1444,9 +1444,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkb271el2jbp5i",
@@ -1499,9 +1499,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbw57mxnkxrd",
@@ -1554,9 +1554,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbrf48qbbzjq",
@@ -1609,9 +1609,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbn0u3fr6mkgp",
@@ -1664,9 +1664,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbpbfetrrvdmn",
@@ -1719,9 +1719,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkb4xlmufrk7oq",
@@ -1774,9 +1774,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkblf86n0kyecg",
@@ -1829,9 +1829,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkboap1sgzk0wr",
@@ -1884,9 +1884,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbpmt9z8wub4c",
@@ -1939,9 +1939,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbgojz6wx434e",
@@ -1994,9 +1994,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "mq7zwmkbalw9jcq5jm",
@@ -2049,9 +2049,9 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "x11zGx37eALOPfTRuRPbc",
@@ -2089,9 +2089,9 @@
       "originalText": "PRD: symphony-SPEC.md\n(vendored, pinned)",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "WXjK-Ba7qBmhRdfsdfn5Y",
@@ -2129,9 +2129,9 @@
       "originalText": "Candidate registry\nconfig/registry.yaml",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "Hy9itzCBKRwupDs6_0eGF",
@@ -2169,9 +2169,9 @@
       "originalText": "Frozen test plan\ntestplan.yaml (\u00a717 / \u00a718.1)",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "f1RmmB0zGnp_YOoBREobf",
@@ -2209,9 +2209,9 @@
       "originalText": "Fixture manifest + defaults\n(weights, budgets)",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "pVCpUN7f8Feo9djhojCJg",
@@ -2249,9 +2249,9 @@
       "originalText": "CLI: validate | run | report",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "t6dNBx6Qn-HxP7VufFC4g",
@@ -2289,9 +2289,9 @@
       "originalText": "Scheduler \u2014 trial matrix\n(candidates x trials, budget caps)",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "rsK7R5r-InImuTRYT390W",
@@ -2329,9 +2329,9 @@
       "originalText": "Isolation provider\nDaytona sandbox / git worktree",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "ucvNRUgxT_Ldd6cdtD7fL",
@@ -2369,9 +2369,9 @@
       "originalText": "Session driver \u2014 headless claude -p\nOpus 4.6 \u00b7 session scripts \u00b7 gate handling",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "v2bVZoci4o1uxO1gfGz3g",
@@ -2409,9 +2409,9 @@
       "originalText": "Telemetry + archive\ntokens \u00b7 cost \u00b7 duration \u00b7 transcripts",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "_yoiNzWuXoL-_bEvCJuDE",
@@ -2449,9 +2449,9 @@
       "originalText": "Claude Code CLI 2.1.170\nbuilder harness + cc grading driver",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "gfX3ycXMxZk5wx9ktqL7d",
@@ -2489,9 +2489,9 @@
       "originalText": "Daytona API / SDK\nsandbox provisioning",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "nTDSvCP_K4FsDtzGFnNc4",
@@ -2529,9 +2529,9 @@
       "originalText": "Anthropic API\nsdk driver \u00b7 judge: Sonnet 4.6",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "2AnHrNSW5cqqwYDagstC7",
@@ -2569,9 +2569,9 @@
       "originalText": "Linear API (bonus tier)\nreal-fixture integration checks",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "u2dVET4tcQgUZo4xEC-mB",
@@ -2609,9 +2609,9 @@
       "originalText": "Trial artifacts: runs/<run-id>/trials/<trial>/\nworkspace \u00b7 transcripts \u00b7 telemetry \u00b7 provenance",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "m94MiIYO6OaEi7YXH79R9",
@@ -2649,9 +2649,9 @@
       "originalText": "Eval fixtures\nmock Linear + stub app-server",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "V0ZGpi-qHyLH6wAnfVMKR",
@@ -2689,9 +2689,9 @@
       "originalText": "Adaptive evaluator (ViBench-style)\ncold-start run of frozen plan\nGraded Score \u00b7 Pass@1 \u00b7 CFR",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "wFoLyECLr8igQNxUBsQbc",
@@ -2729,9 +2729,9 @@
       "originalText": "Workspace scrub\nremoves framework markers",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "F7BmS7jzvI8Wc2Owr7tIx",
@@ -2769,9 +2769,9 @@
       "originalText": "Blind code-quality judge\n5 criteria x 3 samples, median",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "ktebYOC3N3W_bxQFXDP4z",
@@ -2809,9 +2809,9 @@
       "originalText": "Grader drivers (host both)\nsdk: Anthropic API\ncc: headless Claude Code",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "KgUw_gziMs_un9kU4d0f2",
@@ -2849,9 +2849,9 @@
       "originalText": "Composite scoring (0-100)\nadherence 40 \u00b7 quality 25\nspeed 17.5 \u00b7 tokens 17.5",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "lLokkD1lX93YD5pwuJupu",
@@ -2889,9 +2889,9 @@
       "originalText": "results.json\nstable schema + provenance",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "dtOVy-QUIeSHP1w-nK7Wa",
@@ -2929,9 +2929,9 @@
       "originalText": "scorecard.md\nranking \u00b7 dimensions \u00b7 variance",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "yBPTJ_dhkHbzMFEPEmrRa",
@@ -2969,9 +2969,9 @@
       "originalText": "Trial artifacts: runs/<run-id>/trials/<trial>/\nworkspace \u00b7 transcripts \u00b7 telemetry \u00b7 provenance",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "arr-evl-scr",
@@ -3027,9 +3027,9 @@
       "fixedSegments": [],
       "startIsSpecial": false,
       "endIsSpecial": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "arr-art-scrub",
@@ -3085,9 +3085,9 @@
       "fixedSegments": [],
       "startIsSpecial": false,
       "endIsSpecial": false,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     },
     {
       "id": "WDGLsL86Em25FTLkxC1cO",
@@ -3125,9 +3125,9 @@
       "originalText": "Trial artifacts: runs/<run-id>/trials/<trial>/\nworkspace \u00b7 transcripts \u00b7 telemetry \u00b7 provenance",
       "autoResize": true,
       "lineHeight": 1.25,
-      "syncedAt": "2026-06-11T22:41:08.646Z",
+      "syncedAt": "2026-06-11T22:46:04.201Z",
       "source": "frontend_sync",
-      "syncTimestamp": "2026-06-11T22:41:07.629Z"
+      "syncTimestamp": "2026-06-11T22:46:04.195Z"
     }
   ]
 }

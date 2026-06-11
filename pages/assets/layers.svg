@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="ui-sans-serif, system-ui" font-size="13">
+<defs>
+<marker id="lar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#8b949e" stroke-width="1.6"/>
+</marker>
+<style>
+.t { fill: #e6edf3; } .h { font-weight: 700; letter-spacing: .04em; }
+.s { fill: #9aa4b2; font-size: 12px; }
+.note { fill: #8b949e; font-size: 11.5px; font-style: italic; }
+.e { stroke: #8b949e; stroke-width: 1.5; fill: none; marker-end: url(#lar); }
+</style>
+</defs>
+<rect width="1000" height="560" fill="#0d1117"/>
+<text class="t h" x="40" y="34" font-size="15">The layers of an eval — vary exactly one at a time</text>
+
+<rect x="40" y="60" width="640" height="92" rx="9" fill="#2d1b4e" stroke="#bc8cff" stroke-width="1.5"/>
+<text class="t h" x="360" y="92" text-anchor="middle">FRAMEWORK — the thing under test</text>
+<text class="s" x="360" y="116" text-anchor="middle">superpowers · compound-engineering · agent-skills · gsd · …</text>
+<text class="note" x="700" y="100">phase 1 (done):</text>
+<text class="note" x="700" y="116">the only varied layer</text>
+
+<rect x="40" y="178" width="640" height="92" rx="9" fill="#1c2e4a" stroke="#58a6ff" stroke-width="1.5"/>
+<text class="t h" x="360" y="210" text-anchor="middle">HARNESS — the coding-agent CLI</text>
+<text class="s" x="360" y="234" text-anchor="middle">claude code · codex · opencode · pi.dev · qwen-coder · …</text>
+<text class="note" x="700" y="216">today: claude code 2.1.170</text>
+<text class="note" x="700" y="232">pluggable via registry harness sections</text>
+
+<rect x="40" y="296" width="640" height="92" rx="9" fill="#0f3a2e" stroke="#3fb950" stroke-width="1.5"/>
+<text class="t h" x="360" y="328" text-anchor="middle">LLM PROVIDER — endpoint + billing</text>
+<text class="s" x="360" y="352" text-anchor="middle">anthropic · openai · google · z.ai · moonshot (kimi) · minimax · alibaba (qwen) · …</text>
+<text class="note" x="700" y="334">today: anthropic (Max plan)</text>
+<text class="note" x="700" y="350">pluggable via model registry (env injection)</text>
+
+<rect x="40" y="414" width="640" height="92" rx="9" fill="#4a2800" stroke="#f0883e" stroke-width="1.5"/>
+<text class="t h" x="360" y="446" text-anchor="middle">MODEL — the weights doing the work</text>
+<text class="s" x="360" y="470" text-anchor="middle">fable / opus / sonnet · gpt-5.5 · gemini · glm-4.7 · kimi k2 · minimax m3 · qwen 3.6 · gemma 4 · …</text>
+<text class="note" x="700" y="452">today: opus 4.6 builds, sonnet 4.6 judges</text>
+<text class="note" x="700" y="468">judge ≠ worker · cross-vendor judging flagged</text>
+
+<path class="e" d="M 360 152 L 360 176"/>
+<path class="e" d="M 360 270 L 360 294"/>
+<path class="e" d="M 360 388 L 360 412"/>
+<text class="note" x="40" y="540">Scores are only comparable when the layers below the varied one are held identical — the harness enforces this per run, and records every layer in provenance.</text>
+</svg>

@@ -37,6 +37,39 @@ const DIM_LABELS: Record<string, string> = {
 	tokenSpend: "Token spend*",
 };
 
+const HELP: Record<string, string> = {
+	Composite:
+		"Weighted sum of the four dimension scores using the weights in the panel above (defaults: PRD adherence 40%, code quality 25%, speed 17.5%, token spend 17.5%). Recomputed live when you move the sliders.",
+	"PRD adherence":
+		"Graded Score, 0–100 (ViBench methodology): an evaluator agent executes the frozen, spec-derived test plan against the BUILT artifact — running it against mock services and recording evidence per step. Weighted partial credit over non-bonus steps; fatal cold-start failures zero the remainder. Absolute scale, comparable across runs.",
+	"Code quality":
+		"Blind LLM-judge score, 0–100: five criteria (meaningful passing tests, architecture vs the spec's layering, error handling, dead code, documentation), each scored 0–10 three times by a pinned judge model (temperature-fixed, never the worker model) on a copy scrubbed of framework-identifying files; per-criterion medians averaged ×10. Absolute scale.",
+	"Speed*":
+		"Agent working time: the sum of harness session durations (sandbox setup and grading time excluded), min-max normalized within THIS run's candidate set — fastest mean = 100, slowest = 0, linear between. Not comparable across runs with different candidates.",
+	"Token spend*":
+		"Total cost across sessions (harness-reported USD; token counts when pricing is unavailable), min-max normalized within THIS run's candidate set — cheapest = 100, priciest = 0. Not comparable across runs with different candidates.",
+	"±σ": "Standard deviation of per-trial composite scores for this candidate. When the top two candidates' ranges (mean ± σ) overlap, the ranking is flagged inconclusive.",
+	Trials:
+		"Number of graded trials counted for this candidate (completed or budget-capped with an artifact). Capped trials flag the row as right-censored.",
+};
+
+function Th({ label }: { label: string }) {
+	const help = HELP[label];
+	return (
+		<th>
+			{label}
+			{help && (
+				<span
+					title={help}
+					style={{ cursor: "help", marginLeft: 4, opacity: 0.7 }}
+				>
+					ⓘ
+				</span>
+			)}
+		</th>
+	);
+}
+
 function Bar({ v }: { v: number }) {
 	return (
 		<>
@@ -204,11 +237,11 @@ function Leaderboard() {
 						<th>#</th>
 						<th>Candidate</th>
 						<th>Harness / model</th>
-						<th>Composite</th>
+						<Th label="Composite" />
 						{Object.values(DIM_LABELS).map((l) => (
-							<th key={l}>{l}</th>
+							<Th key={l} label={l} />
 						))}
-						<th>Trials</th>
+						<Th label="Trials" />
 						<th>Flags</th>
 					</tr>
 				</thead>
@@ -388,12 +421,12 @@ function RunView({ runId }: { runId: string }) {
 					<tr>
 						<th>#</th>
 						<th>Candidate</th>
-						<th>Composite</th>
+						<Th label="Composite" />
 						{Object.values(DIM_LABELS).map((l) => (
-							<th key={l}>{l}</th>
+							<Th key={l} label={l} />
 						))}
-						<th>±σ</th>
-						<th>Trials</th>
+						<Th label="±σ" />
+						<Th label="Trials" />
 					</tr>
 				</thead>
 				<tbody>

@@ -1,0 +1,24 @@
+# Eval target: Symphony Service Specification (the original harness-eval target).
+name: symphony-daemon
+version: "1.1.0"
+prdFile: PRD.md
+prdSha256: fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452
+testplanFile: testplan.yaml
+conformanceSection: 'section 18.1 "REQUIRED for Conformance"'
+coverageMode: spec-checklist
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the service against a WORKFLOW.md in the workspace root, honoring the environment variables SPEC.md defines."
+deliverableNotes: >
+  Treat SPEC.md as the complete product requirements document. Section 17's
+  test matrix is your guide for what must be verifiable. Section 18.2/18.3
+  items are optional; do not prioritize them over 18.1.
+fixtures:
+  - name: mock-linear
+    command: "bun {targetDir}/fixtures/mock-linear.ts {port}"
+    envVar: MOCK_LINEAR_URL
+    urlTemplate: "http://localhost:{port}"
+  - name: stub-app-server
+    # Not a long-running process: path handed to the evaluator via env.
+    pathOnly: "{targetDir}/fixtures/stub-app-server.ts"
+    envVar: STUB_APP_SERVER

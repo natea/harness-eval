@@ -130,7 +130,7 @@ describe("e2e dry run (task 8.2)", () => {
 		).toContain("Hello");
 
 		// Synthetic grading: real test plan, synthetic step results.
-		const { plan } = loadTestPlan("config/testplan.yaml");
+		const { plan } = loadTestPlan("targets/symphony-daemon/testplan.yaml");
 		const stepResults: StepResult[] = plan.steps.map((s) => ({
 			stepId: s.id,
 			outcome: s.fatal ? "pass" : "partial",

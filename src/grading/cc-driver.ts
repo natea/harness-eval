@@ -1,14 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { scoreAdherence } from "./evaluator";
 import {
 	type AdherenceResult,
 	type CriterionScore,
 	type QualityResult,
-	StepResult as StepResultSchema,
 	type StepResult,
+	StepResult as StepResultSchema,
 	type TestPlan,
 } from "../types";
+import { scoreAdherence } from "./evaluator";
 import { CRITERIA, median } from "./judge";
 
 /**
@@ -67,7 +67,10 @@ export async function runCC(opts: CCRunOptions): Promise<string> {
 		try {
 			const obj = JSON.parse(line) as Record<string, unknown>;
 			if (obj.type === "result") {
-				if (obj.is_error) throw new Error(`claude session error: ${String(obj.result).slice(0, 300)}`);
+				if (obj.is_error)
+					throw new Error(
+						`claude session error: ${String(obj.result).slice(0, 300)}`,
+					);
 				return typeof obj.result === "string" ? obj.result : "";
 			}
 		} catch (err) {
@@ -75,7 +78,9 @@ export async function runCC(opts: CCRunOptions): Promise<string> {
 			throw err;
 		}
 	}
-	throw new Error(`no result from claude (exit ${exitCode}): ${stdout.slice(-400)}`);
+	throw new Error(
+		`no result from claude (exit ${exitCode}): ${stdout.slice(-400)}`,
+	);
 }
 
 const NO_REPAIR = `Hard rules:
@@ -185,7 +190,9 @@ export interface CCJudgeOptions {
 }
 
 /** Code-quality judge hosted on headless Claude Code (subscription-billed). */
-export async function judgeQualityCC(opts: CCJudgeOptions): Promise<QualityResult> {
+export async function judgeQualityCC(
+	opts: CCJudgeOptions,
+): Promise<QualityResult> {
 	const samples = opts.samples ?? 3;
 	const criteria: CriterionScore[] = [...(opts.preScored ?? [])];
 	const done = new Set(criteria.map((c) => c.criterion));
@@ -212,7 +219,10 @@ Your FINAL message must end with exactly one JSON object on its own line:
 			let parsed: { score: number; justification: string } | null = null;
 			if (match) {
 				try {
-					parsed = JSON.parse(match) as { score: number; justification: string };
+					parsed = JSON.parse(match) as {
+						score: number;
+						justification: string;
+					};
 				} catch {
 					parsed = null;
 				}
@@ -225,7 +235,11 @@ Your FINAL message must end with exactly one JSON object on its own line:
 					s--;
 					continue;
 				}
-				runs.push({ score: 0, justification: "judge failed to produce a parseable score after retries" });
+				runs.push({
+					score: 0,
+					justification:
+						"judge failed to produce a parseable score after retries",
+				});
 				continue;
 			}
 			runs.push({

@@ -7,7 +7,13 @@ import { z } from "zod";
 export const HarnessId = z.enum(["claude-code", "opencode", "codex"]);
 export type HarnessId = z.infer<typeof HarnessId>;
 
-export const IsolationProviderId = z.enum(["daytona", "e2b", "docker", "macos-vz", "worktree"]);
+export const IsolationProviderId = z.enum([
+	"daytona",
+	"e2b",
+	"docker",
+	"macos-vz",
+	"worktree",
+]);
 export type IsolationProviderId = z.infer<typeof IsolationProviderId>;
 
 export const TrialStatus = z.enum([

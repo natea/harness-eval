@@ -283,10 +283,10 @@ describe("misc (8.1)", () => {
 	});
 
 	test("test plan loads with coverage and PRD hash binding", () => {
-		expect(() => loadTestPlan("config/testplan.yaml", "wrong-hash")).toThrow(
-			/PRD/,
-		);
-		const { plan } = loadTestPlan("config/testplan.yaml");
+		expect(() =>
+			loadTestPlan("targets/symphony-daemon/testplan.yaml", "wrong-hash"),
+		).toThrow(/PRD/);
+		const { plan } = loadTestPlan("targets/symphony-daemon/testplan.yaml");
 		expect(plan.steps.filter((s) => s.fatal).map((s) => s.id)).toEqual([
 			"S-1",
 			"S-2",

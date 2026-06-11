@@ -28,11 +28,15 @@ import { WorktreeProvider } from "./providers/worktree";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
+import {
+	loadTarget,
+	renderTargetPrompt,
+	startFixtures,
+	stopFixtures,
+} from "./targets";
 import { RunConfig, type TrialResult, Weights } from "./types";
 
-const PRD_PATH = "prd/symphony-SPEC.md";
 const REGISTRY_PATH = "config/registry.yaml";
-const TESTPLAN_PATH = "config/testplan.yaml";
 const MANIFEST_PATH = "config/fixtures-manifest.yaml";
 const DEFAULTS_PATH = "config/run.defaults.yaml";
 
@@ -44,19 +48,14 @@ function flag(name: string): boolean {
 	return process.argv.includes(`--${name}`);
 }
 
-function prdSha256(): string {
-	return createHash("sha256").update(readFileSync(PRD_PATH)).digest("hex");
-}
-
 async function cmdValidate(): Promise<void> {
 	const registry = loadRegistry(REGISTRY_PATH);
 	console.log(
 		`registry OK: ${registry.candidates.map((c) => `${c.id}@${c.pinnedVersion}`).join(", ")}`,
 	);
-	const sha = prdSha256();
-	const { plan, sha256 } = loadTestPlan(TESTPLAN_PATH, sha);
+	const target = loadTarget(arg("target") ?? "symphony-daemon");
 	console.log(
-		`test plan OK: ${plan.steps.length} steps, sha ${sha256.slice(0, 12)}…, PRD ${sha.slice(0, 12)}…`,
+		`target OK: ${target.manifest.name}@${target.manifest.version} — ${target.plan.steps.length} steps, plan ${target.testPlanSha256.slice(0, 12)}…, PRD ${target.prdSha256.slice(0, 12)}…`,
 	);
 	const { manifest, sha256: msha } = loadManifest(MANIFEST_PATH);
 	console.log(
@@ -88,8 +87,11 @@ async function cmdRun(): Promise<void> {
 		config.candidates,
 		config.harness,
 	);
-	const sha = prdSha256();
-	const { plan, sha256: planSha } = loadTestPlan(TESTPLAN_PATH, sha);
+	const target = loadTarget(arg("target") ?? "symphony-daemon");
+	registry.basePrompt = renderTargetPrompt(registry.basePrompt, target);
+	const sha = target.prdSha256;
+	const plan = target.plan;
+	const planSha = target.testPlanSha256;
 
 	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 	const runDir = join("runs", runId);
@@ -115,7 +117,7 @@ async function cmdRun(): Promise<void> {
 			provider,
 			registry,
 			runDir,
-			prdContent: readFileSync(PRD_PATH, "utf8"),
+			prdContent: target.prdContent,
 			prdSha256: sha,
 			testPlanSha256: planSha,
 			harnessVersion: arg("harness-version") ?? "2.1.170",
@@ -123,7 +125,7 @@ async function cmdRun(): Promise<void> {
 	);
 
 	if (flag("grade")) {
-		// Each trial gets a fresh mock tracker on its own port.
+		// Each trial gets fresh fixture processes on their own ports.
 		let mockPort = 4280;
 		for (const trial of trials) {
 			const trialDir = join(runDir, "trials", trial.provenance.trialId);
@@ -131,19 +133,9 @@ async function cmdRun(): Promise<void> {
 			if (!existsSync(workspace)) continue;
 			console.log(`grading ${trial.provenance.trialId}…`);
 			mockPort++;
-			const mock = Bun.spawn(
-				[
-					"bun",
-					join(import.meta.dir, "fixtures", "mock-linear.ts"),
-					String(mockPort),
-				],
-				{ stdout: "ignore", stderr: "ignore" },
-			);
+			const fixtures = startFixtures(target, mockPort);
 			await new Promise((r) => setTimeout(r, 500));
-			writeFileSync(
-				join(workspace, "SPEC-REFERENCE.md"),
-				readFileSync(PRD_PATH),
-			);
+			writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
 			let adherence: Awaited<ReturnType<typeof runEvaluator>>;
 			let quality: Awaited<ReturnType<typeof judgeQuality>>;
 			try {
@@ -151,12 +143,10 @@ async function cmdRun(): Promise<void> {
 					model: config.judgeModel,
 					workspaceDir: workspace,
 					mockLinearUrl:
-						process.env.MOCK_LINEAR_URL ?? `http://localhost:${mockPort}`,
-					stubAppServerPath: join(
-						import.meta.dir,
-						"fixtures",
-						"stub-app-server.ts",
-					),
+						fixtures.find((f) => f.name === "mock-linear")?.value ??
+						`http://localhost:${mockPort}`,
+					stubAppServerPath:
+						fixtures.find((f) => f.name === "stub-app-server")?.value ?? "",
 				});
 				const blindDir = join(trialDir, "workspace-blind");
 				scrubWorkspace(workspace, blindDir, registry.candidates);
@@ -165,7 +155,7 @@ async function cmdRun(): Promise<void> {
 					blindWorkspaceDir: blindDir,
 				});
 			} finally {
-				mock.kill();
+				stopFixtures(fixtures);
 			}
 			trial.grades = {
 				trialId: trial.provenance.trialId,

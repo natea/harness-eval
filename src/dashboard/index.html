@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>harness-eval dashboard</title>
+		<style>
+			:root { color-scheme: dark; }
+			body { font: 14px/1.5 ui-sans-serif, system-ui; margin: 0; background: #0d1117; color: #e6edf3; }
+			a { color: #58a6ff; text-decoration: none; }
+			a:hover { text-decoration: underline; }
+			main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+			table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+			th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #21262d; }
+			th { color: #8b949e; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+			tr:hover td { background: #161b22; }
+			.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
+			.warn { background: #5a3e00; color: #f0c674; }
+			.flag { background: #4a1d1d; color: #ff9b9b; }
+			.ok { background: #1d4a2a; color: #9bffb0; }
+			.bar { display: inline-block; height: 9px; background: #2f81f7; border-radius: 2px; vertical-align: middle; }
+			.muted { color: #8b949e; }
+			.mono { font-family: ui-monospace, monospace; font-size: 12px; }
+			pre { background: #161b22; padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; }
+			input[type="range"] { width: 120px; vertical-align: middle; }
+			.weights { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+			h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; } h3 { font-size: 14px; }
+			details summary { cursor: pointer; color: #8b949e; }
+		</style>
+	</head>
+	<body>
+		<main id="root"></main>
+		<script type="module" src="./app.tsx"></script>
+	</body>
+</html>

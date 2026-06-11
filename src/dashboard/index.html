@@ -24,8 +24,9 @@
 			pre { background: #161b22; padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; }
 			input[type="range"] { width: 120px; vertical-align: middle; }
 			.weights { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
-			.weights .sliders { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 6px; }
-			.weights label { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+			.weights .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 6px 18px; margin-top: 6px; }
+			.weights label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+			.weights input[type="range"] { flex: 1; min-width: 60px; width: auto; }
 			h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; } h3 { font-size: 14px; }
 			details summary { cursor: pointer; color: #8b949e; }
 		</style>

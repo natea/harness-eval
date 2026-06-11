@@ -28,7 +28,30 @@ export class DaytonaProvider implements SandboxProvider {
 		this.snapshotId = snapshotId;
 	}
 
+	private async sweepStaleTrialSandboxes(trialId: string): Promise<void> {
+		try {
+			const list = (await (this.client as unknown as { list: () => Promise<unknown> }).list()) as
+				| Array<{ id: string; state?: string; labels?: Record<string, string>; delete: () => Promise<void> }>
+				| { items?: Array<{ id: string; state?: string; labels?: Record<string, string>; delete: () => Promise<void> }> };
+			const items = Array.isArray(list) ? list : (list.items ?? []);
+			for (const sb of items) {
+				const label = sb.labels?.["harness-eval/trial"];
+				if (!label) continue; // never touch non-trial sandboxes (orchestrator!)
+				if (String(sb.state ?? "").toLowerCase().includes("start")) {
+					console.warn(`[daytona] sweeping stale trial sandbox ${sb.id} (${label}) before provisioning ${trialId}`);
+					await sb.delete().catch(() => {});
+				}
+			}
+		} catch {
+			// sweep is best-effort; create() will surface real quota errors
+		}
+	}
+
 	async provision(trialId: string): Promise<Sandbox> {
+		// Quota guard: provider-side accounting lags deletes, and a wedged
+		// teardown can strand a sandbox that eats the org memory cap. Sweep
+		// our own stale trial sandboxes, then wait for quota headroom.
+		await this.sweepStaleTrialSandboxes(trialId);
 		const sandbox = await this.client.create({
 			snapshot: this.snapshotId,
 			labels: { "harness-eval/trial": trialId },

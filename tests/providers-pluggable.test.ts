@@ -53,16 +53,67 @@ describe("docker provider preflight", () => {
 	});
 });
 
+function containerCliAvailable(): boolean {
+	try {
+		execFileSync("container", ["system", "status"], {
+			stdio: "ignore",
+			timeout: 10_000,
+		});
+		return true;
+	} catch {
+		return false;
+	}
+}
+const hasContainerCli = containerCliAvailable();
+
 describe("macos-vz preflight", () => {
-	test("fails clearly when container CLI absent or platform wrong", async () => {
-		const p = createMacosVzProvider(IMAGE);
-		// On this dev host (Apple Silicon, no `container` CLI) this must fail
-		// with remediation, never hang or pass silently.
-		await expect(
-			p.preflight({ trialWallClockMs: 1000, concurrency: 1 }),
-		).rejects.toThrow(PreflightError);
+	test("version pin format", () => {
 		expect(MIN_CONTAINER_CLI).toMatch(/^\d+\.\d+\.\d+$/);
 	});
+
+	test.if(!hasContainerCli)(
+		"fails clearly when container CLI absent",
+		async () => {
+			const p = createMacosVzProvider(IMAGE);
+			await expect(
+				p.preflight({ trialWallClockMs: 1000, concurrency: 1 }),
+			).rejects.toThrow(PreflightError);
+		},
+	);
+
+	test.if(hasContainerCli)(
+		"passes with CLI present and image loaded",
+		async () => {
+			const p = createMacosVzProvider(IMAGE);
+			await p.preflight({ trialWallClockMs: 1000, concurrency: 1 });
+		},
+	);
+});
+
+describe.if(hasContainerCli)("macos-vz live (VM-per-trial)", () => {
+	test("contamination: two concurrent VMs are isolated", async () => {
+		const provider = createMacosVzProvider(IMAGE);
+		const [a, b] = await Promise.all([
+			provider.provision("vz-test-a"),
+			provider.provision("vz-test-b"),
+		]);
+		try {
+			await a.writeFile("secret.txt", "a-only");
+			await a.exec(
+				"mkdir -p ~/.claude/skills/x && echo s > ~/.claude/skills/x/SKILL.md",
+			);
+			const cross = await b.exec(
+				"test -f secret.txt || test -f ~/.claude/skills/x/SKILL.md; echo $?",
+			);
+			expect(cross.stdout.trim()).toBe("1");
+			const env = await b.exec("echo $VZ_PROBE", {
+				env: { VZ_PROBE: "b-env" },
+			});
+			expect(env.stdout.trim()).toBe("b-env");
+		} finally {
+			await Promise.all([a.destroy(), b.destroy()]);
+		}
+	}, 300_000);
 });
 
 describe.if(hasDocker)("docker provider end-to-end (live)", () => {

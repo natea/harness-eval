@@ -34,7 +34,9 @@ export function createMacosVzProvider(
 		{
 			providerId: "macos-vz",
 			binary: "container",
-			runArgs: (l) => [`--memory=${l.memoryGb}g`, `--cpus=${l.cpus}`],
+			runArgs: (l) => ["--memory", `${l.memoryGb}g`, "--cpus", String(l.cpus)],
+			infoArgs: ["system", "status"],
+			execCopy: true, // Apple container CLI (0.7.x) has no cp verb
 			platformCheck: async () => {
 				if (platform() !== "darwin" || arch() !== "arm64") {
 					throw new PreflightError(

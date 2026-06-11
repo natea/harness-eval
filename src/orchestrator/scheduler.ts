@@ -200,7 +200,8 @@ export async function runTrial(
 			// when both are set, which would silently bill the API account).
 			const workerAuth: Record<string, string> = {};
 			if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
-				workerAuth.CLAUDE_CODE_OAUTH_TOKEN = process.env.CLAUDE_CODE_OAUTH_TOKEN;
+				workerAuth.CLAUDE_CODE_OAUTH_TOKEN =
+					process.env.CLAUDE_CODE_OAUTH_TOKEN;
 				workerAuth.ANTHROPIC_API_KEY = "";
 			} else if (process.env.ANTHROPIC_API_KEY) {
 				workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;

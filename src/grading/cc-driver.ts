@@ -192,6 +192,7 @@ export async function judgeQualityCC(opts: CCJudgeOptions): Promise<QualityResul
 	for (const criterion of CRITERIA) {
 		if (done.has(criterion.key)) continue;
 		const runs: { score: number; justification: string }[] = [];
+		let retriesLeft = 2; // parse/transport failures are judge-infra, not artifact signal
 		for (let s = 0; s < samples; s++) {
 			const prompt = `You are a senior engineer reviewing an anonymous codebase implementing a daemon service against the spec at SPEC-REFERENCE.md in this directory.
 
@@ -208,19 +209,29 @@ Your FINAL message must end with exactly one JSON object on its own line:
 				timeoutMs: opts.timeoutMs ?? 20 * 60 * 1000,
 			});
 			const match = text.match(/\{[^{}]*"score"[\s\S]*?\}/g)?.at(-1);
-			if (!match) {
-				runs.push({ score: 0, justification: "judge returned no parseable score" });
+			let parsed: { score: number; justification: string } | null = null;
+			if (match) {
+				try {
+					parsed = JSON.parse(match) as { score: number; justification: string };
+				} catch {
+					parsed = null;
+				}
+			}
+			if (!parsed) {
+				// Unparseable output is a judge failure, not a 0-quality artifact:
+				// retry the sample (bounded) instead of poisoning the median.
+				if (retriesLeft > 0) {
+					retriesLeft--;
+					s--;
+					continue;
+				}
+				runs.push({ score: 0, justification: "judge failed to produce a parseable score after retries" });
 				continue;
 			}
-			try {
-				const obj = JSON.parse(match) as { score: number; justification: string };
-				runs.push({
-					score: Math.max(0, Math.min(10, Number(obj.score))),
-					justification: String(obj.justification),
-				});
-			} catch {
-				runs.push({ score: 0, justification: "judge score JSON malformed" });
-			}
+			runs.push({
+				score: Math.max(0, Math.min(10, Number(parsed.score))),
+				justification: String(parsed.justification),
+			});
 		}
 		const scores = runs.map((r) => r.score);
 		const med = median(scores);

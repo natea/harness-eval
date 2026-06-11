@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
+    "@e2b/cli": "^2.11.1",
     "@types/bun": "latest"
   },
   "peerDependencies": {

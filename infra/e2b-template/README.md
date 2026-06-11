@@ -16,3 +16,19 @@ One-time build (requires an E2B account and `E2B_API_KEY`):
 Preflight (`src/providers/e2b.ts`) probes the template with a short-lived
 sandbox and validates the account tier's max lifetime against the trial
 wall-clock budget before any trial is dispatched.
+
+## Built (2026-06-11)
+
+Template `harness-eval-trial` is live on the account (2 vCPU / 4096 MB),
+built with:
+
+```sh
+bunx e2b template create harness-eval-trial \
+  --path infra/trial-image --dockerfile Dockerfile \
+  --cpu-count 2 --memory-mb 4096
+```
+
+Notes: E2B's builder does not interpret printf escapes in RUN (use echo
+lines); sandboxes inherit the image's `ubuntu` (uid 1000) user with
+HOME=/home/ubuntu; Hobby tier rejects sandbox timeouts > 1h at the API
+(provider tier-caps the provision fallback).

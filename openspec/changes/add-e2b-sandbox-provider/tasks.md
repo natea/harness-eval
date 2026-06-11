@@ -2,8 +2,8 @@
 
 ## 1. Template
 
-- [ ] 1.1 Define the E2B template under `infra/e2b-template/` (Ubuntu base, Node 22, Bun, git, Claude Code 2.1.170, uid-1000 user), reusing the Daytona Dockerfile if the builder accepts it
-- [ ] 1.2 Build and push the template; pin the template tag in `config/run.defaults.yaml` (`e2bTemplate`) and document the rebuild procedure
+- [x] 1.1 Define the E2B template under `infra/e2b-template/` (Ubuntu base, Node 22, Bun, git, Claude Code 2.1.170, uid-1000 user), reusing the Daytona Dockerfile if the builder accepts it
+- [x] 1.2 Build and push the template; pin the template tag in `config/run.defaults.yaml` (`e2bTemplate`) and document the rebuild procedure
 
 ## 2. Provider
 
@@ -16,6 +16,6 @@
 ## 3. Validation
 
 - [ ] 3.1 Unit tests: enum/CLI plumbing, preflight failure paths (mocked SDK)
-- [ ] 3.2 Live smoke: provision → exec env propagation → writeFile/copyOut roundtrip → destroy, plus contamination check between two concurrent E2B trials
+- [x] 3.2 Live smoke: provision → exec env propagation → writeFile/copyOut roundtrip → destroy, plus contamination check between two concurrent E2B trials
 - [ ] 3.3 One real candidate trial (cheapest protocol: superpowers) end-to-end on E2B; verify provenance records provider/template and scorecard generation
 - [ ] 3.4 Document cost-per-trial observation and tier requirements in `docs/`

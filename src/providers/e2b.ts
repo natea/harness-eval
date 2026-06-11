@@ -12,7 +12,7 @@ import type {
 } from "./types";
 import { PreflightError } from "./types";
 
-const WORKSPACE = "/home/user/workspace";
+const WORKSPACE = "/home/ubuntu/workspace";
 
 /** Hobby-tier max sandbox lifetime; Pro is higher (e2b change D2). */
 const TIER_LIFETIME_MS: Record<string, number> = {
@@ -68,12 +68,16 @@ export class E2BProvider implements SandboxProvider {
 	}
 
 	async provision(trialId: string): Promise<Sandbox> {
+		const cap =
+			TIER_LIFETIME_MS[this.opts.tier ?? "hobby"] ?? TIER_LIFETIME_MS.hobby!;
+		const lifetime =
+			this.lifetimeMs > 0 ? this.lifetimeMs : Math.min(2 * 60 * 60 * 1000, cap);
 		const sandbox = await E2BSandbox.create(this.opts.template, {
-			timeoutMs: this.lifetimeMs || 2 * 60 * 60 * 1000,
+			timeoutMs: lifetime,
 			metadata: { "harness-eval/trial": trialId },
 		});
 		await sandbox.commands.run(`mkdir -p ${WORKSPACE}`);
-		return new E2BTrialSandbox(sandbox, trialId, this.lifetimeMs);
+		return new E2BTrialSandbox(sandbox, trialId, lifetime);
 	}
 }
 

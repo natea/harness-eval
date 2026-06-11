@@ -7,7 +7,8 @@
 FROM ubuntu:24.04
 
 # Retry hardening: trial builds must survive flaky links.
-RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\n' > /etc/apt/apt.conf.d/80-retries
+RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries \
+    && echo 'Acquire::http::Timeout "30";' >> /etc/apt/apt.conf.d/80-retries
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl git unzip ripgrep jq tar python3 \

@@ -47,6 +47,10 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		and ranked on a weighted composite.
 	</p>
 
+	<h2>Architecture</h2>
+	<p class="pipeline">Designed in Excalidraw (<a href="https://github.com/natea/harness-eval/blob/main/docs/architecture.excalidraw.json">editable scene</a>); one pipeline, every variable held fixed except the framework under test.</p>
+	<img src="./assets/architecture.svg" alt="harness-eval architecture: registry, targets and run config feed the orchestrator; trials run on pluggable sandbox providers from a shared image; headless Claude Code builds are archived then graded by an evaluator agent and a blind judge; results feed scorecards and the dashboard" style="width:100%; border:1px solid #21262d; border-radius:10px; margin-top:10px" />
+
 	<h2>How grading works</h2>
 	<div class="grid">
 		<div class="card"><h3>PRD adherence — 40%</h3><p>ViBench-style Graded Score: an evaluator agent executes a frozen, spec-derived test plan against the <em>built, running</em> artifact — cold-start scripts, mock services, per-step cited evidence, weighted partial credit, fatal gates. Absolute 0–100.</p></div>

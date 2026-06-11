@@ -55,8 +55,12 @@ const HELP = {
 const DIMS = ["prdAdherence", "codeQuality", "speed", "tokenSpend"];
 const LABELS = { prdAdherence: "PRD adherence", codeQuality: "Code quality", speed: "Speed*", tokenSpend: "Token spend*" };
 const DEFAULTS = { prdAdherence: 0.4, codeQuality: 0.25, speed: 0.175, tokenSpend: 0.175 };
-let weights = { ...DEFAULTS };
+let raw = { ...DEFAULTS };   // slider positions (stable during drag)
 let data;
+const norm = () => {
+	const sum = DIMS.reduce((a, k) => a + raw[k], 0) || 1;
+	return Object.fromEntries(DIMS.map((k) => [k, raw[k] / sum]));
+};
 
 const composite = (d, w) =>
 	Math.round((d.prdAdherence * w.prdAdherence + d.codeQuality * w.codeQuality + d.speed * w.speed + d.tokenSpend * w.tokenSpend) * 100) / 100;
@@ -64,21 +68,28 @@ const bar = (v) => `<span class="bar" style="width:${Math.max(1, v) * 0.6}px"></
 const th = (l) => `<th>${l}${HELP[l] ? ` <span class="tip" data-tip="${HELP[l].replace(/"/g, "&quot;")}" style="opacity:.7">ⓘ</span>` : ""}</th>`;
 
 function renderSliders() {
+	// Built ONCE — re-rendering inputs mid-drag detaches the element being
+	// dragged, which is why dragging used to do nothing.
 	document.getElementById("sliders").innerHTML = DIMS.map((k) =>
-		`<label>${LABELS[k]} <span class="mono" style="width:3.2em;text-align:right">${(weights[k] * 100).toFixed(1)}%</span>
-		 <input type="range" min="0" max="100" value="${weights[k] * 100}" data-k="${k}"></label>`).join("");
+		`<label>${LABELS[k]} <span class="mono" id="pct-${k}" style="width:3.2em;text-align:right"></span>
+		 <input type="range" min="0" max="100" step="0.5" value="${raw[k] * 100}" data-k="${k}"></label>`).join("");
 	for (const el of document.querySelectorAll("#sliders input")) {
-		el.oninput = () => {
-			const next = { ...weights, [el.dataset.k]: Number(el.value) / 100 };
-			const sum = DIMS.reduce((a, k) => a + next[k], 0) || 1;
-			for (const k of DIMS) weights[k] = next[k] / sum;
-			render();
-		};
+		el.addEventListener("input", () => {
+			raw[el.dataset.k] = Number(el.value) / 100;
+			renderBoard();
+		});
 	}
+	updateLabels();
 }
 
-function render() {
-	renderSliders();
+function updateLabels() {
+	const w = norm();
+	for (const k of DIMS) document.getElementById(`pct-${k}`).textContent = `${(w[k] * 100).toFixed(1)}%`;
+}
+
+function renderBoard() {
+	updateLabels();
+	const weights = norm();
 	const rows = data.scores
 		.map((s) => ({ ...s, c: composite(s.dimensions, weights) }))
 		.sort((a, b) => b.c - a.c);
@@ -95,8 +106,9 @@ fetch("./data/combined-n1.json").then((r) => r.json()).then((d) => {
 	document.getElementById("meta").textContent =
 		`${d.config.harness} / ${d.config.model} on ${d.config.provider} · judge ${d.config.judgeModel} · ` +
 		`${new Date(d.startedAt).toLocaleString()} · target: Symphony daemon spec (22-step frozen test plan)`;
-	document.getElementById("reset").onclick = () => { weights = { ...DEFAULTS }; render(); };
-	render();
+	document.getElementById("reset").onclick = () => { raw = { ...DEFAULTS }; renderSliders(); renderBoard(); };
+	renderSliders();
+	renderBoard();
 	const trials = d.trials.filter((t) => t.telemetry);
 	document.getElementById("trials").innerHTML = `<table><thead><tr>
 		<th>Trial</th><th>Status</th><th>Graded</th><th>Quality</th><th>Agent time</th><th>Cost</th><th>Turns</th>

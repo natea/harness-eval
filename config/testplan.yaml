@@ -8,7 +8,7 @@
 # cause-and-effect (command run, output/log/filesystem state observed).
 # The evaluator NEVER repairs the artifact.
 
-version: "1.0.0"
+version: "1.1.0"
 prdSha256: fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452
 
 steps:
@@ -158,10 +158,15 @@ steps:
     covers: ["10.1", "10.3", "17.5", "18.1"]
     description: App-server subprocess client speaks the JSON-line protocol
     check: >
-      Stub app-server (JSON-line protocol per §10) receives a well-formed
-      session start in workspace cwd via bash -lc of codex.command; streamed
-      stub events are processed; read/turn timeouts enforced (stub stalls →
-      session killed and retried, not hung forever).
+      Stub app-server (faithful to the documented Codex app-server protocol:
+      initialize/initialized handshake, thread/start, turn/start with
+      turn/completed notifications) receives a well-formed session start in
+      workspace cwd via bash -lc of codex.command; streamed events are
+      processed; read/turn timeouts enforced (STUB_MODE=stall → session
+      killed and retried, not hung forever). Evidence MUST cite the stub log
+      (STUB_LOG_FILE) showing which methods the candidate spoke; clients
+      using a coherent JSON-RPC dialect that the liberal stub ACKs may earn
+      partial credit, with the deviation from documented methods noted.
     weight: 4
   - id: A-2
     covers: ["6.4", "10.1", "18.1"]

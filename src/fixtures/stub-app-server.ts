@@ -1,18 +1,24 @@
 #!/usr/bin/env bun
 /**
- * Stub coding-agent app-server speaking a JSON-line protocol over
- * stdin/stdout (task 6.2, per Symphony §10/§17.5). Used as `codex.command`
- * during functional evaluation so candidate Symphony implementations can be
- * exercised without a real coding agent.
+ * Stub Codex app-server speaking the documented app-server protocol
+ * (https://developers.openai.com/codex/app-server/): JSON-RPC-style JSONL
+ * over stdio — requests carry `id`, notifications don't.
  *
- * Behavior is controlled by STUB_MODE:
- *   normal (default) — handshake, a few agent events with usage, clean exit
- *   crash            — exit(3) mid-turn (abnormal exit → backoff retry path)
- *   stall            — stop responding after handshake (timeout path)
+ * Faithful surface:
+ *   initialize -> result {userAgent}; expects `initialized` notification
+ *   thread/start -> result {thread:{id,sessionId}} + thread/started notif
+ *   thread/resume -> result {thread:{id}}
+ *   turn/start -> result {turn:{id,status:inProgress}} then streamed
+ *     notifications: turn/started, item/started, item/completed,
+ *     thread/tokenUsage/updated, turn/completed
+ * Liberality rule: any OTHER id-bearing request gets a generic `{ok:true}`
+ * result (never starves a variant client), and every line is logged to
+ * STUB_LOG_FILE so the evaluator can cite exactly which methods the
+ * candidate spoke — protocol conformance is evidence, not a guess.
  *
- * Evidence: every received line is appended to STUB_LOG_FILE (default
- * /tmp/stub-app-server.log) with cwd and timestamps, so the evaluator can
- * verify launch cwd, prompt rendering, and protocol traffic.
+ * Modes via STUB_MODE: normal | crash (exit 3 mid-turn) | stall (stop
+ * responding after handshake) | approval (one requestApproval round-trip
+ * before completing the turn).
  */
 
 import { appendFileSync } from "node:fs";
@@ -31,11 +37,133 @@ function send(obj: Record<string, unknown>) {
 	process.stdout.write(`${JSON.stringify(obj)}\n`);
 }
 
+const threadId = `thr_stub_${process.pid}`;
+let turnCount = 0;
+let initialized = false;
+let stalled = false;
+
 log({ event: "started", mode, argv: process.argv.slice(2) });
 
-let turnCount = 0;
-let stalled = false;
-let handshaken = false;
+function streamTurn(id: unknown, turnId: string, input: unknown) {
+	send({ method: "turn/started", params: { turn: { id: turnId, status: "inProgress" } } });
+	send({
+		method: "item/started",
+		params: { item: { id: `item_${turnId}_1`, type: "agentMessage", text: "" } },
+	});
+	if (mode === "crash") {
+		log({ event: "crashing-mid-turn" });
+		process.exit(3);
+	}
+	if (mode === "approval") {
+		send({
+			method: "item/commandExecution/requestApproval",
+			params: {
+				itemId: `item_${turnId}_2`,
+				threadId,
+				turnId,
+				command: "echo stub-approval-probe",
+				reason: "stub approval-flow exercise",
+			},
+		});
+		// Completion continues when the client answers (handled in dispatch).
+		pendingApprovalTurn = { id, turnId };
+		return;
+	}
+	completeTurn(id, turnId);
+}
+
+let pendingApprovalTurn: { id: unknown; turnId: string } | null = null;
+
+function completeTurn(id: unknown, turnId: string) {
+	send({
+		method: "item/completed",
+		params: {
+			item: {
+				id: `item_${turnId}_1`,
+				type: "agentMessage",
+				phase: "final_answer",
+				text: `stub completed turn ${turnCount}`,
+			},
+		},
+	});
+	send({
+		method: "thread/tokenUsage/updated",
+		params: {
+			threadId,
+			usage: { inputTokens: 1200, outputTokens: 340, totalTokens: 1540 },
+		},
+	});
+	send({ method: "turn/completed", params: { turn: { id: turnId, status: "completed" } } });
+	if (mode === "normal" && turnCount >= 1) {
+		// Stay alive briefly for continuation turns (spec 10.3), then exit clean.
+		log({ event: "turn-complete-idle" });
+	}
+}
+
+function dispatch(msg: Record<string, unknown>) {
+	const id = "id" in msg ? msg.id : undefined;
+	const method = String(msg.method ?? "");
+	const params = (msg.params ?? {}) as Record<string, unknown>;
+
+	// Approval responses come back as plain results referencing our request.
+	if (pendingApprovalTurn && !method) {
+		const decision = JSON.stringify(msg).toLowerCase();
+		log({ event: "approval-response", accepted: decision.includes("accept") });
+		const t = pendingApprovalTurn;
+		pendingApprovalTurn = null;
+		completeTurn(t.id, t.turnId);
+		return;
+	}
+
+	switch (method) {
+		case "initialize":
+			initialized = true;
+			send({
+				id,
+				result: {
+					userAgent: { name: "stub-app-server", version: "1.0.0" },
+					platform: "linux",
+				},
+			});
+			return;
+		case "initialized":
+			log({ event: "initialized-notification" });
+			if (mode === "stall") {
+				stalled = true;
+				log({ event: "stalling" });
+			}
+			return;
+		case "thread/start":
+		case "thread/resume": {
+			send({ id, result: { thread: { id: threadId, sessionId: threadId } } });
+			send({ method: "thread/started", params: { thread: { id: threadId } } });
+			log({ event: method, cwd: params.cwd, approvalPolicy: params.approvalPolicy });
+			return;
+		}
+		case "turn/start": {
+			turnCount++;
+			const turnId = `turn_stub_${turnCount}`;
+			send({ id, result: { turn: { id: turnId, status: "inProgress", items: [] } } });
+			log({ event: "turn/start", turn: turnCount, input: JSON.stringify(params.input).slice(0, 500), cwd: params.cwd });
+			streamTurn(id, turnId, params.input);
+			return;
+		}
+		case "turn/interrupt":
+			send({ id, result: {} });
+			send({
+				method: "turn/completed",
+				params: { turn: { id: `turn_stub_${turnCount}`, status: "interrupted" } },
+			});
+			return;
+		default:
+			// Liberality: never starve an id-bearing request, even unknown
+			// methods — but the log preserves what was actually spoken.
+			log({ event: "unknown-method", method, hadId: id !== undefined });
+			if (id !== undefined) {
+				send({ id, result: { ok: true, note: `stub: unrecognized method ${method}` } });
+			}
+	}
+}
 
 process.stdin.setEncoding("utf8");
 let buffer = "";
@@ -56,61 +184,14 @@ process.stdin.on("data", (chunk: string) => {
 		}
 		log({ event: "received", msg });
 		if (stalled) continue;
-		handle(msg);
+		if (!initialized && msg.method !== "initialize") {
+			// Documented behavior: pre-handshake requests error.
+			if ("id" in msg) send({ id: msg.id, error: { code: -32002, message: "Not initialized" } });
+			continue;
+		}
+		dispatch(msg);
 	}
 });
-
-function handle(msg: Record<string, unknown>) {
-	const id = msg.id ?? null;
-	const method = String(msg.method ?? msg.type ?? "");
-	const isTurn = /turn|prompt|input|message|run|task/i.test(method);
-
-	// Multi-stage protocols (client/init → thread/create → turn/...) are
-	// common: ACK every non-turn request that carries an id, and emit
-	// session_started once. (A handshake-only stub starves the later stages
-	// and falsely times out conforming clients.)
-	if (!isTurn) {
-		if (id !== null) {
-			send({
-				id,
-				result: {
-					session_id: `stub-${process.pid}`,
-					thread_id: `thread-${process.pid}`,
-					ok: true,
-				},
-			});
-		}
-		if (!handshaken) {
-			handshaken = true;
-			send({ type: "session_started", session_id: `stub-${process.pid}` });
-			if (mode === "stall") {
-				stalled = true;
-				log({ event: "stalling" });
-			}
-		}
-		return;
-	}
-
-	if (isTurn) {
-		turnCount++;
-		if (mode === "crash") {
-			log({ event: "crashing" });
-			process.exit(3);
-		}
-		send({ type: "agent_event", event: "task_started", turn: turnCount });
-		send({
-			type: "usage",
-			usage: { input_tokens: 1200, output_tokens: 340, total_tokens: 1540 },
-			rate_limits: { remaining: 99 },
-		});
-		send({ type: "agent_event", event: "task_completed", turn: turnCount });
-		send({ id, result: { status: "completed", turn: turnCount } });
-		if (mode === "normal" && turnCount >= 1) {
-			log({ event: "normal-exit" });
-			setTimeout(() => process.exit(0), 100);
-		}
-	}
-}
 
 process.stdin.on("end", () => {
 	log({ event: "stdin-closed" });

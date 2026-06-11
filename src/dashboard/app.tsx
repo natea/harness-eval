@@ -90,10 +90,13 @@ function WeightControls({
 			<button type="button" onClick={() => onChange(DEFAULT_WEIGHTS)}>
 				reset
 			</button>
-			<div>
+			<div className="sliders">
 				{(Object.keys(DIM_LABELS) as (keyof Weights)[]).map((k) => (
-					<label key={k} style={{ marginRight: 18 }}>
-						{DIM_LABELS[k]} {(weights[k] * 100).toFixed(1)}%{" "}
+					<label key={k}>
+						{DIM_LABELS[k]}{" "}
+						<span className="mono" style={{ display: "inline-block", width: "3.2em", textAlign: "right" }}>
+							{(weights[k] * 100).toFixed(1)}%
+						</span>
 						<input
 							type="range"
 							min={0}

@@ -81,6 +81,14 @@ async function cmdRun(): Promise<void> {
 		concurrency: Number(
 			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
 		),
+		...(arg("trial-minutes")
+			? {
+					budget: {
+						...((defaults.budget as Record<string, unknown>) ?? {}),
+						trialWallClockMs: Number(arg("trial-minutes")) * 60_000,
+					},
+				}
+			: {}),
 	});
 	const candidates = resolveCandidates(
 		registry,

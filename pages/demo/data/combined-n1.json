@@ -1,0 +1,1586 @@
+{
+  "schemaVersion": 1,
+  "runId": "combined:run-2026-06-10T00-51-47-767Z+run-2026-06-10T13-44-56-687Z+run-2026-06-10T15-23-14-710Z+run-2026-06-10T18-44-38-671Z",
+  "config": {
+    "candidates": [
+      "gsd"
+    ],
+    "harness": "claude-code",
+    "model": "claude-opus-4-6",
+    "trialsPerCandidate": 1,
+    "provider": "daytona",
+    "concurrency": 2,
+    "budget": {
+      "trialWallClockMs": 7200000,
+      "trialCostUsd": 50,
+      "runCostUsd": 400
+    },
+    "weights": {
+      "prdAdherence": 0.4,
+      "codeQuality": 0.25,
+      "speed": 0.175,
+      "tokenSpend": 0.175
+    },
+    "judgeModel": "claude-sonnet-4-6",
+    "infraRetryLimit": 2,
+    "realIntegrationTier": false
+  },
+  "weights": {
+    "prdAdherence": 0.5,
+    "codeQuality": 0.35,
+    "speed": 0.075,
+    "tokenSpend": 0.075
+  },
+  "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+  "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+  "startedAt": "2026-06-10T00:51:47.768Z",
+  "endedAt": "2026-06-10T19:21:01.831Z",
+  "scores": [
+    {
+      "candidate": "superpowers",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 84.21,
+        "codeQuality": 32,
+        "speed": 100,
+        "tokenSpend": 100
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 84.21,
+          "min": 84.21,
+          "max": 84.21,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 32,
+          "min": 32,
+          "max": 32,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 779627,
+          "min": 779627,
+          "max": 779627,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 3.9881977500000003,
+          "min": 3.9881977500000003,
+          "max": 3.9881977500000003,
+          "stddev": 0
+        }
+      },
+      "composite": 68.3,
+      "compositeStats": {
+        "mean": 68.3,
+        "min": 68.3,
+        "max": 68.3,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    },
+    {
+      "candidate": "gsd",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 78.25,
+        "codeQuality": 60,
+        "speed": 41.82,
+        "tokenSpend": 49.97
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 78.25,
+          "min": 78.25,
+          "max": 78.25,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 60,
+          "min": 60,
+          "max": 60,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 1511173,
+          "min": 1511173,
+          "max": 1511173,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 10.967191750000003,
+          "min": 10.967191750000003,
+          "max": 10.967191750000003,
+          "stddev": 0
+        }
+      },
+      "composite": 67.01,
+      "compositeStats": {
+        "mean": 67.01,
+        "min": 67.01,
+        "max": 67.01,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    },
+    {
+      "candidate": "agent-skills",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 85.26,
+        "codeQuality": 54,
+        "speed": 0,
+        "tokenSpend": 13.26
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 85.26,
+          "min": 85.26,
+          "max": 85.26,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 54,
+          "min": 54,
+          "max": 54,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 2036925,
+          "min": 2036925,
+          "max": 2036925,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 16.08908995,
+          "min": 16.08908995,
+          "max": 16.08908995,
+          "stddev": 0
+        }
+      },
+      "composite": 62.52,
+      "compositeStats": {
+        "mean": 62.52,
+        "min": 62.52,
+        "max": 62.52,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    },
+    {
+      "candidate": "compound-engineering",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 75.79,
+        "codeQuality": 60,
+        "speed": 27.54,
+        "tokenSpend": 0
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 75.79,
+          "min": 75.79,
+          "max": 75.79,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 60,
+          "min": 60,
+          "max": 60,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 1690630,
+          "min": 1690630,
+          "max": 1690630,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 17.938688349999996,
+          "min": 17.938688349999996,
+          "max": 17.938688349999996,
+          "stddev": 0
+        }
+      },
+      "composite": 60.96,
+      "compositeStats": {
+        "mean": 60.96,
+        "min": 60.96,
+        "max": 60.96,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    }
+  ],
+  "trials": [
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T00-51-47-767Z",
+        "trialId": "gsd-t1",
+        "candidate": "gsd",
+        "candidateVersion": "1.4.3",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "/gsd-new-project --auto Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          },
+          {
+            "prompt": "/gsd-plan-phase",
+            "newSession": false
+          },
+          {
+            "prompt": "/gsd-execute-phase",
+            "newSession": false
+          },
+          {
+            "prompt": "/gsd-verify-work",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T00:51:47.769Z",
+        "endedAt": "2026-06-10T01:29:10.450Z",
+        "status": "completed",
+        "cappedBy": null,
+        "notes": []
+      },
+      "telemetry": {
+        "sessions": [
+          {
+            "sessionId": "0949f6da-d1d5-4215-a103-27444ba72618",
+            "stepIndex": 0,
+            "durationMs": 993863,
+            "numTurns": 75,
+            "costUsd": 5.700069000000002,
+            "usage": {
+              "inputTokens": 1822,
+              "outputTokens": 53186,
+              "cacheReadTokens": 7188943,
+              "cacheCreationTokens": 122694
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "0949f6da-d1d5-4215-a103-27444ba72618",
+            "stepIndex": 1,
+            "durationMs": 186091,
+            "numTurns": 15,
+            "costUsd": 2.183406,
+            "usage": {
+              "inputTokens": 16,
+              "outputTokens": 7054,
+              "cacheReadTokens": 2201802,
+              "cacheCreationTokens": 144972
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "0949f6da-d1d5-4215-a103-27444ba72618",
+            "stepIndex": 2,
+            "durationMs": 290688,
+            "numTurns": 30,
+            "costUsd": 2.7376859999999996,
+            "usage": {
+              "inputTokens": 25,
+              "outputTokens": 5423,
+              "cacheReadTokens": 942524,
+              "cacheCreationTokens": 172919
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "0949f6da-d1d5-4215-a103-27444ba72618",
+            "stepIndex": 3,
+            "durationMs": 40531,
+            "numTurns": 4,
+            "costUsd": 0.34603075,
+            "usage": {
+              "inputTokens": 4,
+              "outputTokens": 1252,
+              "cacheReadTokens": 123159,
+              "cacheCreationTokens": 40501
+            },
+            "isError": false
+          }
+        ],
+        "agentDurationMs": 1511173,
+        "setupDurationMs": 11268,
+        "totalCostUsd": 10.967191750000003,
+        "totalTokens": {
+          "inputTokens": 1867,
+          "outputTokens": 66915,
+          "cacheReadTokens": 10456428,
+          "cacheCreationTokens": 481086
+        },
+        "totalTurns": 124
+      },
+      "grades": {
+        "trialId": "gsd-t1",
+        "adherence": {
+          "gradedScore": 78.25,
+          "passAt1": false,
+          "completeFailure": false,
+          "stepResults": [
+            {
+              "stepId": "S-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Run ./setup.sh in /tmp/symphony-clean-test (rsync copy without node_modules/dist). Exit 0. npm install added 284 packages, tsc compiled successfully, dist/ directory created with all modules."
+            },
+            {
+              "stepId": "S-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Placed valid WORKFLOW.md pointing to http://localhost:4306/graphql and stub-app-server. Ran ./start.sh WORKFLOW.md. Process emitted startup logs: symphony starting, workflow reloaded, workflow config reloaded and applied, startup terminal workspace cleanup completed, orchestrator started poll_interval_ms=5000 max_concurrent_agents=2. Process stayed up until killed by timeout (15s). Exit 124 from timeout kill."
+            },
+            {
+              "stepId": "W-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Explicit path /tmp/relocated-workflow.md used: log shows workflow_path=/tmp/relocated-workflow.md. No arg in cwd with WORKFLOW.md: used /private/tmp/symphony-clean-test/WORKFLOW.md. No arg, no WORKFLOW.md in cwd: exit 1 with error workflow file not found."
+            },
+            {
+              "stepId": "W-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Valid WORKFLOW.md with front matter+body loads fine (tested in S-2). Invalid YAML (broken nested mapping): error msg Invalid YAML front matter: Nested mappings are not allowed, exit 1. Non-map YAML (list): error YAML front matter must be a map/object, exit 1. Errors are operator-visible, typed, no crash-loop."
+            },
+            {
+              "stepId": "W-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Omitting optional fields: poll_interval_ms defaulted to 30000, max_concurrent_agents to 10, hooks.timeout_ms defaults to 60000 (confirmed in source: getInt(hooksRaw, timeout_ms, 60000)), codex.command defaults to codex app-server (source line 146). $TEST_API_VAR resolved to resolved-api-key-12345 as seen in authHeader in mock tracker requests at 11:35:12. ~ expansion implemented via expandHome() function in service-config.ts; service starts with ~/symphony-test-ws as workspace.root without error."
+            },
+            {
+              "stepId": "W-4",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Valid WORKFLOW.md change (poll_interval from 30000 to 8000): service logged workflow reloaded and workflow config reloaded and applied without restart (observed at 11:36:14). Invalid YAML (broken nested mapping with --- delimiters): service logged workflow reload failed, keeping last known good config and continued running. Service did not crash-loop."
+            },
+            {
+              "stepId": "P-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Template {{issue.identifier}} renders to TEST-1, {{issue.title}} to Issue 1, {{attempt}} to empty/null on first dispatch and 1 on retry (observed in stub log turn/start prompt). Unknown variable {{bad_variable}}: prompt rendering failed error Unknown variable in template: undefined variable: bad_variable (LiquidJS strictVariables:true). Dispatch fails with clear error, retry scheduled."
+            },
+            {
+              "stepId": "O-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Concurrency bounded to 1: TEST-1 dispatched at 11:38:52, TEST-2 only dispatched at 11:38:58 (after TEST-1 failed), TEST-3 at 11:39:04. No overlap. Priority order correct: TEST-1 (priority 1) first, TEST-2 (priority 2), TEST-3 (priority 3). FAIL: Blocker skip does not work — TEST-1 (blocked by non-terminal TEST-0) was dispatched despite blocker being In Progress. Root cause: service queries relations.nodes but mock returns inverseRelations; blocked_by always empty so blocker check is vacuous."
+            },
+            {
+              "stepId": "T-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Candidate fetch: requests observed with states=[Todo,In Progress] on each poll. Terminal fetch during startup: states=[Done,Cancelled] at startup. Pagination: requests with after=2 (page 2) observed when 3 issues seeded. Labels normalized to lowercase (source: labels.map(l => l.name.toLowerCase())). FAIL: State refresh fails — service uses STATE_REFRESH_QUERY (nodes(ids:[...])) expecting top-level {nodes:[]} but mock returns {data:{issues:{nodes:[...]}}}; every reconciliation poll logs TrackerError: Unexpected response from Linear state refresh."
+            },
+            {
+              "stepId": "R-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Exponential backoff on abnormal exit verified: attempt 1 delay_ms=10000, attempt 2 delay_ms=20000 (10000*2^1). Attempt increments on each retry. FAIL: Normal-exit continuation retry (1000ms) cannot be exercised — post-turn state refresh always fails (same TrackerError), causing runner to return {success:false} even after successful turns, so onWorkerExit always fires with reason=abnormal. Continuation retry code exists in source (scheduleRetry with delay_type:continuation → delayMs=1000) but is unreachable due to state refresh bug."
+            },
+            {
+              "stepId": "R-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Set agent.max_retry_backoff_ms=15000. Observed: attempt 1 delay_ms=10000 (10000*2^0), attempt 2 delay_ms=15000 (min(20000,15000)), attempt 3 delay_ms=15000 (capped). Cap respected correctly."
+            },
+            {
+              "stepId": "R-3",
+              "outcome": "fail",
+              "credit": 0.1,
+              "evidence": "Active state change test: flipped TEST-1 from Todo to Done via /control/set-state. Reconciliation part B (fetchIssueStatesByIds) always fails with TrackerError, so state changes during an active run are NOT detected via reconciliation. Service does release the retry-queue claim when the issue is no longer in the candidate poll (observed: issue no longer in candidates, releasing claim at 11:53:09), but (1) workspace is NOT cleaned, (2) this only fires at retry time not during active run, (3) active run termination on state change is not implemented."
+            },
+            {
+              "stepId": "WS-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "sanitizeIdentifier: ../escape → .._escape (all non [A-Za-z0-9._-] replaced with _). validateWorkspacePath: resolve+normalize check that workspace path starts with workspaceRoot+/ — ../escape sanitized to .._escape yields /root/.._escape which stays inside root. Existing workspace reused on retry: second dispatch shows created_now=false."
+            },
+            {
+              "stepId": "WS-2",
+              "outcome": "partial",
+              "credit": 0.7,
+              "evidence": "after_create: fired once on first creation (created_now=true), not on retry (created_now=false). before_run: fired before each attempt; failure (exit 1) aborts attempt with before_run hook failed error and schedules retry. after_run: fired after each attempt; failure (exit 1) logged as error but run continues/ignored. FAIL: before_remove not tested — workspace cleanup (removeWorkspace) never called during active run because reconciliation state refresh always fails. before_remove behavior cannot be observed at runtime."
+            },
+            {
+              "stepId": "WS-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "hooks.timeout_ms=2000, before_run=sleep 30. Hook killed after 2s (11:56:00.505 dispatch to 11:56:02.508 Hook before_run failed). before_run timeout aborts attempt (worker exited abnormally, retry scheduled). Default 60000ms confirmed in source."
+            },
+            {
+              "stepId": "WS-4",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Startup sweep: Pre-created /tmp/symphony-ws-ws4/TEST-DONE workspace for issue in Done state; service startup fetched terminal issues and removed it (log: workspace removed workspace_key=TEST-DONE, cleaned=1). FAIL: Active terminal transition cleanup broken — reconciliation state refresh always fails so terminal transition during run is not detected and workspace not cleaned."
+            },
+            {
+              "stepId": "A-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Subprocess launched via spawn(bash,[-lc, codex.command], {cwd:workspacePath}): confirmed in source codex-client.ts. Stub log shows cwd=/private/tmp/symphony-ws-e2e/TEST-1 (workspace cwd). client/init sent as first message: stub received it. FAIL: thread/create sent without id field; original stub only responds if id!=null and handshaken is false; since client/init already set handshaken=true, thread/create receives no response → 5000ms read timeout (codex.read_timeout_ms default). Service kills session after timeout and retries (not hung). With compat stub (sends thread_id in response to thread/create): full session works, turn completed observed. Stall timeout (stall_timeout_ms=300000ms default) exists in source."
+            },
+            {
+              "stepId": "A-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "With codex.command unset: defaults to codex app-server (source line 146). Real codex binary found in PATH; service launched it, received stderr: Failed to deserialize JSONRPCMessage (protocol mismatch). With codex.command=/tmp/compat-stub-normal-wrapper.sh: stub launched in workspace cwd, turns completed."
+            },
+            {
+              "stepId": "L-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Log lines from e2e run: dispatching issue issue_id=id-1 issue_identifier=TEST-1; agent session started issue_id=id-1 issue_identifier=TEST-1 session_id=thread-67884-0; starting turn issue_id=id-1 issue_identifier=TEST-1 session_id=thread-67884-1; turn completed issue_id=id-1 issue_identifier=TEST-1 session_id=thread-67884-1. All three fields present on run-scoped events."
+            },
+            {
+              "stepId": "L-2",
+              "outcome": "partial",
+              "credit": 0.6,
+              "evidence": "Dispatch decisions logged: dispatching issue. Retry decisions logged: retry scheduled, worker exited abnormally with delay_ms. Release decisions logged: issue no longer in candidates, releasing claim. Validation failures logged: dispatch validation failed with error list. FAIL: Token/usage telemetry aggregated in state.codex_totals (input_tokens, output_tokens, total_tokens with delta tracking to prevent double-count), but not emitted as structured log output — no log statement observably outputs token totals at any point (no shutdown summary, no per-turn log of running totals)."
+            },
+            {
+              "stepId": "B-1",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "No HTTP server implementation found in codebase. src/cli/main.ts has no server.port, --port flag, or Bun.serve/http.createServer calls. Bonus not shipped."
+            },
+            {
+              "stepId": "B-2",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "No runtime snapshot/status endpoint found. state.codex_totals tracked in memory but not exposed via HTTP or any other external surface. Bonus not shipped."
+            }
+          ]
+        },
+        "quality": {
+          "judgeModel": "claude-sonnet-4-6 (claude-code driver)",
+          "criteria": [
+            {
+              "criterion": "tests",
+              "samples": [
+                5,
+                5,
+                5
+              ],
+              "score": 5,
+              "justification": "97/97 tests pass. The workflow-loader, service-config, workspace, prompt, and CLI test files are substantive: they call real production functions, exercise real filesystem operations and shell hooks, and would catch regressions. However, ~30 of 97 tests in orchestrator.test.ts are trivially-green tautologies (e.g., `expect(1000).toBe(1000)` for retry delay, `terminalStates.includes('done')` on an inline array literal) — none instantiate the Orchestrator class or call production dispatch/reconcile code. The tracker.test.ts mostly tests TrackerError constructor and inline normalization, not LinearClient behavior. The watcher change-detection test has a soft conditional that lets it vacuously pass. The agent runner layer (codex-client.ts, runner.ts) has zero test coverage. Roughly 60 of 97 tests are meaningful; the remaining ~37 would survive arbitrary rewrites of the orchestrator and tracker production code."
+            },
+            {
+              "criterion": "architecture",
+              "samples": [
+                8,
+                8,
+                7
+              ],
+              "score": 8,
+              "justification": "The codebase maps all 6 spec §3.2 layers to dedicated directories/files (config, orchestrator, agent+workspace, tracker, logging) with correct downward dependency flow throughout — no lower layer ever imports from a higher one. Config/types.ts is the dependency-free foundation; logging is a leaf; tracker/workspace/agent all depend only on config and logging. The orchestrator correctly depends on all below it via injected interfaces or direct imports. One boundary impurity: agent/runner.ts imports TrackerClient from tracker/linear-client.ts (Execution → Integration coupling) rather than from an abstract interface defined in config/types.ts; the spec's §16.5 algorithm prescribes this behavior but a cleaner design would invert the dependency. This is the sole notable boundary issue in an otherwise well-layered implementation."
+            },
+            {
+              "criterion": "errorHandling",
+              "samples": [
+                8,
+                8,
+                7
+              ],
+              "score": 8,
+              "justification": "All spec-required typed error codes are defined and thrown (WorkflowError/TrackerError/AgentError with full code enumerations). Timeouts are enforced for every external call: 30 s AbortController for Linear GraphQL, read_timeout_ms for Codex init, turn_timeout_ms for turns, hooks.timeout_ms for shell hooks. The daemon loop is crash-safe via .catch() wrappers on tick and retry timers. Recovery semantics match the spec: tracker failures skip the tick, reconciliation failures keep workers alive, startup cleanup failures are non-fatal. Hook failure semantics (fatal after_create/before_run, best-effort after_run/before_remove) are correctly implemented. Deductions: currentConfig/currentWorkflow are uninitialized TypeScript let declarations that would return undefined masquerading as their declared type if getConfig() were called before a successful reload; template_parse_error typed code is defined but never thrown (all Liquid errors map to template_render_error); reconciliation state-refresh failure is logged at debug rather than warn level; no process.on('unhandledRejection') safety net. All 97 tests pass. Net: solid, well-structured error handling with minor spec deviations and one latent null-safety hazard."
+            },
+            {
+              "criterion": "deadCode",
+              "samples": [
+                5,
+                7,
+                7
+              ],
+              "score": 7,
+              "justification": "Three concrete dead-code items found: (1) `validateDispatchConfig` is imported but never called in `watcher.ts:3` — only used in orchestrator.ts which imports it directly; (2) the `LiveSession` interface in `types.ts:88-103` is defined but never referenced anywhere in the codebase — its spec-mandated fields were folded into `RunningEntry` instead; (3) `CodexSession.process: ChildProcess` (codex-client.ts:18) is exposed on the public interface but no caller ever accesses it. Additionally, `STATE_REFRESH_QUERY` selects the same 12 fields as `CANDIDATE_QUERY` (title, description, priority, branchName, createdAt, updatedAt, labels, relations) even though reconciliation only consumes id/state/labels, while `TERMINAL_ISSUES_QUERY` is correctly minimal. The codebase is otherwise clean: no commented-out code, no vestigial planning scaffolding in src/, both runtime dependencies are actively used, business logic is non-duplicated, and all 97 tests pass."
+            },
+            {
+              "criterion": "documentation",
+              "samples": [
+                3,
+                2,
+                2
+              ],
+              "score": 2,
+              "justification": "No README.md exists. The repo's WORKFLOW.md is a test fixture pointing to an absolute dev-machine path (stub-app-server.ts), not a user-facing contract document. The spec (§10.5, §15.1) explicitly REQUIRES documenting the implementation's approval/sandbox posture — the defaults of approval_policy='auto-edit', thread_sandbox='none', turn_sandbox_policy='none' appear only as bare strings in service-config.ts:147-149 with no explanation. Only 9 inline comment lines exist across all source files; non-obvious decisions (delta vs. absolute token accounting, 1s continuation retry, auto-failing user-input turns) are undocumented. setup.sh instructs use of npm/npx rather than the actual runtime. SPEC.md (identical to SPEC-REFERENCE.md), well-named types, and descriptive test names provide some implicit documentation, preventing a score of 0-1."
+            }
+          ],
+          "score": 60
+        },
+        "integration": null
+      }
+    },
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T13-44-56-687Z",
+        "trialId": "superpowers-t1",
+        "candidate": "superpowers",
+        "candidateVersion": "5.1.0",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T13:44:56.689Z",
+        "endedAt": "2026-06-10T13:58:01.763Z",
+        "status": "completed",
+        "cappedBy": null,
+        "notes": []
+      },
+      "telemetry": {
+        "sessions": [
+          {
+            "sessionId": "ce674c12-7ef7-45c9-b866-bc1e91c624c1",
+            "stepIndex": 0,
+            "durationMs": 779627,
+            "numTurns": 51,
+            "costUsd": 3.9881977500000003,
+            "usage": {
+              "inputTokens": 52,
+              "outputTokens": 49788,
+              "cacheReadTokens": 4321988,
+              "cacheCreationTokens": 93159
+            },
+            "isError": false
+          }
+        ],
+        "agentDurationMs": 779627,
+        "setupDurationMs": 2552,
+        "totalCostUsd": 3.9881977500000003,
+        "totalTokens": {
+          "inputTokens": 52,
+          "outputTokens": 49788,
+          "cacheReadTokens": 4321988,
+          "cacheCreationTokens": 93159
+        },
+        "totalTurns": 51
+      },
+      "grades": {
+        "trialId": "superpowers-t1",
+        "adherence": {
+          "gradedScore": 84.21,
+          "passAt1": false,
+          "completeFailure": false,
+          "stepResults": [
+            {
+              "stepId": "S-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "cd /tmp && cp -r workspace /tmp/symphony-test && bash setup.sh: exit 0; npm install succeeded, tsc compiled all modules to dist/; node_modules/js-yaml present"
+            },
+            {
+              "stepId": "S-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "cd /tmp/symphony-test && bash start.sh /tmp/symphony-test/WORKFLOW.md 2>&1: emitted INFO Symphony starting, INFO Workflow loaded, INFO Startup cleanup completed, INFO Symphony is running; process stayed alive >10s"
+            },
+            {
+              "stepId": "W-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Explicit path: node dist/main.js /tmp/relocated-wf/WORKFLOW.md -> workflow_path=/tmp/relocated-wf/WORKFLOW.md. No-arg with cwd: cd /tmp/symphony-test && node dist/main.js -> workflow_path=/tmp/symphony-test/WORKFLOW.md. Missing both: cd /tmp && node dist/main.js -> ERROR Failed to resolve workflow path: Default workflow file not found + exit 1"
+            },
+            {
+              "stepId": "W-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Invalid YAML: exit 1, ERROR Startup failed: Invalid YAML front matter: YAMLException. Non-map (array) front matter: exit 1, ERROR Startup failed: Front matter must be a YAML map"
+            },
+            {
+              "stepId": "W-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Defaults observed: poll_interval_ms=30000 (no config), max_concurrent_agents=10, workspace_root=/tmp/symphony_workspaces. $TEST_VAR=my-resolved-key in api_key: auth header my-resolved-key seen in mock requests. ~ expansion: ~/symphony_ws_test -> workspace_root=/home/ubuntu/symphony_ws_test"
+            },
+            {
+              "stepId": "W-4",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Changed poll interval 5000->2000 while running: INFO Workflow reloaded successfully, new poll_interval_ms=2000. Invalid YAML written to watched file: ERROR Workflow reload failed, keeping last good config, service continued with prior config"
+            },
+            {
+              "stepId": "P-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Stub log shows turns/create with prompt 'Work on issue TEST-42: Fix the login bug (attempt=)' and 'attempt=1' for retries. Unknown var {{unknown_var}} in template: ERROR Worker failed: Unknown variable in template: undefined variable: unknown_var - dispatch fails with clear error (liquidjs strictVariables)"
+            },
+            {
+              "stepId": "O-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Concurrency=1 verified: stubs dispatched sequentially (TEST-B starts, exits, then next dispatched). Dispatch order: priority-1/oldest(TEST-B 08:00) first, then priority-1/newer(TEST-C 10:00), then priority-2(TEST-A) - correct. Blocker check FAIL: seeded TEST-BLOCKED with blockedBy=[blocker-001] (In Progress), but service dispatched it anyway. Root cause: mock inverseRelations nodes omit state field for blocking issues, so blocker.state=null in normalizeIssue, and shouldDispatch skips the check when blocker.state is null - blocked issue dispatched incorrectly"
+            },
+            {
+              "stepId": "T-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Candidate fetch with active_states filter confirmed in mock requests. Pagination: after cursor used (after=2 observed). Startup terminal cleanup: 'Startup cleanup completed, checked 1 terminal issues'. Labels normalized to lowercase (code confirmed). STATE REFRESH requests are made (STATE REFRESH ids: ['t1-001'] etc. in mock log), but response parsing is broken: implementation uses data.nodes but mock returns data.issues.nodes for nodes(ids) query - fetchIssueStatesByIds throws LinearError silently at debug level"
+            },
+            {
+              "stepId": "R-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Normal exit->continuation: stub normal mode -> 'Worker completed normally, scheduling continuation' -> dispatched at attempt=1 after 1s delay. PASS. Crash exit: STUB_MODE=crash stub crashes (crashing events in stub log), but orchestrator logs 'Worker completed normally' for all crash attempts. Root cause: startThread ignores turn success=false (doesn't propagate crash as exception), so onWorkerExit('normal') is called instead of onWorkerExit('abnormal'). Exponential backoff NOT observed for crashes."
+            },
+            {
+              "stepId": "R-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "With STUB_MODE=stall + read_timeout_ms=3000 + max_retry_backoff_ms=15000: Attempt 1: delay=10000ms (10s*2^0), Attempt 2: delay=15000ms (capped), Attempt 3: delay=15000ms (capped). Cap respected."
+            },
+            {
+              "stepId": "R-3",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "Set R3-1 to Human Review (non-active) and R3-2 to Done (terminal) via /control/set-state. After next tick (4s), workspaces still present. Debug log shows: 'State refresh failed, keeping workers: LinearError: Unexpected response payload'. Root cause: fetchIssueStatesByIds expects data.nodes but mock returns data.issues.nodes for the nodes(ids) query. Reconciliation silently fails, workers not stopped."
+            },
+            {
+              "stepId": "WS-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Identifier TEST/../../escape sanitized to TEST_.._.._escape (/ replaced with _). Path /tmp/sym-ws-ws1/TEST_.._.._escape inside root /tmp/sym-ws-ws1 - no escape. Workspace reused on retry: after_create hook fires only once (.created_marker present once after multiple dispatches)."
+            },
+            {
+              "stepId": "WS-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "after_create: fires once on creation only. before_run: fires before each attempt. after_run: fires after each attempt, failure WARN-logged and ignored ('after_run hook failed (ignored)'). before_remove: fires during startup cleanup ('Running before_remove hook', workspace removed). before_run failure aborts attempt: 'exit 1' -> ERROR Worker failed, stub not called."
+            },
+            {
+              "stepId": "WS-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "before_run: sleep 10 with timeout_ms=2000. Hook killed at ~2s: ERROR Worker failed: spawnSync /bin/bash ETIMEDOUT. Correct behavior: before_run timeout aborts the attempt (not ignored)."
+            },
+            {
+              "stepId": "WS-4",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Pre-created /tmp/sym-ws-ws4/TERM-ISSUE-1 for a Done issue. Service startup: 'Running before_remove hook', 'Workspace removed workspace=...TERM-ISSUE-1', 'Startup cleanup completed, checked 1 terminal issues'. Workspace gone after startup."
+            },
+            {
+              "stepId": "A-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Stub log shows: started in cwd=/tmp/sym-ws-a1/A1-TEST, received initialize, threads/create, turns/create. Service launched with bash -lc command per spec. Stall mode: read_timeout_ms=3000 fires for threads/create, ERROR Worker failed: Timeout waiting for response to threads/create, retried with backoff. Session not hung."
+            },
+            {
+              "stepId": "A-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "With codex.command unset: service dispatches, tries 'codex app-server' (bash -lc), waits for response; no crash, graceful stall. With codex.command set to stub binary: stub launched and protocol works (confirmed across all A-1 tests)."
+            },
+            {
+              "stepId": "L-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Log lines contain issue_id=l1-001, issue_identifier=L1-TEST, session_id=thread-1781101179901-turn-... for dispatching and session events. All three fields present for run-scoped events."
+            },
+            {
+              "stepId": "L-2",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Validation failures logged at ERROR (tracker.api_key required). Dispatch/retry/stop decisions logged at INFO/WARN. Token/usage telemetry: stub sends {type:'usage', usage:{input_tokens:1200,...}} but implementation checks params.usage/result.usage - top-level usage field not captured. Token totals remain 0 throughout (confirmed via /api/v1/state snapshot)."
+            },
+            {
+              "stepId": "B-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "--port 9877: HTTP server listening on 127.0.0.1:9877. GET /: HTML dashboard with auto-refresh. GET /api/v1/state: {counts:{running:1,retrying:0}, running:[...]}. POST /api/v1/refresh: {queued:true}. GET /api/v1/B1-A: {status:running, issue_id:b1-001}. GET /api/v1/NONEXISTENT: HTTP 404. Safe bind host 127.0.0.1."
+            },
+            {
+              "stepId": "B-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Snapshot via /api/v1/state shows: counts:{running:0,retrying:1}, codex_totals:{seconds_running:3}, retrying:[{id:B2-A,attempt:1,due_at:...}]. Snapshot driven from orchestrator state."
+            }
+          ]
+        },
+        "quality": {
+          "judgeModel": "claude-sonnet-4-6 (claude-code driver)",
+          "criteria": [
+            {
+              "criterion": "tests",
+              "samples": [
+                4,
+                0,
+                4
+              ],
+              "score": 4,
+              "justification": "91/100 tests pass across 6/8 suites. Peripheral modules (config, workspace-manager, workflow-loader, prompt) are tested well with real assertions against actual source functions. However, the two most critical daemon components are severely deficient: orchestrator.test.ts has 26 tests that import only type definitions and reimplement all logic inline — the Orchestrator class is never instantiated or called, so these tests are trivially green and would pass with a broken or deleted orchestrator.ts; linear-client.test.ts (17 tests) fails entirely to compile due to globalThis.fetch mock incompatibility with bun-types' preconnect requirement. One codex-client test also fails with a real timeout bug. The spec's core behaviors — concurrent dispatch, retry backoff policy, reconciliation with live tracker data — have zero executable test coverage against the actual implementation."
+            },
+            {
+              "criterion": "architecture",
+              "samples": [
+                6,
+                7,
+                6
+              ],
+              "score": 6,
+              "justification": "All six spec layers (Policy, Configuration, Coordination, Execution, Integration, Observability) have corresponding source modules (workflow-loader.ts, config.ts, orchestrator.ts, workspace-manager.ts+codex-client.ts, linear-client.ts, logger.ts). The dependency DAG is acyclic with correct direction: no lower-layer module imports from the orchestrator or from peer layers (verified by grepping every import statement). However, the critical Coordination/Execution boundary (§3.2 layers 3 and 4) is not clean: the spec calls for a separate Agent Runner component (§3.1.6, §10.7) but the implementation embeds all execution-layer logic — workspace creation via createWorkspace(), hook invocation via runHook(), codex session lifecycle (startSession/startThread/startTurn/stopSession), and per-turn tracker reads via linearClient.fetchIssueStatesByIds() — directly inside the 836-line Orchestrator.runWorker() method. The optional HTTP observability server (§13.7) is also implemented in main.ts rather than the Observability layer, mixing bootstrap and observability concerns. The module-level structure maps well to the spec's layers, but the execution/coordination boundary is structurally absent."
+            },
+            {
+              "criterion": "errorHandling",
+              "samples": [
+                0,
+                0,
+                7
+              ],
+              "score": 0,
+              "justification": "judge score JSON malformed"
+            },
+            {
+              "criterion": "deadCode",
+              "samples": [
+                4,
+                4,
+                5
+              ],
+              "score": 4,
+              "justification": "tsc --noUnusedLocals confirms three unused symbols: logger in linear-client.ts:2, RetryEntry in orchestrator.ts:5, WorkflowError in orchestrator.ts:7. The executeGraphQL method (linear-client.ts:327–364, 38 lines) is never called from any source or test file (grep returns only its definition) and internally duplicates the AbortController+fetch+header+timeout pattern already present in the module-level graphqlRequest function. Three exported types—LiveSession, RunAttempt, RunStatus—are defined in types.ts but never imported anywhere; they are vestigial scaffolding superseded by RunningEntry. The isFirst parameter in CodexClient.startTurn (codex-client.ts:117) is declared but never referenced in the body. SPEC.md and SPEC-REFERENCE.md are byte-for-byte identical (diff exit 0, 2185 lines each). Total dead/vestigial code is ~75 lines out of 2373 source lines, with one method that is both dead and a direct DRY violation."
+            },
+            {
+              "criterion": "documentation",
+              "samples": [
+                2,
+                2,
+                2
+              ],
+              "score": 2,
+              "justification": "No README.md exists at the project root — zero setup, installation, or usage documentation for a 2,373-line daemon service. No WORKFLOW.md example is provided to demonstrate the central configuration contract. Spec §10.5 and §15.1 explicitly REQUIRE documenting the implementation's approval/sandbox posture and trust boundary; these are silently defaulted to `auto-edit`/`none`/`none` in config.ts:132-134 with no documentation. Across all 10 source files, exactly one meaningful inline comment exists (codex-client.ts:322). Non-obvious design decisions — the `lastGoodConfig` fallback on bad reload (orchestrator.ts:29), the `10000 * 2^(attempt-1)` backoff formula (orchestrator.ts:541), the 1000ms continuation retry delay, and the token delta-tracking logic — are undocumented. The only documentation artifacts are minimal shell scripts: `setup.sh` (installs and builds) and `start.sh` (one comment explaining the default workflow path)."
+            }
+          ],
+          "score": 32
+        },
+        "integration": null
+      }
+    },
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T13-44-56-687Z",
+        "trialId": "compound-engineering-t1",
+        "candidate": "compound-engineering",
+        "candidateVersion": "3.12.0",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "/ce-setup",
+            "newSession": false
+          },
+          {
+            "prompt": "/ce-plan Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          },
+          {
+            "prompt": "/ce-work",
+            "newSession": false
+          },
+          {
+            "prompt": "/ce-code-review",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T13:58:01.836Z",
+        "endedAt": "2026-06-10T13:58:01.879Z",
+        "status": "infra-failed",
+        "cappedBy": null,
+        "notes": [
+          "DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.\nTo increase concurrency limits, upgrade your organization's Tier by visiting https://app.daytona.io/dashboard/limits."
+        ]
+      },
+      "telemetry": null,
+      "grades": null
+    },
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T13-44-56-687Z",
+        "trialId": "agent-skills-t1",
+        "candidate": "agent-skills",
+        "candidateVersion": "5e262b20e0cd",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "/spec Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          },
+          {
+            "prompt": "/plan",
+            "newSession": false
+          },
+          {
+            "prompt": "/build",
+            "newSession": false
+          },
+          {
+            "prompt": "/test",
+            "newSession": false
+          },
+          {
+            "prompt": "/review",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T13:58:01.880Z",
+        "endedAt": "2026-06-10T13:58:01.914Z",
+        "status": "infra-failed",
+        "cappedBy": null,
+        "notes": [
+          "DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.\nTo increase concurrency limits, upgrade your organization's Tier by visiting https://app.daytona.io/dashboard/limits."
+        ]
+      },
+      "telemetry": null,
+      "grades": null
+    },
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T15-23-14-710Z",
+        "trialId": "compound-engineering-t1",
+        "candidate": "compound-engineering",
+        "candidateVersion": "3.12.0",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "/ce-setup",
+            "newSession": false
+          },
+          {
+            "prompt": "/ce-plan Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          },
+          {
+            "prompt": "/ce-work",
+            "newSession": false
+          },
+          {
+            "prompt": "/ce-code-review",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T15:23:14.713Z",
+        "endedAt": "2026-06-10T15:59:27.832Z",
+        "status": "completed",
+        "cappedBy": null,
+        "notes": []
+      },
+      "telemetry": {
+        "sessions": [
+          {
+            "sessionId": "ea5fb013-9b73-475f-9810-a1a02d03e1eb",
+            "stepIndex": 0,
+            "durationMs": 64696,
+            "numTurns": 8,
+            "costUsd": 0.3259775,
+            "usage": {
+              "inputTokens": 8,
+              "outputTokens": 1638,
+              "cacheReadTokens": 180150,
+              "cacheCreationTokens": 31186
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "ea5fb013-9b73-475f-9810-a1a02d03e1eb",
+            "stepIndex": 1,
+            "durationMs": 72224,
+            "numTurns": 4,
+            "costUsd": 0.41779525,
+            "usage": {
+              "inputTokens": 3,
+              "outputTokens": 2944,
+              "cacheReadTokens": 82998,
+              "cacheCreationTokens": 48429
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "ea5fb013-9b73-475f-9810-a1a02d03e1eb",
+            "stepIndex": 2,
+            "durationMs": 1205829,
+            "numTurns": 92,
+            "costUsd": 6.144948500000002,
+            "usage": {
+              "inputTokens": 60,
+              "outputTokens": 66170,
+              "cacheReadTokens": 6033317,
+              "cacheCreationTokens": 197848
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "ea5fb013-9b73-475f-9810-a1a02d03e1eb",
+            "stepIndex": 3,
+            "durationMs": 347881,
+            "numTurns": 24,
+            "costUsd": 11.049967099999995,
+            "usage": {
+              "inputTokens": 24,
+              "outputTokens": 15253,
+              "cacheReadTokens": 3158055,
+              "cacheCreationTokens": 26902
+            },
+            "isError": false
+          }
+        ],
+        "agentDurationMs": 1690630,
+        "setupDurationMs": 5800,
+        "totalCostUsd": 17.938688349999996,
+        "totalTokens": {
+          "inputTokens": 95,
+          "outputTokens": 86005,
+          "cacheReadTokens": 9454520,
+          "cacheCreationTokens": 304365
+        },
+        "totalTurns": 128
+      },
+      "grades": {
+        "trialId": "compound-engineering-t1",
+        "adherence": {
+          "gradedScore": 75.79,
+          "passAt1": false,
+          "completeFailure": false,
+          "stepResults": [
+            {
+              "stepId": "S-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Ran ./setup.sh from workspace directory. Exit code 0. Output: npm install (up to date, 62 packages), tsc build succeeded. node v22.22.3 present. dist/ populated with all .js files."
+            },
+            {
+              "stepId": "S-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Created WORKFLOW.md with front matter pointing tracker.endpoint=http://localhost:4308/graphql, api_key=test-api-key-123, codex.command=/tmp/stub-wrapper.sh. Ran: timeout 15 node dist/index.js WORKFLOW.md. Process emitted: Watching workflow file, Startup terminal cleanup complete count=0, Symphony started, Config reapplied poll_interval_ms=5000. Ran stably for 15s before timeout kill (exit 124). Service stays up >10s and emits startup logging."
+            },
+            {
+              "stepId": "W-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Three scenarios tested: (1) node dist/index.js /tmp/w1test/relocated.md → service used path=/tmp/w1test/relocated.md, startup ok. (2) node dist/index.js from workspace dir with WORKFLOW.md present → used workspace/WORKFLOW.md. (3) cd /tmp && node dist/index.js with no WORKFLOW.md → error log Workflow file not found path=/tmp/WORKFLOW.md, exit 1 (nonzero)."
+            },
+            {
+              "stepId": "W-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Three scenarios tested: (1) Valid YAML+body: node -e parseWorkflow returned {config:{tracker:{kind:linear,api_key:testkey,project_slug:testproj}},prompt_template:This is the prompt body...}. (2) Invalid YAML (unclosed bracket): threw SymphonyError code=workflow_parse_error, message=Invalid YAML in front matter: unexpected end of stream. (3) Non-map (array) front matter: threw error code=workflow_front_matter_not_a_map message=must be a map/object got array. Live run test: invalid YAML written while running -> log error msg=Invalid workflow reload keeping last good config, service stayed alive and continued."
+            },
+            {
+              "stepId": "W-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Defaults verified via buildConfig: hooks.timeout_ms=60000, codex.command=codex app-server, polling.interval_ms=30000, agent.max_turns=20, agent.max_concurrent_agents=10. $VAR resolution: set TEST_VAR=resolved-api-key-xyz, WORKFLOW.md with api_key: $TEST_VAR, ran service, curl http://localhost:4308/control/requests showed authHeader: resolved-api-key-xyz. Tilde expansion: workspace.root ~/symphony_test -> /home/ubuntu/symphony_test."
+            },
+            {
+              "stepId": "W-4",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "No issues seeded to avoid EPIPE bug. Started service with poll_interval_ms=8000. At 3s: changed to 12000 via sed. Observed: Workflow file changed reloading, Workflow reloaded successfully, Config reapplied poll_interval_ms=12000. Next poll tick confirmed 12000. Then wrote invalid YAML (unclosed bracket). Observed: Workflow file changed reloading, Invalid workflow reload keeping last good config error logged. Service stayed alive (YES_ALIVE). Poll continued at 12000 interval."
+            },
+            {
+              "stepId": "P-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Template rendering tested: (1) node -e renderPrompt with {{issue.identifier}} and {{attempt}} -> RENDERED: Working on TEST-123 - Fix the bug (attempt=2). (2) Unknown variable {{unknown_var}} -> ERROR code:template_render_error msg:Prompt rendering failed: undefined variable: unknown_var line:1 col:45. (3) Live dispatch: seeded issue P1-1, ran service, stub received turn/start with prompt=Rendered prompt for issue P1-1: Prompt Test Issue - attempt= (null attempt renders empty on first run, correct per spec). Stub log at /tmp/stub-p1-test.log confirms rendered prompt delivered."
+            },
+            {
+              "stepId": "O-1",
+              "outcome": "partial",
+              "credit": 0.4,
+              "evidence": "Concurrency: With max_concurrent_agents=1, sequential dispatch observed (O1-C then O1-A, never two simultaneously). Priority ordering: O1-C priority=0 dispatched before O1-A priority=1, correct sort. FAIL - Blocked issue skipping: Mock returns inverseRelations but linear-client queries relations field; node.relations is undefined in response so blocked_by is always []; blocked issues are dispatched despite having non-terminal blockers. Verified: curl mock GraphQL shows inverseRelations node but client CANDIDATE_QUERY uses relations. Additionally: service crashes with unhandled EPIPE error from stopSession on stdin write after subprocess exits, preventing extended concurrency observation."
+            },
+            {
+              "stepId": "T-1",
+              "outcome": "partial",
+              "credit": 0.6,
+              "evidence": "Candidate fetch: fetchCandidateIssues with active_states=[Todo,In Progress] returned only Todo and InProgress issues, filtered correctly. Label normalization: IMPORTANT->important, WORK->work, FEATURE->feature confirmed. Pagination: 3 seeded issues across 2 mock pages (2-per-page) returned all 3. Startup terminal cleanup: Startup terminal cleanup complete count=1 - terminal Done issue found and workspace removal attempted. Auth header: authHeader: test-key-for-t1 confirmed in mock requests. FAIL - State refresh: fetchIssueStatesByIds queries nodes(ids:[...]) root field, mock returns data.issues not data.nodes; TypeError: nodes is not iterable (confirmed by direct test). Reconciliation silently swallows error and keeps workers running."
+            },
+            {
+              "stepId": "R-1",
+              "outcome": "partial",
+              "credit": 0.4,
+              "evidence": "Crash exit (stub exit(3) on turn/start): Worker failed Turn did not complete successfully -> Retry scheduled attempt=1 delay_ms=10000, confirming 10s-base exponential backoff for crash. Code: delay = min(10000 * 2^(nextAttempt-1), max_retry_backoff_ms). FAIL - Normal exit continuation retry (delay 1000ms, attempt increments): Never triggered - stub normal exit causes turn to fail (Codex process exited unexpectedly) because client does not recognize task_completed as turn_completed; both crash and normal stub exit take the error path with 10s backoff instead of 1s continuation retry. Service also crashes from unhandled EPIPE on stopSession, preventing observation of subsequent retry firings."
+            },
+            {
+              "stepId": "R-2",
+              "outcome": "partial",
+              "credit": 0.6,
+              "evidence": "Code inspection: All retry scheduling paths use Math.min(10000 * Math.pow(2, attempt-1), config.agent.max_retry_backoff_ms). Formula verified: attempt1->10000, attempt2->min(20000,15000)=15000, attempt3->min(40000,15000)=15000 (capped). Config: max_retry_backoff_ms read from agent.max_retry_backoff_ms in buildConfig. CANNOT VERIFY via live test: EPIPE crash kills service after first retry scheduling (at 10000ms), preventing observation of second attempt which would show the 15000ms cap. Credit given for correct formula implementation."
+            },
+            {
+              "stepId": "R-3",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "R-3 FAIL. Tested with hang stub (stays alive during turn). Flipped issue r3-1 to Canceled (terminal) after 5s of running. Expected: worker stopped, workspace cleaned. Observed: worker continued running for 8+ more seconds after state flip, workspace R3-1 still present. Root cause: reconcileRunningIssues calls fetchIssueStatesByIds which uses nodes(ids:[...]) GraphQL query; mock returns data.issues.nodes but client reads data.nodes; TypeError: nodes is not iterable is caught by debug-level logger.debug and swallowed silently. State change reconciliation never succeeds. Also tested non-active flip (In Review): same failure - worker not stopped, workspace retained for wrong reason (bug)."
+            },
+            {
+              "stepId": "WS-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "computeWorkspacePath tested: (1) ABC-123 -> /tmp/ws/ABC-123 (deterministic). (2) Space in identifier -> AB_C (sanitized via [^A-Za-z0-9._-] -> _). (3) ../escape -> .._escape (slash sanitized) -> path /tmp/ws/.._escape IS inside root (no escape). (4) .. identifier -> sanitized to .., path.resolve(/tmp/ws,..)=/tmp is OUTSIDE root -> BLOCKED: Workspace path /tmp is outside workspace root /tmp/ws. (5) createForIssue reuse on retry: first call created_now=true, second call created_now=false, same path returned. Both root containment check and sanitization work correctly."
+            },
+            {
+              "stepId": "WS-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "All four hooks tested: (1) after_create: fires only on first creation (created_now=true path), confirmed marker echo. Second createForIssue call created_now=false, no second after_create. (2) before_run: fires before each attempt; failure (exit 1) aborts attempt and still triggers afterRunBestEffort (after_run fires). Confirmed: marker shows after_create, before_run, after_run in order. (3) after_run: fires in finally block - confirmed marker after_run_fired even when EPIPE crash follows. (4) before_remove: fires via removeWorkspace - confirmed marker before_remove_fired when workspace removed. before_remove failure logged as warning and cleanup continues (from source code)."
+            },
+            {
+              "stepId": "WS-3",
+              "outcome": "partial",
+              "credit": 0.6,
+              "evidence": "Hook timeout tested via runHook API and live tests. Correct behavior: (1) Simple command sleep 3 with timeout_ms=1000: timed out at 1006ms, ok=false, error=Hook before_run timed out after 1000ms. (2) before_run timeout aborts the attempt: Worker failed with before_run hook failed: Hook timed out after 2000ms, Retry scheduled. PARTIAL FAIL: Compound command sleep 5 && echo with timeout_ms=1000: timeout detected at 1000ms (SIGTERM sent, timedOut=true) but close event fires at 5008ms (sleep subprocess inherits bash stdout/stderr pipes, keeps them open). Termination delayed but result is still ok=false with correct error message. After_run timeout semantics (ignore) verified in source code but EPIPE crash prevents live after_run timeout observation."
+            },
+            {
+              "stepId": "WS-4",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Startup sweep: Pre-created /tmp/ws4_sweep/DONE-1 with testfile.txt for Done issue ws4-done-1. Started service -> logs: Workspace removed workspace=/tmp/ws4_sweep/DONE-1, Startup terminal cleanup complete count=1. After startup: ls /tmp/ws4_sweep/ shows only ACTIVE-1 (DONE-1 removed). FAIL - Terminal transition during active run: Same as R-3 finding - fetchIssueStatesByIds uses nodes(ids) query but mock returns data.issues; TypeError silently caught; reconciliation never fires; workspace not cleaned on state transition to terminal."
+            },
+            {
+              "stepId": "A-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "JSON-line protocol verified via stub log: (1) stub received initialize id=1, thread/create id=2, turn/start id=timestamp all in cwd=/tmp/a1_ws/A1-1 (correct workspace dir). (2) turn/start prompt contains rendered issue text (A1 protocol test: A1-1 - Protocol test). (3) Stall timeout: stall_timeout_ms=5000 -> Session stalled terminating elapsed_ms=6011, Retry scheduled. FAIL - Turn completion detection: stub sends {type:agent_event,event:task_completed} but client only matches turn_completed/turn/completed/turn_complete; stub normal exit always treated as error. FAIL - EPIPE bug: stopSession writes to stdin of exited process; Node.js emits unhandled error event; service crashes on most stub exits (normal + crash mode)."
+            },
+            {
+              "stepId": "A-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "buildConfig confirms default codex.command = codex app-server. With codex not in PATH: dispatch -> bash -lc codex app-server -> bash exits with command not found -> readResponseWithTimeout receives rl close event -> null returned -> throws response_timeout -> Worker failed: Codex app-server did not respond to initialize. With custom codex.command=/tmp/stub-wrapper.sh: stub-a1.log shows stub started, received initialize, thread/create, turn/start in workspace cwd. Both default exec-failure and custom stub launch confirmed."
+            },
+            {
+              "stepId": "L-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Fresh run with issue l1-1/L1-1: Worker starting issue_id=l1-1 issue_identifier=L1-1, Dispatched issue issue_id=l1-1 issue_identifier=L1-1, Workspace ready issue_id=l1-1 issue_identifier=L1-1, Codex session started issue_id=l1-1 issue_identifier=L1-1 thread_id=thread-141823, Starting turn issue_id=l1-1 issue_identifier=L1-1, Worker failed issue_id=l1-1 issue_identifier=L1-1 session_id=thread-141823-turn-1781108824991. All three fields present in run-scoped log lines."
+            },
+            {
+              "stepId": "L-2",
+              "outcome": "partial",
+              "credit": 0.6,
+              "evidence": "Operator-visible observability: (1) Validation failures visible: Dispatch validation failed errors logged at error level with field-specific messages. Config reload failures logged at error level (Invalid workflow reload keeping last good config). Retry scheduling logged at info level with delay_ms and attempt. Dispatch decisions logged as Dispatched issue. (2) Snapshot: getSnapshot() returns counts={running,retrying}, codex_totals={input_tokens,output_tokens,total_tokens,seconds_running}, rate_limits. Snapshot accumulates totals correctly (direct test with manual state mutation). PARTIAL FAIL - Token telemetry from stub: stub sends {type:usage, usage:{input_tokens:1200,...}} but handleCodexEvent only accumulates if event kind matches tokenUsage/updated or token_usage_updated; type=usage does not match; stub usage events are NOT accumulated in codex_totals."
+            },
+            {
+              "stepId": "B-1",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "No HTTP server implemented. dist/index.js has no port, server, or listen references. No --port CLI flag in arg parsing. No Bun.serve, http.createServer, express, or any HTTP server code found in codebase. OPTIONAL feature not shipped."
+            },
+            {
+              "stepId": "B-2",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "No HTTP status surface implemented. getSnapshot() method exists on Orchestrator and returns snapshot data, but it is not exposed via any HTTP endpoint (B-1 not implemented). OPTIONAL feature not shipped."
+            }
+          ]
+        },
+        "quality": {
+          "judgeModel": "claude-sonnet-4-6 (claude-code driver)",
+          "criteria": [
+            {
+              "criterion": "tests",
+              "samples": [
+                8,
+                7,
+                7
+              ],
+              "score": 7,
+              "justification": "All 125 tests pass across 11 test files covering every spec section (17.1–17.7). Assertions are mostly precise: error codes checked via SymphonyError.code, retry backoff math verified numerically, sort order asserted by exact id array, pagination cursor checked, real filesystem used for workspace/hooks tests, real process spawning in CLI tests. Deductions: one trivially-green 'launch contract' test only reads config back rather than verifying bash -lc invocation; the watcher change-detection test has a conditional `if (changeCount > 0)` guard making it unable to catch a broken watcher; a `before_remove` hook test sets but never asserts `hookRan`; turn timeout enforcement, slot-exhaustion retry requeue, and retry-timer-fires-and-dispatches paths are untested. The test suite is solid and regression-catching for the core dispatch/reconciliation/retry state machine but has a few structural gaps in the codex client and dynamic-reload verifiability."
+            },
+            {
+              "criterion": "architecture",
+              "samples": [
+                7,
+                8,
+                7
+              ],
+              "score": 7,
+              "justification": "All six §3.2 layers (Policy: workflow-loader+prompt; Configuration: config+watcher; Coordination: orchestrator; Execution: worker+workspace+hooks+codex-client; Integration: linear-client; Observability: logger) are present and identifiable in the file structure. Dependency directions are correct in five of six: logger is a leaf, linear-client depends only on types+logger, orchestrator correctly aggregates all lower layers, watcher bridges policy→config cleanly, workspace/hooks/codex-client have no upward deps. One sideways violation: worker.ts:7 imports fetchIssueStatesByIds from linear-client.ts directly, coupling Execution to Integration and meaning a tracker swap requires editing worker.ts. This coupling is sanctioned by §16.5's reference algorithm, which shows the worker calling tracker.fetch_issue_states_by_ids within its turn loop, but it still weakens the boundary. No HTTP observability surface (§13.7) is present; the spec marks it OPTIONAL so this does not count as a violation. Overall: excellent layer presence and mostly clean boundaries, with one spec-sanctioned cross-layer coupling as the main structural weakness."
+            },
+            {
+              "criterion": "errorHandling",
+              "samples": [
+                8,
+                8,
+                8
+              ],
+              "score": 8,
+              "justification": "Implementation is comprehensively typed: SymphonyError with all spec-required error codes (missing_workflow_file, workflow_parse_error, linear_api_request, linear_graphql_errors, linear_missing_end_cursor, turn_input_required, etc.) used throughout. All external calls have timeouts — Linear API uses a 30s AbortController, codex startup uses read_timeout_ms, turns use turn_timeout_ms, stall detection is active. The daemon loop is crash-safe with an outer try/catch in tick(). Hook failure semantics match the spec (after_create/before_run fatal; after_run/before_remove logged-and-ignored). Invalid workflow reloads keep last good config. Two notable gaps: (1) setTimeout(() => this.onRetryTimer(issueId)) at orchestrator.ts:346 is a floating async promise with no .catch() — any unexpected throw inside onRetryTimer after its inner try/catch becomes an unhandled rejection that can crash the daemon on Node.js ≥15; (2) reconciliation state-refresh failure is logged at logger.debug (orchestrator.ts:437) rather than warn/error, making it invisible in production and violating the spec's operator-visibility requirement (§13.2). The exitPromise in runTurn (codex-client.ts:197) is also a floating promise but is benign. Overall very solid, minor but real daemon-safety and observability gaps prevent a 9+."
+            },
+            {
+              "criterion": "deadCode",
+              "samples": [
+                5,
+                6,
+                7
+              ],
+              "score": 6,
+              "justification": "Three exported types (RunAttempt, WorkerResult, WorkerExitReason in types.ts:98–181) are defined but never imported anywhere in src/ or tests/. The isContinuation parameter in runTurn (codex-client.ts:164) is declared but never referenced in the function body. The exitPromise variable (codex-client.ts:197) is created but never awaited or used—only the side-effect closure matters. The relatedIssue field in the LinearNode interface (linear-client.ts:22) is typed and fetched in the GraphQL query but normalizeIssue only reads rel.issue, leaving relatedIssue dead. The completed Set is write-only—appended to after normal worker exit but never read in getSnapshot() or anywhere else. The two pagination loops in fetchCandidateIssues and fetchIssuesByStates are duplicated rather than extracted. Against this, all three runtime dependencies are used, TypeScript compiles cleanly with strict mode, there are no dead files, and the overall structure is lean—the issues are concentrated in types.ts and codex-client.ts rather than pervasive."
+            },
+            {
+              "criterion": "documentation",
+              "samples": [
+                2,
+                3,
+                2
+              ],
+              "score": 2,
+              "justification": "No README.md exists — the most critical operator-facing document is entirely absent. The spec requires (MUST, §10.5) that implementations document their approval/sandbox posture and user-input-required handling policy; neither is documented anywhere, despite the code hardcoding a permissive high-trust posture (approval_policy='auto-edit', thread_sandbox='none', turn_sandbox_policy='none'). The SHOULD requirement in §15.1 for trust-boundary documentation is also unmet. In 2,391 lines of TypeScript source, there are zero explanatory //comments and zero JSDoc blocks; non-obvious decisions (token delta tracking, stderrBuf cap, approval auto-resolve logic) are unexplained. Positives are marginal: package.json has a one-line description, setup.sh/start.sh provide minimal setup guidance, and --help works. The spec itself (SPEC.md) is included but that is the language-agnostic reference spec, not implementation documentation."
+            }
+          ],
+          "score": 60
+        },
+        "integration": null
+      }
+    },
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T15-23-14-710Z",
+        "trialId": "agent-skills-t1",
+        "candidate": "agent-skills",
+        "candidateVersion": "5e262b20e0cd",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "/spec Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          },
+          {
+            "prompt": "/plan",
+            "newSession": false
+          },
+          {
+            "prompt": "/build",
+            "newSession": false
+          },
+          {
+            "prompt": "/test",
+            "newSession": false
+          },
+          {
+            "prompt": "/review",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T15:59:27.883Z",
+        "endedAt": "2026-06-10T15:59:27.929Z",
+        "status": "infra-failed",
+        "cappedBy": null,
+        "notes": [
+          "DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.\nTo increase concurrency limits, upgrade your organization's Tier by visiting https://app.daytona.io/dashboard/limits."
+        ]
+      },
+      "telemetry": null,
+      "grades": null
+    },
+    {
+      "provenance": {
+        "runId": "run-2026-06-10T18-44-38-671Z",
+        "trialId": "agent-skills-t1",
+        "candidate": "agent-skills",
+        "candidateVersion": "5e262b20e0cd",
+        "harness": "claude-code",
+        "harnessVersion": "2.1.170",
+        "model": "claude-opus-4-6",
+        "provider": "daytona",
+        "snapshotId": "harness-eval-base:v2",
+        "prdSha256": "fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452",
+        "testPlanSha256": "996e3e1763b8e9db12a91b2bec26268c7f92223935d293354a84e86721fa8766",
+        "sessionScript": [
+          {
+            "prompt": "/agent-skills:spec Build the service defined in SPEC.md (in this workspace root) so that it\nmeets every REQUIRED item in section 18.1 \"REQUIRED for Conformance\".\nTreat SPEC.md as the complete product requirements document.\n\nCompletion criteria:\n- The implementation builds and its own test suite passes.\n- Section 17's test matrix is your guide for what must be verifiable.\n- Section 18.2/18.3 items are optional; do not prioritize them over 18.1.\n\nDeliverables (evaluated cold in a fresh environment with no state from\nthis session):\n- `setup.sh` — installs all dependencies for your implementation.\n- `start.sh` — launches the service against a WORKFLOW.md in the\n  workspace root, honoring the environment variables SPEC.md defines.\n\nYou may use any tooling, commands, or workflow available in this\nenvironment. Choose the implementation language and structure yourself\nunless SPEC.md constrains it. When you consider the work complete, stop.\n",
+            "newSession": false
+          },
+          {
+            "prompt": "/agent-skills:plan",
+            "newSession": false
+          },
+          {
+            "prompt": "/agent-skills:build",
+            "newSession": false
+          },
+          {
+            "prompt": "/agent-skills:test",
+            "newSession": false
+          },
+          {
+            "prompt": "/agent-skills:review",
+            "newSession": false
+          }
+        ],
+        "startedAt": "2026-06-10T18:44:38.673Z",
+        "endedAt": "2026-06-10T19:21:01.774Z",
+        "status": "completed",
+        "cappedBy": null,
+        "notes": [
+          "step 3: continuation 1 ('proceed')"
+        ]
+      },
+      "telemetry": {
+        "sessions": [
+          {
+            "sessionId": "f52f888e-f8f5-431c-8963-0c45437c678b",
+            "stepIndex": 0,
+            "durationMs": 767309,
+            "numTurns": 56,
+            "costUsd": 4.0367565,
+            "usage": {
+              "inputTokens": 50,
+              "outputTokens": 52327,
+              "cacheReadTokens": 4007138,
+              "cacheCreationTokens": 115962
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "f52f888e-f8f5-431c-8963-0c45437c678b",
+            "stepIndex": 1,
+            "durationMs": 427348,
+            "numTurns": 20,
+            "costUsd": 2.7405445500000005,
+            "usage": {
+              "inputTokens": 23,
+              "outputTokens": 6485,
+              "cacheReadTokens": 2364056,
+              "cacheCreationTokens": 26724
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "f52f888e-f8f5-431c-8963-0c45437c678b",
+            "stepIndex": 2,
+            "durationMs": 445164,
+            "numTurns": 60,
+            "costUsd": 4.670574,
+            "usage": {
+              "inputTokens": 55,
+              "outputTokens": 15812,
+              "cacheReadTokens": 7466301,
+              "cacheCreationTokens": 53127
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "f52f888e-f8f5-431c-8963-0c45437c678b",
+            "stepIndex": 3,
+            "durationMs": 9290,
+            "numTurns": 1,
+            "costUsd": 0.21443800000000002,
+            "usage": {
+              "inputTokens": 2,
+              "outputTokens": 361,
+              "cacheReadTokens": 17831,
+              "cacheCreationTokens": 31438
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "f52f888e-f8f5-431c-8963-0c45437c678b",
+            "stepIndex": 4,
+            "durationMs": 374679,
+            "numTurns": 33,
+            "costUsd": 2.1270936000000003,
+            "usage": {
+              "inputTokens": 34,
+              "outputTokens": 16468,
+              "cacheReadTokens": 2489504,
+              "cacheCreationTokens": 52569
+            },
+            "isError": false
+          },
+          {
+            "sessionId": "f52f888e-f8f5-431c-8963-0c45437c678b",
+            "stepIndex": 5,
+            "durationMs": 13135,
+            "numTurns": 1,
+            "costUsd": 2.2996833000000003,
+            "usage": {
+              "inputTokens": 3,
+              "outputTokens": 642,
+              "cacheReadTokens": 119981,
+              "cacheCreationTokens": 3955
+            },
+            "isError": false
+          }
+        ],
+        "agentDurationMs": 2036925,
+        "setupDurationMs": 3036,
+        "totalCostUsd": 16.08908995,
+        "totalTokens": {
+          "inputTokens": 167,
+          "outputTokens": 92095,
+          "cacheReadTokens": 16464811,
+          "cacheCreationTokens": 283775
+        },
+        "totalTurns": 171
+      },
+      "grades": {
+        "trialId": "agent-skills-t1",
+        "adherence": {
+          "gradedScore": 85.26,
+          "passAt1": false,
+          "completeFailure": false,
+          "stepResults": [
+            {
+              "stepId": "S-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Ran ./setup.sh in workspace dir. Exit code 0. npm install succeeded, tsc compiled dist/. node dist/cli.js --help shows usage."
+            },
+            {
+              "stepId": "S-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "start.sh launched node dist/cli.js with valid WORKFLOW.md. Process stayed up >10s (PID 149077, killed after 12s with SIGTERM). Startup logs: Symphony starting, Startup terminal cleanup complete count=0, Symphony started entering poll loop."
+            },
+            {
+              "stepId": "W-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(a) Explicit path /tmp/relocated-WORKFLOW.md: log shows workflow=/tmp/relocated-WORKFLOW.md, started OK. (b) No arg from workspace dir: used cwd WORKFLOW.md at correct path, started OK. (c) No arg from /tmp/empty-dir: ERROR Default workflow file not found, exit code 1."
+            },
+            {
+              "stepId": "W-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(a) Valid WORKFLOW.md with front matter+body loads fine (tested in S-2/W-1). (b) Invalid YAML ({bad yaml: [unclosed): logged ERROR Invalid YAML front matter: ..., exit 1. (c) Non-map YAML (array): logged ERROR YAML front matter must be a map/object, exit 1."
+            },
+            {
+              "stepId": "W-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(1) Default workspace.root: /tmp/symphony_workspaces when workspace.root omitted. (2) $VAR resolution: api_key=$TEST_VAR with TEST_VAR=my-resolved-api-key → mock tracker sees authHeader:my-resolved-api-key. (3) ~ expansion: workspace.root: ~/symphony-test-tilde → /home/ubuntu/symphony-test-tilde. (4) Default terminal_states include Closed/Cancelled/Canceled/Duplicate/Done (confirmed in FetchTerminal query). (5) Source shows hooks.timeout_ms defaults to 60000, codex.command defaults to codex app-server."
+            },
+            {
+              "stepId": "W-4",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(1) Valid edit: service detected change within 200ms debounce and logged Workflow config reloaded and applied + Workflow reloaded successfully. (2) Invalid reload (bad YAML): process stayed alive, logged ERROR Failed to reload workflow keeping last good config, did not crash-loop."
+            },
+            {
+              "stepId": "P-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Stub received turn/start with prompt=Working on TEST-42: Fix the login bug (attempt=) - {{issue.identifier}} rendered to TEST-42, {{issue.title}} to Fix the login bug, {{attempt}} to empty string (null first attempt). Unknown variable {{unknown_variable}} produced error: undefined variable: unknown_variable, line:1, col:36 - dispatch failed with clear error, no silent rendering."
+            },
+            {
+              "stepId": "O-1",
+              "outcome": "partial",
+              "credit": 0.7,
+              "evidence": "Concurrency=1 respected: with 3 issues and 1 slot, dispatched sequentially (TEST-1 at 19:26:00, TEST-2 at 19:26:03, TEST-3 at 19:26:06 - no overlap in stubs). Priority ordering correct: P1(TEST-2) before P2(TEST-3) before P3(TEST-1). Blocker skipping: code exists (checks blocked_by[].state against terminal states) but mock inverseRelations does not return state for blocker issues, so state=null → issue not skipped → blocker behavior not verifiable via observed behavior."
+            },
+            {
+              "stepId": "T-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(1) FetchTerminal at startup with correct stateNames=[Done, Cancelled]. (2) FetchCandidates filtered by active states=[Todo, In Progress]. (3) State refresh (FetchIssueStates with ids=[i1]) fired on next poll tick while agent in running map. (4) Labels normalized to lowercase: issue with labels=[Bug,FEAT] dispatched when required_labels=[bug], non-labeled issue skipped. (5) Pagination preserved: FetchCandidates sent after=None, then after=2 cursor for 3-issue seed (mock pages at 2)."
+            },
+            {
+              "stepId": "R-1",
+              "outcome": "partial",
+              "credit": 0.5,
+              "evidence": "Crash mode (STUB_MODE=crash): stub exits(3) mid-turn, service logs Worker exited abnormally, schedules attempt=1 delay_ms=10000, then attempt=2 delay_ms=20000 - exponential backoff at 10s base confirmed. Continuation retry: normal stub (STUB_MODE=normal) exits after completing one turn. Service tries to start turn 2, gets port_exit Codex process closed, and treats exit as abnormal (delay_ms=10000 exponential), not as a continuation (1s delay). Root cause: stub sends {id,result:{status:completed}} for turn completion, service expects method=turn/completed event; mismatch means normal exit never recognized as success → continuation retry path (1s delay attempt=1) never fires."
+            },
+            {
+              "stepId": "R-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "max_retry_backoff_ms=15000 set. attempt=1 → delay_ms=10000 (10s base, under cap). attempt=2 → delay_ms=15000 (capped; formula would give 20000). attempt=3 → delay_ms=15000 (capped; formula would give 40000). Cap observed at 15000ms as configured."
+            },
+            {
+              "stepId": "R-3",
+              "outcome": "partial",
+              "credit": 0.3,
+              "evidence": "State refresh queries do fire (mock shows {ids:[i1,i2]} queries at 19:36:42, 19:36:45, 19:36:48). State flip sent at 19:36:44. Reconciliation code exists (terminateRunningIssue aborts worker + removes workspace for terminal). BUT: reconciliation does not terminate agents because STATE_REFRESH_QUERY expects response at data.nodes (real Linear nodes() query), while mock returns data.issues.nodes. So refreshed=[] always, no termination logic runs. Implementation code is correct for real API; mock/impl mismatch prevents observable R-3 behavior."
+            },
+            {
+              "stepId": "WS-1",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(1) ../escape identifier sanitized to .._escape (/ replaced with _), workspace created at /tmp/ws1-workspaces/.._escape - inside root, not above it. (2) Existing workspace reused on retry: first dispatch created_now=true, second dispatch (retry) created_now=false for same TEST-1 workspace. Root containment check in computeWorkspacePath checks wsPath.startsWith(normalizedRoot+sep)."
+            },
+            {
+              "stepId": "WS-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "(1) after_create fires only on first creation - one after_create in two-attempt test (second attempt created_now=false, no second after_create). (2) before_run fires before each attempt - twice for two crash attempts. (3) before_run failure (exit 1) → aborts attempt, logged ERROR before_run hook failed, retry scheduled. (4) after_run fires after each attempt. (5) after_run failure (exit 1) → WARN Hook after_run failed (ignored), run continued. (6) before_remove fires on startup cleanup: pre-created workspace DONE-1 for Done issue, service startup ran before_remove hook then removed workspace, Startup terminal cleanup complete count=1."
+            },
+            {
+              "stepId": "WS-3",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "hooks.timeout_ms=2000, before_run hook runs sleep 5. Dispatched at 19:41:52, before_run hook killed at 19:41:54 (exactly 2s). Error: spawnSync /bin/sh ETIMEDOUT (Node.js timeout kill). before_run failure aborted the attempt (Worker exited abnormally). Timing confirms hook killed at configured timeout, not at sleep duration (5s)."
+            },
+            {
+              "stepId": "WS-4",
+              "outcome": "partial",
+              "credit": 0.7,
+              "evidence": "Startup sweep confirmed: pre-created workspace TERMINAL-1 for Done issue → service startup ran before_remove hook, removed workspace, logged Workspace removed + Startup terminal cleanup complete count=1. Terminal transition during active run: not verifiable because state refresh response format mismatch (mock returns data.issues.nodes, implementation expects data.nodes) prevents reconciliation from detecting terminal state changes. The terminateRunningIssue(cleanupWorkspace=true) code path exists but cannot be exercised via mock."
+            },
+            {
+              "stepId": "A-1",
+              "outcome": "partial",
+              "credit": 0.7,
+              "evidence": "Stub launched via bash -lc in workspace cwd (/tmp/a1-workspaces/A1-TEST). Service sent well-formed JSON-RPC protocol: configure{approval_policy,sandbox_policy}, thread/start{cwd,sandbox}, turn/start{prompt,title} (all logged in stub). Stall (STUB_MODE=stall): stub stalls after session_started before thread/start response. read_timeout_ms=2000 fired after 2s, session killed (Codex session startup failed: Read timeout after 2000ms), retried (not hung). Limitation: stall_timeout_ms cannot be verified because stub stalls before session establishes - turn-level stall detection code exists (reconcileStalledRuns) but stub cant demonstrate post-session-start stall."
+            },
+            {
+              "stepId": "A-2",
+              "outcome": "pass",
+              "credit": 1,
+              "evidence": "Default codex.command=codex app-server (source: getString(codexObj, command, codex app-server)). With command unset, service attempts codex app-server via bash -lc, fails with Codex process closed (codex not in PATH on test system). With command set to stub binary (bun /path/stub-app-server.ts), stub is launched successfully - confirmed across all previous A-1/P-1/WS tests. Custom command completely overrides default."
+            },
+            {
+              "stepId": "L-1",
+              "outcome": "partial",
+              "credit": 0.6,
+              "evidence": "Structured logs (key=value format) include issue_id and issue_identifier consistently in run-scoped events: Dispatching issue, Workspace prepared, Codex session started, Worker exited abnormally, Retry scheduled all carry issue_id=... issue_identifier=.... session_id: tracked in memory (entry.session_id = thread_id-turn_id) and emitted in CodexEvent objects, but NOT included in any logger.info/warn/error log calls. thread_id is logged in Codex session started. session_id itself never appears in log lines."
+            },
+            {
+              "stepId": "L-2",
+              "outcome": "partial",
+              "credit": 0.7,
+              "evidence": "Validation failures: Startup validation failed error=tracker.project_slug is required, exit 1 - operator visible. Dispatch decisions logged: Dispatching issue, Retry scheduled with attempt/delay. Stop decisions: Terminating running issue logged when reconciliation aborts. Token telemetry: codex_totals tracked in memory with delta-based accounting, but stub usage events (type:usage, no method field) not processed by processMessage (expects method=tokenUsage or thread/tokenUsage/updated) so stub-driven tests show 0 tokens - cannot verify aggregation correctness."
+            },
+            {
+              "stepId": "B-1",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "No HTTP server implemented. src/ directory has no HTTP server files. cli.js does not parse --port argument. No Bun.serve, http.createServer, or express usage found in source or dist. getSnapshot() exists in orchestrator but is not exposed via any HTTP endpoint."
+            },
+            {
+              "stepId": "B-2",
+              "outcome": "fail",
+              "credit": 0,
+              "evidence": "No runtime snapshot/status surface via HTTP. getSnapshot() method exists in Orchestrator class returning running/retrying/token data, but no endpoint or CLI command exposes it. B-2 requires the optional HTTP extension from B-1 which is not implemented."
+            }
+          ]
+        },
+        "quality": {
+          "judgeModel": "claude-sonnet-4-6 (claude-code driver)",
+          "criteria": [
+            {
+              "criterion": "tests",
+              "samples": [
+                6,
+                6,
+                6
+              ],
+              "score": 6,
+              "justification": "157/157 tests pass. Component-level tests are genuinely strong: codex-client tests drive real subprocesses and verify protocol behaviors (approvals, timeouts, token extraction, unsupported tools); agent-runner tests execute actual runAgentAttempt with mock bash servers and confirm continuation turns, max_turns cap, hook lifecycle, and abort behavior; config, workspace-manager, and linear-client tests call real production functions with concrete filesystem/API assertions. However, the entire orchestrator.test.ts (583 lines, the largest file) imports zero functions from orchestrator.ts — all tests re-implement spec formulas inline (backoff math, slot subtraction, state-set membership) and use comments like '// terminateRunningIssue is called' in place of actual calls. The 763-line Orchestrator class — covering onTick, reconcileRunning, dispatchIssue, scheduleRetry, and onWorkerExit — has no function-level test coverage. A bug in any of those methods would not be detected by this suite. Score reduced from a potential 8 to 6 because the central coordinating component is the most complex piece of the system and its tests are entirely hollow."
+            },
+            {
+              "criterion": "architecture",
+              "samples": [
+                7,
+                0,
+                8
+              ],
+              "score": 7,
+              "justification": "All six §3.2 layers map cleanly to distinct files: config.ts+workflow-loader.ts (Configuration), orchestrator.ts (Coordination), agent-runner.ts+workspace-manager.ts+codex-client.ts (Execution), linear-client.ts (Integration), logger.ts (Observability). Grep confirms zero upward dependencies — no lower-layer file imports from orchestrator, agent-runner, or linear-client. TypeScript type-check passes clean. The IssueStateRefresher callback prevents agent-runner from directly coupling to linear-client. Two minor violations: (1) orchestrator.ts imports node:fs for the FSWatcher type rather than receiving an opaque cleanup handle from workflow-loader, leaking a filesystem type into the Coordination layer; (2) before_run hook logic is re-implemented inline in agent-runner.ts via execSync (lines 69–89) rather than using workspace-manager's exported runHook infrastructure, splitting hook execution responsibility across two Execution-layer files. These are real but minor compared to the overall correctness of the layered structure."
+            },
+            {
+              "criterion": "errorHandling",
+              "samples": [
+                8,
+                7,
+                7
+              ],
+              "score": 7,
+              "justification": "Error handling is structurally sound: typed error classes with spec-mandated codes exist across all layers (WorkflowError, TrackerError, CodexClientError, TemplateError); all external calls have timeouts (LinearClient: AbortController 30s, CodexClient: read_timeout_ms + turn_timeout_ms); the daemon tick loop is protected by an outer try/catch that unconditionally reschedules; hook semantics are correct (after_run/before_remove best-effort, after_create/before_run fatal); invalid workflow reloads keep last good config. Three weaknesses prevent a higher score: (1) both async timer callbacks `setTimeout(() => this.tick(), ...)` and `setTimeout(() => this.onRetryTimer(...), ...)` discard their Promises—no `.catch()` and no global `unhandledRejection` handler, a real daemon crash-safety gap on Node.js v15+; (2) reconciliation state-refresh failures log at `debug` level (orchestrator.ts:212), making them invisible to operators at default INFO level, violating observability requirements; (3) the executeGraphQL fallback fetch (linear-client.ts:407) has no timeout."
+            },
+            {
+              "criterion": "deadCode",
+              "samples": [
+                5,
+                5,
+                4
+              ],
+              "score": 5,
+              "justification": "Nine distinct issues found via grep and inspection: (1) `execFile` unused import in workspace-manager.ts:3; (2) `lastEventTime` variable assigned but never read in codex-client.ts:213/247; (3) dead if/else in logger.ts:37-40 (both branches identical); (4) `RunAttempt` and `LiveSession` types exported but unconsumed anywhere; (5) five unused exported public APIs (`executeGraphQL`, `getSnapshot`, `triggerRefresh`, `pid` getter, `setLogLevel`); (6) `tools?` parameter in `startSession` never passed by any caller; (7) verbatim duplicated config-reload block in `tick()` lines 148-155 repeating `onWorkflowChange()` lines 120-125; (8) required-labels check duplicated across three methods with slight normalization inconsistency; (9) `tasks/plan.md` and `tasks/todo.md` scaffolding committed to the tree. Runtime dependencies are lean and all used. The production logic modules are reasonably focused, but the accumulation of dead variables, unused exports, duplicated config-reload logic, and vestigial task files is substantial enough to materially affect maintainability."
+            },
+            {
+              "criterion": "documentation",
+              "samples": [
+                2,
+                2,
+                2
+              ],
+              "score": 2,
+              "justification": "No README exists — confirmed by `ls README*` returning nothing. The only markdown files at the root are SPEC.md/SPEC-REFERENCE.md (the language-agnostic spec, not implementation docs) and WORKFLOW.md (a test fixture with localhost endpoints). setup.sh uses `npm install && npx tsc` and start.sh uses `node dist/cli.js`, contradicting the project's own CLAUDE.md (bun), making both inaccurate for actual setup. Across 2,638 LOC in src/, `grep -rn '//' src/` returns exactly one hit — a URL string value, not a comment — so there are zero inline comments, no JSDoc, and no explanation of non-obvious decisions (1s continuation retry delay, token delta accounting, `AbortController` cancellation, high-trust sandbox defaults). SPEC-REFERENCE.md §10.5 explicitly REQUIRES documenting the approval/sandbox posture; the defaults (`auto-edit`, `none`, `none`) are buried in config.ts:196-198 with no operator-visible documentation. The WORKFLOW.md format contract is well-documented in the spec files, which earns the score above 0, but no operator can set up, configure, or understand the trust posture of this service from the available documentation."
+            }
+          ],
+          "score": 54
+        },
+        "integration": null
+      }
+    }
+  ],
+  "exclusions": [
+    {
+      "trialId": "compound-engineering-t1",
+      "status": "infra-failed",
+      "reason": "DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.\nTo increase concurrency limits, upgrade your organization's Tier by visiting https://app.daytona.io/dashboard/limits."
+    },
+    {
+      "trialId": "agent-skills-t1",
+      "status": "infra-failed",
+      "reason": "DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.\nTo increase concurrency limits, upgrade your organization's Tier by visiting https://app.daytona.io/dashboard/limits."
+    },
+    {
+      "trialId": "agent-skills-t1",
+      "status": "infra-failed",
+      "reason": "DaytonaValidationError: Total memory limit exceeded. Maximum allowed: 10GiB.\nTo increase concurrency limits, upgrade your organization's Tier by visiting https://app.daytona.io/dashboard/limits."
+    }
+  ],
+  "inconclusive": false
+}

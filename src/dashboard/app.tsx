@@ -60,8 +60,9 @@ function Th({ label }: { label: string }) {
 			{label}
 			{help && (
 				<span
-					title={help}
-					style={{ cursor: "help", marginLeft: 4, opacity: 0.7 }}
+					className="tip"
+					data-tip={help}
+					style={{ marginLeft: 4, opacity: 0.7 }}
 				>
 					ⓘ
 				</span>
@@ -548,7 +549,7 @@ function StepComparison({ trials }: { trials: TrialResult[] }) {
 					: "❌";
 		// Hover shows the recorded evidence — why credit was docked.
 		return (
-			<span title={s.evidence} style={{ cursor: "help" }}>
+			<span className="tip" data-tip={s.evidence}>
 				{icon}
 			</span>
 		);
@@ -573,12 +574,10 @@ function StepComparison({ trials }: { trials: TrialResult[] }) {
 				<tbody>
 					{stepIds.map((id) => (
 						<tr key={id}>
-							<td
-								className="mono"
-								title={stepInfo?.[id]}
-								style={{ cursor: "help" }}
-							>
-								{id}
+							<td className="mono">
+								<span className="tip" data-tip={stepInfo?.[id] ?? "…"}>
+									{id}
+								</span>
 							</td>
 							{graded.map((t) => (
 								<td key={t.provenance.trialId}>{cell(t, id)}</td>

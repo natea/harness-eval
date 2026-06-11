@@ -29,6 +29,19 @@
 			.weights input[type="range"] { flex: 1; min-width: 60px; width: auto; }
 			h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; } h3 { font-size: 14px; }
 			details summary { cursor: pointer; color: #8b949e; }
+			.tip { position: relative; cursor: help; }
+			.tip::after {
+				content: attr(data-tip);
+				position: absolute; left: 0; top: 100%; z-index: 10;
+				display: none; width: max-content; max-width: 380px;
+				background: #1c2128; color: #e6edf3; border: 1px solid #30363d;
+				border-radius: 6px; padding: 8px 10px; margin-top: 4px;
+				font: 12px/1.45 ui-sans-serif, system-ui; font-weight: 400;
+				text-transform: none; letter-spacing: normal;
+				white-space: pre-wrap; box-shadow: 0 4px 14px rgba(0,0,0,.5);
+			}
+			.tip:hover::after { display: block; }
+			th .tip::after, td .tip::after { text-align: left; }
 		</style>
 	</head>
 	<body>

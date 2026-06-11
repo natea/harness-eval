@@ -60,6 +60,23 @@ for each.
 - VM memory is committed up-front (less elastic than Docker cgroup limits):
   watch `memoryGb × concurrency` against host RAM; preflight warns at >80%.
 
+## Useful commands
+
+```sh
+# List running trial VMs (each gets its own IP via NAT)
+container list
+# ID                 IMAGE                                           OS     ARCH   STATE    ADDR           CPUS  MEMORY
+# he-superpowers-t1  docker.io/library/harness-eval-trial:2.1.170-1  linux  arm64  running  192.168.64.13  2     4096 MB
+
+container list --all              # include stopped VMs
+container image list              # loaded images
+container logs he-superpowers-t1  # VM console logs
+container exec -it he-superpowers-t1 bash   # shell into a running trial VM
+container stats                   # live CPU/memory per VM
+container delete -f he-<trial-id> # force-remove one trial VM
+container system status           # daemon health
+```
+
 ## Teardown / cleanup
 
 ```sh

@@ -48,6 +48,14 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		and ranked on a weighted composite.
 	</p>
 
+	<h2>The contenders</h2>
+	<div class="grid">
+		<div class="card"><h3><a href="https://blog.fsck.com/2026/05/04/superpowers-5.1/">Superpowers</a></h3><p>Jesse Vincent's composable skills library — brainstorm → plan → TDD subagents, auto-triggered from a plain prompt. <a href="https://github.com/obra/superpowers">GitHub</a></p></div>
+		<div class="card"><h3><a href="https://every.to/guides/compound-engineering">Compound Engineering</a></h3><p>Every's AI-native methodology (Kieran Klaassen) — each unit of work should make the next easier; /ce-plan → /ce-work → /ce-review. <a href="https://github.com/EveryInc/compound-engineering-plugin">GitHub</a></p></div>
+		<div class="card"><h3><a href="https://addyosmani.com/blog/agent-skills/">Agent Skills</a></h3><p>Addy Osmani's SDLC skill pack on the Agent Skills standard — /spec → /plan → /build → /test → /review with verification checkpoints. <a href="https://github.com/addyosmani/agent-skills">GitHub</a></p></div>
+		<div class="card"><h3><a href="https://opengsd.net/">GSD</a></h3><p>"Get Shit Done" — spec-driven context engineering: durable plans in .planning/, fresh contexts per phase, verification with evidence. <a href="https://github.com/open-gsd/gsd-core">GitHub</a></p></div>
+	</div>
+
 	<h2>Architecture</h2>
 	<p class="pipeline">Designed in Excalidraw (<a href="https://github.com/natea/harness-eval/blob/main/docs/architecture.excalidraw.json">editable scene</a>); one pipeline, every variable held fixed except the framework under test.</p>
 	<img src="./assets/architecture.svg" alt="harness-eval architecture: registry, targets and run config feed the orchestrator; trials run on pluggable sandbox providers from a shared image; headless Claude Code builds are archived then graded by an evaluator agent and a blind judge; results feed scorecards and the dashboard" style="width:100%; border:1px solid #21262d; border-radius:10px; margin-top:10px" />

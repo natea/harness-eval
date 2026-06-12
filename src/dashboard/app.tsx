@@ -62,7 +62,7 @@ function Th({ label }: { label: string }) {
 				<span
 					className="tip"
 					data-tip={help}
-					style={{ marginLeft: 4, opacity: 0.7 }}
+					style={{ marginLeft: 4, color: "#8b949e" }}
 				>
 					ⓘ
 				</span>

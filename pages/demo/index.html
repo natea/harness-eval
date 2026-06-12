@@ -66,7 +66,7 @@ const norm = () => {
 const composite = (d, w) =>
 	Math.round((d.prdAdherence * w.prdAdherence + d.codeQuality * w.codeQuality + d.speed * w.speed + d.tokenSpend * w.tokenSpend) * 100) / 100;
 const bar = (v) => `<span class="bar" style="width:${Math.max(1, v) * 0.6}px"></span> <span class="mono">${v.toFixed(1)}</span>`;
-const th = (l) => `<th>${l}${HELP[l] ? ` <span class="tip" data-tip="${HELP[l].replace(/"/g, "&quot;")}" style="opacity:.7">ⓘ</span>` : ""}</th>`;
+const th = (l) => `<th>${l}${HELP[l] ? ` <span class="tip" data-tip="${HELP[l].replace(/"/g, "&quot;")}" style="color:#8b949e">ⓘ</span>` : ""}</th>`;
 
 function renderSliders() {
 	// Built ONCE — re-rendering inputs mid-drag detaches the element being

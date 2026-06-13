@@ -15,6 +15,23 @@ export const FixtureDef = z.object({
 });
 export type FixtureDef = z.infer<typeof FixtureDef>;
 
+/**
+ * Upstream attribution for a target adapted from a third-party source
+ * (eval-targets spec: "Upstream attribution for adapted targets"). When a
+ * manifest declares `source`, every field is required so attribution can't be
+ * dropped silently — e.g. ViBench PRDs are Apache-2.0 and must carry provenance
+ * plus the `targets/NOTICE` text.
+ */
+export const SourceProvenance = z.object({
+	upstream: z.string().min(1),
+	repo: z.string().url(),
+	commit: z.string().min(7),
+	originalDir: z.string().min(1),
+	license: z.string().min(1),
+	note: z.string().optional(),
+});
+export type SourceProvenance = z.infer<typeof SourceProvenance>;
+
 export const TargetManifest = z.object({
 	name: z.string().regex(/^[a-z0-9-]+$/),
 	version: z.string(),
@@ -25,6 +42,8 @@ export const TargetManifest = z.object({
 	coverageMode: z.enum(["spec-checklist", "attested"]),
 	/** Required when coverageMode is `attested` (eval-targets spec). */
 	attestation: z.string().optional(),
+	/** Required for targets adapted from a third-party source. */
+	source: SourceProvenance.optional(),
 	coldStartContract: z.array(z.string()).min(1),
 	deliverableNotes: z.string().default(""),
 	fixtures: z.array(FixtureDef).default([]),
@@ -75,6 +94,15 @@ export function loadTarget(name: string, targetsDir = "targets"): LoadedTarget {
 	if (manifest.coverageMode === "attested" && !manifest.attestation?.trim()) {
 		throw new TargetError(
 			`target '${name}' uses attested coverage but has no attestation — add a human coverage sign-off to target.yaml`,
+		);
+	}
+
+	// Adapted targets must preserve the upstream notice (eval-targets spec:
+	// "preserve required upstream notices"). The manifest's required `source`
+	// fields are enforced by the schema; here we ensure the NOTICE file exists.
+	if (manifest.source && !existsSync(join(targetsDir, "NOTICE"))) {
+		throw new TargetError(
+			`target '${name}' declares upstream source '${manifest.source.upstream}' but ${join(targetsDir, "NOTICE")} is missing — add the upstream attribution/NOTICE text`,
 		);
 	}
 

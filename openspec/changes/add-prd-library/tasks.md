@@ -6,18 +6,19 @@
 - [x] 1.2 Migrate Symphony content-identical into `targets/symphony-daemon/` (PRD, test plan, mock Linear, stub app-server); update CLI/grading paths; assert hashes unchanged
 - [x] 1.3 Parameterize the base prompt template with target slots (PRD file, conformance pointer, deliverables); default `--target symphony-daemon`
 - [x] 1.4 Generalize fixture lifecycle: grading runner starts/stops manifest-declared fixture processes per trial
+- [x] 1.5 Add optional `source` provenance block to the manifest schema (upstream, repo URL, commit SHA, original dir, license); `validate --target` requires complete fields when `source.upstream` is present; add `targets/NOTICE` carrying ViBench's Apache-2.0 copyright/NOTICE text
 
 ## 2. CLI
 
-- [ ] 2.1 `target init <name> --spec <file>` scaffolding (manifest + test-plan skeleton; optional LLM-assisted draft step documented as requiring human review)
-- [x] 2.2 `target validate <name>`; wire into run preflight
+- [ ] 2.1 `init --target <name> --spec <file>` scaffolding (manifest + test-plan skeleton; optional LLM-assisted draft step documented as requiring human review)
+- [x] 2.2 `validate --target <name>`; wire into run preflight
 - [x] 2.3 Record target name/version/hashes in provenance, results.json, and scorecards; reporting refuses cross-target aggregation
 
 ## 3. Library Targets
 
 - [x] 3.1 Author `cli-tool` target (PRD, weighted test plan with fatal gates, exit-code/stdout fixtures); smoke trial
-- [ ] 3.2 Author `rest-api` target (PRD, test plan, HTTP-check fixtures); smoke trial
-- [ ] 3.3 Author `web-app` target (PRD, test plan, HTTP/DOM-light fixtures — REPL evaluator, no browser dependency in v1); smoke trial
+- [ ] 3.2 Adapt `rest-api` target from a ViBench service-shaped PRD (e.g. `logistics`/`hvac`): port `prd/*.txt` → `PRD.md`, upstream `tests/*` → `testplan.yaml`, build HTTP-check fixtures; record `source` provenance; smoke trial
+- [ ] 3.3 Adapt `web-app` target from a ViBench app PRD (e.g. `barber`/`quiz`/`notes`): port PRD + test plan, HTTP/DOM-light fixtures (REPL evaluator, no browser dependency in v1); record `source` provenance; smoke trial
 - [x] 3.4 Per-target budget defaults in run config
 
 ## 4. Validation and Docs

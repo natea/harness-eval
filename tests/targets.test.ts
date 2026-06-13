@@ -42,6 +42,40 @@ describe("eval targets (add-prd-library)", () => {
 		expect(() => loadTarget("nope")).toThrow(/available/);
 	});
 
+	test("adapted target missing a source field fails validation (spec scenario, task 1.5)", () => {
+		const root = join(tmp, "prov-missing-field");
+		mkdirSync(join(root, "adapted"), { recursive: true });
+		writeFileSync(join(root, "NOTICE"), "x\n");
+		writeFileSync(join(root, "adapted", "PRD.md"), "# p\n");
+		const sha = new Bun.CryptoHasher("sha256").update("# p\n").digest("hex");
+		writeFileSync(
+			join(root, "adapted", "tp.yaml"),
+			`version: "1"\nprdSha256: ${sha}\nsteps:\n  - id: A\n    covers: ["1"]\n    description: d\n    check: c\n`,
+		);
+		// `source` declared with `upstream` but missing commit/originalDir/license.
+		writeFileSync(
+			join(root, "adapted", "target.yaml"),
+			`name: adapted\nversion: "1"\nprdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\nsource:\n  upstream: vibench-public\n  repo: https://github.com/ViBench/vibench-public\n`,
+		);
+		expect(() => loadTarget("adapted", root)).toThrow(/source/);
+	});
+
+	test("adapted target with full source but no NOTICE fails (preserve notices, task 1.5)", () => {
+		const root = join(tmp, "prov-no-notice");
+		mkdirSync(join(root, "adapted"), { recursive: true });
+		writeFileSync(join(root, "adapted", "PRD.md"), "# p\n");
+		const sha = new Bun.CryptoHasher("sha256").update("# p\n").digest("hex");
+		writeFileSync(
+			join(root, "adapted", "tp.yaml"),
+			`version: "1"\nprdSha256: ${sha}\nsteps:\n  - id: A\n    covers: ["1"]\n    description: d\n    check: c\n`,
+		);
+		writeFileSync(
+			join(root, "adapted", "target.yaml"),
+			`name: adapted\nversion: "1"\nprdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\nsource:\n  upstream: vibench-public\n  repo: https://github.com/ViBench/vibench-public\n  commit: abc1234\n  originalDir: prds/barber\n  license: Apache-2.0\n`,
+		);
+		expect(() => loadTarget("adapted", root)).toThrow(/NOTICE/);
+	});
+
 	test("prompt rendering fills all slots identically for any candidate", () => {
 		const t = loadTarget("symphony-daemon");
 		const out = renderTargetPrompt(

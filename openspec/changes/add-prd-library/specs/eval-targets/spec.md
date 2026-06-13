@@ -9,15 +9,22 @@ An eval target SHALL be a self-contained directory under `targets/<name>/` conta
 - **WHEN** a target is loaded for a run
 - **THEN** the manifest validates against the schema, the PRD's recorded hash matches the file, and a mismatch fails the run before any trial is dispatched
 
+### Requirement: Upstream attribution for adapted targets
+A target adapted from a third-party source SHALL record provenance in its manifest under a `source` block declaring at least the upstream name, repository URL, commit SHA, original directory, and license identifier. The harness SHALL preserve required upstream notices (e.g. a `targets/NOTICE` file for Apache-2.0 sources). When `source.upstream` is present, target validation SHALL require all `source` fields to be complete.
+
+#### Scenario: Adapted target missing provenance fails validation
+- **WHEN** a target declares a `source.upstream` but omits a required provenance field (repo, commit, original directory, or license)
+- **THEN** target validation fails and the run does not start
+
 ### Requirement: Shipped target library
-The harness SHALL ship targets covering distinct software shapes, at minimum: `symphony-daemon` (the existing Symphony spec, test plan, and fixtures migrated content-identical), `web-app`, `cli-tool`, and `rest-api`, each with a spec-derived weighted test plan and fixtures sufficient for evidence-based evaluation.
+The harness SHALL ship targets covering distinct software shapes, at minimum: `symphony-daemon` (the existing Symphony spec, test plan, and fixtures migrated content-identical), `web-app`, `cli-tool`, and `rest-api`, each with a spec-derived weighted test plan and fixtures sufficient for evidence-based evaluation. Targets adapted from the ViBench catalog (Apache-2.0) SHALL carry upstream attribution per the attribution requirement.
 
 #### Scenario: Symphony migration preserves comparability
 - **WHEN** the `symphony-daemon` target is selected after migration
 - **THEN** its PRD and test-plan content hashes equal the pre-migration hashes, so prior run results remain comparable
 
 ### Requirement: Custom targets
-The CLI SHALL scaffold a new target from a user-provided spec document (`target init <name> --spec <file>`) and SHALL validate any target (`target validate <name>`) for schema, hash freshness, weight sanity, and coverage-mode obligations. Custom targets SHALL be subject to the same freeze and provenance rules as shipped targets.
+The CLI SHALL scaffold a new target from a user-provided spec document (`init --target <name> --spec <file>`) and SHALL validate any target (`validate --target <name>`) for schema, hash freshness, weight sanity, and coverage-mode obligations. Custom targets SHALL be subject to the same freeze and provenance rules as shipped targets.
 
 #### Scenario: Bring-your-own PRD
 - **WHEN** a user scaffolds a target from their own spec, authors its test plan, and the target passes validation

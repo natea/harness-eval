@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
@@ -137,6 +137,101 @@ function loadGenericTestPlan(path: string, expectedPrdSha256: string) {
 		);
 	}
 	return { plan, sha256 };
+}
+
+export interface ScaffoldResult {
+	dir: string;
+	prdSha256: string;
+	files: string[];
+}
+
+/**
+ * Scaffold a new target from a user-provided spec document (eval-targets spec:
+ * `init --target <name> --spec <file>`). Writes PRD.md (copied from the spec),
+ * a one-step testplan.yaml skeleton bound to the PRD hash, and a target.yaml
+ * manifest with placeholders. The result does NOT pass `validate --target`
+ * until a human fills the skeleton in — that gate is intentional (an
+ * LLM-assisted draft is allowed, but human review is required before a target
+ * is run-eligible).
+ */
+export function scaffoldTarget(
+	name: string,
+	specPath: string,
+	targetsDir = "targets",
+): ScaffoldResult {
+	if (!/^[a-z0-9-]+$/.test(name)) {
+		throw new TargetError(
+			`invalid target name '${name}' — use lowercase letters, digits, and hyphens`,
+		);
+	}
+	if (!existsSync(specPath)) {
+		throw new TargetError(`spec file not found: ${specPath}`);
+	}
+	const dir = resolve(targetsDir, name);
+	if (existsSync(join(dir, "target.yaml"))) {
+		throw new TargetError(
+			`target '${name}' already exists at ${dir} — choose another name or edit it directly`,
+		);
+	}
+	mkdirSync(dir, { recursive: true });
+
+	const prdContent = readFileSync(specPath, "utf8");
+	const prdSha256 = createHash("sha256").update(prdContent).digest("hex");
+	const files: string[] = [];
+
+	const prdPath = join(dir, "PRD.md");
+	writeFileSync(prdPath, prdContent);
+	files.push(prdPath);
+
+	const testplanPath = join(dir, "testplan.yaml");
+	writeFileSync(
+		testplanPath,
+		`# Frozen test plan for the '${name}' target. SKELETON — author real steps,
+# then re-freeze. ViBench semantics: sequential, weighted, fatal gates halt.
+# Checks must be observable behavior (commands + expected output/exit/log),
+# never code reading. An LLM may draft; a human MUST review (the attestation).
+version: "0.1.0"
+prdSha256: ${prdSha256}
+
+steps:
+  - id: S-1
+    covers: ["TODO"]
+    description: TODO — replace with a real, observable cold-start gate
+    check: TODO — e.g. ./setup.sh exits 0 and the run/start script exists
+    weight: 1
+    fatal: true
+`,
+	);
+	files.push(testplanPath);
+
+	const manifestPath = join(dir, "target.yaml");
+	writeFileSync(
+		manifestPath,
+		`name: ${name}
+version: "0.1.0"
+prdFile: PRD.md
+prdSha256: ${prdSha256}
+testplanFile: testplan.yaml
+conformanceSection: 'TODO — name the PRD section your prompt will cite'
+coverageMode: attested
+# attestation is intentionally absent — \`validate --target\` fails until you add
+# a dated human coverage sign-off here (which PRD requirements map to which
+# steps). This is the human-review gate; an LLM may draft, a human must sign.
+# attestation: >
+#   Coverage reviewed <date>: <requirement> -> <step ids>, all checks observable.
+coldStartContract:
+  - "\`setup.sh\` — installs all dependencies for your implementation."
+  - "\`run.sh ARGS...\` — TODO: describe how the evaluator invokes the build."
+deliverableNotes: >
+  TODO — optional guidance the prompt appends (what is in scope / out of scope).
+fixtures: []
+# Adapted from a third-party spec? Add a 'source:' block (upstream, repo,
+# commit, originalDir, license) and ensure ${join(targetsDir, "NOTICE")} exists.
+`,
+	);
+	files.push(manifestPath);
+
+	return { dir, prdSha256, files };
 }
 
 /** Render the registry's base-prompt template with this target's slots. */

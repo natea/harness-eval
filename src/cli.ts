@@ -2,8 +2,12 @@
 /**
  * harness-eval CLI.
  *
- *   bun run src/cli.ts validate
+ *   bun run src/cli.ts validate [--target <name>]
  *       Validate registry + test plan + PRD hash + fixture manifest.
+ *
+ *   bun run src/cli.ts init --target <name> --spec <file>
+ *       Scaffold a new target (PRD.md + skeleton testplan.yaml + target.yaml)
+ *       from a spec document. Fill the TODOs + human review before validate.
  *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
  *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] [--grade]
@@ -31,6 +35,7 @@ import { buildResults, writeResults } from "./report/results";
 import {
 	loadTarget,
 	renderTargetPrompt,
+	scaffoldTarget,
 	startFixtures,
 	stopFixtures,
 } from "./targets";
@@ -183,6 +188,24 @@ async function cmdRun(): Promise<void> {
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
 }
 
+async function cmdInit(): Promise<void> {
+	const name = arg("target");
+	const spec = arg("spec");
+	if (!name || !spec) {
+		throw new Error(
+			"usage: init --target <name> --spec <file>   scaffold a target from a spec doc",
+		);
+	}
+	const { dir, prdSha256, files } = scaffoldTarget(name, spec);
+	console.log(`scaffolded target '${name}' at ${dir}`);
+	console.log(`  PRD sha256: ${prdSha256.slice(0, 12)}…`);
+	for (const f of files) console.log(`  + ${f}`);
+	console.log(
+		"\nnext: fill the TODOs in target.yaml + testplan.yaml (human review required),",
+	);
+	console.log(`then: bun run src/cli.ts validate --target ${name}`);
+}
+
 async function cmdReport(): Promise<void> {
 	const runDir = process.argv[3];
 	if (!runDir || !existsSync(runDir))
@@ -229,13 +252,14 @@ async function cmdReport(): Promise<void> {
 const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
 	validate: cmdValidate,
+	init: cmdInit,
 	run: cmdRun,
 	report: cmdReport,
 };
 const handler = commands[cmd ?? ""];
 if (!handler) {
 	console.error(
-		"usage: cli.ts <validate|run|report> [options]   (see file header)",
+		"usage: cli.ts <validate|init|run|report> [options]   (see file header)",
 	);
 	process.exit(2);
 }

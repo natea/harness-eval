@@ -10,19 +10,19 @@
 
 ## 2. CLI
 
-- [ ] 2.1 `init --target <name> --spec <file>` scaffolding (manifest + test-plan skeleton; optional LLM-assisted draft step documented as requiring human review)
+- [x] 2.1 `init --target <name> --spec <file>` scaffolding (manifest + test-plan skeleton; optional LLM-assisted draft step documented as requiring human review)
 - [x] 2.2 `validate --target <name>`; wire into run preflight
 - [x] 2.3 Record target name/version/hashes in provenance, results.json, and scorecards; reporting refuses cross-target aggregation
 
 ## 3. Library Targets
 
 - [x] 3.1 Author `cli-tool` target (PRD, weighted test plan with fatal gates, exit-code/stdout fixtures); smoke trial
-- [ ] 3.2 Adapt `rest-api` target from a ViBench service-shaped PRD (e.g. `logistics`/`hvac`): port `prd/*.txt` → `PRD.md`, upstream `tests/*` → `testplan.yaml`, build HTTP-check fixtures; record `source` provenance; smoke trial
-- [ ] 3.3 Adapt `web-app` target from a ViBench app PRD (e.g. `barber`/`quiz`/`notes`): port PRD + test plan, HTTP/DOM-light fixtures (REPL evaluator, no browser dependency in v1); record `source` provenance; smoke trial
+- [x] 3.2 Adapt `rest-api` target from ViBench `logistics`: `PRD.md` (API-only reframe), `testplan.yaml` (9 HTTP-observable steps, fatal cold-start gate, hand-derived ROI worked example), `source` provenance; validates. (Real-spend n=1 smoke trial still pending before matrix use.)
+- [x] 3.3 Adapt `web-app` target from ViBench `barber`: `PRD.md` (HTTP/JSON API behind the schedule UI + served page, HTTP-light v1), `testplan.yaml` (10 steps, fatal gate, fixed seed date), `source` provenance; validates + exercised by the 4.2 dry run. (Real-spend n=1 smoke trial still pending.)
 - [x] 3.4 Per-target budget defaults in run config
 
 ## 4. Validation and Docs
 
 - [x] 4.1 Unit tests: manifest validation, migration hash parity, cross-target aggregation refusal
-- [ ] 4.2 End-to-end dry run on a non-Symphony target
+- [x] 4.2 End-to-end dry run on a non-Symphony target (`tests/e2e-dry-target.test.ts`: web-app target through orchestration → grading → scorecard, fake executor, no spend)
 - [x] 4.3 Author "bring your own PRD" guide in `docs/`

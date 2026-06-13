@@ -1,0 +1,31 @@
+name: rest-api
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: 654717002fddf27d876c577a53b5adf75f9d4ae01c4262c9021c9bd05c3d74c1
+testplanFile: testplan.yaml
+conformanceSection: 'section 6 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-13: every REQUIRED item R1-R10 maps to >=1
+  test-plan step (R1:S-1; R2:INS-1; R3:INS-2; R4:ROI-1,ROI-2; R5:ROI-1;
+  R6:ROI-3; R7:CON-1; R8:QUO-1; R9:QUO-2; R10:QUO-2). All checks are
+  HTTP-observable (status codes + JSON bodies); the ROI worked example in
+  testplan.yaml was derived by hand from PRD §2 and recomputed to verify.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the JSON API on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 6 is the Definition of Done; Section 7 lists non-goals (no browser UI,
+  no payments, no DB requirement — in-process persistence is fine). Money/ROI
+  values are JSON numbers. Validation errors use `{ "error": "..." }`.
+fixtures: []
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/logistics
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `logistics` marketing-site PRD into an API-only
+    service (calculation engine + capture/persist/list flows reframed as JSON
+    endpoints; UI/DOM scope dropped).

@@ -37,9 +37,11 @@ profiles:
     authKind: oauth
 
   # --- z.ai GLM via Claude Code (Anthropic-compatible coding endpoint) ---
-  # Endpoint + integration per docs.z.ai/devpack/tool/claude. Model IDs and
-  # pricing are placeholders pending live verification (task 4.2 probe) —
-  # re-pin deliberately once confirmed against the operator's z.ai plan.
+  # Endpoint + integration per docs.z.ai/devpack/tool/claude. z.ai maps Claude's
+  # opus/sonnet/haiku slots to GLM models via ANTHROPIC_DEFAULT_*_MODEL (set by
+  # resolveClaudeCodeEnv), so the harness drives the opus slot rather than a raw
+  # `--model glm-*`. GLM Coding Plan models: glm-4.6, glm-4.7, glm-5.1 (flagship),
+  # glm-4.5-air (haiku-class). Pricing omitted (flat-rate plan; tokens-only).
   - name: glm-5.1
     provider: z.ai
     modelId: glm-5.1

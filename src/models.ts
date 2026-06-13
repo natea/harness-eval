@@ -144,13 +144,27 @@ export function resolveClaudeCodeEnv(
 	};
 	if (p.authKind === "oauth") {
 		env.CLAUDE_CODE_OAUTH_TOKEN = token;
-	} else if (p.authKind === "auth-token") {
+		return { env, modelFlag: p.modelId };
+	}
+	if (p.authKind === "auth-token") {
+		// z.ai-style Anthropic-compatible endpoints don't take a raw `--model
+		// glm-*`; Claude Code selects a slot (opus/sonnet/haiku) and the
+		// ANTHROPIC_DEFAULT_*_MODEL env vars map that slot to the GLM model. Pin
+		// all three slots to the profile model so the worker IS that model
+		// regardless of which slot Claude Code or its subagents pick. GLM is slow
+		// to first token, so widen the request timeout (z.ai's documented value).
 		env.ANTHROPIC_AUTH_TOKEN = token;
 		if (p.baseUrl) env.ANTHROPIC_BASE_URL = p.baseUrl;
-	} else {
-		env.ANTHROPIC_API_KEY = token;
-		if (p.baseUrl) env.ANTHROPIC_BASE_URL = p.baseUrl;
+		env.ANTHROPIC_DEFAULT_OPUS_MODEL = p.modelId;
+		env.ANTHROPIC_DEFAULT_SONNET_MODEL = p.modelId;
+		env.ANTHROPIC_DEFAULT_HAIKU_MODEL = p.modelId;
+		env.API_TIMEOUT_MS = "3000000";
+		// Drive Claude Code via the opus slot, which we've mapped to the model.
+		return { env, modelFlag: "opus" };
 	}
+	// Direct API key (SDK/native baseURL override).
+	env.ANTHROPIC_API_KEY = token;
+	if (p.baseUrl) env.ANTHROPIC_BASE_URL = p.baseUrl;
 	return { env, modelFlag: p.modelId };
 }
 

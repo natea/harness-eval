@@ -60,7 +60,13 @@ describe("model registry (add-pluggable-models)", () => {
 		expect(glm.env.ANTHROPIC_AUTH_TOKEN).toBe("zai-tok");
 		expect(glm.env.ANTHROPIC_BASE_URL).toContain("z.ai");
 		expect(glm.env.ANTHROPIC_API_KEY).toBe("");
-		expect(glm.modelFlag).toBe("glm-4.7");
+		expect(glm.env.CLAUDE_CODE_OAUTH_TOKEN).toBe(""); // stray ambient token blanked
+		// z.ai maps Claude slots → GLM via env; worker runs the opus slot.
+		expect(glm.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe("glm-4.7");
+		expect(glm.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("glm-4.7");
+		expect(glm.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe("glm-4.7");
+		expect(glm.env.API_TIMEOUT_MS).toBe("3000000");
+		expect(glm.modelFlag).toBe("opus");
 	});
 
 	test("resolveClaudeCodeEnv errors when the auth env var is unset", () => {

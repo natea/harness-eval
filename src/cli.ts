@@ -100,10 +100,13 @@ async function cmdRun(): Promise<void> {
 	const models = loadModels();
 	const workerProfile = resolveProfile(arg("worker-model") ?? config.model, models);
 	let workerEnv: Record<string, string> | undefined;
+	let workerModelFlag = workerProfile.modelId;
 	if (workerProfile.provider !== "anthropic") {
-		workerEnv = resolveClaudeCodeEnv(workerProfile).env;
+		const resolved = resolveClaudeCodeEnv(workerProfile);
+		workerEnv = resolved.env;
+		workerModelFlag = resolved.modelFlag; // mapped slot (e.g. "opus") for z.ai
 		console.log(
-			`worker model: ${workerProfile.name} (${workerProfile.provider}) via ${workerProfile.baseUrl}`,
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via ${workerProfile.baseUrl}`,
 		);
 	} else if (workerProfile.name !== "claude-opus-4-6") {
 		console.log(`worker model: ${workerProfile.name} (anthropic)`);
@@ -144,7 +147,7 @@ async function cmdRun(): Promise<void> {
 			testPlanSha256: planSha,
 			harnessVersion: arg("harness-version") ?? "2.1.170",
 			workerEnv,
-			workerModelFlag: workerProfile.modelId,
+			workerModelFlag,
 		},
 	);
 
@@ -240,7 +243,7 @@ async function cmdModel(): Promise<void> {
 			env: { ...process.env, ...env },
 		},
 	);
-	const timer = setTimeout(() => proc.kill(), 60000);
+	const timer = setTimeout(() => proc.kill(), 150000);
 	const out = await new Response(proc.stdout).text();
 	const err = await new Response(proc.stderr).text();
 	clearTimeout(timer);

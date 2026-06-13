@@ -10,7 +10,8 @@
  *       from a spec document. Fill the TODOs + human review before validate.
  *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
- *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] [--grade]
+ *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] \
+ *       [--target <name>] [--trial-minutes M] [--grade]
  *       Execute the matrix. Builds happen with real Claude Code sessions —
  *       REAL SPEND. --grade additionally runs evaluator+judge (API spend).
  *
@@ -73,6 +74,18 @@ async function cmdRun(): Promise<void> {
 	const defaults = existsSync(DEFAULTS_PATH)
 		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
 		: {};
+	// --trial-minutes overrides the per-trial wall-clock cap (the default comes
+	// from run.defaults.yaml's budget block). Applies to every provider, not
+	// just the cloud preflight.
+	const trialMinutes = arg("trial-minutes");
+	const baseBudget = (defaults.budget as Record<string, unknown> | undefined) ?? {};
+	if (trialMinutes !== undefined && !(Number(trialMinutes) > 0)) {
+		throw new Error(`--trial-minutes must be a positive number, got ${trialMinutes}`);
+	}
+	const budget =
+		trialMinutes !== undefined
+			? { ...baseBudget, trialWallClockMs: Number(trialMinutes) * 60000 }
+			: baseBudget;
 	const config = RunConfig.parse({
 		...defaults,
 		candidates: (
@@ -86,6 +99,7 @@ async function cmdRun(): Promise<void> {
 		concurrency: Number(
 			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
 		),
+		budget,
 	});
 	const candidates = resolveCandidates(
 		registry,

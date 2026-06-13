@@ -3,7 +3,8 @@
 ## 1. Tooling
 
 - [ ] 1.1 Install shadcn skill (`bunx skills add shadcn/ui`) and shadcn MCP server for the implementing agent; record versions
-- [ ] 1.2 Tailwind + shadcn init in src/studio/ (dark theme tokens matching codingharness.xyz); verify components build under Bun HTML imports (fallback: minimal tailwind build step)
+- [ ] 1.2 Author `src/studio/DESIGN.md` — token source-of-truth (semantic color tokens, typography, spacing scale, radius, shadows) matching codingharness.xyz's dark theme; pure spec, no component implementation
+- [ ] 1.3 Tailwind + shadcn init in src/studio/; map `DESIGN.md` tokens → `tailwind.config` + `:root`/`.dark` CSS variables (single mapping step, so theme derives from the spec); verify shadcn components inherit the tokens and build under Bun HTML imports (fallback: minimal tailwind build step)
 
 ## 2. Review view first (parity)
 

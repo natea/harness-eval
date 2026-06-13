@@ -11,6 +11,7 @@ The current dashboard (add-results-dashboard) is read-only review; runs are conf
   - **Runs view**: live run list with status (building/grading/done), per-trial progress, capped/infra-failed badges.
   - **Review view**: everything the current dashboard does (leaderboard with re-weighting, run scorecards, trial drill-down with step evidence and judge samples, step-comparison matrix) rebuilt on shadcn primitives (Table, Card, Slider, Tooltip, Dialog, Tabs, Badge).
 - **Run-launch API**: the studio server gains POST endpoints that enqueue runs through the existing orchestrator (local execution first; the hosted service later fronts the same API). Mutations are explicit and confirmation-gated — the read-only guarantee moves from "server has no writes" to "writes only via the launch endpoint, never touching artifacts".
+- **Design tokens via `DESIGN.md`**: the studio's design system is captured in a single agent-friendly markdown file, `src/studio/DESIGN.md` (the portable, tool-agnostic format popularized by Google Stitch — semantic color tokens, typography, spacing scale, radius, shadows). It is the source-of-truth for the theme: its tokens map once into the Tailwind config + `:root`/`.dark` CSS variables that shadcn components already consume, so styling derives from the spec rather than ad-hoc CSS. `DESIGN.md` stays pure spec — it introduces no component implementation; shadcn remains the only component source. It can be hand-authored or generated/round-tripped by a `DESIGN.md`-speaking tool (Stitch today, Claude Design later) without changing the studio.
 - **Tooling adoption**: install the shadcn skill (`bunx skills add shadcn/ui`) and MCP server for the implementing agent; components vendored via the shadcn CLI into the repo (no runtime registry dependency).
 - The existing `bun run dashboard` remains until the studio reaches feature parity, then is retired by a follow-up.
 
@@ -27,6 +28,7 @@ The current dashboard (add-results-dashboard) is read-only review; runs are conf
 ## Impact
 
 - New deps: tailwindcss, shadcn/ui component sources (vendored), lucide icons; Bun HTML imports continue (no Vite) — verify shadcn CLI output works under Bun's bundler, else a minimal Tailwind build step.
+- `src/studio/DESIGN.md` is the theme source-of-truth; the Tailwind theme + CSS-variable block are generated from it (one mapping step), so re-theming or adopting a `DESIGN.md`-exporting tool is a token edit, not a component rewrite.
 - `src/studio/` (server + React app); run-launch endpoint wraps the orchestrator's existing entry points; registries (candidates/harnesses/models/targets) become the studio's option sources, keeping UI and CLI validation identical.
 - Local-first: binds 127.0.0.1; the hosted service (separate change) will reuse the API surface with auth.
 - Sequencing: depends on eval-targets (target list), benefits from harness/model registries as they land; review view can ship first against existing artifacts.

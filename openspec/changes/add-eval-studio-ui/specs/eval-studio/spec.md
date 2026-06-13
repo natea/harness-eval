@@ -20,6 +20,13 @@ The studio SHALL list runs with live status (building, grading, completed) inclu
 - **WHEN** a queued run is executing trials
 - **THEN** the runs view shows each trial's current status and updates as provenance records land, without modifying any artifact
 
+### Requirement: Design tokens sourced from DESIGN.md
+The studio's visual theme SHALL derive from a single `src/studio/DESIGN.md` token specification (semantic color tokens, typography, spacing scale, radius, shadows), mapped into the Tailwind theme and CSS variables that shadcn components consume. `DESIGN.md` SHALL remain a specification only and SHALL NOT introduce any component implementation; shadcn/ui SHALL remain the sole component source. Theme changes SHALL be expressible as edits to `DESIGN.md` and its token mapping rather than per-component styling.
+
+#### Scenario: Token edit re-themes without touching components
+- **WHEN** a token value (e.g. primary color or radius) is changed in `DESIGN.md` and its mapping re-applied
+- **THEN** shadcn components reflect the new value through the shared CSS variables, with no edits to component source
+
 ### Requirement: Review parity on shadcn components
 The studio's review view SHALL provide at minimum the capabilities of the results-dashboard spec — cross-run leaderboard with normalization warnings and client-side re-weighting (shared scoring module, CLI parity), run scorecards with variance/exclusions/provenance, trial drill-down with step evidence and judge samples, step-comparison matrix, and the results schema-version gate — implemented with shadcn/ui components (Table, Card, Slider, Tooltip, Dialog, Tabs, Badge) under the project's dark theme.
 

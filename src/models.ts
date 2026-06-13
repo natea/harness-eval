@@ -133,7 +133,15 @@ export function resolveClaudeCodeEnv(
 			`${p.authEnv} is not set (required by model profile '${p.name}')`,
 		);
 	}
-	const env: Record<string, string> = { ANTHROPIC_API_KEY: "" };
+	// Blank every auth var first, then set only the ones this profile uses, so a
+	// stray ambient credential (e.g. CLAUDE_CODE_OAUTH_TOKEN) can't override a
+	// third-party endpoint when this env is spread over process.env.
+	const env: Record<string, string> = {
+		ANTHROPIC_API_KEY: "",
+		ANTHROPIC_AUTH_TOKEN: "",
+		ANTHROPIC_BASE_URL: "",
+		CLAUDE_CODE_OAUTH_TOKEN: "",
+	};
 	if (p.authKind === "oauth") {
 		env.CLAUDE_CODE_OAUTH_TOKEN = token;
 	} else if (p.authKind === "auth-token") {

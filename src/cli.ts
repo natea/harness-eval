@@ -22,6 +22,11 @@ import { loadManifest } from "./grading/integration";
 import { judgeQuality } from "./grading/judge";
 import { scrubWorkspace } from "./grading/scrub";
 import { loadTestPlan } from "./grading/testplan";
+import {
+	loadModels,
+	resolveClaudeCodeEnv,
+	resolveProfile,
+} from "./models";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
 import { DaytonaProvider } from "./providers/daytona";
 import { WorktreeProvider } from "./providers/worktree";
@@ -87,6 +92,23 @@ async function cmdRun(): Promise<void> {
 		config.candidates,
 		config.harness,
 	);
+
+	// Worker model resolution (model-registry). `--worker-model` (or config.model)
+	// names a profile; bare claude-* ids resolve to implicit native profiles.
+	// Native Anthropic keeps the scheduler's OAuth/API-key fallback; third-party
+	// profiles (e.g. z.ai GLM) inject ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN.
+	const models = loadModels();
+	const workerProfile = resolveProfile(arg("worker-model") ?? config.model, models);
+	let workerEnv: Record<string, string> | undefined;
+	if (workerProfile.provider !== "anthropic") {
+		workerEnv = resolveClaudeCodeEnv(workerProfile).env;
+		console.log(
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) via ${workerProfile.baseUrl}`,
+		);
+	} else if (workerProfile.name !== "claude-opus-4-6") {
+		console.log(`worker model: ${workerProfile.name} (anthropic)`);
+	}
+
 	const target = loadTarget(arg("target") ?? "symphony-daemon");
 	registry.basePrompt = renderTargetPrompt(registry.basePrompt, target);
 	const sha = target.prdSha256;
@@ -121,6 +143,8 @@ async function cmdRun(): Promise<void> {
 			prdSha256: sha,
 			testPlanSha256: planSha,
 			harnessVersion: arg("harness-version") ?? "2.1.170",
+			workerEnv,
+			workerModelFlag: workerProfile.modelId,
 		},
 	);
 
@@ -183,6 +207,61 @@ async function cmdRun(): Promise<void> {
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
 }
 
+async function cmdModel(): Promise<void> {
+	const sub = process.argv[3];
+	const ref = process.argv[4];
+	if (sub !== "probe" || !ref) {
+		throw new Error("usage: model probe <profile>   (1-token connectivity check)");
+	}
+	const profile = resolveProfile(ref, loadModels());
+	if (profile.transport !== "claude-code") {
+		throw new Error(
+			`probe supports claude-code transport only (profile '${profile.name}' is ${profile.transport})`,
+		);
+	}
+	const { env, modelFlag } = resolveClaudeCodeEnv(profile);
+	console.log(
+		`probing ${profile.name} (${profile.provider}, model ${modelFlag})${profile.baseUrl ? ` via ${profile.baseUrl}` : ""}…`,
+	);
+	const proc = Bun.spawn(
+		[
+			"claude",
+			"-p",
+			"--model",
+			modelFlag,
+			"--output-format",
+			"json",
+			"--dangerously-skip-permissions",
+		],
+		{
+			stdin: new TextEncoder().encode("Reply with exactly: OK"),
+			stdout: "pipe",
+			stderr: "pipe",
+			env: { ...process.env, ...env },
+		},
+	);
+	const timer = setTimeout(() => proc.kill(), 60000);
+	const out = await new Response(proc.stdout).text();
+	const err = await new Response(proc.stderr).text();
+	clearTimeout(timer);
+	const code = await proc.exited;
+	const line = out
+		.split("\n")
+		.reverse()
+		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
+	if (code === 0 && line) {
+		const obj = JSON.parse(line) as Record<string, unknown>;
+		const reply = String(obj.result ?? "").trim();
+		console.log(
+			`✓ probe OK — reply ${JSON.stringify(reply.slice(0, 40))}, cost $${obj.total_cost_usd ?? "?"}, ${obj.num_turns ?? "?"} turn(s)`,
+		);
+	} else {
+		console.error(`✗ probe FAILED (exit ${code})`);
+		if (err.trim()) console.error(err.trim().split("\n").slice(-5).join("\n"));
+		process.exit(1);
+	}
+}
+
 async function cmdReport(): Promise<void> {
 	const runDir = process.argv[3];
 	if (!runDir || !existsSync(runDir))
@@ -229,13 +308,14 @@ async function cmdReport(): Promise<void> {
 const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
 	validate: cmdValidate,
+	model: cmdModel,
 	run: cmdRun,
 	report: cmdReport,
 };
 const handler = commands[cmd ?? ""];
 if (!handler) {
 	console.error(
-		"usage: cli.ts <validate|run|report> [options]   (see file header)",
+		"usage: cli.ts <validate|model|run|report> [options]   (see file header)",
 	);
 	process.exit(2);
 }

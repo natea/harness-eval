@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+	classifyCostSource,
 	judgeWorkerRelation,
 	loadModels,
 	ModelError,
@@ -86,6 +87,31 @@ describe("model registry (add-pluggable-models)", () => {
 			pricing: { inputPerMtokUsd: 0.6, outputPerMtokUsd: 2.2 },
 		};
 		expect(priceFromTokens(priced, 1_000_000, 1_000_000)).toBeCloseTo(2.8, 6);
+	});
+
+	test("classifyCostSource picks the right source (task 2.3)", () => {
+		const reg = loadModels();
+		const opus = resolveProfile("claude-opus-4-6", reg);
+		const glm = resolveProfile("glm-4.7", reg); // no pricing in yaml
+		const glmPriced = {
+			...glm,
+			pricing: { inputPerMtokUsd: 0.6, outputPerMtokUsd: 2.2 },
+		};
+
+		// Native Anthropic + harness dollars → harness-reported.
+		expect(classifyCostSource(opus, 0.42, 1000, 500)).toEqual({
+			costUsd: 0.42,
+			source: "harness-reported",
+		});
+		// Third-party: harness USD is Anthropic-priced, so ignore it; use pricing.
+		const priced = classifyCostSource(glmPriced, 0.42, 1_000_000, 1_000_000);
+		expect(priced.source).toBe("profile-priced");
+		expect(priced.costUsd).toBeCloseTo(2.8, 6);
+		// Third-party, no pricing → tokens-only, no dollar figure.
+		expect(classifyCostSource(glm, 0.42, 1_000_000, 1_000_000)).toEqual({
+			costUsd: null,
+			source: "tokens-only",
+		});
 	});
 
 	test("loader rejects auth-token profile without a baseUrl", () => {

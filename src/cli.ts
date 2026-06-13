@@ -23,6 +23,7 @@ import { judgeQuality } from "./grading/judge";
 import { scrubWorkspace } from "./grading/scrub";
 import { loadTestPlan } from "./grading/testplan";
 import {
+	judgeWorkerRelation,
 	loadModels,
 	resolveClaudeCodeEnv,
 	resolveProfile,
@@ -110,6 +111,16 @@ async function cmdRun(): Promise<void> {
 		);
 	} else if (workerProfile.name !== "claude-opus-4-6") {
 		console.log(`worker model: ${workerProfile.name} (anthropic)`);
+	}
+
+	// Judge-validity guardrail (model-registry): judge must differ from worker;
+	// cross-vendor judging is allowed but flagged as a bias caveat.
+	const judgeProfile = resolveProfile(config.judgeModel, models);
+	const { crossVendor } = judgeWorkerRelation(workerProfile, judgeProfile);
+	if (crossVendor) {
+		console.log(
+			`⚠ cross-vendor judge: ${judgeProfile.provider} judge (${judgeProfile.name}) grading ${workerProfile.provider} worker (${workerProfile.name}) — recorded as a judge-bias caveat`,
+		);
 	}
 
 	const target = loadTarget(arg("target") ?? "symphony-daemon");

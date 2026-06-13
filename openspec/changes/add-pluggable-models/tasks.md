@@ -9,8 +9,8 @@
 ## 2. Resolution and Drivers
 
 - [x] 2.1 Resolve worker profile in the session driver: `cmdRun` resolves `--worker-model`/config.model via the registry; third-party profiles inject env (base-url + auth-token) through `SchedulerDeps.workerEnv`, native keeps the OAuth/API-key fallback; model flag from profile
-- [ ] 2.2 Resolve judge profile in both grading drivers (cc: env injection; sdk: baseURL+key) with cross-vendor flag plumbed to provenance
-- [ ] 2.3 Implement cost-source logic in telemetry (harness-reported / profile-priced / tokens-only) and surface in results/scorecard
+- [~] 2.2 Resolve judge profile in both grading drivers (cc: env injection; sdk: baseURL+key) with cross-vendor flag plumbed to provenance — DONE: judge profile resolved + judge≠worker guardrail enforced at run start + cross-vendor caveat logged. PENDING: per-driver baseURL/env injection for a non-Anthropic judge, and writing the flag into provenance (with 3.2).
+- [~] 2.3 Implement cost-source logic in telemetry (harness-reported / profile-priced / tokens-only) and surface in results/scorecard — DONE: `classifyCostSource` (native+harness→reported, third-party→profile-priced, else tokens-only) implemented + tested. PENDING: surface the source/estimate in results.json + scorecard (with 3.1).
 - [x] 2.4 `cli.ts model probe <profile>` (claude-code 1-token connectivity check; resolves profile, injects env, reports reply/cost/turns)
 
 ## 3. Reporting

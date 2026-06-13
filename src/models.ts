@@ -197,3 +197,31 @@ export function priceFromTokens(
 		(outputTokens / 1_000_000) * p.pricing.outputPerMtokUsd
 	);
 }
+
+export type CostSource = "harness-reported" | "profile-priced" | "tokens-only";
+
+export interface CostEstimate {
+	costUsd: number | null;
+	source: CostSource;
+}
+
+/**
+ * Decide how a trial's cost is known (run-telemetry capability). Claude Code's
+ * `total_cost_usd` is Anthropic-priced, so it's only trustworthy for native
+ * profiles; third-party runs fall back to profile pricing, else tokens-only
+ * (no dollar figure). The source is recorded so mixed-cost leaderboards can
+ * badge the caveat.
+ */
+export function classifyCostSource(
+	profile: ModelProfile,
+	harnessReportedUsd: number | null,
+	inputTokens: number,
+	outputTokens: number,
+): CostEstimate {
+	if (profile.provider === "anthropic" && harnessReportedUsd != null) {
+		return { costUsd: harnessReportedUsd, source: "harness-reported" };
+	}
+	const priced = priceFromTokens(profile, inputTokens, outputTokens);
+	if (priced != null) return { costUsd: priced, source: "profile-priced" };
+	return { costUsd: null, source: "tokens-only" };
+}

@@ -13,6 +13,33 @@ Opus 4.6? The architecture deliberately holds every other variable fixed so
 the framework is the only thing being measured — and swaps cleanly for phase
 2 (other harnesses like OpenCode/Codex, other models like GLM via z.ai).
 
+## Status
+
+Built (merged or in review) — each capability was specified under
+[`openspec/changes/`](https://github.com/natea/harness-eval/tree/main/openspec/changes)
+before implementation:
+
+- **Core harness** — candidate registry, orchestration with isolation +
+  budgets + provenance, headless build sessions, two-instrument grading
+  (evidence-based evaluator + blind code-quality judge), telemetry, and
+  `results.json` + `scorecard.md`. ([`setup-harness-eval-framework`](https://github.com/natea/harness-eval/tree/main/openspec/changes/setup-harness-eval-framework))
+- **Results dashboard** — cross-run leaderboard, per-run scorecards, trial
+  drill-downs with evidence, and live re-weighting. ([`add-results-dashboard`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-results-dashboard))
+- **PRD library + bring-your-own-PRD** — a target abstraction spanning several
+  product shapes (`symphony-daemon`, `cli-tool`, plus `rest-api` and `web-app`
+  adapted from ViBench), an `init --target … --spec` scaffolder, and
+  freeze/attribution rules. ([`add-prd-library`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-prd-library))
+- **Pluggable models** — a model-profile registry, worker/judge resolution,
+  **GLM via z.ai validated end-to-end**, a `model probe` connectivity check,
+  and cross-vendor-judge + cost-basis caveats in results/scorecards.
+  ([`add-pluggable-models`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-pluggable-models))
+
+Built and validated on branches, pending merge: **Docker / E2B / macOS-VZ
+isolation providers** (live-validated on the `pluggable-providers` branch).
+**Not yet built:** the Eval Studio web UI, additional model providers
+(Kimi / MiniMax / Qwen), and a language-effectiveness evaluation mode. See
+**[ROADMAP.md](ROADMAP.md)**.
+
 ## How it works
 
 ```
@@ -43,13 +70,15 @@ run config (budgets, weights) ─┘        │                                 
    Symphony daemon). Bring your own spec: see
    [docs/BRING-YOUR-OWN-PRD.md](docs/BRING-YOUR-OWN-PRD.md).
 3. **Isolation providers** — every trial runs in a fresh environment behind
-   one `SandboxProvider` interface: **Daytona** (cloud), **E2B** (cloud,
-   Firecracker), **Docker** (local), **macOS Virtualization** (Apple Silicon
-   per-trial micro-VMs via Apple's `container` CLI), or git worktrees
-   (zero-dependency fallback). All container/VM providers run the same pinned
-   trial image (`infra/trial-image/Dockerfile`: Node 22, Bun, Claude Code at
-   an exact version). Providers preflight before any spend (image present,
-   tier lifetime caps, daemon health).
+   one `SandboxProvider` interface. On `main`: **Daytona** (cloud) and
+   **git worktrees** (zero-dependency local fallback). Built and live-validated
+   on the [`pluggable-providers`](https://github.com/natea/harness-eval/tree/pluggable-providers)
+   branch (pending merge): **Docker** (local), **E2B** (cloud, Firecracker),
+   and **macOS Virtualization** (Apple-Silicon per-trial micro-VMs via Apple's
+   `container` CLI). All container/VM providers share one pinned trial image
+   (`infra/trial-image/Dockerfile`: Node 22, Bun, Claude Code at an exact
+   version) and preflight before any spend (image present, tier lifetime caps,
+   daemon health).
 4. **Build phase** — the orchestrator drives Claude Code headless
    (`claude -p`, stream-JSON) through the candidate's session script, with
    per-trial wall-clock/cost caps, generic continuation handling at approval
@@ -107,7 +136,7 @@ cp .env.example .env        # add the keys for the providers you use
 bun run src/cli.ts validate                 # registry + target + fixtures
 bun run src/cli.ts run \
   --candidates superpowers --trials 1 \
-  --provider docker --snapshot harness-eval-trial:2.1.170-1   # one smoke trial
+  --provider worktree         # one smoke trial (worktree = zero-dependency local)
 bun scripts/grade-trial.ts runs/<run-dir> superpowers-t1 --driver cc
 bun run src/cli.ts report runs/<run-dir>    # (re)generate results + scorecard
 bun run src/cli.ts report runs/<run-dir> --weights 0.5,0.35,0.075,0.075
@@ -155,10 +184,14 @@ rendering.
   paid work.
 - **Subscription-billed grading**: graders run on headless Claude Code with
   a Max-plan OAuth token by default; no API credits required.
+- **Pluggable LLM models**: a model-profile registry drives the worker (and
+  judge) model from config; **GLM via z.ai** is implemented and validated
+  end-to-end through Claude Code's Anthropic-compatible endpoint, with
+  cross-vendor-judge and cost-basis caveats recorded. Kimi/MiniMax/Qwen are
+  config-only additions on the [roadmap](ROADMAP.md).
 - **OpenSpec-driven development**: every capability is specified before
-  implementation under `openspec/` (proposal → design → spec deltas →
-  tasks), including the in-flight changes for pluggable LLM
-  providers/models (GLM, Kimi, Qwen via Anthropic-compatible endpoints).
+  implementation under `openspec/` (proposal → design → spec deltas → tasks);
+  see [ROADMAP.md](ROADMAP.md) for what's specified but not yet built.
 
 ## Project layout
 

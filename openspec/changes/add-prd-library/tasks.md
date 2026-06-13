@@ -17,8 +17,8 @@
 ## 3. Library Targets
 
 - [x] 3.1 Author `cli-tool` target (PRD, weighted test plan with fatal gates, exit-code/stdout fixtures); smoke trial
-- [x] 3.2 Adapt `rest-api` target from ViBench `logistics`: `PRD.md` (API-only reframe), `testplan.yaml` (9 HTTP-observable steps, fatal cold-start gate, hand-derived ROI worked example), `source` provenance; validates. (Real-spend n=1 smoke trial still pending before matrix use.)
-- [x] 3.3 Adapt `web-app` target from ViBench `barber`: `PRD.md` (HTTP/JSON API behind the schedule UI + served page, HTTP-light v1), `testplan.yaml` (10 steps, fatal gate, fixed seed date), `source` provenance; validates + exercised by the 4.2 dry run. (Real-spend n=1 smoke trial still pending.)
+- [x] 3.2 Adapt `rest-api` target from ViBench `logistics`: `PRD.md` (API-only reframe), `testplan.yaml` (9 HTTP-observable steps, fatal cold-start gate, hand-derived ROI worked example), `source` provenance; validates. Smoke trial (gsd, worktree, 14.2m, completed): built server returns the exact ROI worked example (3100/3970/3100), insights/quote-persist/admin-auth/validation all conformant.
+- [x] 3.3 Adapt `web-app` target from ViBench `barber`: `PRD.md` (HTTP/JSON API behind the schedule UI + served page, HTTP-light v1), `testplan.yaml` (10 steps, fatal gate, fixed seed date), `source` provenance; validates + exercised by the 4.2 dry run. Smoke trial (gsd, worktree, 14.2m, completed): built server passes create/double-book-409/bad-slot-400/immutable-PATCH-400/delete-204 and serves HTML root.
 - [x] 3.4 Per-target budget defaults in run config
 
 ## 4. Validation and Docs

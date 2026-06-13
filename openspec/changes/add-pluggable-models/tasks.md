@@ -21,6 +21,6 @@
 ## 4. Validation
 
 - [x] 4.1 Unit tests: schema validation, implicit profiles, judge≠worker, cost-source selection
-- [ ] 4.2 Probe glm-4.7 live with operator's z.ai key — BLOCKED 2026-06-13 on credentials, not code. Integration verified correct: endpoint https://api.z.ai/api/anthropic reachable, model glm-4.7 accepted, request well-formed, slot-mapping (ANTHROPIC_DEFAULT_*_MODEL) implemented per z.ai docs. Direct curl returns 401 "Authentication Failed" on BOTH the Anthropic and OpenAI-compatible z.ai endpoints → the ZAI_API_KEY is invalid/expired or the GLM Coding Plan isn't active. Re-probe once a working key is supplied: `bun run src/cli.ts model probe glm-4.7`.
+- [x] 4.2 Probe glm-4.7 live with operator's z.ai key — PASSED 2026-06-13 with a working key: `model probe glm-4.7` → `✓ probe OK, reply "OK", cost $0.027, 1 turn` through the full slot-mapping path (ANTHROPIC_DEFAULT_*_MODEL via opus slot, https://api.z.ai/api/anthropic). No protocol deviations observed at the 1-token level; full-session deviations to be assessed in the 4.3 smoke.
 - [ ] 4.3 One GLM smoke trial (single candidate, n=1) end-to-end before any GLM matrix; document in retro
 - [ ] 4.4 Add Kimi K2 / MiniMax M3 / Qwen Coder profiles when operator supplies keys; probe each (no matrix until smoke-tested)

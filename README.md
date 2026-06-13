@@ -154,6 +154,10 @@ pattern — orchestrator-in-a-sandbox.
 bun run dashboard          # http://127.0.0.1:4870 (localhost-only, read-only)
 ```
 
+![Coding-harness leaderboard dashboard: a cross-run leaderboard with live
+re-weighting sliders over four frameworks, above a table of runs across
+Daytona, Docker, E2B, and worktree providers](docs/dashboard.png)
+
 Leaderboard across runs (filter by run; speed/spend flagged as within-run
 normalized), per-run scorecards with variance and exclusions, trial
 drill-downs (every test-plan step with evidence, judge samples with

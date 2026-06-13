@@ -1,0 +1,98 @@
+# Frozen test plan for the `web-app` target (Barber Shop Scheduling).
+# Adapted from the ViBench `barber` test plans, re-authored as HTTP-observable
+# checks (no browser; the harness web-app evaluator is HTTP-light in v1).
+# ViBench semantics: sequential, weighted, fatal gates halt.
+# Evidence = requests issued (curl) + observed status codes / JSON bodies.
+#
+# Checks use a fixed seed date 2026-07-01 (UTC) so results don't depend on
+# "today"; the API is date-parameterized, so no clock dependence.
+version: "1.0.0"
+prdSha256: 88c9a868edefb3742eaadf24609009553688b17f84351dac0325301121dfcf2d
+
+steps:
+  - id: S-1
+    covers: ["7.R1"]
+    description: setup.sh installs deps and start.sh boots the service on $PORT
+    check: >
+      Run ./setup.sh in a clean copy (exit 0). Then PORT=3000 ./start.sh & ;
+      poll http://localhost:3000/ until it answers within 30s. Fatal: if the
+      service never serves, the app cannot be evaluated.
+    weight: 4
+    fatal: true
+
+  - id: PAGE-1
+    covers: ["1", "7.R2"]
+    description: root page serves HTML
+    check: >
+      GET / → 200 with Content-Type containing text/html and a non-empty body.
+    weight: 2
+
+  - id: SCH-1
+    covers: ["2", "7.R3"]
+    description: daily schedule query, empty state, and bad-date handling
+    check: >
+      GET /api/appointments?date=2026-07-01 → 200 with [] (empty store). GET
+      /api/appointments with no date → 400; with date=not-a-date → 400.
+    weight: 3
+
+  - id: CRT-1
+    covers: ["3", "7.R4"]
+    description: create a valid appointment
+    check: >
+      POST /api/appointments {date:"2026-07-01", startTime:"10:00",
+      barber:"Lucy", customerName:"Jordan Miles", notes:"First-time visit."}
+      → 201 with a server-assigned id and the echoed fields. Then GET
+      /api/appointments?date=2026-07-01 includes it.
+    weight: 4
+
+  - id: CRT-2
+    covers: ["3", "7.R5"]
+    description: create input validation
+    check: >
+      POST with customerName "" (or whitespace) → 400; with barber "Dave" → 400;
+      with startTime "10:15" (not a 30-min slot) → 400; with startTime "18:00"
+      (past last bookable slot) → 400.
+    weight: 4
+
+  - id: CRT-3
+    covers: ["3", "7.R6"]
+    description: double-booking the same barber+slot returns 409
+    check: >
+      With Lucy@2026-07-01 10:00 already booked (CRT-1), POST another
+      appointment for barber Lucy, date 2026-07-01, startTime 10:00 → 409 with
+      an `error` field. A different barber (Alex) at the same date/slot → 201.
+    weight: 5
+
+  - id: VIEW-1
+    covers: ["4", "7.R7"]
+    description: fetch by id and unknown-id 404
+    check: >
+      GET /api/appointments/<id from CRT-1> → 200 with full appointment;
+      GET /api/appointments/does-not-exist → 404.
+    weight: 2
+
+  - id: EDIT-1
+    covers: ["5", "7.R8"]
+    description: edit name/notes, reject empty name
+    check: >
+      PATCH /api/appointments/<id> {customerName:"Jordan M.", notes:"Updated"}
+      → 200 with the new values; a subsequent GET reflects them. PATCH
+      {customerName:""} → 400.
+    weight: 4
+
+  - id: EDIT-2
+    covers: ["5", "7.R9"]
+    description: immutable fields rejected
+    check: >
+      PATCH /api/appointments/<id> {startTime:"11:00"} → 400; {barber:"Alex"}
+      → 400; {date:"2026-07-02"} → 400. The stored appointment is unchanged.
+    weight: 4
+
+  - id: DEL-1
+    covers: ["6", "7.R10"]
+    description: cancel removes the appointment
+    check: >
+      DELETE /api/appointments/<id> → 204. GET /api/appointments/<id> → 404 and
+      GET /api/appointments?date=2026-07-01 no longer lists it. DELETE on an
+      unknown id → 404.
+    weight: 4

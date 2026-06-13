@@ -1,0 +1,23 @@
+harness-eval — eval targets
+============================
+
+Some eval targets in this directory are adapted from third-party sources.
+Each adapted target records its provenance in its `target.yaml` under a
+`source:` block (upstream, repo, commit, originalDir, license). The required
+attribution for those upstreams is reproduced below.
+
+
+ViBench
+-------
+Copyright 2026 Replit
+
+The PRDs and test plans under ViBench-derived targets are adapted from the
+ViBench project (https://github.com/ViBench/vibench-public), licensed under the
+Apache License, Version 2.0. The original specifications live under that
+repository's `prds/` tree; see each target's `target.yaml` `source.originalDir`
+and `source.commit` for the exact provenance.
+
+A copy of the Apache License, Version 2.0 is available at:
+    http://www.apache.org/licenses/LICENSE-2.0
+
+This NOTICE text is preserved as required by section 4(d) of that license.

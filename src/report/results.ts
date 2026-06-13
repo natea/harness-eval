@@ -2,6 +2,8 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isInconclusive, scoreRun } from "../grading/scoring";
 import {
+	type CostSource,
+	type ModelRef,
 	type RunConfig,
 	RunResults,
 	type TrialResult,
@@ -18,6 +20,11 @@ export interface BuildResultsInput {
 	startedAt: string;
 	endedAt: string | null;
 	trials: TrialResult[];
+	/** Resolved model profiles + caveats (model-registry). */
+	workerModel?: ModelRef;
+	judgeModel?: ModelRef;
+	crossVendorJudge?: boolean;
+	costSource?: CostSource;
 }
 
 /**
@@ -27,9 +34,11 @@ export interface BuildResultsInput {
  */
 export function buildResults(input: BuildResultsInput): RunResults {
 	const weights = input.weights ?? input.config.weights;
+	// Key scores by the resolved worker model when present (so --worker-model
+	// runs aren't mislabeled with config.model's default).
 	const scores = scoreRun({
 		harness: input.config.harness,
-		model: input.config.model,
+		model: input.workerModel?.name ?? input.config.model,
 		weights,
 		trials: input.trials,
 	});
@@ -53,6 +62,10 @@ export function buildResults(input: BuildResultsInput): RunResults {
 		testPlanSha256: input.testPlanSha256,
 		startedAt: input.startedAt,
 		endedAt: input.endedAt,
+		workerModel: input.workerModel,
+		judgeModel: input.judgeModel,
+		crossVendorJudge: input.crossVendorJudge ?? false,
+		costSource: input.costSource ?? "harness-reported",
 		scores,
 		trials: input.trials,
 		exclusions,

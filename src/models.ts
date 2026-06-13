@@ -200,6 +200,35 @@ export function priceFromTokens(
 
 export type CostSource = "harness-reported" | "profile-priced" | "tokens-only";
 
+/** Identity-only view of a profile for provenance/results (never the key). */
+export function toModelRef(p: ModelProfile): {
+	name: string;
+	provider: string;
+	modelId: string;
+	endpointHost: string | null;
+} {
+	let endpointHost: string | null = null;
+	if (p.baseUrl) {
+		try {
+			endpointHost = new URL(p.baseUrl).host;
+		} catch {
+			endpointHost = p.baseUrl;
+		}
+	}
+	return { name: p.name, provider: p.provider, modelId: p.modelId, endpointHost };
+}
+
+/**
+ * Run-level cost source expected for a worker profile, before per-trial dollars
+ * are known: native Anthropic → harness-reported; priced third-party →
+ * profile-priced; otherwise tokens-only.
+ */
+export function defaultCostSource(p: ModelProfile): CostSource {
+	if (p.provider === "anthropic") return "harness-reported";
+	if (p.pricing) return "profile-priced";
+	return "tokens-only";
+}
+
 export interface CostEstimate {
 	costUsd: number | null;
 	source: CostSource;

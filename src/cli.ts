@@ -23,10 +23,12 @@ import { judgeQuality } from "./grading/judge";
 import { scrubWorkspace } from "./grading/scrub";
 import { loadTestPlan } from "./grading/testplan";
 import {
+	defaultCostSource,
 	judgeWorkerRelation,
 	loadModels,
 	resolveClaudeCodeEnv,
 	resolveProfile,
+	toModelRef,
 } from "./models";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
 import { DaytonaProvider } from "./providers/daytona";
@@ -122,6 +124,9 @@ async function cmdRun(): Promise<void> {
 			`⚠ cross-vendor judge: ${judgeProfile.provider} judge (${judgeProfile.name}) grading ${workerProfile.provider} worker (${workerProfile.name}) — recorded as a judge-bias caveat`,
 		);
 	}
+	const workerModelRef = toModelRef(workerProfile);
+	const judgeModelRef = toModelRef(judgeProfile);
+	const costSource = defaultCostSource(workerProfile);
 
 	const target = loadTarget(arg("target") ?? "symphony-daemon");
 	registry.basePrompt = renderTargetPrompt(registry.basePrompt, target);
@@ -159,6 +164,7 @@ async function cmdRun(): Promise<void> {
 			harnessVersion: arg("harness-version") ?? "2.1.170",
 			workerEnv,
 			workerModelFlag,
+			workerModelRef,
 		},
 	);
 
@@ -216,6 +222,10 @@ async function cmdRun(): Promise<void> {
 		startedAt,
 		endedAt: new Date().toISOString(),
 		trials,
+		workerModel: workerModelRef,
+		judgeModel: judgeModelRef,
+		crossVendorJudge: crossVendor,
+		costSource,
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);

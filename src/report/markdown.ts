@@ -17,10 +17,31 @@ export function renderScorecard(r: RunResults): string {
 	const lines: string[] = [];
 	lines.push(`# Harness Eval Scorecard — run \`${r.runId}\``);
 	lines.push("");
+	const workerLabel = r.workerModel
+		? `${r.workerModel.name} (${r.workerModel.provider})`
+		: r.config.model;
 	lines.push(
-		`Harness **${r.config.harness}** · model **${r.config.model}** · provider **${r.config.provider}** · ${r.config.trialsPerCandidate} trial(s)/candidate`,
+		`Harness **${r.config.harness}** · worker model **${workerLabel}** · provider **${r.config.provider}** · ${r.config.trialsPerCandidate} trial(s)/candidate`,
 	);
 	lines.push("");
+
+	// Cross-model caveat badges (model-registry): judge bias and cost basis.
+	const caveats: string[] = [];
+	if (r.crossVendorJudge && r.judgeModel) {
+		caveats.push(
+			`> ⚠️ **Cross-vendor judge:** ${r.judgeModel.provider} judge (\`${r.judgeModel.name}\`) graded a ${r.workerModel?.provider ?? "different"}-vendor worker — quality scores may carry vendor bias.`,
+		);
+	}
+	if (r.costSource && r.costSource !== "harness-reported") {
+		caveats.push(
+			r.costSource === "profile-priced"
+				? "> ⚠️ **Cost basis:** token-spend dollars are estimated from profile pricing (the harness's `total_cost_usd` is Anthropic-priced and not valid off-vendor)."
+				: "> ⚠️ **Cost basis:** tokens-only — no dollar figure (no pricing for this provider; the harness's `total_cost_usd` is Anthropic-priced and not valid off-vendor).",
+		);
+	}
+	if (caveats.length) {
+		lines.push(...caveats, "");
+	}
 
 	if (r.inconclusive && r.scores.length >= 2) {
 		lines.push(
@@ -114,7 +135,18 @@ export function renderScorecard(r: RunResults): string {
 	lines.push(
 		`- Weights: adherence ${w.prdAdherence}, quality ${w.codeQuality}, speed ${w.speed}, spend ${w.tokenSpend}`,
 	);
-	lines.push(`- Judge model: \`${r.config.judgeModel}\``);
+	if (r.workerModel) {
+		lines.push(
+			`- Worker model: \`${r.workerModel.name}\` (${r.workerModel.provider}, model \`${r.workerModel.modelId}\`${r.workerModel.endpointHost ? `, via ${r.workerModel.endpointHost}` : ""})`,
+		);
+	}
+	const judgeRef = r.judgeModel;
+	lines.push(
+		judgeRef
+			? `- Judge model: \`${judgeRef.name}\` (${judgeRef.provider})${r.crossVendorJudge ? " — cross-vendor" : ""}`
+			: `- Judge model: \`${r.config.judgeModel}\``,
+	);
+	lines.push(`- Cost basis: ${r.costSource}`);
 	lines.push(`- Started ${r.startedAt} · ended ${r.endedAt ?? "(incomplete)"}`);
 	lines.push("");
 	lines.push(

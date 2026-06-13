@@ -36,6 +36,8 @@ export interface SchedulerDeps {
 	workerEnv?: Record<string, string>;
 	/** Resolved worker `--model` flag; defaults to config.model. */
 	workerModelFlag?: string;
+	/** Resolved worker profile identity for provenance (never the key). */
+	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */
 	executeScript?: typeof executeSessionScript;
 	archive?: typeof archiveTrial;
@@ -132,7 +134,8 @@ function baseProvenance(
 		candidateVersion: plan.candidate.pinnedVersion,
 		harness: config.harness,
 		harnessVersion: deps.harnessVersion,
-		model: config.model,
+		model: deps.workerModelRef?.name ?? config.model,
+		workerModel: deps.workerModelRef,
 		provider: deps.provider.id,
 		snapshotId: deps.provider.snapshotId,
 		prdSha256: deps.prdSha256,

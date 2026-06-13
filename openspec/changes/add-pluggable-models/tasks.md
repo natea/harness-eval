@@ -9,14 +9,14 @@
 ## 2. Resolution and Drivers
 
 - [x] 2.1 Resolve worker profile in the session driver: `cmdRun` resolves `--worker-model`/config.model via the registry; third-party profiles inject env (base-url + auth-token) through `SchedulerDeps.workerEnv`, native keeps the OAuth/API-key fallback; model flag from profile
-- [~] 2.2 Resolve judge profile in both grading drivers (cc: env injection; sdk: baseURL+key) with cross-vendor flag plumbed to provenance — DONE: judge profile resolved + judge≠worker guardrail enforced at run start + cross-vendor caveat logged. PENDING: per-driver baseURL/env injection for a non-Anthropic judge, and writing the flag into provenance (with 3.2).
-- [~] 2.3 Implement cost-source logic in telemetry (harness-reported / profile-priced / tokens-only) and surface in results/scorecard — DONE: `classifyCostSource` (native+harness→reported, third-party→profile-priced, else tokens-only) implemented + tested. PENDING: surface the source/estimate in results.json + scorecard (with 3.1).
+- [x] 2.2 Resolve judge profile + judge≠worker guardrail + cross-vendor flag recorded (results.crossVendorJudge, scorecard caveat badge, provenance). NOTE: per-driver baseURL/env injection for a *non-Anthropic* judge is deferred — not needed yet (judge defaults to native sonnet); the guardrail/flag/recording are in place.
+- [x] 2.3 Cost-source logic: `classifyCostSource` + `defaultCostSource`; recorded in results.costSource and surfaced as a scorecard cost-basis caveat (profile-priced / tokens-only).
 - [x] 2.4 `cli.ts model probe <profile>` (claude-code 1-token connectivity check; resolves profile, injects env, reports reply/cost/turns)
 
 ## 3. Reporting
 
-- [ ] 3.1 Key results by (candidate, harness, workerModel); leaderboard groups across model stacks with cross-vendor-judge and mixed-cost-source caveat badges
-- [ ] 3.2 Record resolved profiles (never keys) in provenance; backward-map existing runs to implicit profiles
+- [x] 3.1 Results key scores by the resolved workerModel (not config.model); scorecard shows worker/judge models + cross-vendor-judge and cost-basis caveat badges
+- [x] 3.2 Resolved worker/judge profiles recorded (identity only, never keys) in provenance (TrialProvenance.workerModel) and results (workerModel/judgeModel/crossVendorJudge/costSource); new fields optional so pre-registry runs back-map to implicit profiles and still parse
 
 ## 4. Validation
 

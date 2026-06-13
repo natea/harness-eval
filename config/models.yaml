@@ -1,0 +1,65 @@
+# Model-provider registry (model-registry capability).
+#
+# Each profile names a worker or judge model and how to drive it. Run config
+# references a profile by name (`workerModel: glm-4.7`); a bare `claude-*` id
+# with no profile here resolves to an implicit native-Anthropic profile, so
+# existing runs keep working unchanged.
+#
+# Auth is per-profile and env-only: `authEnv` names the variable, never the
+# value. `authKind`: oauth → CLAUDE_CODE_OAUTH_TOKEN; auth-token →
+# ANTHROPIC_AUTH_TOKEN + baseUrl; api-key → ANTHROPIC_API_KEY (+ optional baseUrl).
+#
+# Pricing (optional, $/Mtok) lets telemetry estimate spend for providers whose
+# harness reports tokens but not dollars.
+
+profiles:
+  # --- Native Anthropic (Claude Code / Max subscription) ---
+  - name: claude-opus-4-6
+    provider: anthropic
+    modelId: claude-opus-4-6
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
+  - name: claude-sonnet-4-6
+    provider: anthropic
+    modelId: claude-sonnet-4-6
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
+  # Cheap native model for `model probe` connectivity checks.
+  - name: claude-haiku-4-5
+    provider: anthropic
+    modelId: claude-haiku-4-5-20251001
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
+  # --- z.ai GLM via Claude Code (Anthropic-compatible coding endpoint) ---
+  # Endpoint + integration per docs.z.ai/devpack/tool/claude. Model IDs and
+  # pricing are placeholders pending live verification (task 4.2 probe) —
+  # re-pin deliberately once confirmed against the operator's z.ai plan.
+  - name: glm-5.1
+    provider: z.ai
+    modelId: glm-5.1
+    transport: claude-code
+    baseUrl: https://api.z.ai/api/anthropic
+    authEnv: ZAI_API_KEY
+    authKind: auth-token
+
+  - name: glm-4.7
+    provider: z.ai
+    modelId: glm-4.7
+    transport: claude-code
+    baseUrl: https://api.z.ai/api/anthropic
+    authEnv: ZAI_API_KEY
+    authKind: auth-token
+
+  - name: glm-4.5-air
+    provider: z.ai
+    modelId: glm-4.5-air
+    transport: claude-code
+    baseUrl: https://api.z.ai/api/anthropic
+    authEnv: ZAI_API_KEY
+    authKind: auth-token

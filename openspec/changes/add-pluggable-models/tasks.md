@@ -2,9 +2,9 @@
 
 ## 1. Registry
 
-- [ ] 1.1 Define model-profile zod schema (provider, modelId, transport, env, auth, pricing) and loader with validation (judge≠worker, unknown-profile fail-fast, implicit `claude-*` profiles)
-- [ ] 1.2 Author `config/models.yaml`: native Anthropic profiles (opus-4-6 worker, sonnet-4-6 judge, haiku probe) + z.ai profiles (glm-5.1, glm-4.7, glm-4.5-air per docs.z.ai/devpack/tool/claude — verify model IDs and endpoint at implementation time)
-- [ ] 1.3 Add `ZAI_API_KEY` to `.env.example` and redaction list; document per-profile auth
+- [x] 1.1 Define model-profile zod schema (provider, modelId, transport, env, auth, pricing) and loader with validation (judge≠worker, unknown-profile fail-fast, implicit `claude-*` profiles)
+- [x] 1.2 Author `config/models.yaml`: native Anthropic profiles (opus-4-6 worker, sonnet-4-6 judge, haiku probe) + z.ai profiles (glm-5.1, glm-4.7, glm-4.5-air per docs.z.ai/devpack/tool/claude — verify model IDs and endpoint at implementation time)
+- [x] 1.3 Add `ZAI_API_KEY` to `.env.example` and redaction list; document per-profile auth
 
 ## 2. Resolution and Drivers
 
@@ -20,7 +20,7 @@
 
 ## 4. Validation
 
-- [ ] 4.1 Unit tests: schema validation, implicit profiles, judge≠worker, cost-source selection
+- [x] 4.1 Unit tests: schema validation, implicit profiles, judge≠worker, cost-source selection
 - [ ] 4.2 Probe glm-4.7 live with operator's z.ai key; record protocol deviations observed
 - [ ] 4.3 One GLM smoke trial (single candidate, n=1) end-to-end before any GLM matrix; document in retro
 - [ ] 4.4 Add Kimi K2 / MiniMax M3 / Qwen Coder profiles when operator supplies keys; probe each (no matrix until smoke-tested)

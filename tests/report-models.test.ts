@@ -87,6 +87,8 @@ describe("reporting with model registry (tasks 3.1/3.2)", () => {
 		expect(results.workerModel?.provider).toBe("z.ai");
 		expect(results.crossVendorJudge).toBe(true);
 		expect(results.costSource).toBe("tokens-only");
+		// Embedded config reconciled to the resolved worker (not the default).
+		expect(results.config.model).toBe("glm-4.7");
 	});
 
 	test("scorecard renders cross-vendor and cost-basis caveats", () => {

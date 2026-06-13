@@ -34,11 +34,15 @@ export interface BuildResultsInput {
  */
 export function buildResults(input: BuildResultsInput): RunResults {
 	const weights = input.weights ?? input.config.weights;
-	// Key scores by the resolved worker model when present (so --worker-model
-	// runs aren't mislabeled with config.model's default).
+	// Reconcile the embedded config with the resolved worker model so
+	// `config.model` agrees with workerModel/provenance instead of keeping its
+	// default while --worker-model is in effect (also fixes re-reported runs).
+	const config = input.config;
+	if (input.workerModel) config.model = input.workerModel.name;
+	// Key scores by the resolved worker model when present.
 	const scores = scoreRun({
-		harness: input.config.harness,
-		model: input.workerModel?.name ?? input.config.model,
+		harness: config.harness,
+		model: input.workerModel?.name ?? config.model,
 		weights,
 		trials: input.trials,
 	});

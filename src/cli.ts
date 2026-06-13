@@ -324,6 +324,12 @@ async function cmdReport(): Promise<void> {
 		startedAt: prior.startedAt,
 		endedAt: prior.endedAt,
 		trials,
+		// Preserve the resolved model metadata recorded at run time (re-report
+		// must not drop the worker/judge profiles or caveats).
+		workerModel: prior.workerModel,
+		judgeModel: prior.judgeModel,
+		crossVendorJudge: prior.crossVendorJudge,
+		costSource: prior.costSource,
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);

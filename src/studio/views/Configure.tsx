@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { Weights } from "../../types";
 import { Badge } from "../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "../components/ui/card";
 import { DEFAULT_WEIGHTS, useFetch } from "../lib/api";
 import { WeightControls } from "./shared";
 
@@ -40,6 +45,49 @@ export function Configure() {
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [vr, setVr] = useState<Validation>();
 	const [copied, setCopied] = useState(false);
+	const [confirm, setConfirm] = useState<Validation["budget"]>();
+	const [launchErr, setLaunchErr] = useState<string>();
+	const [busy, setBusy] = useState(false);
+
+	const launch = (dryRun: boolean, confirmed: boolean) => {
+		setBusy(true);
+		setLaunchErr(undefined);
+		fetch("/api/launch", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				target,
+				candidates,
+				harness,
+				workerModel,
+				provider: dryRun ? "worktree" : provider,
+				trials,
+				weights,
+				grade,
+				dryRun,
+				confirmed,
+			}),
+		})
+			.then((r) => r.json())
+			.then(
+				(d: {
+					runId?: string;
+					errors?: string[];
+					needsConfirmation?: boolean;
+					budget?: Validation["budget"];
+				}) => {
+					if (d.runId) {
+						window.location.href = "/runs";
+					} else if (d.needsConfirmation) {
+						setConfirm(d.budget);
+					} else if (d.errors) {
+						setLaunchErr(d.errors.join("; "));
+					}
+				},
+			)
+			.catch((e) => setLaunchErr(String(e)))
+			.finally(() => setBusy(false));
+	};
 
 	// Seed sensible defaults once options load.
 	useEffect(() => {
@@ -67,7 +115,16 @@ export function Configure() {
 			.then((r) => r.json())
 			.then((d) => setVr(d as Validation))
 			.catch(() => setVr(undefined));
-	}, [target, candidates, harness, workerModel, provider, trials, weights, grade]);
+	}, [
+		target,
+		candidates,
+		harness,
+		workerModel,
+		provider,
+		trials,
+		weights,
+		grade,
+	]);
 
 	if (!opts) return <p className="text-muted-foreground">loading…</p>;
 
@@ -80,8 +137,8 @@ export function Configure() {
 		<>
 			<h1 className="text-xl font-bold tracking-tight">Configure a run</h1>
 			<p className="mt-1 text-[13px] text-muted-foreground">
-				Build a valid run from the live registries. Submitting copies the
-				equivalent CLI command — launching from the studio is added next.
+				Build a valid run from the live registries, then launch a real run, a
+				zero-spend dry run, or copy the equivalent CLI command.
 			</p>
 
 			<div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -257,41 +314,112 @@ export function Configure() {
 								{copied ? "copied" : "copy"}
 							</button>
 						</div>
-						<div className="mt-3 flex items-center gap-3">
+						<div className="mt-3 flex flex-wrap items-center gap-3">
 							<button
 								type="button"
-								className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted"
-								onClick={() => {
-									fetch("/api/launch", {
-										method: "POST",
-										headers: { "content-type": "application/json" },
-										body: JSON.stringify({
-											target,
-											candidates,
-											harness,
-											workerModel,
-											provider: "worktree",
-											trials,
-											weights,
-											dryRun: true,
-										}),
-									})
-										.then((r) => r.json())
-										.then((d: { runId?: string }) => {
-											if (d.runId) window.location.href = "/runs";
-										});
-								}}
+								disabled={busy}
+								className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+								onClick={() => launch(false, false)}
 							>
-								Test launch (worktree dry run)
+								Launch real run
+							</button>
+							<button
+								type="button"
+								disabled={busy}
+								className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted disabled:opacity-50"
+								onClick={() => launch(true, false)}
+							>
+								Dry run (no spend)
 							</button>
 							<span className="text-[12px] text-muted-foreground">
-								no spend — fake build to exercise the launch → status → review
-								chain. Real runs: copy the command.
+								Real runs bill your subscription and require confirmation. Dry
+								run uses a fake build on worktree.
 							</span>
 						</div>
+						{launchErr && (
+							<p className="mt-2 text-[13px] text-danger">⚠ {launchErr}</p>
+						)}
 					</CardContent>
 				</Card>
 			) : null}
+
+			{confirm && (
+				<ConfirmDialog
+					budget={confirm}
+					provider={provider}
+					grade={grade}
+					busy={busy}
+					onCancel={() => setConfirm(undefined)}
+					onConfirm={() => {
+						setConfirm(undefined);
+						launch(false, true);
+					}}
+				/>
+			)}
 		</>
+	);
+}
+
+function ConfirmDialog({
+	budget,
+	provider,
+	grade,
+	busy,
+	onCancel,
+	onConfirm,
+}: {
+	budget: NonNullable<Validation["budget"]>;
+	provider: string;
+	grade: boolean;
+	busy: boolean;
+	onCancel: () => void;
+	onConfirm: () => void;
+}) {
+	return (
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle className="text-[15px]">Confirm real run</CardTitle>
+				</CardHeader>
+				<CardContent className="text-[13px]">
+					<p className="mb-3 text-muted-foreground">
+						This starts a real evaluation that bills your subscription.
+					</p>
+					<ul className="mb-4 space-y-1">
+						<li>
+							Provider: <span className="font-medium">{provider}</span>
+						</li>
+						<li>
+							Trials: <span className="font-medium">{budget.totalTrials}</span>
+						</li>
+						<li>
+							Max spend:{" "}
+							<span className="font-medium">
+								${budget.maxCostUsd.toFixed(0)}
+							</span>{" "}
+							· ≤ {budget.wallClockHours.toFixed(1)}h wall-clock
+						</li>
+						<li>Grading after build: {grade ? "yes" : "no"}</li>
+					</ul>
+					<div className="flex justify-end gap-2">
+						<button
+							type="button"
+							className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+							onClick={onCancel}
+						>
+							Cancel
+						</button>
+						<button
+							type="button"
+							disabled={busy}
+							className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+							onClick={onConfirm}
+						>
+							Confirm &amp; launch (${budget.maxCostUsd.toFixed(0)})
+						</button>
+					</div>
+				</CardContent>
+			</Card>
+		</div>
 	);
 }

@@ -45,6 +45,13 @@ export interface SchedulerDeps {
 	executeScript?: typeof executeSessionScript;
 	archive?: typeof archiveTrial;
 	now?: () => Date;
+	/**
+	 * Cooperative cancel (studio live runs): when aborted, no new trial starts —
+	 * remaining plans terminate as skipped/cancelled. In-flight trials finish
+	 * their current sandbox lifecycle, whose `finally` tears the sandbox down, so
+	 * a cancelled run leaks no cloud resources.
+	 */
+	abortSignal?: AbortSignal;
 }
 
 /** Build the full trial matrix: candidates x trialsPerCandidate. */
@@ -109,6 +116,12 @@ export async function runMatrix(
 			for (;;) {
 				const plan = queue.shift();
 				if (!plan) return;
+				if (deps.abortSignal?.aborted) {
+					results.push(
+						skippedResult(plan, config, deps, "run cancelled by operator"),
+					);
+					continue;
+				}
 				if (ledger.exceeded()) {
 					results.push(
 						skippedResult(plan, config, deps, "run cost ceiling reached"),

@@ -23,14 +23,27 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 describe("eval-studio launch → status → review (task 4.2, dry run)", () => {
 	test("a worktree dry run completes through the orchestrator and writes results", async () => {
 		// Validation is enforced: bad request never launches.
-		expect(launchRun({ ...REQ, candidates: [] }, { dryRun: true }).errors).toBeDefined();
-		// Real (non-dry) launch is refused from the studio.
-		expect(launchRun(REQ, { dryRun: false }).errors?.[0]).toMatch(/disabled/);
+		const bad = await launchRun({ ...REQ, candidates: [] }, { dryRun: true });
+		expect("errors" in bad && bad.errors).toBeTruthy();
+		// A real (non-dry) launch without confirmation returns the budget to
+		// review and starts nothing — no real spend from a test.
+		const unconfirmed = await launchRun(REQ, { dryRun: false });
+		expect("needsConfirmation" in unconfirmed).toBe(true);
+		// A denying policy refuses the real launch with its reason.
+		const denied = await launchRun(REQ, {
+			dryRun: false,
+			policy: {
+				async canLaunch() {
+					return { ok: false, reason: "nope" };
+				},
+			},
+		});
+		expect("errors" in denied && denied.errors[0]).toBe("nope");
 
-		const { runId, errors } = launchRun(REQ, { dryRun: true });
-		expect(errors).toBeUndefined();
-		expect(runId).toBeTruthy();
-		const id = runId as string;
+		const started = await launchRun(REQ, { dryRun: true });
+		expect("runId" in started).toBe(true);
+		const id = (started as { runId: string }).runId;
+		expect(id).toBeTruthy();
 
 		// Poll the queue (3.4 live status) until the run reaches a terminal state.
 		let entry = getQueue().find((e) => e.runId === id);

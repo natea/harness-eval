@@ -7,3 +7,4 @@ runs/
 *.log
 skills/
 .DS_Store
+.playwright-mcp/

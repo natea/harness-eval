@@ -12,11 +12,12 @@ import {
 
 interface QueueEntry {
 	runId: string;
-	dryRun: boolean;
-	status: "running" | "completed" | "error";
+	kind: "dry" | "live";
+	status: "running" | "completed" | "error" | "cancelled";
 	startedAt: string;
 	candidates: string[];
 	trials: Record<string, string>;
+	costUsdSoFar: number;
 	error?: string;
 }
 
@@ -24,6 +25,7 @@ const STATUS_VARIANT = {
 	running: "warn",
 	completed: "ok",
 	error: "danger",
+	cancelled: "outline",
 } as const;
 
 /** Live status of studio-launched runs (polls /api/queue). */
@@ -39,6 +41,13 @@ export function Runs() {
 		const id = setInterval(tick, 1500);
 		return () => clearInterval(id);
 	}, []);
+
+	const cancel = (runId: string) =>
+		fetch("/api/cancel", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ runId }),
+		}).catch(() => {});
 
 	return (
 		<>
@@ -65,7 +74,9 @@ export function Runs() {
 									<TableHead>Status</TableHead>
 									<TableHead>Candidates</TableHead>
 									<TableHead>Trials</TableHead>
+									<TableHead>Cost</TableHead>
 									<TableHead>Mode</TableHead>
+									<TableHead />
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -101,8 +112,26 @@ export function Runs() {
 												.map(([id, s]) => `${id}:${s}`)
 												.join("  ") || "—"}
 										</TableCell>
+										<TableCell className="font-mono text-[12px]">
+											{e.kind === "live"
+												? `$${e.costUsdSoFar.toFixed(2)}`
+												: "—"}
+										</TableCell>
 										<TableCell>
-											{e.dryRun && <Badge variant="outline">dry run</Badge>}
+											<Badge variant={e.kind === "dry" ? "outline" : "default"}>
+												{e.kind === "dry" ? "dry run" : "live"}
+											</Badge>
+										</TableCell>
+										<TableCell>
+											{e.status === "running" && (
+												<button
+													type="button"
+													className="rounded-md border border-border px-2 py-1 text-[12px] text-foreground hover:bg-muted"
+													onClick={() => cancel(e.runId)}
+												>
+													Cancel
+												</button>
+											)}
 										</TableCell>
 									</TableRow>
 								))}

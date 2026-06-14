@@ -59,6 +59,12 @@ export interface StudioRunRequest {
 	trials: number;
 	weights: Weights;
 	grade?: boolean;
+	/** Optional design-system selection (design-adherence). */
+	design?: string;
+	/** Explicit acknowledgement of the budget envelope — required for a real run. */
+	confirmed?: boolean;
+	/** Operator token presented for launch authorization, if configured. */
+	operatorToken?: string;
 }
 
 export interface ValidationResult {
@@ -166,6 +172,7 @@ export function cliCommand(req: StudioRunRequest): string {
 	];
 	if (req.workerModel && req.workerModel !== "claude-opus-4-6")
 		parts.push(`--worker-model ${req.workerModel}`);
+	if (req.design) parts.push(`--design ${req.design}`);
 	if (req.grade) parts.push("--grade");
 	return parts.join(" ");
 }

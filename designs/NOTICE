@@ -1,0 +1,19 @@
+harness-eval — design systems
+==============================
+
+The design systems in this directory are vendored verbatim from the
+awesome-design-md catalog, licensed under the MIT License.
+
+awesome-design-md
+-----------------
+Copyright (c) VoltAgent
+
+Source: https://github.com/VoltAgent/awesome-design-md
+Each `designs/<name>/DESIGN.md` is taken unmodified from that repository's
+`design-md/` tree at the commit recorded in designs/provenance.yaml. See that
+file for the exact commit and per-design original paths.
+
+A copy of the MIT License is available at:
+    https://opensource.org/licenses/MIT
+
+This NOTICE preserves the upstream attribution as required.

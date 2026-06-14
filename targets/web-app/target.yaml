@@ -1,5 +1,6 @@
 name: web-app
 version: "1.0.0"
+ui: true
 prdFile: PRD.md
 prdSha256: 88c9a868edefb3742eaadf24609009553688b17f84351dac0325301121dfcf2d
 testplanFile: testplan.yaml

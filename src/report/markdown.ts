@@ -107,6 +107,12 @@ export function renderScorecard(r: RunResults): string {
 						? `; ${fmtMs(tel.agentDurationMs)} agent time, $${tel.totalCostUsd.toFixed(2)}, ${tel.totalTurns} turns, ${(tel.totalTokens.inputTokens + tel.totalTokens.outputTokens).toLocaleString()} tokens (+${tel.totalTokens.cacheReadTokens.toLocaleString()} cache-read)`
 						: ""),
 			);
+			const da = t.grades?.designAdherence;
+			if (da) {
+				lines.push(
+					`    - design adherence (\`${da.design}\`): **${da.score}** — color ${da.colorScore} (${da.colorsMatched}/${da.colorsTotal} tokens), type ${da.typographyScore} (${da.typographyMatched}/${da.typographyTotal})`,
+				);
+			}
 			const integ = t.grades?.integration;
 			if (integ?.ran) {
 				const ok = integ.fixtures.filter(

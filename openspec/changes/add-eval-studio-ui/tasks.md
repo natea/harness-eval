@@ -10,7 +10,7 @@
 
 - [x] 2.1 Port data layer (run index, schema gate, grades join) and shared scoring module into the studio server
 - [x] 2.2 Leaderboard + run scorecard + trial drill-down + step matrix on shadcn components, with re-weighting (Slider) and tooltips (Tooltip) — CLI-parity test reused
-- [ ] 2.3 Retire-or-keep decision recorded for bun run dashboard once parity verified
+- [x] 2.3 Retire-or-keep decision (KEEP `bun run dashboard` until the studio reaches launch parity; documented in docs/EVAL-STUDIO.md + README) recorded for bun run dashboard once parity verified
 
 ## 3. Configure + queue
 
@@ -23,4 +23,4 @@
 
 - [x] 4.1 Unit tests: validation mirroring (registry rejections identical to CLI), scoring parity, launch endpoint accepts only RunConfig shapes
 - [ ] 4.2 E2E: configure → launch a worktree dry run → watch status → review results, all through the studio
-- [ ] 4.3 docs/ + screenshots; update website dashboard mentions
+- [x] 4.3 docs/ + screenshots; update website dashboard mentions

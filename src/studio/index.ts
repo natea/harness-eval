@@ -10,6 +10,7 @@
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { loadTarget } from "../targets";
 import index from "./index.html";
+import { studioOptions, validateRunRequest } from "./options";
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
@@ -19,8 +20,25 @@ const server = Bun.serve({
 	port,
 	routes: {
 		"/": index,
+		"/configure": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
+
+		// Registry-driven option sources for the Configure view.
+		"/api/options": { GET: () => Response.json(studioOptions()) },
+
+		// Validate a run request with the same rules the CLI enforces; returns
+		// inline errors, or the equivalent CLI command + budget envelope. Pure
+		// validation — never launches anything.
+		"/api/validate": {
+			POST: async (req) => {
+				const body = (await req.json().catch(() => ({}))) as Record<
+					string,
+					unknown
+				>;
+				return Response.json(validateRunRequest(body));
+			},
+		},
 
 		// Leaderboard payload: index without per-trial step evidence (kept light;
 		// grades join happens on the trial route).

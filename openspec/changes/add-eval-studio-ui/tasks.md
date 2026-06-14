@@ -14,8 +14,8 @@
 
 ## 3. Configure + queue
 
-- [ ] 3.1 Registry-driven option sources (targets, candidates, harness/model when registries land) with mirrored validation and inline rejection reasons
-- [ ] 3.2 Budget envelope estimator (trials × caps; subscription window note) on the confirm dialog
+- [x] 3.1 Registry-driven option sources (targets, candidates, harness/model when registries land) with mirrored validation and inline rejection reasons
+- [x] 3.2 Budget envelope estimator (trials × caps; subscription window note) on the confirm dialog
 - [ ] 3.3 Run-launch endpoint wrapping the orchestrator; queue persistence; CLI-command copy mode
 - [ ] 3.4 Runs view with live trial status from provenance files
 

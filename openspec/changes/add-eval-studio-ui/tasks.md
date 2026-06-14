@@ -8,8 +8,8 @@
 
 ## 2. Review view first (parity)
 
-- [ ] 2.1 Port data layer (run index, schema gate, grades join) and shared scoring module into the studio server
-- [ ] 2.2 Leaderboard + run scorecard + trial drill-down + step matrix on shadcn components, with re-weighting (Slider) and tooltips (Tooltip) — CLI-parity test reused
+- [x] 2.1 Port data layer (run index, schema gate, grades join) and shared scoring module into the studio server
+- [x] 2.2 Leaderboard + run scorecard + trial drill-down + step matrix on shadcn components, with re-weighting (Slider) and tooltips (Tooltip) — CLI-parity test reused
 - [ ] 2.3 Retire-or-keep decision recorded for bun run dashboard once parity verified
 
 ## 3. Configure + queue

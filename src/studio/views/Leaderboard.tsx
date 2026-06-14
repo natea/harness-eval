@@ -1,8 +1,7 @@
 import { useState } from "react";
 import type { CandidateScore, Weights } from "../../types";
 import { Badge } from "../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Slider } from "../components/ui/slider";
+import { Card, CardContent } from "../components/ui/card";
 import {
 	Table,
 	TableBody,
@@ -11,96 +10,14 @@ import {
 	TableHeader,
 	TableRow,
 } from "../components/ui/table";
-import { InfoTip } from "../components/ui/tooltip";
 import {
 	DEFAULT_WEIGHTS,
 	DIM_LABELS,
-	HELP,
 	type RunSummary,
 	reweight,
 	useFetch,
 } from "../lib/api";
-
-const DIM_KEYS = Object.keys(DIM_LABELS) as (keyof Weights)[];
-
-/** Horizontal data bar + monospace value (the accent's only decorative use). */
-function Bar({ v }: { v: number }) {
-	return (
-		<div className="flex items-center gap-2">
-			<span
-				className="inline-block h-[9px] rounded-[2px] bg-primary"
-				style={{ width: `${Math.max(1, v) * 0.6}px` }}
-			/>
-			<span className="font-mono text-[12px]">{v.toFixed(1)}</span>
-		</div>
-	);
-}
-
-function ColHead({ label }: { label: string }) {
-	return (
-		<span className="inline-flex items-center">
-			{label}
-			{HELP[label] && <InfoTip text={HELP[label]} />}
-		</span>
-	);
-}
-
-function WeightControls({
-	weights,
-	onChange,
-}: {
-	weights: Weights;
-	onChange: (w: Weights) => void;
-}) {
-	const set = (k: keyof Weights, v: number) => {
-		const next = { ...weights, [k]: v };
-		const sum =
-			next.prdAdherence + next.codeQuality + next.speed + next.tokenSpend;
-		onChange({
-			prdAdherence: next.prdAdherence / sum,
-			codeQuality: next.codeQuality / sum,
-			speed: next.speed / sum,
-			tokenSpend: next.tokenSpend / sum,
-		});
-	};
-	return (
-		<Card className="my-3">
-			<CardHeader className="flex flex-row items-center justify-between pb-1">
-				<CardTitle className="text-[13px]">
-					Re-weight{" "}
-					<span className="font-normal text-muted-foreground">
-						(ephemeral, client-side)
-					</span>
-				</CardTitle>
-				<button
-					type="button"
-					onClick={() => onChange(DEFAULT_WEIGHTS)}
-					className="rounded-sm border border-border px-2 py-0.5 text-[12px] text-muted-foreground hover:bg-muted"
-				>
-					reset
-				</button>
-			</CardHeader>
-			<CardContent className="grid grid-cols-1 gap-x-6 gap-y-2 pt-1 sm:grid-cols-2 lg:grid-cols-4">
-				{DIM_KEYS.map((k) => (
-					<div key={k} className="flex items-center gap-3">
-						<span className="w-28 shrink-0 text-[13px]">{DIM_LABELS[k]}</span>
-						<Slider
-							className="flex-1"
-							min={0}
-							max={100}
-							step={1}
-							value={[weights[k] * 100]}
-							onValueChange={([v]) => set(k, (v ?? 0) / 100)}
-						/>
-						<span className="w-12 shrink-0 text-right font-mono text-[12px]">
-							{(weights[k] * 100).toFixed(1)}%
-						</span>
-					</div>
-				))}
-			</CardContent>
-		</Card>
-	);
-}
+import { Bar, ColHead, DIM_KEYS, WeightControls } from "./shared";
 
 export function Leaderboard() {
 	const runs = useFetch<RunSummary[]>("/api/runs");
@@ -181,17 +98,11 @@ export function Leaderboard() {
 								<TableHead className="w-8">#</TableHead>
 								<TableHead>Candidate</TableHead>
 								<TableHead>Harness / model</TableHead>
-								<TableHead>
-									<ColHead label="Composite" />
-								</TableHead>
+								<ColHead label="Composite" />
 								{Object.values(DIM_LABELS).map((l) => (
-									<TableHead key={l}>
-										<ColHead label={l} />
-									</TableHead>
+									<ColHead key={l} label={l} />
 								))}
-								<TableHead>
-									<ColHead label="Trials" />
-								</TableHead>
+								<ColHead label="Trials" />
 								<TableHead>Flags</TableHead>
 							</TableRow>
 						</TableHeader>

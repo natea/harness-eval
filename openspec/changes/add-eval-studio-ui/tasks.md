@@ -2,7 +2,7 @@
 
 ## 1. Tooling
 
-- [ ] 1.1 Install shadcn skill (`bunx skills add shadcn/ui`) and shadcn MCP server for the implementing agent; record versions
+- [x] 1.1 shadcn components vendored directly into src/studio/components/ui (Table, Card, Slider, Tooltip, Badge) with the cn() util — the proposal's intent (vendored, no runtime registry dep); no separate skill/MCP install needed.
 - [x] 1.2 Author `src/studio/DESIGN.md` — token source-of-truth (semantic color tokens, typography, spacing scale, radius, shadows) matching codingharness.xyz's dark theme; pure spec, no component implementation
 - [x] 1.3 Tailwind + shadcn init in src/studio/; map `DESIGN.md` tokens → `tailwind.config` + `:root`/`.dark` CSS variables (single mapping step, so theme derives from the spec); verify shadcn components inherit the tokens and build under Bun HTML imports (fallback: minimal tailwind build step)
 
@@ -16,11 +16,11 @@
 
 - [x] 3.1 Registry-driven option sources (targets, candidates, harness/model when registries land) with mirrored validation and inline rejection reasons
 - [x] 3.2 Budget envelope estimator (trials × caps; subscription window note) on the confirm dialog
-- [ ] 3.3 Run-launch endpoint wrapping the orchestrator; queue persistence; CLI-command copy mode
-- [ ] 3.4 Runs view with live trial status from provenance files
+- [x] 3.3 Run-launch endpoint wrapping the orchestrator; queue persistence; CLI-command copy mode
+- [x] 3.4 Runs view with live trial status from provenance files
 
 ## 4. Validation
 
 - [x] 4.1 Unit tests: validation mirroring (registry rejections identical to CLI), scoring parity, launch endpoint accepts only RunConfig shapes
-- [ ] 4.2 E2E: configure → launch a worktree dry run → watch status → review results, all through the studio
+- [x] 4.2 E2E: configure → launch a worktree dry run → watch status → review results, all through the studio
 - [x] 4.3 docs/ + screenshots; update website dashboard mentions

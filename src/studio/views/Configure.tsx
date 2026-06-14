@@ -257,6 +257,38 @@ export function Configure() {
 								{copied ? "copied" : "copy"}
 							</button>
 						</div>
+						<div className="mt-3 flex items-center gap-3">
+							<button
+								type="button"
+								className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted"
+								onClick={() => {
+									fetch("/api/launch", {
+										method: "POST",
+										headers: { "content-type": "application/json" },
+										body: JSON.stringify({
+											target,
+											candidates,
+											harness,
+											workerModel,
+											provider: "worktree",
+											trials,
+											weights,
+											dryRun: true,
+										}),
+									})
+										.then((r) => r.json())
+										.then((d: { runId?: string }) => {
+											if (d.runId) window.location.href = "/runs";
+										});
+								}}
+							>
+								Test launch (worktree dry run)
+							</button>
+							<span className="text-[12px] text-muted-foreground">
+								no spend — fake build to exercise the launch → status → review
+								chain. Real runs: copy the command.
+							</span>
+						</div>
 					</CardContent>
 				</Card>
 			) : null}

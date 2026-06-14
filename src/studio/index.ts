@@ -10,7 +10,12 @@
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { loadTarget } from "../targets";
 import index from "./index.html";
-import { studioOptions, validateRunRequest } from "./options";
+import { getQueue, launchRun } from "./launcher";
+import {
+	type StudioRunRequest,
+	studioOptions,
+	validateRunRequest,
+} from "./options";
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
@@ -21,6 +26,7 @@ const server = Bun.serve({
 	routes: {
 		"/": index,
 		"/configure": index,
+		"/runs": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
 
@@ -39,6 +45,21 @@ const server = Bun.serve({
 				return Response.json(validateRunRequest(body));
 			},
 		},
+
+		// Launch a run (dry-run only from the studio; real runs use the CLI
+		// command). Background; returns the runId immediately.
+		"/api/launch": {
+			POST: async (req) => {
+				const body = (await req.json().catch(() => ({}))) as Partial<
+					StudioRunRequest
+				> & { dryRun?: boolean };
+				const out = launchRun(body, { dryRun: body.dryRun === true });
+				return Response.json(out, { status: out.errors ? 400 : 200 });
+			},
+		},
+
+		// Live status of studio-launched runs.
+		"/api/queue": { GET: () => Response.json(getQueue()) },
 
 		// Leaderboard payload: index without per-trial step evidence (kept light;
 		// grades join happens on the trial route).

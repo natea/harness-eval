@@ -2,15 +2,17 @@ import { createRoot } from "react-dom/client";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Configure } from "./views/Configure";
 import { Leaderboard } from "./views/Leaderboard";
+import { Runs } from "./views/Runs";
 import { RunView } from "./views/RunView";
 import { TrialView } from "./views/TrialView";
 import "./index.css";
 
-/** Path-based routing: / → leaderboard, /configure → configure,
+/** Path-based routing: / → leaderboard, /configure → configure, /runs → queue,
  *  /runs/:id → scorecard, /runs/:id/trials/:trialId → trial. */
 function Routed() {
 	const path = window.location.pathname;
 	if (path === "/configure") return <Configure />;
+	if (path === "/runs") return <Runs />;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
 		return <TrialView runId={trial[1]} trialId={trial[2]} />;
@@ -21,7 +23,6 @@ function Routed() {
 
 function Nav() {
 	const path = window.location.pathname;
-	const isConfig = path === "/configure";
 	const tab = (href: string, label: string, active: boolean) => (
 		<a
 			href={href}
@@ -33,8 +34,9 @@ function Nav() {
 	return (
 		<nav className="mb-4 flex items-center gap-1 border-b border-border pb-2">
 			<span className="mr-2 font-semibold">Eval Studio</span>
-			{tab("/", "Review", !isConfig)}
-			{tab("/configure", "Configure", isConfig)}
+			{tab("/", "Review", path === "/")}
+			{tab("/configure", "Configure", path === "/configure")}
+			{tab("/runs", "Runs", path === "/runs")}
 		</nav>
 	);
 }

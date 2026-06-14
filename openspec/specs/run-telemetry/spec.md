@@ -4,15 +4,19 @@
 TBD - created by archiving change setup-harness-eval-framework. Update Purpose after archive.
 ## Requirements
 ### Requirement: Session metrics capture
-The system SHALL capture, from each headless Claude Code session's JSON output, at minimum: wall-clock duration, input tokens, output tokens, cache-read and cache-creation tokens, reported cost in USD, and turn count; and SHALL aggregate these per trial across all sessions in the trial's session script.
+The system SHALL capture, from each headless harness session's JSON output, at minimum: wall-clock duration, input tokens, output tokens, cache-read and cache-creation tokens, turn count, and cost. Cost SHALL be taken from the harness when natively reported; otherwise computed from token usage and the worker model profile's pricing; otherwise recorded as tokens-only. The cost source SHALL be recorded per trial, and per-trial aggregation SHALL sum sessions as today.
 
-#### Scenario: Single-session trial metrics
-- **WHEN** a Superpowers trial completes its one session
-- **THEN** the trial telemetry record contains that session's duration, token breakdown, cost, and turn count, and trial totals equal the session values
+#### Scenario: Harness-reported cost (Anthropic billing)
+- **WHEN** a trial runs on a native Anthropic profile
+- **THEN** trial cost sums the sessions' harness-reported `total_cost_usd` with source `harness-reported`
 
-#### Scenario: Multi-session trial aggregation
-- **WHEN** a GSD trial completes five sessions
-- **THEN** trial totals are the sums across all five sessions, and per-session records are retained individually
+#### Scenario: Profile-priced cost (third-party endpoint)
+- **WHEN** a trial runs on a profile whose harness reports zero/no cost but declares pricing
+- **THEN** trial cost is computed from summed token usage at the profile's rates with source `profile-priced`
+
+#### Scenario: Tokens-only fallback
+- **WHEN** a profile has no pricing and the harness reports no cost
+- **THEN** the trial records cost as null with source `tokens-only`, and the run's token-spend dimension uses token counts for every candidate in that run
 
 ### Requirement: Speed measurement boundaries
 Speed of execution SHALL be measured as agent working time: the sum of session durations from first prompt submission to final result per session. Sandbox provisioning, framework installation, and grading time MUST be recorded separately and MUST NOT count toward the speed dimension.

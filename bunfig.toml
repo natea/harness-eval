@@ -1,0 +1,3 @@
+# Process Tailwind in HTML imports served by Bun.serve (Eval Studio).
+[serve.static]
+plugins = ["bun-plugin-tailwind"]

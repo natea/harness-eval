@@ -34,10 +34,9 @@ before implementation:
   and cross-vendor-judge + cost-basis caveats in results/scorecards.
   ([`add-pluggable-models`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-pluggable-models))
 
-Built and validated on branches, pending merge: **Docker / E2B / macOS-VZ
-isolation providers** (live-validated on the `pluggable-providers` branch).
-**Not yet built:** the Eval Studio web UI, additional model providers
-(Kimi / MiniMax / Qwen), and a language-effectiveness evaluation mode. See
+In review on branches: the **Eval Studio web UI** (review + configure on
+shadcn/ui — this branch). **Not yet built:** a language-effectiveness
+evaluation mode. See
 **[ROADMAP.md](ROADMAP.md)**.
 
 ## How it works
@@ -167,6 +166,21 @@ every scoring column, and live re-weighting sliders that recompute
 composites client-side via the same scoring module the CLI uses. Runs with
 unknown results schema versions are listed with a regenerate hint instead of
 rendering.
+
+## Eval Studio (shadcn/ui)
+
+```sh
+bun run studio             # http://127.0.0.1:4871 (localhost-only)
+```
+
+A richer web UI on [shadcn/ui](https://ui.shadcn.com) that adds **run
+configuration** to review: pick target × frameworks × harness × worker-model ×
+provider from the live registries, with validation that mirrors the CLI exactly
+and a copyable run command + budget envelope; plus the full review experience
+(leaderboard, scorecards, trial drill-downs) reusing the same scoring module.
+Themed from a single `DESIGN.md` token spec. See
+[docs/EVAL-STUDIO.md](docs/EVAL-STUDIO.md). (In review; supersedes the dashboard
+once it reaches launch parity.)
 
 ## Specific features
 

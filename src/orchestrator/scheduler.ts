@@ -28,6 +28,16 @@ export interface SchedulerDeps {
 	prdSha256: string;
 	testPlanSha256: string | null;
 	harnessVersion: string;
+	/**
+	 * Resolved worker-model env (model-registry): the secret/base-url/auth-token
+	 * bundle injected into the session. When omitted, falls back to the native
+	 * Anthropic worker-auth rule below (backward compatible).
+	 */
+	workerEnv?: Record<string, string>;
+	/** Resolved worker `--model` flag; defaults to config.model. */
+	workerModelFlag?: string;
+	/** Resolved worker profile identity for provenance (never the key). */
+	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */
 	executeScript?: typeof executeSessionScript;
 	archive?: typeof archiveTrial;
@@ -124,7 +134,8 @@ function baseProvenance(
 		candidateVersion: plan.candidate.pinnedVersion,
 		harness: config.harness,
 		harnessVersion: deps.harnessVersion,
-		model: config.model,
+		model: deps.workerModelRef?.name ?? config.model,
+		workerModel: deps.workerModelRef,
 		provider: deps.provider.id,
 		snapshotId: deps.provider.snapshotId,
 		prdSha256: deps.prdSha256,
@@ -194,20 +205,27 @@ export async function runTrial(
 				plan.candidate,
 				config.harness,
 			);
-			// Worker auth: the only secret that enters the sandbox. Prefer the
-			// subscription OAuth token; pass the API key ONLY as a fallback when
-			// no OAuth token exists (Claude Code prioritizes ANTHROPIC_API_KEY
-			// when both are set, which would silently bill the API account).
-			const workerAuth: Record<string, string> = {};
-			if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
-				workerAuth.CLAUDE_CODE_OAUTH_TOKEN =
-					process.env.CLAUDE_CODE_OAUTH_TOKEN;
-				workerAuth.ANTHROPIC_API_KEY = "";
-			} else if (process.env.ANTHROPIC_API_KEY) {
-				workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+			// Worker auth: the only secret that enters the sandbox. A resolved
+			// model-registry profile (deps.workerEnv) takes precedence; otherwise
+			// fall back to the native rule — prefer the subscription OAuth token,
+			// pass the API key ONLY when no OAuth token exists (Claude Code
+			// prioritizes ANTHROPIC_API_KEY when both are set, silently billing
+			// the API account).
+			let workerAuth: Record<string, string>;
+			if (deps.workerEnv) {
+				workerAuth = deps.workerEnv;
+			} else {
+				workerAuth = {};
+				if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+					workerAuth.CLAUDE_CODE_OAUTH_TOKEN =
+						process.env.CLAUDE_CODE_OAUTH_TOKEN;
+					workerAuth.ANTHROPIC_API_KEY = "";
+				} else if (process.env.ANTHROPIC_API_KEY) {
+					workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+				}
 			}
 			const result = await exec(sandbox, {
-				model: config.model,
+				model: deps.workerModelFlag ?? config.model,
 				steps: script,
 				continuation: setup.continuation,
 				wallClockBudgetMs: config.budget.trialWallClockMs,

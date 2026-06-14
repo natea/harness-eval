@@ -27,6 +27,14 @@ import { loadManifest } from "./grading/integration";
 import { judgeQuality } from "./grading/judge";
 import { scrubWorkspace } from "./grading/scrub";
 import { loadTestPlan } from "./grading/testplan";
+import {
+	defaultCostSource,
+	judgeWorkerRelation,
+	loadModels,
+	resolveClaudeCodeEnv,
+	resolveProfile,
+	toModelRef,
+} from "./models";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
 import { DaytonaProvider } from "./providers/daytona";
 import { WorktreeProvider } from "./providers/worktree";
@@ -106,6 +114,39 @@ async function cmdRun(): Promise<void> {
 		config.candidates,
 		config.harness,
 	);
+
+	// Worker model resolution (model-registry). `--worker-model` (or config.model)
+	// names a profile; bare claude-* ids resolve to implicit native profiles.
+	// Native Anthropic keeps the scheduler's OAuth/API-key fallback; third-party
+	// profiles (e.g. z.ai GLM) inject ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN.
+	const models = loadModels();
+	const workerProfile = resolveProfile(arg("worker-model") ?? config.model, models);
+	let workerEnv: Record<string, string> | undefined;
+	let workerModelFlag = workerProfile.modelId;
+	if (workerProfile.provider !== "anthropic") {
+		const resolved = resolveClaudeCodeEnv(workerProfile);
+		workerEnv = resolved.env;
+		workerModelFlag = resolved.modelFlag; // mapped slot (e.g. "opus") for z.ai
+		console.log(
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via ${workerProfile.baseUrl}`,
+		);
+	} else if (workerProfile.name !== "claude-opus-4-6") {
+		console.log(`worker model: ${workerProfile.name} (anthropic)`);
+	}
+
+	// Judge-validity guardrail (model-registry): judge must differ from worker;
+	// cross-vendor judging is allowed but flagged as a bias caveat.
+	const judgeProfile = resolveProfile(config.judgeModel, models);
+	const { crossVendor } = judgeWorkerRelation(workerProfile, judgeProfile);
+	if (crossVendor) {
+		console.log(
+			`⚠ cross-vendor judge: ${judgeProfile.provider} judge (${judgeProfile.name}) grading ${workerProfile.provider} worker (${workerProfile.name}) — recorded as a judge-bias caveat`,
+		);
+	}
+	const workerModelRef = toModelRef(workerProfile);
+	const judgeModelRef = toModelRef(judgeProfile);
+	const costSource = defaultCostSource(workerProfile);
+
 	const target = loadTarget(arg("target") ?? "symphony-daemon");
 	registry.basePrompt = renderTargetPrompt(registry.basePrompt, target);
 	const sha = target.prdSha256;
@@ -140,6 +181,9 @@ async function cmdRun(): Promise<void> {
 			prdSha256: sha,
 			testPlanSha256: planSha,
 			harnessVersion: arg("harness-version") ?? "2.1.170",
+			workerEnv,
+			workerModelFlag,
+			workerModelRef,
 		},
 	);
 
@@ -197,9 +241,68 @@ async function cmdRun(): Promise<void> {
 		startedAt,
 		endedAt: new Date().toISOString(),
 		trials,
+		workerModel: workerModelRef,
+		judgeModel: judgeModelRef,
+		crossVendorJudge: crossVendor,
+		costSource,
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+}
+
+async function cmdModel(): Promise<void> {
+	const sub = process.argv[3];
+	const ref = process.argv[4];
+	if (sub !== "probe" || !ref) {
+		throw new Error("usage: model probe <profile>   (1-token connectivity check)");
+	}
+	const profile = resolveProfile(ref, loadModels());
+	if (profile.transport !== "claude-code") {
+		throw new Error(
+			`probe supports claude-code transport only (profile '${profile.name}' is ${profile.transport})`,
+		);
+	}
+	const { env, modelFlag } = resolveClaudeCodeEnv(profile);
+	console.log(
+		`probing ${profile.name} (${profile.provider}, model ${modelFlag})${profile.baseUrl ? ` via ${profile.baseUrl}` : ""}…`,
+	);
+	const proc = Bun.spawn(
+		[
+			"claude",
+			"-p",
+			"--model",
+			modelFlag,
+			"--output-format",
+			"json",
+			"--dangerously-skip-permissions",
+		],
+		{
+			stdin: new TextEncoder().encode("Reply with exactly: OK"),
+			stdout: "pipe",
+			stderr: "pipe",
+			env: { ...process.env, ...env },
+		},
+	);
+	const timer = setTimeout(() => proc.kill(), 150000);
+	const out = await new Response(proc.stdout).text();
+	const err = await new Response(proc.stderr).text();
+	clearTimeout(timer);
+	const code = await proc.exited;
+	const line = out
+		.split("\n")
+		.reverse()
+		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
+	if (code === 0 && line) {
+		const obj = JSON.parse(line) as Record<string, unknown>;
+		const reply = String(obj.result ?? "").trim();
+		console.log(
+			`✓ probe OK — reply ${JSON.stringify(reply.slice(0, 40))}, cost $${obj.total_cost_usd ?? "?"}, ${obj.num_turns ?? "?"} turn(s)`,
+		);
+	} else {
+		console.error(`✗ probe FAILED (exit ${code})`);
+		if (err.trim()) console.error(err.trim().split("\n").slice(-5).join("\n"));
+		process.exit(1);
+	}
 }
 
 async function cmdInit(): Promise<void> {
@@ -258,6 +361,12 @@ async function cmdReport(): Promise<void> {
 		startedAt: prior.startedAt,
 		endedAt: prior.endedAt,
 		trials,
+		// Preserve the resolved model metadata recorded at run time (re-report
+		// must not drop the worker/judge profiles or caveats).
+		workerModel: prior.workerModel,
+		judgeModel: prior.judgeModel,
+		crossVendorJudge: prior.crossVendorJudge,
+		costSource: prior.costSource,
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
@@ -267,13 +376,14 @@ const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
 	validate: cmdValidate,
 	init: cmdInit,
+	model: cmdModel,
 	run: cmdRun,
 	report: cmdReport,
 };
 const handler = commands[cmd ?? ""];
 if (!handler) {
 	console.error(
-		"usage: cli.ts <validate|init|run|report> [options]   (see file header)",
+		"usage: cli.ts <validate|init|model|run|report> [options]   (see file header)",
 	);
 	process.exit(2);
 }

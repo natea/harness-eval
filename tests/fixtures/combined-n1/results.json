@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "runId": "combined-n1",
+  "config": {
+    "candidates": [
+      "gsd"
+    ],
+    "harness": "claude-code",
+    "model": "claude-opus-4-6",
+    "trialsPerCandidate": 3,
+    "provider": "worktree",
+    "concurrency": 2,
+    "budget": {
+      "trialWallClockMs": 7200000,
+      "trialCostUsd": 50,
+      "runCostUsd": 400
+    },
+    "weights": {
+      "prdAdherence": 0.4,
+      "codeQuality": 0.25,
+      "speed": 0.175,
+      "tokenSpend": 0.175
+    },
+    "judgeModel": "claude-sonnet-4-6",
+    "infraRetryLimit": 2,
+    "realIntegrationTier": false
+  },
+  "weights": {
+    "prdAdherence": 0.4,
+    "codeQuality": 0.25,
+    "speed": 0.175,
+    "tokenSpend": 0.175
+  },
+  "prdSha256": "fixturesha256fixturesha256fixturesha256fixturesha256fixtureshaa",
+  "testPlanSha256": null,
+  "startedAt": "2026-06-13T00:00:00.000Z",
+  "endedAt": "2026-06-13T00:30:00.000Z",
+  "crossVendorJudge": false,
+  "costSource": "harness-reported",
+  "scores": [
+    {
+      "candidate": "superpowers",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 90,
+        "codeQuality": 80,
+        "speed": 70,
+        "tokenSpend": 100
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 90,
+          "min": 90,
+          "max": 90,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 80,
+          "min": 80,
+          "max": 80,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 70,
+          "min": 70,
+          "max": 70,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 100,
+          "min": 100,
+          "max": 100,
+          "stddev": 0
+        }
+      },
+      "composite": 85.75,
+      "compositeStats": {
+        "mean": 85.75,
+        "min": 85.75,
+        "max": 85.75,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    },
+    {
+      "candidate": "gsd",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 80,
+        "codeQuality": 70,
+        "speed": 100,
+        "tokenSpend": 60
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 80,
+          "min": 80,
+          "max": 80,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 70,
+          "min": 70,
+          "max": 70,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 100,
+          "min": 100,
+          "max": 100,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 60,
+          "min": 60,
+          "max": 60,
+          "stddev": 0
+        }
+      },
+      "composite": 77.5,
+      "compositeStats": {
+        "mean": 77.5,
+        "min": 77.5,
+        "max": 77.5,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    },
+    {
+      "candidate": "agent-skills",
+      "harness": "claude-code",
+      "model": "claude-opus-4-6",
+      "dimensions": {
+        "prdAdherence": 60,
+        "codeQuality": 90,
+        "speed": 80,
+        "tokenSpend": 80
+      },
+      "stats": {
+        "prdAdherence": {
+          "mean": 60,
+          "min": 60,
+          "max": 60,
+          "stddev": 0
+        },
+        "codeQuality": {
+          "mean": 90,
+          "min": 90,
+          "max": 90,
+          "stddev": 0
+        },
+        "speed": {
+          "mean": 80,
+          "min": 80,
+          "max": 80,
+          "stddev": 0
+        },
+        "tokenSpend": {
+          "mean": 80,
+          "min": 80,
+          "max": 80,
+          "stddev": 0
+        }
+      },
+      "composite": 74.5,
+      "compositeStats": {
+        "mean": 74.5,
+        "min": 74.5,
+        "max": 74.5,
+        "stddev": 0
+      },
+      "trialsCounted": 1,
+      "rightCensored": false
+    }
+  ],
+  "trials": [],
+  "exclusions": [],
+  "inconclusive": false
+}

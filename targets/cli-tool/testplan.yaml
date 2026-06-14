@@ -1,0 +1,64 @@
+# Frozen test plan for the `tally` CLI target. Derived from PRD §4
+# (Definition of Done D1-D10). ViBench semantics: sequential, weighted,
+# fatal gates halt. Evidence = commands run + observed stdout/stderr/exit.
+version: "1.0.0"
+prdSha256: b3b9e3f11a3d4035c14fc2b580ba3c2cc1ad8955a7801259c3ed940fa75f48d7
+
+steps:
+  - id: S-1
+    covers: ["4.D1"]
+    description: setup.sh installs dependencies in a fresh copy
+    check: Run ./setup.sh in a clean workspace copy; exit 0; run.sh exists and is executable.
+    weight: 3
+    fatal: true
+  - id: S-2
+    covers: ["4.D1"]
+    description: run.sh invokes the tool
+    check: printf 'a b\nc\n' | ./run.sh → exits 0 with three integers on stdout.
+    weight: 3
+    fatal: true
+  - id: C-1
+    covers: ["3.1", "4.D2"]
+    description: default counts match POSIX wc
+    check: For 3 diverse inputs (incl. trailing-newline-less), compare `./run.sh` to `wc -l -w -c` numbers.
+    weight: 4
+  - id: C-2
+    covers: ["3.2", "4.D3"]
+    description: --unique ordering and 7-char count field
+    check: printf 'b\na\nb\nb\na\nc\n' | ./run.sh --unique → counts 3,2,1 for b,a,c in that order; count right-aligned width 7.
+    weight: 3
+  - id: C-3
+    covers: ["3.3", "4.D4"]
+    description: --top limits; --top without --unique is usage error
+    check: --unique --top 2 prints exactly 2 rows (b,a); `--top 2` alone exits 2 with usage on stderr, stdout empty.
+    weight: 3
+  - id: C-4
+    covers: ["3.4", "4.D5"]
+    description: --json outputs valid jq-parseable JSON in both modes
+    check: ./run.sh --json | jq .lines and ./run.sh --unique --json | jq '.unique[0].count' both succeed with correct values.
+    weight: 3
+  - id: C-5
+    covers: ["3.5", "4.D6"]
+    description: --version matches project metadata
+    check: ./run.sh --version equals the version in the project metadata file (package.json/pyproject/Cargo.toml); exit 0.
+    weight: 2
+  - id: E-1
+    covers: ["3.6", "4.D7"]
+    description: exit-code contract with stderr-only errors
+    check: unreadable file → exit 1, message on stderr, stdout empty; unknown flag → exit 2 with usage on stderr.
+    weight: 3
+  - id: R-1
+    covers: ["3.7", "4.D8"]
+    description: robustness — empty input, 1MiB line, non-UTF-8 bytes
+    check: empty stdin → '0 0 0' exit 0; python-generated 1MiB single line counts correctly; head -c100 /dev/urandom piped in does not crash and byte count = 100.
+    weight: 3
+  - id: Q-1
+    covers: ["4.D9"]
+    description: project's own test suite passes
+    check: Run the project's documented test command after setup.sh; exit 0 with >0 tests.
+    weight: 2
+  - id: Q-2
+    covers: ["4.D10"]
+    description: README documents usage with >=3 pipeline examples
+    check: README exists and contains at least three distinct shell-pipeline examples using the tool.
+    weight: 1

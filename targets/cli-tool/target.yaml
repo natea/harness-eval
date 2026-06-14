@@ -1,0 +1,18 @@
+name: cli-tool
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: b3b9e3f11a3d4035c14fc2b580ba3c2cc1ad8955a7801259c3ed940fa75f48d7
+testplanFile: testplan.yaml
+conformanceSection: 'section 4 "REQUIRED Project Shape (Definition of Done)"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-11: every Definition-of-Done item D1-D10 maps to
+  >=1 test-plan step (S-1/S-2:D1, C-1:D2, C-2:D3, C-3:D4, C-4:D5, C-5:D6,
+  E-1:D7, R-1:D8, Q-1:D9, Q-2:D10); all checks are mechanically observable.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`run.sh ARGS...` — invokes the tool with the given arguments."
+deliverableNotes: >
+  Section 4 is the Definition of Done. Section 5 lists non-goals; do not
+  build them. Match POSIX `wc` semantics exactly where the spec says so.
+fixtures: []

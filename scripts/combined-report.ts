@@ -31,8 +31,10 @@ for (const dir of runDirs) {
 	config ??= RunConfig.parse(results.config);
 	prdSha256 ||= results.prdSha256;
 	testPlanSha256 ??= results.testPlanSha256;
-	if (!startedAt || results.startedAt < startedAt) startedAt = results.startedAt;
-	if (results.endedAt && (!endedAt || results.endedAt > endedAt)) endedAt = results.endedAt;
+	if (!startedAt || results.startedAt < startedAt)
+		startedAt = results.startedAt;
+	if (results.endedAt && (!endedAt || results.endedAt > endedAt))
+		endedAt = results.endedAt;
 	if (results.prdSha256 !== prdSha256)
 		throw new Error(`PRD hash mismatch in ${dir} — runs are not comparable`);
 	for (const t of results.trials as TrialResult[]) {

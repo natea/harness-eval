@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>harness-eval — demo leaderboard</title>
+<style>
+:root { color-scheme: dark; }
+body { font: 14px/1.5 ui-sans-serif, system-ui; margin: 0; background: #0d1117; color: #e6edf3; }
+a { color: #58a6ff; text-decoration: none; } a:hover { text-decoration: underline; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #21262d; }
+th { color: #8b949e; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+tr:hover td { background: #161b22; }
+.bar { display: inline-block; height: 9px; background: #2f81f7; border-radius: 2px; vertical-align: middle; }
+.muted { color: #8b949e; } .mono { font-family: ui-monospace, monospace; font-size: 12px; }
+.weights { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+.weights .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 6px 18px; margin-top: 6px; }
+.weights label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.weights input[type="range"] { flex: 1; min-width: 60px; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; background: #5a3e00; color: #f0c674; }
+.tip { position: relative; cursor: help; }
+.tip::after { content: attr(data-tip); position: absolute; left: 0; top: 100%; z-index: 10; display: none; width: max-content; max-width: 380px; background: #1c2128; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; margin-top: 4px; font: 12px/1.45 ui-sans-serif, system-ui; font-weight: 400; text-transform: none; white-space: pre-wrap; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+.tip:hover::after { display: block; }
+h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; }
+</style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="02050033-3400-4ace-9669-2c2bf81b6017"></script>
+</head>
+<body>
+<main>
+	<p><a href="../">← about harness-eval</a></p>
+	<h1>🏆 Demo leaderboard <span class="badge">static snapshot</span></h1>
+	<p class="muted" id="meta"></p>
+	<div class="weights">
+		<strong>Re-weight (client-side, same formula as the CLI)</strong>
+		<button type="button" id="reset">reset</button>
+		<div class="sliders" id="sliders"></div>
+	</div>
+	<div id="board"></div>
+	<h2>Per-trial telemetry</h2>
+	<div id="trials"></div>
+	<p class="muted">This is a read-only snapshot of a real n=1 baseline run
+	(see <a href="https://github.com/natea/harness-eval/blob/main/docs/LEADERBOARD-n1.md">the
+	write-up</a>). The full dashboard — run drill-downs, step-level evidence,
+	judge samples — runs locally: <span class="mono">bun run dashboard</span>.</p>
+</main>
+<script>
+const HELP = {
+	Composite: "Weighted sum of the four dimension scores using the sliders above. Recomputed live.",
+	"PRD adherence": "Graded Score 0–100 (ViBench methodology): an evaluator agent executes the frozen spec-derived test plan against the BUILT, running artifact, with cited evidence per step. Weighted partial credit; fatal cold-start failures zero the remainder. Absolute scale.",
+	"Code quality": "Blind LLM-judge score 0–100: five criteria (tests, architecture, error handling, dead code, docs), each 0–10 × 3 samples with medians, on a framework-marker-scrubbed copy. Judge ≠ worker model.",
+	"Speed*": "Agent working time (setup/grading excluded), min-max normalized within this run: fastest 100, slowest 0.",
+	"Token spend*": "Total session cost, min-max normalized within this run: cheapest 100, priciest 0.",
+};
+const DIMS = ["prdAdherence", "codeQuality", "speed", "tokenSpend"];
+const LABELS = { prdAdherence: "PRD adherence", codeQuality: "Code quality", speed: "Speed*", tokenSpend: "Token spend*" };
+const DEFAULTS = { prdAdherence: 0.4, codeQuality: 0.25, speed: 0.175, tokenSpend: 0.175 };
+let raw = { ...DEFAULTS };   // slider positions (stable during drag)
+let data;
+const norm = () => {
+	const sum = DIMS.reduce((a, k) => a + raw[k], 0) || 1;
+	return Object.fromEntries(DIMS.map((k) => [k, raw[k] / sum]));
+};
+
+const composite = (d, w) =>
+	Math.round((d.prdAdherence * w.prdAdherence + d.codeQuality * w.codeQuality + d.speed * w.speed + d.tokenSpend * w.tokenSpend) * 100) / 100;
+const bar = (v) => `<span class="bar" style="width:${Math.max(1, v) * 0.6}px"></span> <span class="mono">${v.toFixed(1)}</span>`;
+const th = (l) => `<th>${l}${HELP[l] ? ` <span class="tip" data-tip="${HELP[l].replace(/"/g, "&quot;")}" style="color:#8b949e">ⓘ</span>` : ""}</th>`;
+
+function renderSliders() {
+	// Built ONCE — re-rendering inputs mid-drag detaches the element being
+	// dragged, which is why dragging used to do nothing.
+	document.getElementById("sliders").innerHTML = DIMS.map((k) =>
+		`<label>${LABELS[k]} <span class="mono" id="pct-${k}" style="width:3.2em;text-align:right"></span>
+		 <input type="range" min="0" max="100" step="0.5" value="${raw[k] * 100}" data-k="${k}"></label>`).join("");
+	for (const el of document.querySelectorAll("#sliders input")) {
+		el.addEventListener("input", () => {
+			raw[el.dataset.k] = Number(el.value) / 100;
+			renderBoard();
+		});
+	}
+	updateLabels();
+}
+
+function updateLabels() {
+	const w = norm();
+	for (const k of DIMS) document.getElementById(`pct-${k}`).textContent = `${(w[k] * 100).toFixed(1)}%`;
+}
+
+function renderBoard() {
+	updateLabels();
+	const weights = norm();
+	const rows = data.scores
+		.map((s) => ({ ...s, c: composite(s.dimensions, weights) }))
+		.sort((a, b) => b.c - a.c);
+	document.getElementById("board").innerHTML = `<table><thead><tr>
+		<th>#</th><th>Candidate</th>${th("Composite")}${DIMS.map((k) => th(LABELS[k])).join("")}<th>Trials</th>
+	</tr></thead><tbody>${rows.map((s, i) =>
+		`<tr><td>${i + 1}</td><td><strong>${s.candidate}</strong></td><td>${bar(s.c)}</td>${
+			DIMS.map((k) => `<td>${bar(s.dimensions[k])}</td>`).join("")}<td>${s.trialsCounted}</td></tr>`).join("")}</tbody></table>
+	<p class="muted">* min-max normalized within this run's candidate set.</p>`;
+}
+
+fetch("./data/combined-n1.json").then((r) => r.json()).then((d) => {
+	data = d;
+	document.getElementById("meta").textContent =
+		`${d.config.harness} / ${d.config.model} on ${d.config.provider} · judge ${d.config.judgeModel} · ` +
+		`${new Date(d.startedAt).toLocaleString()} · target: Symphony daemon spec (22-step frozen test plan)`;
+	document.getElementById("reset").onclick = () => { raw = { ...DEFAULTS }; renderSliders(); renderBoard(); };
+	renderSliders();
+	renderBoard();
+	const trials = d.trials.filter((t) => t.telemetry);
+	document.getElementById("trials").innerHTML = `<table><thead><tr>
+		<th>Trial</th><th>Status</th><th>Graded</th><th>Quality</th><th>Agent time</th><th>Cost</th><th>Turns</th>
+	</tr></thead><tbody>${trials.map((t) =>
+		`<tr><td class="mono">${t.provenance.trialId}</td><td>${t.provenance.status}</td>
+		<td class="mono">${t.grades?.adherence ? t.grades.adherence.gradedScore.toFixed(1) : "—"}</td>
+		<td class="mono">${t.grades?.quality ? t.grades.quality.score.toFixed(0) : "—"}</td>
+		<td class="mono">${(t.telemetry.agentDurationMs / 60000).toFixed(1)}m</td>
+		<td class="mono">$${t.telemetry.totalCostUsd.toFixed(2)}</td>
+		<td class="mono">${t.telemetry.totalTurns}</td></tr>`).join("")}</tbody></table>`;
+});
+</script>
+</body>
+</html>

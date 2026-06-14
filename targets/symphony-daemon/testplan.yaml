@@ -1,0 +1,213 @@
+# Frozen PRD-adherence test plan for the Symphony Service Specification.
+# Derived from §17 (Test and Validation Matrix) and §18.1 (REQUIRED for
+# Conformance). FROZEN per grading-rubric spec: content hash recorded at run
+# start; no edits within a run. ViBench semantics: sequential execution,
+# weighted partial credit, fatal failures halt the plan.
+#
+# Evidence rules for the evaluator: every verdict must cite observed
+# cause-and-effect (command run, output/log/filesystem state observed).
+# The evaluator NEVER repairs the artifact.
+
+version: "1.1.0"
+prdSha256: fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452
+
+steps:
+  # ---- Cold start (fatal gates) -------------------------------------------
+  - id: S-1
+    covers: ["3.3", "18.1"]
+    description: setup.sh installs all implementation dependencies in a fresh environment
+    check: >
+      Run ./setup.sh in a clean copy of the workspace. Exit code 0 and
+      subsequent commands find their dependencies.
+    weight: 4
+    fatal: true
+  - id: S-2
+    covers: ["16.1", "17.7", "18.1"]
+    description: start.sh launches the service against a WORKFLOW.md in the workspace root
+    check: >
+      Place a valid WORKFLOW.md (front matter pointing tracker at the mock
+      Linear endpoint, codex.command at the stub app-server). Run ./start.sh;
+      the process stays up >10s and emits startup logging.
+    weight: 4
+    fatal: true
+
+  # ---- Workflow contract (§5, §6) -----------------------------------------
+  - id: W-1
+    covers: ["5.1", "17.7", "18.1"]
+    description: Workflow path selection supports explicit runtime path and cwd default
+    check: >
+      Start with an explicit path argument to a relocated WORKFLOW.md → used.
+      Start with no argument in a dir containing WORKFLOW.md → that file used.
+      Missing both → clean error, nonzero exit.
+    weight: 2
+  - id: W-2
+    covers: ["5.2", "17.1", "18.1"]
+    description: WORKFLOW.md loader splits YAML front matter and prompt body
+    check: >
+      A WORKFLOW.md with front matter + body loads; invalid YAML front matter
+      and non-map front matter produce typed, operator-visible errors and do
+      not crash-loop the daemon.
+    weight: 3
+  - id: W-3
+    covers: ["5.3", "6.1", "17.1", "18.1"]
+    description: Typed config layer applies defaults and $VAR resolution
+    check: >
+      Omit OPTIONAL config values → documented defaults observed (e.g.
+      hooks.timeout_ms 60000, codex.command 'codex app-server'). Set
+      tracker.api_key to $TEST_VAR with TEST_VAR exported → resolved value
+      used in tracker requests (observe mock auth header). ~ expands in paths.
+    weight: 3
+  - id: W-4
+    covers: ["6.2", "17.1", "18.1"]
+    description: Dynamic WORKFLOW.md watch/reload/re-apply without restart
+    check: >
+      While running, edit WORKFLOW.md (change poll interval or prompt body) →
+      new behavior observed without restart. Make it invalid → last known good
+      config stays effective and an operator-visible error is logged.
+    weight: 3
+  - id: P-1
+    covers: ["5.4", "12.2", "17.1", "18.1"]
+    description: Strict prompt rendering with issue and attempt variables
+    check: >
+      Template containing {{issue.identifier}} and {{attempt}} renders into
+      the prompt sent to the stub app-server (observe stub's received
+      payload). A template with an unknown variable fails the dispatch with a
+      clear error rather than rendering silently.
+    weight: 2
+
+  # ---- Orchestration core (§7, §8) ----------------------------------------
+  - id: O-1
+    covers: ["7", "8.1", "8.2", "18.1"]
+    description: Polling orchestrator dispatches eligible issues with bounded concurrency
+    check: >
+      Seed mock tracker with 3 Todo issues, concurrency 1 → exactly one agent
+      session at a time (stub records overlap); dispatch order is priority
+      then oldest creation. Issues with non-terminal blockers are skipped.
+    weight: 4
+  - id: T-1
+    covers: ["11.1", "11.2", "17.3", "18.1"]
+    description: Tracker client fetches candidates, refreshes states, fetches terminal issues
+    check: >
+      Mock tracker logs show candidate fetch filtered by active states and
+      project, periodic state refresh for in-flight issue IDs, and a
+      terminal-state fetch during startup cleanup. Labels normalized to
+      lowercase; pagination preserved across pages.
+    weight: 3
+  - id: R-1
+    covers: ["8.4", "17.4", "18.1"]
+    description: Exponential retry queue with continuation retry after normal exit
+    check: >
+      Stub app-server exits normally mid-task → short continuation retry
+      (attempt increments). Stub crashes → retries with 10s-base exponential
+      backoff observed in logs/timing.
+    weight: 3
+  - id: R-2
+    covers: ["8.4", "17.4", "18.1"]
+    description: Retry backoff respects configured agent.max_retry_backoff_ms
+    check: >
+      Set agent.max_retry_backoff_ms to a small value (e.g. 15000); force
+      repeated crashes → observed delay never exceeds the cap.
+    weight: 2
+  - id: R-3
+    covers: ["8.5", "17.4", "18.1"]
+    description: Reconciliation stops runs when tracker state becomes non-active/terminal
+    check: >
+      While an agent run is active, flip the issue to a non-active state in
+      the mock tracker → run stops, workspace retained. Flip another to
+      terminal → run stops AND workspace is cleaned.
+    weight: 3
+
+  # ---- Workspaces and hooks (§9) ------------------------------------------
+  - id: WS-1
+    covers: ["9.1", "9.2", "9.5", "17.2", "18.1"]
+    description: Sanitized, deterministic per-issue workspaces with root containment
+    check: >
+      Issue identifiers map to deterministic directories under the configured
+      root; an identifier with unsafe characters (e.g. '../escape') cannot
+      produce a path outside the root (observe sanitized dir or rejected
+      dispatch). Existing workspace is reused on retry.
+    weight: 3
+  - id: WS-2
+    covers: ["9.4", "17.2", "18.1"]
+    description: Workspace lifecycle hooks fire (after_create, before_run, after_run, before_remove)
+    check: >
+      Configure hooks that append to a marker file → after_create fires only
+      on first creation; before_run before each attempt and its failure
+      aborts the attempt; after_run after each attempt with failures logged
+      and ignored; before_remove on cleanup with failures ignored.
+    weight: 3
+  - id: WS-3
+    covers: ["9.4", "18.1"]
+    description: Hook timeout config (hooks.timeout_ms, default 60000)
+    check: >
+      Configure a hook that sleeps past a small configured hooks.timeout_ms →
+      hook is killed at the timeout with the documented per-hook semantics
+      (before_run abort vs after_run ignore).
+    weight: 2
+  - id: WS-4
+    covers: ["8.6", "9.2", "17.4", "18.1"]
+    description: Terminal-issue workspace cleanup (startup sweep + active transition)
+    check: >
+      Pre-create a workspace for an issue already terminal in the mock
+      tracker; start service → startup sweep removes it. Terminal transition
+      during a run also cleans (overlaps R-3 evidence; verify directory gone).
+    weight: 2
+
+  # ---- Agent runner (§10) --------------------------------------------------
+  - id: A-1
+    covers: ["10.1", "10.3", "17.5", "18.1"]
+    description: App-server subprocess client speaks the JSON-line protocol
+    check: >
+      Stub app-server (faithful to the documented Codex app-server protocol:
+      initialize/initialized handshake, thread/start, turn/start with
+      turn/completed notifications) receives a well-formed session start in
+      workspace cwd via bash -lc of codex.command; streamed events are
+      processed; read/turn timeouts enforced (STUB_MODE=stall → session
+      killed and retried, not hung forever). Evidence MUST cite the stub log
+      (STUB_LOG_FILE) showing which methods the candidate spoke; clients
+      using a coherent JSON-RPC dialect that the liberal stub ACKs may earn
+      partial credit, with the deviation from documented methods noted.
+    weight: 4
+  - id: A-2
+    covers: ["6.4", "10.1", "18.1"]
+    description: codex.command is configurable with default 'codex app-server'
+    check: >
+      With codex.command unset, launch attempts 'codex app-server' (observe
+      failed exec or PATH shim hit). With codex.command set to the stub
+      binary, the stub is launched instead.
+    weight: 2
+
+  # ---- Observability (§13) -------------------------------------------------
+  - id: L-1
+    covers: ["13.1", "17.6", "18.1"]
+    description: Structured logs carry issue_id, issue_identifier, session_id
+    check: >
+      During a dispatched run, structured log lines (JSON or documented
+      format) contain all three fields for run-scoped events.
+    weight: 3
+  - id: L-2
+    covers: ["13.2", "17.6", "18.1"]
+    description: Operator-visible observability of orchestrator state
+    check: >
+      Validation failures and dispatch/retry/stop decisions are visible in
+      logs at operator level; token/usage telemetry from stub agent updates
+      is aggregated without corruption across repeated updates.
+    weight: 2
+
+  # ---- Bonus (OPTIONAL/RECOMMENDED; never scored) --------------------------
+  - id: B-1
+    covers: ["13.7", "18.2"]
+    description: OPTIONAL HTTP server extension
+    check: >
+      If shipped: honors CLI --port over server.port, safe default bind host,
+      baseline endpoints respond per §13.7.
+    weight: 1
+    bonus: true
+  - id: B-2
+    covers: ["13.3", "17.4"]
+    description: OPTIONAL runtime snapshot/status surface
+    check: >
+      If shipped: snapshot reports running rows, retry rows, token totals;
+      driven from orchestrator state without affecting correctness.
+    weight: 1
+    bonus: true

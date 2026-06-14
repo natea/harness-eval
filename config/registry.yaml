@@ -6,24 +6,20 @@
 # Versions pinned 2026-06-09; verify at sandbox snapshot build.
 
 basePrompt: |
-  Build the service defined in SPEC.md (in this workspace root) so that it
-  meets every REQUIRED item in section 18.1 "REQUIRED for Conformance".
-  Treat SPEC.md as the complete product requirements document.
-
-  Completion criteria:
-  - The implementation builds and its own test suite passes.
-  - Section 17's test matrix is your guide for what must be verifiable.
-  - Section 18.2/18.3 items are optional; do not prioritize them over 18.1.
+  Build the product defined in {{PRD_FILE}} (in this workspace root) so that
+  it meets every REQUIRED item in {{CONFORMANCE}}.
+  Treat {{PRD_FILE}} as the complete product requirements document.
 
   Deliverables (evaluated cold in a fresh environment with no state from
   this session):
-  - `setup.sh` — installs all dependencies for your implementation.
-  - `start.sh` — launches the service against a WORKFLOW.md in the
-    workspace root, honoring the environment variables SPEC.md defines.
+  {{DELIVERABLES}}
+
+  {{NOTES}}
 
   You may use any tooling, commands, or workflow available in this
   environment. Choose the implementation language and structure yourself
-  unless SPEC.md constrains it. When you consider the work complete, stop.
+  unless {{PRD_FILE}} constrains it. When you consider the work complete,
+  stop.
 
 candidates:
   - id: superpowers
@@ -74,7 +70,7 @@ candidates:
   - id: agent-skills
     name: Agent Skills
     repo: https://github.com/addyosmani/agent-skills
-    pinnedVersion: 5e262b20e0cd
+    pinnedVersion: d187883b7d76
     markerPaths: []
     harnesses:
       claude-code:
@@ -82,7 +78,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add addyosmani/agent-skills
           - claude plugin install agent-skills@addy-agent-skills
-          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 5e262b20e0cd'"
+          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: d187883b7d76'"
         session:
           - prompt: "/agent-skills:spec {{BASE_PROMPT}}"
           - prompt: "/agent-skills:plan"

@@ -2,11 +2,16 @@
 /**
  * harness-eval CLI.
  *
- *   bun run src/cli.ts validate
+ *   bun run src/cli.ts validate [--target <name>]
  *       Validate registry + test plan + PRD hash + fixture manifest.
  *
+ *   bun run src/cli.ts init --target <name> --spec <file>
+ *       Scaffold a new target (PRD.md + skeleton testplan.yaml + target.yaml)
+ *       from a spec document. Fill the TODOs + human review before validate.
+ *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
- *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] [--grade]
+ *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] \
+ *       [--target <name>] [--trial-minutes M] [--grade]
  *       Execute the matrix. Builds happen with real Claude Code sessions —
  *       REAL SPEND. --grade additionally runs evaluator+judge (API spend).
  *
@@ -22,16 +27,29 @@ import { loadManifest } from "./grading/integration";
 import { judgeQuality } from "./grading/judge";
 import { scrubWorkspace } from "./grading/scrub";
 import { loadTestPlan } from "./grading/testplan";
+import {
+	defaultCostSource,
+	judgeWorkerRelation,
+	loadModels,
+	resolveClaudeCodeEnv,
+	resolveProfile,
+	toModelRef,
+} from "./models";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
 import { createProvider } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
+import {
+	loadTarget,
+	renderTargetPrompt,
+	scaffoldTarget,
+	startFixtures,
+	stopFixtures,
+} from "./targets";
 import { RunConfig, type TrialResult, Weights } from "./types";
 
-const PRD_PATH = "prd/symphony-SPEC.md";
 const REGISTRY_PATH = "config/registry.yaml";
-const TESTPLAN_PATH = "config/testplan.yaml";
 const MANIFEST_PATH = "config/fixtures-manifest.yaml";
 const DEFAULTS_PATH = "config/run.defaults.yaml";
 
@@ -43,19 +61,14 @@ function flag(name: string): boolean {
 	return process.argv.includes(`--${name}`);
 }
 
-function prdSha256(): string {
-	return createHash("sha256").update(readFileSync(PRD_PATH)).digest("hex");
-}
-
 async function cmdValidate(): Promise<void> {
 	const registry = loadRegistry(REGISTRY_PATH);
 	console.log(
 		`registry OK: ${registry.candidates.map((c) => `${c.id}@${c.pinnedVersion}`).join(", ")}`,
 	);
-	const sha = prdSha256();
-	const { plan, sha256 } = loadTestPlan(TESTPLAN_PATH, sha);
+	const target = loadTarget(arg("target") ?? "symphony-daemon");
 	console.log(
-		`test plan OK: ${plan.steps.length} steps, sha ${sha256.slice(0, 12)}…, PRD ${sha.slice(0, 12)}…`,
+		`target OK: ${target.manifest.name}@${target.manifest.version} — ${target.plan.steps.length} steps, plan ${target.testPlanSha256.slice(0, 12)}…, PRD ${target.prdSha256.slice(0, 12)}…`,
 	);
 	const { manifest, sha256: msha } = loadManifest(MANIFEST_PATH);
 	console.log(
@@ -68,6 +81,18 @@ async function cmdRun(): Promise<void> {
 	const defaults = existsSync(DEFAULTS_PATH)
 		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
 		: {};
+	// --trial-minutes overrides the per-trial wall-clock cap (the default comes
+	// from run.defaults.yaml's budget block). Applies to every provider, not
+	// just the cloud preflight.
+	const trialMinutes = arg("trial-minutes");
+	const baseBudget = (defaults.budget as Record<string, unknown> | undefined) ?? {};
+	if (trialMinutes !== undefined && !(Number(trialMinutes) > 0)) {
+		throw new Error(`--trial-minutes must be a positive number, got ${trialMinutes}`);
+	}
+	const budget =
+		trialMinutes !== undefined
+			? { ...baseBudget, trialWallClockMs: Number(trialMinutes) * 60000 }
+			: baseBudget;
 	const config = RunConfig.parse({
 		...defaults,
 		candidates: (
@@ -81,22 +106,51 @@ async function cmdRun(): Promise<void> {
 		concurrency: Number(
 			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
 		),
-		...(arg("trial-minutes")
-			? {
-					budget: {
-						...((defaults.budget as Record<string, unknown>) ?? {}),
-						trialWallClockMs: Number(arg("trial-minutes")) * 60_000,
-					},
-				}
-			: {}),
+		budget,
 	});
 	const candidates = resolveCandidates(
 		registry,
 		config.candidates,
 		config.harness,
 	);
-	const sha = prdSha256();
-	const { plan, sha256: planSha } = loadTestPlan(TESTPLAN_PATH, sha);
+
+	// Worker model resolution (model-registry). `--worker-model` (or config.model)
+	// names a profile; bare claude-* ids resolve to implicit native profiles.
+	// Native Anthropic keeps the scheduler's OAuth/API-key fallback; third-party
+	// profiles (e.g. z.ai GLM) inject ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN.
+	const models = loadModels();
+	const workerProfile = resolveProfile(arg("worker-model") ?? config.model, models);
+	let workerEnv: Record<string, string> | undefined;
+	let workerModelFlag = workerProfile.modelId;
+	if (workerProfile.provider !== "anthropic") {
+		const resolved = resolveClaudeCodeEnv(workerProfile);
+		workerEnv = resolved.env;
+		workerModelFlag = resolved.modelFlag; // mapped slot (e.g. "opus") for z.ai
+		console.log(
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via ${workerProfile.baseUrl}`,
+		);
+	} else if (workerProfile.name !== "claude-opus-4-6") {
+		console.log(`worker model: ${workerProfile.name} (anthropic)`);
+	}
+
+	// Judge-validity guardrail (model-registry): judge must differ from worker;
+	// cross-vendor judging is allowed but flagged as a bias caveat.
+	const judgeProfile = resolveProfile(config.judgeModel, models);
+	const { crossVendor } = judgeWorkerRelation(workerProfile, judgeProfile);
+	if (crossVendor) {
+		console.log(
+			`⚠ cross-vendor judge: ${judgeProfile.provider} judge (${judgeProfile.name}) grading ${workerProfile.provider} worker (${workerProfile.name}) — recorded as a judge-bias caveat`,
+		);
+	}
+	const workerModelRef = toModelRef(workerProfile);
+	const judgeModelRef = toModelRef(judgeProfile);
+	const costSource = defaultCostSource(workerProfile);
+
+	const target = loadTarget(arg("target") ?? "symphony-daemon");
+	registry.basePrompt = renderTargetPrompt(registry.basePrompt, target);
+	const sha = target.prdSha256;
+	const plan = target.plan;
+	const planSha = target.testPlanSha256;
 
 	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 	const runDir = join("runs", runId);
@@ -131,15 +185,18 @@ async function cmdRun(): Promise<void> {
 			provider,
 			registry,
 			runDir,
-			prdContent: readFileSync(PRD_PATH, "utf8"),
+			prdContent: target.prdContent,
 			prdSha256: sha,
 			testPlanSha256: planSha,
 			harnessVersion: arg("harness-version") ?? "2.1.170",
+			workerEnv,
+			workerModelFlag,
+			workerModelRef,
 		},
 	);
 
 	if (flag("grade")) {
-		// Each trial gets a fresh mock tracker on its own port.
+		// Each trial gets fresh fixture processes on their own ports.
 		let mockPort = 4280;
 		for (const trial of trials) {
 			const trialDir = join(runDir, "trials", trial.provenance.trialId);
@@ -147,19 +204,9 @@ async function cmdRun(): Promise<void> {
 			if (!existsSync(workspace)) continue;
 			console.log(`grading ${trial.provenance.trialId}…`);
 			mockPort++;
-			const mock = Bun.spawn(
-				[
-					"bun",
-					join(import.meta.dir, "fixtures", "mock-linear.ts"),
-					String(mockPort),
-				],
-				{ stdout: "ignore", stderr: "ignore" },
-			);
+			const fixtures = startFixtures(target, mockPort);
 			await new Promise((r) => setTimeout(r, 500));
-			writeFileSync(
-				join(workspace, "SPEC-REFERENCE.md"),
-				readFileSync(PRD_PATH),
-			);
+			writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
 			let adherence: Awaited<ReturnType<typeof runEvaluator>>;
 			let quality: Awaited<ReturnType<typeof judgeQuality>>;
 			try {
@@ -167,12 +214,10 @@ async function cmdRun(): Promise<void> {
 					model: config.judgeModel,
 					workspaceDir: workspace,
 					mockLinearUrl:
-						process.env.MOCK_LINEAR_URL ?? `http://localhost:${mockPort}`,
-					stubAppServerPath: join(
-						import.meta.dir,
-						"fixtures",
-						"stub-app-server.ts",
-					),
+						fixtures.find((f) => f.name === "mock-linear")?.value ??
+						`http://localhost:${mockPort}`,
+					stubAppServerPath:
+						fixtures.find((f) => f.name === "stub-app-server")?.value ?? "",
 				});
 				const blindDir = join(trialDir, "workspace-blind");
 				scrubWorkspace(workspace, blindDir, registry.candidates);
@@ -181,7 +226,7 @@ async function cmdRun(): Promise<void> {
 					blindWorkspaceDir: blindDir,
 				});
 			} finally {
-				mock.kill();
+				stopFixtures(fixtures);
 			}
 			trial.grades = {
 				trialId: trial.provenance.trialId,
@@ -204,9 +249,86 @@ async function cmdRun(): Promise<void> {
 		startedAt,
 		endedAt: new Date().toISOString(),
 		trials,
+		workerModel: workerModelRef,
+		judgeModel: judgeModelRef,
+		crossVendorJudge: crossVendor,
+		costSource,
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+}
+
+async function cmdModel(): Promise<void> {
+	const sub = process.argv[3];
+	const ref = process.argv[4];
+	if (sub !== "probe" || !ref) {
+		throw new Error("usage: model probe <profile>   (1-token connectivity check)");
+	}
+	const profile = resolveProfile(ref, loadModels());
+	if (profile.transport !== "claude-code") {
+		throw new Error(
+			`probe supports claude-code transport only (profile '${profile.name}' is ${profile.transport})`,
+		);
+	}
+	const { env, modelFlag } = resolveClaudeCodeEnv(profile);
+	console.log(
+		`probing ${profile.name} (${profile.provider}, model ${modelFlag})${profile.baseUrl ? ` via ${profile.baseUrl}` : ""}…`,
+	);
+	const proc = Bun.spawn(
+		[
+			"claude",
+			"-p",
+			"--model",
+			modelFlag,
+			"--output-format",
+			"json",
+			"--dangerously-skip-permissions",
+		],
+		{
+			stdin: new TextEncoder().encode("Reply with exactly: OK"),
+			stdout: "pipe",
+			stderr: "pipe",
+			env: { ...process.env, ...env },
+		},
+	);
+	const timer = setTimeout(() => proc.kill(), 150000);
+	const out = await new Response(proc.stdout).text();
+	const err = await new Response(proc.stderr).text();
+	clearTimeout(timer);
+	const code = await proc.exited;
+	const line = out
+		.split("\n")
+		.reverse()
+		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
+	if (code === 0 && line) {
+		const obj = JSON.parse(line) as Record<string, unknown>;
+		const reply = String(obj.result ?? "").trim();
+		console.log(
+			`✓ probe OK — reply ${JSON.stringify(reply.slice(0, 40))}, cost $${obj.total_cost_usd ?? "?"}, ${obj.num_turns ?? "?"} turn(s)`,
+		);
+	} else {
+		console.error(`✗ probe FAILED (exit ${code})`);
+		if (err.trim()) console.error(err.trim().split("\n").slice(-5).join("\n"));
+		process.exit(1);
+	}
+}
+
+async function cmdInit(): Promise<void> {
+	const name = arg("target");
+	const spec = arg("spec");
+	if (!name || !spec) {
+		throw new Error(
+			"usage: init --target <name> --spec <file>   scaffold a target from a spec doc",
+		);
+	}
+	const { dir, prdSha256, files } = scaffoldTarget(name, spec);
+	console.log(`scaffolded target '${name}' at ${dir}`);
+	console.log(`  PRD sha256: ${prdSha256.slice(0, 12)}…`);
+	for (const f of files) console.log(`  + ${f}`);
+	console.log(
+		"\nnext: fill the TODOs in target.yaml + testplan.yaml (human review required),",
+	);
+	console.log(`then: bun run src/cli.ts validate --target ${name}`);
 }
 
 async function cmdReport(): Promise<void> {
@@ -247,6 +369,12 @@ async function cmdReport(): Promise<void> {
 		startedAt: prior.startedAt,
 		endedAt: prior.endedAt,
 		trials,
+		// Preserve the resolved model metadata recorded at run time (re-report
+		// must not drop the worker/judge profiles or caveats).
+		workerModel: prior.workerModel,
+		judgeModel: prior.judgeModel,
+		crossVendorJudge: prior.crossVendorJudge,
+		costSource: prior.costSource,
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
@@ -276,6 +404,8 @@ async function cmdCleanup(): Promise<void> {
 const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
 	validate: cmdValidate,
+	init: cmdInit,
+	model: cmdModel,
 	run: cmdRun,
 	report: cmdReport,
 	cleanup: cmdCleanup,
@@ -283,7 +413,7 @@ const commands: Record<string, () => Promise<void>> = {
 const handler = commands[cmd ?? ""];
 if (!handler) {
 	console.error(
-		"usage: cli.ts <validate|run|report> [options]   (see file header)",
+		"usage: cli.ts <validate|init|model|run|report> [options]   (see file header)",
 	);
 	process.exit(2);
 }

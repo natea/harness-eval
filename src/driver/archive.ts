@@ -15,6 +15,10 @@ const SECRET_ENV_VARS = [
 	"DAYTONA_API_KEY",
 	"ANTHROPIC_API_KEY",
 	"LINEAR_API_KEY",
+	"ZAI_API_KEY",
+	"KIMI_API_KEY",
+	"MINIMAX_API_KEY",
+	"DASHSCOPE_API_KEY",
 ];
 
 /** Patterns matching well-known credential shapes, independent of env. */

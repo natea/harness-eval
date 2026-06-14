@@ -1,0 +1,101 @@
+# Model-provider registry (model-registry capability).
+#
+# Each profile names a worker or judge model and how to drive it. Run config
+# references a profile by name (`workerModel: glm-4.7`); a bare `claude-*` id
+# with no profile here resolves to an implicit native-Anthropic profile, so
+# existing runs keep working unchanged.
+#
+# Auth is per-profile and env-only: `authEnv` names the variable, never the
+# value. `authKind`: oauth → CLAUDE_CODE_OAUTH_TOKEN; auth-token →
+# ANTHROPIC_AUTH_TOKEN + baseUrl; api-key → ANTHROPIC_API_KEY (+ optional baseUrl).
+#
+# Pricing (optional, $/Mtok) lets telemetry estimate spend for providers whose
+# harness reports tokens but not dollars.
+
+profiles:
+  # --- Native Anthropic (Claude Code / Max subscription) ---
+  - name: claude-opus-4-6
+    provider: anthropic
+    modelId: claude-opus-4-6
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
+  - name: claude-sonnet-4-6
+    provider: anthropic
+    modelId: claude-sonnet-4-6
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
+  # Cheap native model for `model probe` connectivity checks.
+  - name: claude-haiku-4-5
+    provider: anthropic
+    modelId: claude-haiku-4-5-20251001
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
+  # --- z.ai GLM via Claude Code (Anthropic-compatible coding endpoint) ---
+  # Endpoint + integration per docs.z.ai/devpack/tool/claude. z.ai maps Claude's
+  # opus/sonnet/haiku slots to GLM models via ANTHROPIC_DEFAULT_*_MODEL (set by
+  # resolveClaudeCodeEnv), so the harness drives the opus slot rather than a raw
+  # `--model glm-*`. GLM Coding Plan models: glm-4.6, glm-4.7, glm-5.1 (flagship),
+  # glm-4.5-air (haiku-class). Pricing omitted (flat-rate plan; tokens-only).
+  - name: glm-5.1
+    provider: z.ai
+    modelId: glm-5.1
+    transport: claude-code
+    baseUrl: https://api.z.ai/api/anthropic
+    authEnv: ZAI_API_KEY
+    authKind: auth-token
+
+  - name: glm-4.7
+    provider: z.ai
+    modelId: glm-4.7
+    transport: claude-code
+    baseUrl: https://api.z.ai/api/anthropic
+    authEnv: ZAI_API_KEY
+    authKind: auth-token
+
+  - name: glm-4.5-air
+    provider: z.ai
+    modelId: glm-4.5-air
+    transport: claude-code
+    baseUrl: https://api.z.ai/api/anthropic
+    authEnv: ZAI_API_KEY
+    authKind: auth-token
+
+  # --- Other Anthropic-compatible coding endpoints (same slot-mapping path) ---
+  # All verified at the HTTP layer 2026-06-14. Each provider exposes an
+  # Anthropic-compatible endpoint that accepts Bearer auth, so they reuse the
+  # auth-token profile (ANTHROPIC_DEFAULT_*_MODEL slot-mapping + API_TIMEOUT_MS).
+
+  # Kimi (Moonshot) — platform.moonshot.ai. Model id current as of 2026-03;
+  # re-pin via `model probe kimi-k2` once the account has balance.
+  - name: kimi-k2
+    provider: moonshot
+    modelId: kimi-k2.7-code
+    transport: claude-code
+    baseUrl: https://api.moonshot.ai/anthropic
+    authEnv: KIMI_API_KEY
+    authKind: auth-token
+
+  # MiniMax — platform.minimax.io (international endpoint).
+  - name: minimax-m2
+    provider: minimax
+    modelId: MiniMax-M2
+    transport: claude-code
+    baseUrl: https://api.minimax.io/anthropic
+    authEnv: MINIMAX_API_KEY
+    authKind: auth-token
+
+  # Qwen — Alibaba Cloud Model Studio (DashScope). US (Virginia) region; the key
+  # region MUST match the endpoint region. Validated end-to-end 2026-06-14.
+  - name: qwen3-coder
+    provider: alibaba
+    modelId: qwen3-coder-plus
+    transport: claude-code
+    baseUrl: https://dashscope-us.aliyuncs.com/apps/anthropic
+    authEnv: DASHSCOPE_API_KEY
+    authKind: auth-token

@@ -174,6 +174,25 @@ export type TrialTelemetry = z.infer<typeof TrialTelemetry>;
 // Provenance
 // ---------------------------------------------------------------------------
 
+/**
+ * Resolved model profile recorded in provenance/results — identity only, never
+ * the credential (model-registry capability).
+ */
+export const ModelRef = z.object({
+	name: z.string(),
+	provider: z.string(),
+	modelId: z.string(),
+	endpointHost: z.string().nullable().default(null),
+});
+export type ModelRef = z.infer<typeof ModelRef>;
+
+export const CostSource = z.enum([
+	"harness-reported",
+	"profile-priced",
+	"tokens-only",
+]);
+export type CostSource = z.infer<typeof CostSource>;
+
 export const TrialProvenance = z.object({
 	runId: z.string(),
 	trialId: z.string(),
@@ -182,6 +201,8 @@ export const TrialProvenance = z.object({
 	harness: HarnessId,
 	harnessVersion: z.string(),
 	model: z.string(),
+	/** Resolved worker profile (optional; absent on pre-registry runs). */
+	workerModel: ModelRef.optional(),
 	provider: IsolationProviderId,
 	snapshotId: z.string().nullable(),
 	prdSha256: z.string(),
@@ -346,6 +367,12 @@ export const RunResults = z.object({
 	testPlanSha256: z.string().nullable(),
 	startedAt: z.iso.datetime(),
 	endedAt: z.iso.datetime().nullable(),
+	/** Resolved worker/judge profiles + judge-bias and cost caveats. Optional so
+	 * pre-registry results still parse (run-telemetry / model-registry). */
+	workerModel: ModelRef.optional(),
+	judgeModel: ModelRef.optional(),
+	crossVendorJudge: z.boolean().default(false),
+	costSource: CostSource.default("harness-reported"),
 	scores: z.array(CandidateScore),
 	trials: z.array(TrialResult),
 	exclusions: z.array(

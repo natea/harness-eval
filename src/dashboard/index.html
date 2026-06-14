@@ -42,6 +42,11 @@
 			}
 			.tip:hover::after { display: block; }
 			th .tip::after, td .tip::after { text-align: left; }
+			/* Right-edge columns: open the tooltip leftward so it doesn't run off
+			   the viewport and clip (left:0 + up to 380px would overflow main). */
+			th:nth-last-child(-n+4) .tip::after, td:nth-last-child(-n+4) .tip::after {
+				left: auto; right: 0;
+			}
 		</style>
 	</head>
 	<body>

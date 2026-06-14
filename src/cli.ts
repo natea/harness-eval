@@ -11,9 +11,11 @@
  *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
  *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] \
- *       [--target <name>] [--trial-minutes M] [--grade]
+ *       [--target <name>] [--design <name>] [--trial-minutes M] [--grade]
  *       Execute the matrix. Builds happen with real Claude Code sessions —
- *       REAL SPEND. --grade additionally runs evaluator+judge (API spend).
+ *       REAL SPEND. --design places a frozen DESIGN.md in each workspace and
+ *       (with --grade, on UI targets) scores design adherence. --grade
+ *       additionally runs evaluator+judge (API spend).
  *
  *   bun run src/cli.ts report <run-dir> [--weights a,q,s,t]
  *       (Re)generate results.json + scorecard.md from stored trials.
@@ -22,6 +24,8 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
+import { type LoadedDesign, loadDesign } from "./designs";
+import { scoreDesignAdherence } from "./grading/design-adherence";
 import { runEvaluator } from "./grading/evaluator";
 import { loadManifest } from "./grading/integration";
 import { judgeQuality } from "./grading/judge";
@@ -47,7 +51,7 @@ import {
 	startFixtures,
 	stopFixtures,
 } from "./targets";
-import { RunConfig, type TrialResult, Weights } from "./types";
+import { RunConfig, type TrialGrades, type TrialResult, Weights } from "./types";
 
 const REGISTRY_PATH = "config/registry.yaml";
 const MANIFEST_PATH = "config/fixtures-manifest.yaml";
@@ -147,7 +151,27 @@ async function cmdRun(): Promise<void> {
 	const costSource = defaultCostSource(workerProfile);
 
 	const target = loadTarget(arg("target") ?? "symphony-daemon");
-	registry.basePrompt = renderTargetPrompt(registry.basePrompt, target);
+
+	// Optional design selection (design-adherence): load + hash the frozen
+	// DESIGN.md, warn if the target has no UI (the contract would be a no-op).
+	let design: LoadedDesign | null = null;
+	const designName = arg("design");
+	if (designName) {
+		design = loadDesign(designName);
+		console.log(
+			`design: ${design.name} (sha256 ${design.sha256.slice(0, 12)}…, ${design.source.upstream}@${design.source.commit.slice(0, 7)})`,
+		);
+		if (!target.manifest.ui)
+			console.log(
+				`⚠ target '${target.manifest.name}' is not a UI target — DESIGN.md will be placed but adherence scoring is skipped`,
+			);
+	}
+
+	registry.basePrompt = renderTargetPrompt(
+		registry.basePrompt,
+		target,
+		design?.name,
+	);
 	const sha = target.prdSha256;
 	const plan = target.plan;
 	const planSha = target.testPlanSha256;
@@ -188,6 +212,7 @@ async function cmdRun(): Promise<void> {
 			prdContent: target.prdContent,
 			prdSha256: sha,
 			testPlanSha256: planSha,
+			designContent: design?.content,
 			harnessVersion: arg("harness-version") ?? "2.1.170",
 			workerEnv,
 			workerModelFlag,
@@ -228,11 +253,38 @@ async function cmdRun(): Promise<void> {
 			} finally {
 				stopFixtures(fixtures);
 			}
+			// Design adherence (static, no browser) when a UI design was selected.
+			let designAdherence: TrialGrades["designAdherence"] = null;
+			if (design && target.manifest.ui) {
+				const da = scoreDesignAdherence(workspace, design.spec);
+				designAdherence = {
+					design: design.name,
+					designSha256: design.sha256,
+					provenance: {
+						upstream: design.source.upstream,
+						commit: design.source.commit,
+						license: design.source.license,
+					},
+					score: da.score,
+					colorScore: da.color.score,
+					typographyScore: da.typography.score,
+					colorsMatched: da.color.matches.filter((m) => m.matched).length,
+					colorsTotal: da.color.matches.length,
+					typographyMatched: da.typography.matches.filter((m) => m.matched).length,
+					typographyTotal: da.typography.matches.length,
+					filesScanned: da.realized.filesScanned,
+					note: da.note,
+				};
+				console.log(
+					`  design adherence (${design.name}): ${da.score} [color ${da.color.score}, type ${da.typography.score}]`,
+				);
+			}
 			trial.grades = {
 				trialId: trial.provenance.trialId,
 				adherence,
 				quality,
 				integration: null,
+				designAdherence,
 			};
 			writeFileSync(
 				join(trialDir, "grades.json"),

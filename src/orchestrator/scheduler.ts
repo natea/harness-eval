@@ -27,6 +27,9 @@ export interface SchedulerDeps {
 	prdContent: string;
 	prdSha256: string;
 	testPlanSha256: string | null;
+	/** Frozen DESIGN.md placed in each workspace when a design is selected
+	 *  (design-adherence). Identical bytes for every candidate. */
+	designContent?: string;
 	harnessVersion: string;
 	/**
 	 * Resolved worker-model env (model-registry): the secret/base-url/auth-token
@@ -187,6 +190,11 @@ export async function runTrial(
 				join(sandbox.workspacePath, "SPEC.md"),
 				deps.prdContent,
 			);
+			if (deps.designContent)
+				await sandbox.writeFile(
+					join(sandbox.workspacePath, "DESIGN.md"),
+					deps.designContent,
+				);
 			const setup = plan.candidate.harnesses[config.harness];
 			if (!setup)
 				throw new Error(`no ${config.harness} setup for ${plan.candidate.id}`);

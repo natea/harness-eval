@@ -15,7 +15,7 @@ basePrompt: |
   {{DELIVERABLES}}
 
   {{NOTES}}
-
+  {{DESIGN}}
   You may use any tooling, commands, or workflow available in this
   environment. Choose the implementation language and structure yourself
   unless {{PRD_FILE}} constrains it. When you consider the work complete,

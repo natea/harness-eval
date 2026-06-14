@@ -317,11 +317,39 @@ export const IntegrationResult = z.object({
 });
 export type IntegrationResult = z.infer<typeof IntegrationResult>;
 
+/**
+ * Design-adherence grade (design-adherence capability). Records how closely a
+ * build's declared visual tokens match the chosen DESIGN.md, plus the frozen
+ * identity of that design (name + content hash + upstream provenance) so a score
+ * is always attributable to an exact spec. Null when no `--design` was selected.
+ */
+export const DesignAdherenceGrade = z.object({
+	design: z.string(),
+	designSha256: z.string().length(64),
+	provenance: z.object({
+		upstream: z.string(),
+		commit: z.string(),
+		license: z.string(),
+	}),
+	score: z.number().min(0).max(100),
+	colorScore: z.number().min(0).max(100),
+	typographyScore: z.number().min(0).max(100),
+	colorsMatched: z.number().int().min(0),
+	colorsTotal: z.number().int().min(0),
+	typographyMatched: z.number().int().min(0),
+	typographyTotal: z.number().int().min(0),
+	filesScanned: z.number().int().min(0),
+	note: z.string(),
+});
+export type DesignAdherenceGrade = z.infer<typeof DesignAdherenceGrade>;
+
 export const TrialGrades = z.object({
 	trialId: z.string(),
 	adherence: AdherenceResult.nullable(),
 	quality: QualityResult.nullable(),
 	integration: IntegrationResult.nullable(),
+	/** Present only when the run selected a design (design-adherence). */
+	designAdherence: DesignAdherenceGrade.nullable().default(null),
 });
 export type TrialGrades = z.infer<typeof TrialGrades>;
 

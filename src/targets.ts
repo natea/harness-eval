@@ -47,6 +47,12 @@ export const TargetManifest = z.object({
 	coldStartContract: z.array(z.string()).min(1),
 	deliverableNotes: z.string().default(""),
 	fixtures: z.array(FixtureDef).default([]),
+	/**
+	 * Marks a target whose deliverable has a rendered UI, so a `--design` selection
+	 * is meaningful (design-adherence). When absent/false, `--design` warns + skips
+	 * adherence scoring rather than reporting a misleading zero.
+	 */
+	ui: z.boolean().optional(),
 });
 export type TargetManifest = z.infer<typeof TargetManifest>;
 
@@ -234,8 +240,22 @@ fixtures: []
 	return { dir, prdSha256, files };
 }
 
-/** Render the registry's base-prompt template with this target's slots. */
-export function renderTargetPrompt(template: string, t: LoadedTarget): string {
+/**
+ * Render the registry's base-prompt template with this target's slots. When a
+ * design is selected (design-adherence), the `{{DESIGN}}` slot becomes a visual
+ * contract pointing at the in-workspace `DESIGN.md`; otherwise it renders empty.
+ * The rendered text is identical for every candidate (fairness invariant).
+ */
+export function renderTargetPrompt(
+	template: string,
+	t: LoadedTarget,
+	designName?: string | null,
+): string {
+	const design = designName
+		? `\nFollow the "${designName}" design system, specified in DESIGN.md in this\n` +
+			"workspace root. Treat its color tokens, typography scale, spacing, and\n" +
+			"radius as the visual contract: realize those exact values in your styles.\n"
+		: "";
 	return template
 		.replaceAll(
 			"{{PRD_FILE}}",
@@ -246,7 +266,8 @@ export function renderTargetPrompt(template: string, t: LoadedTarget): string {
 			"{{DELIVERABLES}}",
 			t.manifest.coldStartContract.map((c) => `- ${c}`).join("\n"),
 		)
-		.replaceAll("{{NOTES}}", t.manifest.deliverableNotes.trim());
+		.replaceAll("{{NOTES}}", t.manifest.deliverableNotes.trim())
+		.replaceAll("{{DESIGN}}", design);
 }
 
 export interface RunningFixture {

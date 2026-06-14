@@ -36,8 +36,7 @@ import {
 	toModelRef,
 } from "./models";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
-import { DaytonaProvider } from "./providers/daytona";
-import { WorktreeProvider } from "./providers/worktree";
+import { createProvider } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
@@ -157,10 +156,19 @@ async function cmdRun(): Promise<void> {
 	const runDir = join("runs", runId);
 	mkdirSync(join(runDir, "trials"), { recursive: true });
 
-	const provider =
-		config.provider === "daytona"
-			? new DaytonaProvider(arg("snapshot") ?? "harness-eval-base:v2")
-			: new WorktreeProvider(join(runDir, "sandboxes"));
+	const provider = createProvider(config.provider, {
+		snapshot: arg("snapshot") ?? (defaults.snapshot as string | undefined),
+		worktreeBaseDir: join(runDir, "sandboxes"),
+	});
+	if (provider.preflight) {
+		await provider.preflight({
+			trialWallClockMs: config.budget.trialWallClockMs,
+			concurrency: config.concurrency,
+		});
+		console.log(
+			`preflight OK: ${provider.id} (${provider.snapshotId ?? "no image"})`,
+		);
+	}
 
 	console.log(
 		`run ${runId}: ${candidates.length} candidate(s) × ${config.trialsPerCandidate} trial(s) on ${provider.id}`,
@@ -372,6 +380,27 @@ async function cmdReport(): Promise<void> {
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
 }
 
+async function cmdCleanup(): Promise<void> {
+	// Remove orphaned he-* trial containers left by crashed runs (docker
+	// and, when present, Apple container CLI).
+	const { cli } = await import("./providers/cli-container");
+	for (const binary of ["docker", "container"]) {
+		const ls = await cli(binary, ["ps", "-a", "--format", "{{.Names}}"], {
+			timeoutMs: 15_000,
+		});
+		if (ls.exitCode !== 0) continue;
+		const orphans = ls.stdout.split("\n").filter((n) => n.startsWith("he-"));
+		for (const name of orphans) {
+			const rm = await cli(binary, ["rm", "-f", name]);
+			console.log(
+				`${binary}: removed ${name}${rm.exitCode === 0 ? "" : " (failed)"}`,
+			);
+		}
+		if (orphans.length === 0)
+			console.log(`${binary}: no orphaned he-* containers`);
+	}
+}
+
 const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
 	validate: cmdValidate,
@@ -379,6 +408,7 @@ const commands: Record<string, () => Promise<void>> = {
 	model: cmdModel,
 	run: cmdRun,
 	report: cmdReport,
+	cleanup: cmdCleanup,
 };
 const handler = commands[cmd ?? ""];
 if (!handler) {

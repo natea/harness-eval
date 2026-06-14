@@ -1,0 +1,18 @@
+{
+	"name": "harness-eval",
+	"build": { "dockerfile": "../infra/trial-image/Dockerfile" },
+	"remoteUser": "ubuntu",
+	"mounts": [
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+	],
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+	},
+	"postCreateCommand": "curl -fsSL https://bun.sh/install | bash && export PATH=$HOME/.bun/bin:$PATH && bun install",
+	"remoteEnv": {
+		"PATH": "/home/ubuntu/.bun/bin:${containerEnv:PATH}"
+	},
+	"customizations": {
+		"vscode": { "extensions": ["oven.bun-vscode", "biomejs.biome"] }
+	}
+}

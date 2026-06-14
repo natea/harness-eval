@@ -169,10 +169,16 @@ export interface DesignAdherence {
 	note: string;
 }
 
-/** Score how closely a built implementation's declared tokens match a design. */
+/**
+ * Score how closely a built implementation's declared tokens match a design.
+ * `fontAliases` (normalized lowercase, from the design's provenance) credits
+ * accepted substitutions for non-distributable brand fonts — e.g. a build using
+ * "inter" satisfies a spec that names "linear display".
+ */
 export function scoreDesignAdherence(
 	workspaceDir: string,
 	spec: DesignSpec,
+	fontAliases: Record<string, string[]> = {},
 ): DesignAdherence {
 	const realized = extractRealizedTokens(workspaceDir);
 
@@ -209,10 +215,13 @@ export function scoreDesignAdherence(
 				?.replace(/['"]/g, "")
 				.trim()
 				.toLowerCase();
+			const accepted = family
+				? [family, ...(fontAliases[family] ?? [])]
+				: [];
 			return {
 				style,
 				family,
-				matched: family ? realized.fonts.includes(family) : false,
+				matched: accepted.some((f) => realized.fonts.includes(f)),
 			};
 		},
 	);

@@ -33,8 +33,19 @@
   extraction across CSS-var/Tailwind/inline shapes, ΔE color matching, scoring
 - [x] 4.2 End-to-end dry run: `web-app` target + `--design linear`, fake
   implementation, asserting the adherence score + scorecard rendering
-- [ ] 4.3 Smoke: one real candidate builds the `web-app` target with
+- [x] 4.3 Smoke: one real candidate builds the `web-app` target with
   `--design <name>`; record observed adherence and tune thresholds
+  - Run: `gsd` × web-app × `--design linear`, daytona, n=1, 40m cap (2026-06-14).
+  - Color ΔE=12 **validated, kept**: gsd reproduced Linear's palette near-exactly
+    (22/23 tokens, most ΔE=0); the threshold cleanly accepted near-misses
+    (ΔE 0.3–4.5) and rejected the one off token (`brand-secure`, ΔE=22).
+  - Typography fix surfaced: the build was faithful (Inter + JetBrains Mono) but
+    scored 0 — Linear's brand fonts ("Linear Display/Text/Mono") are proprietary
+    and non-distributable, so exact family-name matching can never credit a real
+    build. Added a per-design `fontAliases` map in `designs/provenance.yaml`
+    (spec family → accepted open-source substitutes), applied by the scorer.
+  - Tuned outcome on the same workspace: **overall 96.7** (color 95.7, type 100)
+    vs a misleading 71.7 (type 0) before the alias fix.
 
 ## 5. Browser measurement (v2 — deferred)
 

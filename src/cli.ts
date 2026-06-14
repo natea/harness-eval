@@ -256,7 +256,11 @@ async function cmdRun(): Promise<void> {
 			// Design adherence (static, no browser) when a UI design was selected.
 			let designAdherence: TrialGrades["designAdherence"] = null;
 			if (design && target.manifest.ui) {
-				const da = scoreDesignAdherence(workspace, design.spec);
+				const da = scoreDesignAdherence(
+					workspace,
+					design.spec,
+					design.fontAliases,
+				);
 				designAdherence = {
 					design: design.name,
 					designSha256: design.sha256,

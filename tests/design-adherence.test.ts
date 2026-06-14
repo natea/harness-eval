@@ -93,4 +93,24 @@ describe("design catalog + adherence (add-design-adherence)", () => {
 		// Evidence: matched/missed tokens recorded.
 		expect(g.color.matches.some((m) => m.matched && m.nearest)).toBe(true);
 	});
+
+	test("font aliases credit proprietary→open substitutions (4.3 tuning)", () => {
+		const linear = loadDesign("linear");
+		// linear's provenance maps "Linear Display"/"Linear Text" → Inter.
+		expect(linear.fontAliases["linear display"]).toContain("inter");
+
+		const ws = join(tmp, "ws-inter");
+		mkdirSync(ws, { recursive: true });
+		writeFileSync(
+			join(ws, "app.css"),
+			'body{font-family:"Inter",sans-serif}\ncode{font-family:"JetBrains Mono"}',
+		);
+
+		// Without aliases the faithful Inter build scores 0 on type (exact-name miss);
+		// with aliases it is fully credited.
+		expect(scoreDesignAdherence(ws, linear.spec).typography.score).toBe(0);
+		expect(
+			scoreDesignAdherence(ws, linear.spec, linear.fontAliases).typography.score,
+		).toBe(100);
+	});
 });

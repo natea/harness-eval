@@ -119,7 +119,7 @@ describe("design-adherence e2e dry run (4.2)", () => {
 		);
 
 		// Score the realized tokens and attach as a grade.
-		const da = scoreDesignAdherence(workspace, design.spec);
+		const da = scoreDesignAdherence(workspace, design.spec, design.fontAliases);
 		expect(da.color.score).toBeGreaterThan(90); // built from linear's palette
 		trial.grades = {
 			trialId: trial.provenance.trialId,

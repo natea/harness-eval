@@ -10,5 +10,12 @@ vendoredAt: 2026-06-14
 designs:
   linear:
     originalDir: design-md/linear.app
+    # Linear's brand fonts are proprietary + non-distributable; a faithful build
+    # substitutes their open-source basis. Crediting these is a scoring decision
+    # validated by the 4.3 smoke (gsd built the palette exactly but used Inter).
+    fontAliases:
+      "Linear Display": [Inter]
+      "Linear Text": [Inter]
+      "Linear Mono": [JetBrains Mono, Roboto Mono, IBM Plex Mono]
   notion:
     originalDir: design-md/notion

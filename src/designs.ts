@@ -37,6 +37,15 @@ export type DesignSource = z.infer<typeof DesignSource>;
 
 export class DesignError extends Error {}
 
+/**
+ * Acceptable font substitutions for a design (normalized lowercase): spec family
+ * → realized families that count as the same. Proprietary brand fonts (e.g.
+ * "Linear Display") aren't web-distributable, so a faithful build substitutes
+ * their open-source basis ("Inter"); this map credits that. Lives in our own
+ * provenance.yaml, never in the vendored DESIGN.md.
+ */
+export type FontAliases = Record<string, string[]>;
+
 export interface LoadedDesign {
 	name: string;
 	dir: string;
@@ -44,6 +53,7 @@ export interface LoadedDesign {
 	content: string;
 	spec: DesignSpec;
 	source: DesignSource;
+	fontAliases: FontAliases;
 }
 
 /** Extract the leading `---` … `---` YAML frontmatter block. */
@@ -53,7 +63,10 @@ function frontmatter(raw: string): string {
 	return m[1];
 }
 
-function loadProvenance(designsDir: string, name: string): DesignSource {
+function loadProvenance(
+	designsDir: string,
+	name: string,
+): { source: DesignSource; fontAliases: FontAliases } {
 	const lock = join(designsDir, "provenance.yaml");
 	if (!existsSync(lock))
 		throw new DesignError(
@@ -64,20 +77,31 @@ function loadProvenance(designsDir: string, name: string): DesignSource {
 		repo?: string;
 		commit?: string;
 		license?: string;
-		designs?: Record<string, { originalDir?: string }>;
+		designs?: Record<
+			string,
+			{ originalDir?: string; fontAliases?: Record<string, string[]> }
+		>;
 	};
 	const entry = data.designs?.[name];
 	if (!entry?.originalDir)
 		throw new DesignError(
 			`design '${name}' has no entry in ${lock} — record its provenance`,
 		);
-	return DesignSource.parse({
-		upstream: data.upstream,
-		repo: data.repo,
-		commit: data.commit,
-		originalDir: entry.originalDir,
-		license: data.license,
-	});
+	const fontAliases: FontAliases = {};
+	for (const [family, subs] of Object.entries(entry.fontAliases ?? {}))
+		fontAliases[family.toLowerCase()] = (subs ?? []).map((s) =>
+			s.toLowerCase(),
+		);
+	return {
+		source: DesignSource.parse({
+			upstream: data.upstream,
+			repo: data.repo,
+			commit: data.commit,
+			originalDir: entry.originalDir,
+			license: data.license,
+		}),
+		fontAliases,
+	};
 }
 
 /** Load + validate a design: frontmatter schema, content hash, provenance,
@@ -104,12 +128,12 @@ export function loadDesign(name: string, designsDir = "designs"): LoadedDesign {
 			.join("\n");
 		throw new DesignError(`invalid DESIGN.md frontmatter for '${name}':\n${issues}`);
 	}
-	const source = loadProvenance(designsDir, name);
+	const { source, fontAliases } = loadProvenance(designsDir, name);
 	if (!existsSync(join(designsDir, "NOTICE")))
 		throw new DesignError(
 			`${join(designsDir, "NOTICE")} missing — preserve the upstream attribution`,
 		);
-	return { name, dir, sha256, content, spec: parsed.data, source };
+	return { name, dir, sha256, content, spec: parsed.data, source, fontAliases };
 }
 
 /** All loadable designs in the catalog. */

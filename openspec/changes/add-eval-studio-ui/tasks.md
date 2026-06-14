@@ -21,6 +21,6 @@
 
 ## 4. Validation
 
-- [ ] 4.1 Unit tests: validation mirroring (registry rejections identical to CLI), scoring parity, launch endpoint accepts only RunConfig shapes
+- [x] 4.1 Unit tests: validation mirroring (registry rejections identical to CLI), scoring parity, launch endpoint accepts only RunConfig shapes
 - [ ] 4.2 E2E: configure → launch a worktree dry run → watch status → review results, all through the studio
 - [ ] 4.3 docs/ + screenshots; update website dashboard mentions

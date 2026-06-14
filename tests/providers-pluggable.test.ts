@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { createDockerProvider } from "../src/providers/docker";
 import { createProvider } from "../src/providers/factory";
@@ -18,6 +18,27 @@ function dockerAvailable(): boolean {
 }
 const hasDocker = dockerAvailable();
 const IMAGE = "harness-eval-trial:2.1.170-1";
+
+/**
+ * Backstop cleanup for live provider tests: force-remove each trial VM/container
+ * by name. The in-test `finally { destroy() }` only runs when provisioning
+ * succeeds; a hung or failed `provision` skips it and would otherwise leak a VM
+ * (which then wedges the runtime). This sweeps those regardless. Best-effort —
+ * "not found" and a wedged runtime are both ignored. (`container rm` aliases to
+ * `container delete`; docker uses `rm`.)
+ */
+function sweepTrials(binary: string, trialIds: string[]): void {
+	for (const id of trialIds) {
+		try {
+			execFileSync(binary, ["rm", "-f", `he-${id}`], {
+				stdio: "ignore",
+				timeout: 60_000,
+			});
+		} catch {
+			/* already gone, or runtime unreachable — nothing more to do here */
+		}
+	}
+}
 
 describe("provider factory", () => {
 	test("creates every provider id", () => {
@@ -91,6 +112,7 @@ describe("macos-vz preflight", () => {
 });
 
 describe.if(hasContainerCli)("macos-vz live (VM-per-trial)", () => {
+	afterAll(() => sweepTrials("container", ["vz-test-a", "vz-test-b"]));
 	test("contamination: two concurrent VMs are isolated", async () => {
 		const provider = createMacosVzProvider(IMAGE);
 		const [a, b] = await Promise.all([
@@ -117,6 +139,7 @@ describe.if(hasContainerCli)("macos-vz live (VM-per-trial)", () => {
 });
 
 describe.if(hasDocker)("docker provider end-to-end (live)", () => {
+	afterAll(() => sweepTrials("docker", ["dk-test-a", "dk-test-b", "dk-stale"]));
 	test("provision/exec/write/copyOut/destroy and cross-trial contamination", async () => {
 		const provider = createDockerProvider(IMAGE);
 		const [a, b] = await Promise.all([
@@ -178,6 +201,7 @@ describe.if(hasDocker)("docker provider end-to-end (live)", () => {
 });
 
 describe.if(hasDocker)("scheduler e2e dry run on docker (live)", () => {
+	afterAll(() => sweepTrials("docker", ["superpowers-t1"]));
 	test("full trial chain with fake executor", async () => {
 		const { mkdtempSync, existsSync, readFileSync, rmSync, mkdirSync } =
 			await import("node:fs");

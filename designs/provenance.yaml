@@ -1,0 +1,14 @@
+# Provenance for vendored design systems (design-adherence capability).
+# Vendored verbatim from awesome-design-md at a pinned commit; re-vendoring is a
+# deliberate edit (same freeze discipline as PRD/test-plan/plugin pins). The MIT
+# attribution is preserved in designs/NOTICE.
+upstream: awesome-design-md
+repo: https://github.com/VoltAgent/awesome-design-md
+commit: 962e08c334dc5c42de3f9d14d2aa8ead9cc6cff9
+license: MIT
+vendoredAt: 2026-06-14
+designs:
+  linear:
+    originalDir: design-md/linear.app
+  notion:
+    originalDir: design-md/notion

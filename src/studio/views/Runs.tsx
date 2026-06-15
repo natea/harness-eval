@@ -41,7 +41,31 @@ interface Row {
 	link: boolean;
 	error?: string;
 	target?: { name: string; title: string } | null;
+	/** Epoch ms parsed from the run id timestamp (for sorting), or null. */
+	ts: number | null;
 }
+
+/** Extract the timestamp embedded in a run id (`run-2026-06-15T14-26-00-596Z…`,
+ *  including `-dry` and `combined:run-…` ids — the first match is used) as epoch
+ *  ms. More reliable than string-sorting run ids across suffixes/prefixes. */
+function runTs(runId: string): number | null {
+	const m = runId.match(
+		/(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z/,
+	);
+	if (!m) return null;
+	const t = Date.parse(`${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]}Z`);
+	return Number.isNaN(t) ? null : t;
+}
+
+const fmtRunDate = (ts: number | null) =>
+	ts == null
+		? "—"
+		: new Date(ts).toLocaleString(undefined, {
+				month: "short",
+				day: "numeric",
+				hour: "2-digit",
+				minute: "2-digit",
+			});
 
 const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = {
 	running: "warn",
@@ -68,6 +92,7 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			link: Boolean(r.summary),
 			error: r.error,
 			target: r.summary?.target ?? null,
+			ts: runTs(r.runId),
 		});
 	}
 	for (const e of queue) {
@@ -86,15 +111,17 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			error: e.error,
 			// Live queue entries don't carry the target; keep the disk-resolved one.
 			target: byId.get(e.runId)?.target ?? null,
+			ts: runTs(e.runId),
 		});
 	}
-	return [...byId.values()].sort((a, b) => b.runId.localeCompare(a.runId));
+	return [...byId.values()];
 }
 
 /** All runs: historical from disk + live status for studio-launched jobs. */
 export function Runs() {
 	const [queue, setQueue] = useState<QueueEntry[]>([]);
 	const [disk, setDisk] = useState<RunSummary[]>([]);
+	const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 
 	useEffect(() => {
 		const pollQueue = () =>
@@ -125,7 +152,12 @@ export function Runs() {
 			body: JSON.stringify({ runId }),
 		}).catch(() => {});
 
-	const rows = merge(disk, queue);
+	// Sort by the run's timestamp; nulls (unparseable ids) sink to the bottom.
+	const rows = merge(disk, queue).sort((a, b) => {
+		const av = a.ts ?? -Infinity;
+		const bv = b.ts ?? -Infinity;
+		return sortDir === "desc" ? bv - av : av - bv;
+	});
 
 	return (
 		<>
@@ -149,6 +181,19 @@ export function Runs() {
 							<TableHeader>
 								<TableRow>
 									<TableHead>Run</TableHead>
+									<TableHead>
+										<button
+											type="button"
+											onClick={() =>
+												setSortDir((d) => (d === "desc" ? "asc" : "desc"))
+											}
+											className="inline-flex items-center gap-1 uppercase hover:text-foreground"
+											title="Sort by date/time"
+										>
+											Date / time
+											<span aria-hidden>{sortDir === "desc" ? "▼" : "▲"}</span>
+										</button>
+									</TableHead>
 									<TableHead>App / PRD</TableHead>
 									<TableHead>Status</TableHead>
 									<TableHead>Candidates</TableHead>
@@ -172,6 +217,9 @@ export function Runs() {
 											) : (
 												<span className="font-mono text-[12px]">{e.runId}</span>
 											)}
+										</TableCell>
+										<TableCell className="whitespace-nowrap font-mono text-[12px] text-muted-foreground">
+											{fmtRunDate(e.ts)}
 										</TableCell>
 										<TableCell className="text-[13px]">
 											{e.target ? (

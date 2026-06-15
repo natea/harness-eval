@@ -14,7 +14,7 @@ import type { RunSummary } from "../lib/api";
 interface QueueEntry {
 	runId: string;
 	kind: "dry" | "live";
-	status: "running" | "completed" | "error" | "cancelled";
+	status: "running" | "completed" | "error" | "cancelled" | "interrupted";
 	startedAt: string;
 	candidates: string[];
 	trials: Record<string, string>;
@@ -28,6 +28,7 @@ type RowStatus =
 	| "completed"
 	| "error"
 	| "cancelled"
+	| "interrupted"
 	| "unsupported";
 
 interface Row {
@@ -47,6 +48,7 @@ const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = 
 	completed: "ok",
 	error: "danger",
 	cancelled: "outline",
+	interrupted: "danger",
 	unsupported: "outline",
 };
 
@@ -81,7 +83,11 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 					.join("  ") || "—",
 			cost: e.kind === "live" ? e.costUsdSoFar : undefined,
 			link: e.status === "completed",
-			error: e.error,
+			error:
+				e.error ??
+				(e.status === "interrupted"
+					? "owner process died — recover: scripts/grade-trial.ts then scripts/finalize-run.ts"
+					: undefined),
 		});
 	}
 	return [...byId.values()].sort((a, b) => b.runId.localeCompare(a.runId));

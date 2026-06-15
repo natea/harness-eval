@@ -18,9 +18,19 @@ import {
 	studioOptions,
 	validateRunRequest,
 } from "./options";
+import { reconcileRunStates } from "./run-state";
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
+
+// Reconcile runs whose owning process died while we were down: relabel stale
+// in-progress state to `interrupted` so they show as such (not running, not
+// vanished). Never re-executes — recovery is operator-initiated.
+const reconciled = reconcileRunStates();
+if (reconciled.length)
+	console.log(
+		`reconciled ${reconciled.length} interrupted run(s): ${reconciled.join(", ")}`,
+	);
 
 const server = Bun.serve({
 	hostname: "127.0.0.1",

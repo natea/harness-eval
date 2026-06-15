@@ -149,6 +149,7 @@ export function Leaderboard() {
 							<TableRow>
 								<TableHead className="w-8" />
 								<TableHead>Run</TableHead>
+								<TableHead>App / PRD</TableHead>
 								<TableHead>Provider</TableHead>
 								<TableHead>Worker model</TableHead>
 								<TableHead>Candidates</TableHead>
@@ -185,6 +186,18 @@ export function Leaderboard() {
 										>
 											{r.runId}
 										</a>
+									</TableCell>
+									<TableCell className="text-[13px]">
+										{r.summary?.target ? (
+											<>
+												{r.summary.target.title}{" "}
+												<span className="font-mono text-[11px] text-muted-foreground">
+													({r.summary.target.name})
+												</span>
+											</>
+										) : (
+											<span className="text-muted-foreground">—</span>
+										)}
 									</TableCell>
 									<TableCell className="text-muted-foreground">
 										{r.summary?.config.provider ?? "—"}

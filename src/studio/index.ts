@@ -32,31 +32,45 @@ interface RunTarget {
 	steps: Record<string, string>;
 }
 
-/** Identify which eval target a run built by matching its PRD content hash
- *  against the target library, so the studio can name the app and show the
- *  exact check behind each step — for whatever target the run actually used. */
-function resolveRunTarget(runId: string): RunTarget | null {
-	const sha = getRun(runId)?.results?.prdSha256;
-	if (!sha) return null;
+/** PRD content hash → { name, title } for every target, built once. Lets any
+ *  run be labelled with the app it built by matching its prdSha256 — the run
+ *  itself doesn't record the target name. */
+let targetByShaCache: Map<string, { name: string; title: string }> | null = null;
+function targetBySha(): Map<string, { name: string; title: string }> {
+	if (targetByShaCache) return targetByShaCache;
+	const m = new Map<string, { name: string; title: string }>();
 	for (const dir of readdirSync("targets")) {
 		if (!existsSync(join("targets", dir, "target.yaml"))) continue;
 		try {
 			const t = loadTarget(dir);
-			if (t.prdSha256 !== sha) continue;
 			const title = t.prdContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? dir;
-			const steps: Record<string, string> = {};
-			for (const step of t.plan.steps) {
-				steps[step.id] =
-					`${step.description}\n\nCheck: ${step.check.trim()}` +
-					(step.fatal ? "\n(FATAL gate)" : "") +
-					(step.bonus ? "\n(bonus — not scored)" : "");
-			}
-			return { name: dir, title, steps };
+			m.set(t.prdSha256, { name: dir, title });
 		} catch {
 			// skip unloadable target
 		}
 	}
-	return null;
+	targetByShaCache = m;
+	return m;
+}
+
+/** Full target detail (incl. per-step checks) for a run, by prdSha256 match. */
+function resolveRunTarget(runId: string): RunTarget | null {
+	const sha = getRun(runId)?.results?.prdSha256;
+	const hit = sha ? targetBySha().get(sha) : undefined;
+	if (!sha || !hit) return null;
+	try {
+		const t = loadTarget(hit.name);
+		const steps: Record<string, string> = {};
+		for (const step of t.plan.steps) {
+			steps[step.id] =
+				`${step.description}\n\nCheck: ${step.check.trim()}` +
+				(step.fatal ? "\n(FATAL gate)" : "") +
+				(step.bonus ? "\n(bonus — not scored)" : "");
+		}
+		return { name: hit.name, title: hit.title, steps };
+	} catch {
+		return null;
+	}
 }
 
 const server = Bun.serve({
@@ -139,6 +153,9 @@ const server = Bun.serve({
 								inconclusive: e.results.inconclusive,
 								startedAt: e.results.startedAt,
 								prdSha256: e.results.prdSha256,
+								// Which app/PRD this run built (resolved by content hash) so
+								// the runs listing isn't ambiguous about the target.
+								target: targetBySha().get(e.results.prdSha256) ?? null,
 								testPlanSha256: e.results.testPlanSha256,
 								workerModel: e.results.workerModel,
 								judgeModelRef: e.results.judgeModel,

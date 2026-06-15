@@ -18,6 +18,7 @@ interface QueueEntry {
 	candidates: string[];
 	trials: Record<string, string>;
 	costUsdSoFar: number;
+	stage?: string;
 	error?: string;
 }
 
@@ -95,9 +96,20 @@ export function Runs() {
 											)}
 										</TableCell>
 										<TableCell>
-											<Badge variant={STATUS_VARIANT[e.status]}>
-												{e.status}
-											</Badge>
+											<span className="inline-flex items-center gap-2">
+												{e.status === "running" && (
+													<span
+														role="status"
+														aria-label="running"
+														className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
+													/>
+												)}
+												<Badge variant={STATUS_VARIANT[e.status]}>
+													{e.status === "running" && e.stage
+														? e.stage
+														: e.status}
+												</Badge>
+											</span>
 											{e.error && (
 												<span className="ml-2 text-[12px] text-danger">
 													{e.error}

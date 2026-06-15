@@ -43,6 +43,8 @@ export interface QueueEntry {
 	trials: Record<string, string>; // trialId → terminal status
 	/** Running cost from telemetry as trials settle (live runs). */
 	costUsdSoFar: number;
+	/** Coarse current phase for live UI feedback (e.g. "building", "grading"). */
+	stage?: string;
 	error?: string;
 }
 
@@ -210,10 +212,14 @@ function launchDry(r: StudioRunRequest): { runId: string } {
 					workerModelRef: toModelRef(workerProfile),
 					executeScript: fakeExecutor as never,
 					abortSignal: abort.signal,
+					onStage: (_id, stage) => {
+						entry.stage = stage;
+					},
 				},
 			);
 			for (const t of trials)
 				entry.trials[t.provenance.trialId] = t.provenance.status;
+			entry.stage = undefined;
 			const results = buildResults({
 				runId,
 				config,
@@ -323,6 +329,9 @@ function launchLive(
 					workerModelRef: toModelRef(workerProfile),
 					executeScript: opts.executeScript,
 					abortSignal: abort.signal,
+					onStage: (_id, stage) => {
+						entry.stage = stage;
+					},
 				},
 			);
 			for (const t of trials) {
@@ -330,7 +339,8 @@ function launchLive(
 				entry.costUsdSoFar += t.telemetry?.totalCostUsd ?? 0;
 			}
 
-			if (r.grade && !abort.signal.aborted)
+			if (r.grade && !abort.signal.aborted) {
+				entry.stage = "grading";
 				await gradeTrials(trials, {
 					target,
 					design,
@@ -338,6 +348,8 @@ function launchLive(
 					judgeModel: judgeProfile.name,
 					runDir,
 				});
+			}
+			entry.stage = "finalizing";
 
 			const results = buildResults({
 				runId,

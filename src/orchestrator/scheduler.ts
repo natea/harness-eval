@@ -52,7 +52,19 @@ export interface SchedulerDeps {
 	 * a cancelled run leaks no cloud resources.
 	 */
 	abortSignal?: AbortSignal;
+	/**
+	 * Coarse per-trial progress for live UIs (studio): called as a trial moves
+	 * through provisioning → installing → building → archiving. Best-effort,
+	 * non-fatal; the host can't see inside the agent session.
+	 */
+	onStage?: (trialId: string, stage: TrialStage) => void;
 }
+
+export type TrialStage =
+	| "provisioning"
+	| "installing"
+	| "building"
+	| "archiving";
 
 /** Build the full trial matrix: candidates x trialsPerCandidate. */
 export function buildMatrix(
@@ -198,6 +210,7 @@ export async function runTrial(
 		let sandbox: Sandbox | null = null;
 		try {
 			const setupStart = Date.now();
+			deps.onStage?.(plan.trialId, "provisioning");
 			sandbox = await deps.provider.provision(plan.trialId);
 			await sandbox.writeFile(
 				join(sandbox.workspacePath, "SPEC.md"),
@@ -211,6 +224,7 @@ export async function runTrial(
 			const setup = plan.candidate.harnesses[config.harness];
 			if (!setup)
 				throw new Error(`no ${config.harness} setup for ${plan.candidate.id}`);
+			deps.onStage?.(plan.trialId, "installing");
 			for (const cmd of setup.install) {
 				const res = await sandbox.exec(cmd, { timeoutMs: 10 * 60 * 1000 });
 				if (res.exitCode !== 0) {
@@ -245,6 +259,7 @@ export async function runTrial(
 					workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 				}
 			}
+			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
 				model: deps.workerModelFlag ?? config.model,
 				steps: script,
@@ -256,6 +271,7 @@ export async function runTrial(
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);
 			ledger.add(telemetry.totalCostUsd);
+			deps.onStage?.(plan.trialId, "archiving");
 			await archive(sandbox, trialDir, result.transcripts);
 
 			provenance.status = result.status === "capped" ? "capped" : "completed";

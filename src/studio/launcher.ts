@@ -22,6 +22,7 @@ import { buildResults, writeResults } from "../report/results";
 import { loadTarget, renderTargetPrompt } from "../targets";
 import { type HarnessId, type IsolationProviderId, RunConfig } from "../types";
 import {
+	defaultConcurrency,
 	type StudioRunRequest,
 	type ValidationResult,
 	validateRunRequest,
@@ -281,6 +282,7 @@ function launchLive(
 		model: workerProfile.name,
 		trialsPerCandidate: r.trials,
 		provider: r.provider as IsolationProviderId,
+		concurrency: r.concurrency ?? defaultConcurrency(r.provider),
 		weights: r.weights,
 	});
 

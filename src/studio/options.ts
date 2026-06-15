@@ -59,12 +59,24 @@ export interface StudioRunRequest {
 	trials: number;
 	weights: Weights;
 	grade?: boolean;
+	/** Concurrent trials; defaults per provider (1 on resource-capped daytona). */
+	concurrency?: number;
 	/** Optional design-system selection (design-adherence). */
 	design?: string;
 	/** Explicit acknowledgement of the budget envelope — required for a real run. */
 	confirmed?: boolean;
 	/** Operator token presented for launch authorization, if configured. */
 	operatorToken?: string;
+}
+
+/**
+ * Default concurrency for a provider. Daytona's free tier is ~10GiB / effectively
+ * concurrency-1, so a multi-trial run at the global default (2) overcommits it and
+ * gets sandboxes reclaimed mid-build — default it to 1. Local/cloud providers with
+ * headroom keep 2.
+ */
+export function defaultConcurrency(provider?: string): number {
+	return provider === "daytona" ? 1 : 2;
 }
 
 export interface ValidationResult {
@@ -127,6 +139,7 @@ export function validateRunRequest(
 			model: req.workerModel,
 			trialsPerCandidate: req.trials,
 			provider: req.provider,
+			concurrency: req.concurrency ?? defaultConcurrency(req.provider),
 			weights: req.weights,
 			...(opts.defaults.budget ? { budget: opts.defaults.budget } : {}),
 		});
@@ -172,6 +185,8 @@ export function cliCommand(req: StudioRunRequest): string {
 	];
 	if (req.workerModel && req.workerModel !== "claude-opus-4-6")
 		parts.push(`--worker-model ${req.workerModel}`);
+	const conc = req.concurrency ?? defaultConcurrency(req.provider);
+	if (conc !== 2) parts.push(`--concurrency ${conc}`);
 	if (req.design) parts.push(`--design ${req.design}`);
 	if (req.grade) parts.push("--grade");
 	return parts.join(" ");

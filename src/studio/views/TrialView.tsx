@@ -67,6 +67,22 @@ export function TrialView({
 				{t.provenance.model} · {t.provenance.provider} (
 				{t.provenance.snapshotId ?? "no image"}) · status {t.provenance.status}
 			</p>
+			{t.provenance.status !== "completed" && (
+				<div className="mt-2 rounded-md border border-danger-bg bg-danger-bg/20 px-3 py-2 text-[13px]">
+					<span className="font-semibold text-danger">
+						{t.provenance.status}
+						{t.provenance.cappedBy ? ` (${t.provenance.cappedBy})` : ""}
+					</span>{" "}
+					— this trial did not complete cleanly and is excluded from scoring.
+					{t.provenance.notes.length > 0 && (
+						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
+							{t.provenance.notes.map((n) => (
+								<li key={n.slice(0, 24)}>• {n}</li>
+							))}
+						</ul>
+					)}
+				</div>
+			)}
 			{tel && (
 				<p className="mt-1 text-[13px]">
 					⏱ {(tel.agentDurationMs / 60000).toFixed(1)}m agent (+
@@ -75,7 +91,8 @@ export function TrialView({
 					{(
 						tel.totalTokens.inputTokens + tel.totalTokens.outputTokens
 					).toLocaleString()}{" "}
-					tokens (+{tel.totalTokens.cacheReadTokens.toLocaleString()} cache-read)
+					tokens (+{tel.totalTokens.cacheReadTokens.toLocaleString()}{" "}
+					cache-read)
 				</p>
 			)}
 
@@ -197,16 +214,17 @@ export function TrialView({
 				</Section>
 			)}
 
-			{t.provenance.notes.length > 0 && (
-				<>
-					<h2 className="mt-7 text-base font-semibold">Notes</h2>
-					<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
-						{t.provenance.notes.map((n, i) => (
-							<li key={`${i}-${n.slice(0, 12)}`}>{n}</li>
-						))}
-					</ul>
-				</>
-			)}
+			{t.provenance.status === "completed" &&
+				t.provenance.notes.length > 0 && (
+					<>
+						<h2 className="mt-7 text-base font-semibold">Notes</h2>
+						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
+							{t.provenance.notes.map((n) => (
+								<li key={n}>{n}</li>
+							))}
+						</ul>
+					</>
+				)}
 		</>
 	);
 }

@@ -41,6 +41,7 @@ export function Configure() {
 	const [workerModel, setWorkerModel] = useState("claude-opus-4-6");
 	const [provider, setProvider] = useState("worktree");
 	const [trials, setTrials] = useState(1);
+	const [concurrency, setConcurrency] = useState(2);
 	const [grade, setGrade] = useState(false);
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [vr, setVr] = useState<Validation>();
@@ -62,6 +63,7 @@ export function Configure() {
 				workerModel,
 				provider: dryRun ? "worktree" : provider,
 				trials,
+				concurrency,
 				weights,
 				grade,
 				dryRun,
@@ -95,6 +97,13 @@ export function Configure() {
 		setTarget((t) => t || opts.targets[0] || "");
 	}, [opts]);
 
+	// Default concurrency per provider — daytona's free tier is concurrency-1, so
+	// a multi-trial run at the default (2) overcommits it. Re-defaults on provider
+	// change; still adjustable below.
+	useEffect(() => {
+		setConcurrency(provider === "daytona" ? 1 : 2);
+	}, [provider]);
+
 	// Validate on every change via the shared server rules (parity with CLI).
 	useEffect(() => {
 		const body = {
@@ -104,6 +113,7 @@ export function Configure() {
 			workerModel,
 			provider,
 			trials,
+			concurrency,
 			weights,
 			grade,
 		};
@@ -122,6 +132,7 @@ export function Configure() {
 		workerModel,
 		provider,
 		trials,
+		concurrency,
 		weights,
 		grade,
 	]);
@@ -222,6 +233,27 @@ export function Configure() {
 							value={trials}
 							onChange={(e) => setTrials(Number(e.target.value))}
 						/>
+
+						<label htmlFor="concurrency" className="text-[13px]">
+							Concurrency
+						</label>
+						<span className="flex items-center gap-2">
+							<input
+								id="concurrency"
+								type="number"
+								min={1}
+								className={`${selectCls} w-20`}
+								value={concurrency}
+								onChange={(e) =>
+									setConcurrency(Math.max(1, Number(e.target.value)))
+								}
+							/>
+							{provider === "daytona" && concurrency > 1 && (
+								<span className="text-[12px] text-warn">
+									daytona free tier is ~1 — higher may be reclaimed
+								</span>
+							)}
+						</span>
 
 						<span className="text-[13px]">Grade</span>
 						<label className="flex items-center gap-2 text-[13px] text-muted-foreground">

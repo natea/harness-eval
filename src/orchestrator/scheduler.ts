@@ -208,10 +208,19 @@ export async function runTrial(
 
 	for (let attempt = 0; ; attempt++) {
 		let sandbox: Sandbox | null = null;
+		let onAbort: (() => void) | undefined;
 		try {
 			const setupStart = Date.now();
 			deps.onStage?.(plan.trialId, "provisioning");
 			sandbox = await deps.provider.provision(plan.trialId);
+			// Cancel teardown: destroying the in-flight sandbox makes the pending
+			// exec/install throw immediately, so a cancel interrupts a stuck trial
+			// instead of waiting for the wall-clock budget (studio live-run cancel).
+			const s = sandbox;
+			onAbort = () => {
+				void s.destroy().catch(() => {});
+			};
+			deps.abortSignal?.addEventListener("abort", onAbort, { once: true });
 			await sandbox.writeFile(
 				join(sandbox.workspacePath, "SPEC.md"),
 				deps.prdContent,
@@ -287,6 +296,17 @@ export async function runTrial(
 			persistProvenance(deps.runDir, provenance);
 			return { provenance, telemetry, grades: null };
 		} catch (err) {
+			// Cancelled mid-trial: the error is the torn-down sandbox, not real
+			// infra failure — terminate now, never retry.
+			if (deps.abortSignal?.aborted) {
+				provenance.status = "infra-failed";
+				provenance.endedAt = new Date().toISOString();
+				provenance.notes.push(
+					"cancelled by operator (in-flight sandbox torn down)",
+				);
+				persistProvenance(deps.runDir, provenance);
+				return { provenance, telemetry: null, grades: null };
+			}
 			if (isInfraFailure(err) && attempt < config.infraRetryLimit) {
 				provenance.notes.push(
 					`infra retry ${attempt + 1}: ${String(err).slice(0, 200)}`,
@@ -302,6 +322,7 @@ export async function runTrial(
 			persistProvenance(deps.runDir, provenance);
 			return { provenance, telemetry: null, grades: null };
 		} finally {
+			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
 			await sandbox?.destroy().catch(() => {});
 		}
 	}

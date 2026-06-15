@@ -53,8 +53,14 @@ sandbox is provisioned: a valid request, **launch authorization** (`canLaunch`),
 an acknowledged **budget confirmation** dialog (provider, trial matrix, USD +
 wall-clock caps), and the resolved caps the orchestrator enforces during the run.
 Real runs execute as **local background jobs**; the **Runs** view shows live
-per-trial status and cost-so-far, with a **Cancel** that stops before the next
-trial and tears down any in-flight sandbox.
+per-trial status, the current **stage** (provisioning → installing → building →
+grading), and cost-so-far. **Cancel** tears down the in-flight sandbox so a stuck
+trial stops immediately (it doesn't wait for the wall-clock budget). A
+non-completed trial's failure reason is surfaced on its drill-down.
+
+**Concurrency** is selectable and defaults per provider — **1 on daytona** (its
+free tier is ~10 GiB / effectively concurrency-1, so a higher value gets sandboxes
+reclaimed mid-build), **2** elsewhere.
 
 - **Operator token (optional):** set `STUDIO_OPERATOR_TOKEN` to require a token
   with each real launch. Unset, any localhost caller is the single operator. This

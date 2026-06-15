@@ -3,7 +3,11 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import type { SessionScriptResult } from "../src/driver/session";
 import { cancelRun, getQueue, launchRun } from "../src/studio/launcher";
-import type { StudioRunRequest } from "../src/studio/options";
+import {
+	cliCommand,
+	defaultConcurrency,
+	type StudioRunRequest,
+} from "../src/studio/options";
 import { operatorPolicy, resolveLaunchPolicy } from "../src/studio/policy";
 
 const REQ: StudioRunRequest = {
@@ -57,6 +61,24 @@ const fakeExecutor = async (sandbox: {
 		notes: [],
 	};
 };
+
+describe("add-studio-live-runs: concurrency defaults (free-tier safety)", () => {
+	test("daytona defaults to concurrency 1, others to 2", () => {
+		expect(defaultConcurrency("daytona")).toBe(1);
+		expect(defaultConcurrency("docker")).toBe(2);
+		expect(defaultConcurrency("worktree")).toBe(2);
+		expect(defaultConcurrency(undefined)).toBe(2);
+	});
+
+	test("CLI command reflects a non-default concurrency", () => {
+		expect(cliCommand({ ...REQ, provider: "daytona" })).toContain(
+			"--concurrency 1",
+		);
+		expect(cliCommand({ ...REQ, provider: "docker" })).not.toContain(
+			"--concurrency",
+		);
+	});
+});
 
 describe("add-studio-live-runs: authorization seam (1.x, 5.1)", () => {
 	test("default policy allows when no operator token is configured", async () => {

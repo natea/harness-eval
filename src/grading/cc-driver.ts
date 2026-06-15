@@ -1,4 +1,12 @@
-import { existsSync, readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import {
+	existsSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
 	type AdherenceResult,
@@ -31,38 +39,124 @@ export interface CCRunOptions {
 	env?: Record<string, string>;
 }
 
+export interface CaptureResult {
+	output: string;
+	exitCode: number;
+	timedOut: boolean;
+}
+
+/**
+ * Run a shell session in its OWN process group, capture its merged output to a
+ * file, and read that file after the foreground process exits.
+ *
+ * Two properties matter for grading reliability:
+ *  - **File capture, not the live pipe.** The evaluator/judge agent routinely
+ *    starts the service under test; that daemon inherits the session's stdout
+ *    fd. Reading the live stdout pipe (`new Response(proc.stdout).text()`) only
+ *    resolves at EOF — i.e. once every writer closes — so a lingering daemon
+ *    would block the read until the watchdog killed claude, wedging the grade.
+ *    Reading a file after the process exits sidesteps the inherited pipe.
+ *  - **Own process group + group kill.** `detached: true` makes the shell a
+ *    process-group leader; on timeout (and again after exit) we signal the whole
+ *    group, so any service the agent started is reaped instead of leaking ports
+ *    and file descriptors into the next sample/trial.
+ *
+ * The capture file lives in the OS temp dir, never the graded workspace, so it
+ * cannot contaminate the blind code-quality judge.
+ */
+export async function captureSession(
+	shellCmd: string,
+	opts: { cwd?: string; env?: Record<string, string>; timeoutMs: number },
+): Promise<CaptureResult> {
+	const dir = mkdtempSync(join(tmpdir(), "he-grade-"));
+	const outFile = join(dir, "out.log");
+	const child = spawn(
+		"bash",
+		["-lc", `( ${shellCmd} ) > ${JSON.stringify(outFile)} 2>&1`],
+		{
+			cwd: opts.cwd,
+			detached: true, // own process group → group-kill reaps started services
+			stdio: "ignore",
+			env: { ...process.env, ...opts.env } as NodeJS.ProcessEnv,
+		},
+	);
+
+	const killGroup = (sig: NodeJS.Signals) => {
+		if (child.pid === undefined) return;
+		try {
+			process.kill(-child.pid, sig); // negative pid → whole process group
+		} catch {
+			// group already gone
+		}
+	};
+
+	let timedOut = false;
+	let escalation: ReturnType<typeof setTimeout> | undefined;
+	const timer = setTimeout(() => {
+		timedOut = true;
+		killGroup("SIGTERM");
+		escalation = setTimeout(() => killGroup("SIGKILL"), 5000);
+	}, opts.timeoutMs);
+
+	const exitCode = await new Promise<number>((resolve) => {
+		child.on("exit", (code) => resolve(code ?? -1));
+		child.on("error", () => resolve(-1));
+	});
+	clearTimeout(timer);
+	if (escalation) clearTimeout(escalation);
+	// Reap any service the session left running (it shares the group).
+	killGroup("SIGKILL");
+
+	let output = "";
+	try {
+		output = readFileSync(outFile, "utf8");
+	} catch {
+		// no output captured
+	}
+	try {
+		rmSync(dir, { recursive: true, force: true });
+	} catch {
+		// best-effort cleanup
+	}
+	return { output, exitCode, timedOut };
+}
+
 export async function runCC(opts: CCRunOptions): Promise<string> {
 	const token = process.env.CLAUDE_CODE_OAUTH_TOKEN;
 	if (!token) throw new Error("CLAUDE_CODE_OAUTH_TOKEN is not set");
-	const proc = Bun.spawn(
-		[
-			"claude",
-			"-p",
-			"--model",
-			opts.model,
-			"--output-format",
-			"json",
-			"--dangerously-skip-permissions",
-		],
-		{
-			cwd: opts.cwd,
-			stdin: new TextEncoder().encode(opts.prompt),
-			stdout: "pipe",
-			stderr: "pipe",
-			env: {
-				...process.env,
-				...opts.env,
-				CLAUDE_CODE_OAUTH_TOKEN: token,
-				// Never bill the API account from the grading path.
-				ANTHROPIC_API_KEY: "",
-			},
+	const promptDir = mkdtempSync(join(tmpdir(), "he-prompt-"));
+	const promptFile = join(promptDir, "prompt.txt");
+	writeFileSync(promptFile, opts.prompt);
+	const shellCmd = [
+		`cat ${JSON.stringify(promptFile)} |`,
+		"claude -p",
+		`--model ${JSON.stringify(opts.model)}`,
+		"--output-format json",
+		"--dangerously-skip-permissions",
+	].join(" ");
+
+	const { output, exitCode, timedOut } = await captureSession(shellCmd, {
+		cwd: opts.cwd,
+		timeoutMs: opts.timeoutMs,
+		env: {
+			...opts.env,
+			CLAUDE_CODE_OAUTH_TOKEN: token,
+			// Never bill the API account from the grading path.
+			ANTHROPIC_API_KEY: "",
 		},
-	);
-	const timer = setTimeout(() => proc.kill(), opts.timeoutMs);
-	const stdout = await new Response(proc.stdout).text();
-	clearTimeout(timer);
-	const exitCode = await proc.exited;
-	const lines = stdout.split("\n").filter((l) => l.trim().startsWith("{"));
+	});
+	try {
+		rmSync(promptDir, { recursive: true, force: true });
+	} catch {
+		// best-effort cleanup
+	}
+
+	if (timedOut)
+		throw new Error(
+			`claude grading session timed out after ${opts.timeoutMs}ms (process group killed)`,
+		);
+
+	const lines = output.split("\n").filter((l) => l.trim().startsWith("{"));
 	for (const line of lines.reverse()) {
 		try {
 			const obj = JSON.parse(line) as Record<string, unknown>;
@@ -79,7 +173,7 @@ export async function runCC(opts: CCRunOptions): Promise<string> {
 		}
 	}
 	throw new Error(
-		`no result from claude (exit ${exitCode}): ${stdout.slice(-400)}`,
+		`no result from claude (exit ${exitCode}): ${output.slice(-400)}`,
 	);
 }
 

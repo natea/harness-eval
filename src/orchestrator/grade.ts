@@ -1,6 +1,7 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { LoadedDesign } from "../designs";
+import { judgeQualityCC, runEvaluatorCC } from "../grading/cc-driver";
 import { scoreDesignAdherence } from "../grading/design-adherence";
 import { runEvaluator } from "../grading/evaluator";
 import { judgeQuality } from "../grading/judge";
@@ -25,6 +26,11 @@ export interface GradeOptions {
 	/** Coarse grading progress for live UI (e.g. "evaluating superpowers-t1 (1/2)").
 	 *  Lets the studio show grading distinctly from the build's archive phase. */
 	onStage?: (stage: string) => void;
+	/** Grading transport. `cc` (default) runs evaluator+judge on the Claude Code
+	 *  subscription (CLAUDE_CODE_OAUTH_TOKEN); `sdk` calls the Anthropic API
+	 *  directly (billed to the API account). Default cc so a $0 API balance never
+	 *  blocks grading a run the subscription already built. */
+	driver?: "cc" | "sdk";
 }
 
 /**
@@ -58,25 +64,43 @@ export async function gradeTrials(
 		const fixtures = startFixtures(target, mockPort);
 		await new Promise((r) => setTimeout(r, 500));
 		writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
+		const driver = opts.driver ?? "cc";
+		const mockLinearUrl =
+			fixtures.find((f) => f.name === "mock-linear")?.value ??
+			`http://localhost:${mockPort}`;
+		const stubAppServerPath =
+			fixtures.find((f) => f.name === "stub-app-server")?.value ?? "";
 		let adherence: Awaited<ReturnType<typeof runEvaluator>>;
 		let quality: Awaited<ReturnType<typeof judgeQuality>>;
 		try {
-			adherence = await runEvaluator(target.plan, {
-				model: judgeModel,
-				workspaceDir: workspace,
-				mockLinearUrl:
-					fixtures.find((f) => f.name === "mock-linear")?.value ??
-					`http://localhost:${mockPort}`,
-				stubAppServerPath:
-					fixtures.find((f) => f.name === "stub-app-server")?.value ?? "",
-			});
+			adherence =
+				driver === "sdk"
+					? await runEvaluator(target.plan, {
+							model: judgeModel,
+							workspaceDir: workspace,
+							mockLinearUrl,
+							stubAppServerPath,
+						})
+					: await runEvaluatorCC(target.plan, {
+							model: judgeModel,
+							workspaceDir: workspace,
+							trialDir,
+							mockLinearUrl,
+							stubAppServerPath,
+						});
 			const blindDir = join(trialDir, "workspace-blind");
 			scrubWorkspace(workspace, blindDir, registry.candidates);
 			opts.onStage?.(`scoring ${trialId} (${idx + 1}/${total})`);
-			quality = await judgeQuality({
-				model: judgeModel,
-				blindWorkspaceDir: blindDir,
-			});
+			quality =
+				driver === "sdk"
+					? await judgeQuality({
+							model: judgeModel,
+							blindWorkspaceDir: blindDir,
+						})
+					: await judgeQualityCC({
+							model: judgeModel,
+							blindWorkspaceDir: blindDir,
+						});
 		} finally {
 			stopFixtures(fixtures);
 		}

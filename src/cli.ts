@@ -217,12 +217,14 @@ async function cmdRun(): Promise<void> {
 	);
 
 	if (flag("grade")) {
+		const driver = arg("driver") === "sdk" ? "sdk" : "cc";
 		await gradeTrials(trials, {
 			target,
 			design,
 			registry,
 			judgeModel: config.judgeModel,
 			runDir,
+			driver,
 			log: (m) => console.log(m),
 		});
 	}

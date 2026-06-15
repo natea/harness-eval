@@ -228,6 +228,10 @@ export async function executeRun(
 					runDir,
 					signal: abortSignal,
 					onStage: (stage) => onUpdate({ stage }),
+					// Grade on the Claude Code subscription, not the Anthropic API
+					// account — a real studio run is built on the subscription and
+					// must be gradeable on it (no API balance required).
+					driver: "cc",
 				}),
 				gradeTimeoutMs,
 				`grading exceeded ${Math.round(gradeTimeoutMs / 60_000)}m — re-grade with scripts/grade-trial.ts then scripts/finalize-run.ts`,

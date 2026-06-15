@@ -22,7 +22,7 @@
 
 ## 4. Validation
 
-- [ ] 4.1 Unit: gradeTrials routes to cc by default, SDK when asked.
-- [ ] 4.2 Live: one real studio run grades end-to-end on the subscription with no 400
+- [x] 4.1 Unit: gradeTrials routes to cc by default, SDK when asked.
+- [x] 4.2 Live: one real studio run grades end-to-end on the subscription with no 400
   balance error; scorecard written.
 - [x] 4.3 `bun run test` green; `openspec validate add-studio-cc-grading`.

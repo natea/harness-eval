@@ -21,6 +21,8 @@ export interface RunSummary {
 		inconclusive: boolean;
 		startedAt: string;
 		prdSha256: string;
+		/** Which app/PRD this run built (resolved by content hash), or null. */
+		target?: { name: string; title: string } | null;
 		testPlanSha256: string | null;
 		workerModel?: ModelRef;
 		judgeModelRef?: ModelRef;

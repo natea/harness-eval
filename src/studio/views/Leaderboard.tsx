@@ -17,12 +17,22 @@ import {
 	reweight,
 	useFetch,
 } from "../lib/api";
-import { Bar, ColHead, DIM_KEYS, WeightControls } from "./shared";
+import {
+	Bar,
+	ColHead,
+	DIM_KEYS,
+	fmtRunDate,
+	runTs,
+	WeightControls,
+} from "./shared";
+
+const RUNS_PREVIEW = 10;
 
 export function Leaderboard() {
 	const runs = useFetch<RunSummary[]>("/api/runs");
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
+	const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 	if (!runs) return <p className="text-muted-foreground">loading…</p>;
 
 	const supported = runs.filter((r) => r.supported && r.summary);
@@ -74,6 +84,15 @@ export function Leaderboard() {
 			};
 		})
 		.sort((a, b) => b.composite - a.composite);
+
+	// Runs table: newest-first (sortable), only a preview here — the full,
+	// filterable list lives on the Runs screen.
+	const sortedRuns = [...runs].sort((a, b) => {
+		const av = runTs(a.runId) ?? -Infinity;
+		const bv = runTs(b.runId) ?? -Infinity;
+		return sortDir === "desc" ? bv - av : av - bv;
+	});
+	const previewRuns = sortedRuns.slice(0, RUNS_PREVIEW);
 
 	return (
 		<>
@@ -149,6 +168,20 @@ export function Leaderboard() {
 							<TableRow>
 								<TableHead className="w-8" />
 								<TableHead>Run</TableHead>
+								<TableHead>
+									<button
+										type="button"
+										onClick={() =>
+											setSortDir((d) => (d === "desc" ? "asc" : "desc"))
+										}
+										className="inline-flex items-center gap-1 uppercase hover:text-foreground"
+										title="Sort by date/time"
+									>
+										Date / time
+										<span aria-hidden>{sortDir === "desc" ? "▼" : "▲"}</span>
+									</button>
+								</TableHead>
+								<TableHead>App / PRD</TableHead>
 								<TableHead>Provider</TableHead>
 								<TableHead>Worker model</TableHead>
 								<TableHead>Candidates</TableHead>
@@ -156,7 +189,7 @@ export function Leaderboard() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{runs.map((r) => (
+							{previewRuns.map((r) => (
 								<TableRow key={r.runId}>
 									<TableCell>
 										{r.supported && (
@@ -185,6 +218,21 @@ export function Leaderboard() {
 										>
 											{r.runId}
 										</a>
+									</TableCell>
+									<TableCell className="whitespace-nowrap font-mono text-[12px] text-muted-foreground">
+										{fmtRunDate(runTs(r.runId))}
+									</TableCell>
+									<TableCell className="text-[13px]">
+										{r.summary?.target ? (
+											<>
+												{r.summary.target.title}{" "}
+												<span className="font-mono text-[11px] text-muted-foreground">
+													({r.summary.target.name})
+												</span>
+											</>
+										) : (
+											<span className="text-muted-foreground">—</span>
+										)}
 									</TableCell>
 									<TableCell className="text-muted-foreground">
 										{r.summary?.config.provider ?? "—"}
@@ -216,6 +264,13 @@ export function Leaderboard() {
 					</Table>
 				</CardContent>
 			</Card>
+			{runs.length > RUNS_PREVIEW && (
+				<p className="mt-2 text-[13px]">
+					<a href="/runs" className="text-primary-hover hover:underline">
+						More… ({runs.length} runs total) →
+					</a>
+				</p>
+			)}
 		</>
 	);
 }

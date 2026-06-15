@@ -9,6 +9,8 @@
  *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { loadTarget } from "../targets";
 import index from "./index.html";
@@ -18,9 +20,68 @@ import {
 	studioOptions,
 	validateRunRequest,
 } from "./options";
+import { reconcileRunStates } from "./run-state";
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
+
+// Reconcile runs whose owning process died while we were down: relabel stale
+// in-progress state to `interrupted` so they show as such (not running, not
+// vanished). Never re-executes — recovery is operator-initiated.
+const reconciled = reconcileRunStates();
+if (reconciled.length)
+	console.log(
+		`reconciled ${reconciled.length} interrupted run(s): ${reconciled.join(", ")}`,
+	);
+
+interface RunTarget {
+	name: string;
+	/** Human title from the PRD's first heading (the app being built). */
+	title: string;
+	/** Step id → description + concrete check (drill-down tooltips). */
+	steps: Record<string, string>;
+}
+
+/** PRD content hash → { name, title } for every target, built once. Lets any
+ *  run be labelled with the app it built by matching its prdSha256 — the run
+ *  itself doesn't record the target name. */
+let targetByShaCache: Map<string, { name: string; title: string }> | null = null;
+function targetBySha(): Map<string, { name: string; title: string }> {
+	if (targetByShaCache) return targetByShaCache;
+	const m = new Map<string, { name: string; title: string }>();
+	for (const dir of readdirSync("targets")) {
+		if (!existsSync(join("targets", dir, "target.yaml"))) continue;
+		try {
+			const t = loadTarget(dir);
+			const title = t.prdContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? dir;
+			m.set(t.prdSha256, { name: dir, title });
+		} catch {
+			// skip unloadable target
+		}
+	}
+	targetByShaCache = m;
+	return m;
+}
+
+/** Full target detail (incl. per-step checks) for a run, by prdSha256 match. */
+function resolveRunTarget(runId: string): RunTarget | null {
+	const sha = getRun(runId)?.results?.prdSha256;
+	const hit = sha ? targetBySha().get(sha) : undefined;
+	if (!sha || !hit) return null;
+	try {
+		const t = loadTarget(hit.name);
+		const steps: Record<string, string> = {};
+		for (const step of t.plan.steps) {
+			steps[step.id] =
+				`${step.description}\n\nCheck: ${step.check.trim()}` +
+				(step.fatal ? "\n(FATAL gate)" : "") +
+				(step.bonus ? "\n(bonus — not scored)" : "");
+		}
+		return { name: hit.name, title: hit.title, steps };
+	} catch {
+		return null;
+	}
+}
 
 const server = Bun.serve({
 	hostname: "127.0.0.1",
@@ -102,6 +163,9 @@ const server = Bun.serve({
 								inconclusive: e.results.inconclusive,
 								startedAt: e.results.startedAt,
 								prdSha256: e.results.prdSha256,
+								// Which app/PRD this run built (resolved by content hash) so
+								// the runs listing isn't ambiguous about the target.
+								target: targetBySha().get(e.results.prdSha256) ?? null,
 								testPlanSha256: e.results.testPlanSha256,
 								workerModel: e.results.workerModel,
 								judgeModelRef: e.results.judgeModel,
@@ -135,22 +199,14 @@ const server = Bun.serve({
 			},
 		},
 
-		// Step descriptions for drill-down tooltips (default target).
-		"/api/steps": {
-			GET: () => {
-				try {
-					const t = loadTarget("symphony-daemon");
-					const out: Record<string, string> = {};
-					for (const step of t.plan.steps) {
-						out[step.id] =
-							`${step.description}\n\nCheck: ${step.check.trim()}` +
-							(step.fatal ? "\n(FATAL gate)" : "") +
-							(step.bonus ? "\n(bonus — not scored)" : "");
-					}
-					return Response.json(out);
-				} catch {
-					return Response.json({});
-				}
+		// Which app a run built (PRD title + name) and the concrete check behind
+		// each step — resolved from the run's actual target, not a hardcoded one.
+		"/api/runs/:id/target": {
+			GET: (req) => {
+				const t = resolveRunTarget(req.params.id);
+				return t
+					? Response.json(t)
+					: Response.json({ error: "not found" }, { status: 404 });
 			},
 		},
 	},

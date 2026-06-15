@@ -9,6 +9,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "../components/ui/table";
+import type { RunSummary } from "../lib/api";
 
 interface QueueEntry {
 	runId: string;
@@ -22,25 +23,95 @@ interface QueueEntry {
 	error?: string;
 }
 
-const STATUS_VARIANT = {
+type RowStatus =
+	| "running"
+	| "completed"
+	| "error"
+	| "cancelled"
+	| "unsupported";
+
+interface Row {
+	runId: string;
+	status: RowStatus;
+	stage?: string;
+	kind?: "dry" | "live";
+	candidates: string[];
+	trialsLabel: string;
+	cost?: number;
+	link: boolean;
+	error?: string;
+}
+
+const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = {
 	running: "warn",
 	completed: "ok",
 	error: "danger",
 	cancelled: "outline",
-} as const;
+	unsupported: "outline",
+};
 
-/** Live status of studio-launched runs (polls /api/queue). */
+/** Merge historical runs from disk (/api/runs) with this session's live jobs
+ *  (/api/queue): disk runs seed the list; queue entries overlay live status. */
+function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
+	const byId = new Map<string, Row>();
+	for (const r of disk) {
+		const cands = r.summary?.scores.map((s) => s.candidate) ?? [];
+		const total = r.summary
+			? cands.length * r.summary.config.trialsPerCandidate
+			: 0;
+		byId.set(r.runId, {
+			runId: r.runId,
+			status: r.summary ? "completed" : r.error ? "error" : "unsupported",
+			candidates: cands,
+			trialsLabel: total ? `${total}` : "—",
+			link: Boolean(r.summary),
+			error: r.error,
+		});
+	}
+	for (const e of queue) {
+		byId.set(e.runId, {
+			runId: e.runId,
+			status: e.status,
+			stage: e.stage,
+			kind: e.kind,
+			candidates: e.candidates,
+			trialsLabel:
+				Object.entries(e.trials)
+					.map(([id, s]) => `${id}:${s}`)
+					.join("  ") || "—",
+			cost: e.kind === "live" ? e.costUsdSoFar : undefined,
+			link: e.status === "completed",
+			error: e.error,
+		});
+	}
+	return [...byId.values()].sort((a, b) => b.runId.localeCompare(a.runId));
+}
+
+/** All runs: historical from disk + live status for studio-launched jobs. */
 export function Runs() {
 	const [queue, setQueue] = useState<QueueEntry[]>([]);
+	const [disk, setDisk] = useState<RunSummary[]>([]);
+
 	useEffect(() => {
-		const tick = () =>
+		const pollQueue = () =>
 			fetch("/api/queue")
 				.then((r) => r.json())
 				.then((d) => setQueue(d as QueueEntry[]))
 				.catch(() => {});
-		tick();
-		const id = setInterval(tick, 1500);
-		return () => clearInterval(id);
+		const pollDisk = () =>
+			fetch("/api/runs")
+				.then((r) => r.json())
+				.then((d) => setDisk(d as RunSummary[]))
+				.catch(() => {});
+		pollQueue();
+		pollDisk();
+		// Live jobs change fast; the disk index changes rarely.
+		const q = setInterval(pollQueue, 1500);
+		const d = setInterval(pollDisk, 10_000);
+		return () => {
+			clearInterval(q);
+			clearInterval(d);
+		};
 	}, []);
 
 	const cancel = (runId: string) =>
@@ -50,16 +121,18 @@ export function Runs() {
 			body: JSON.stringify({ runId }),
 		}).catch(() => {});
 
+	const rows = merge(disk, queue);
+
 	return (
 		<>
 			<h1 className="text-xl font-bold tracking-tight">Runs</h1>
 			<p className="mt-1 text-[13px] text-muted-foreground">
-				Studio-launched runs, with live status. Completed runs link to their
-				scorecard.
+				All runs — historical from disk plus live status for studio-launched
+				jobs. Completed runs link to their scorecard.
 			</p>
-			{queue.length === 0 ? (
+			{rows.length === 0 ? (
 				<p className="mt-4 text-muted-foreground">
-					No studio launches yet — start a dry run from{" "}
+					No runs yet — start one from{" "}
 					<a href="/configure" className="text-primary-hover hover:underline">
 						Configure
 					</a>
@@ -81,10 +154,10 @@ export function Runs() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{queue.map((e) => (
+								{rows.map((e) => (
 									<TableRow key={e.runId}>
 										<TableCell>
-											{e.status === "completed" ? (
+											{e.link ? (
 												<a
 													href={`/runs/${e.runId}`}
 													className="font-mono text-[12px] text-primary-hover hover:underline"
@@ -117,22 +190,26 @@ export function Runs() {
 											)}
 										</TableCell>
 										<TableCell className="text-[13px] text-muted-foreground">
-											{e.candidates.join(", ")}
+											{e.candidates.join(", ") || "—"}
 										</TableCell>
 										<TableCell className="font-mono text-[12px]">
-											{Object.entries(e.trials)
-												.map(([id, s]) => `${id}:${s}`)
-												.join("  ") || "—"}
+											{e.trialsLabel}
 										</TableCell>
 										<TableCell className="font-mono text-[12px]">
-											{e.kind === "live"
-												? `$${e.costUsdSoFar.toFixed(2)}`
-												: "—"}
+											{e.cost != null ? `$${e.cost.toFixed(2)}` : "—"}
 										</TableCell>
 										<TableCell>
-											<Badge variant={e.kind === "dry" ? "outline" : "default"}>
-												{e.kind === "dry" ? "dry run" : "live"}
-											</Badge>
+											{e.kind ? (
+												<Badge
+													variant={e.kind === "dry" ? "outline" : "default"}
+												>
+													{e.kind === "dry" ? "dry run" : "live"}
+												</Badge>
+											) : (
+												<span className="text-[12px] text-muted-foreground">
+													—
+												</span>
+											)}
 										</TableCell>
 										<TableCell>
 											{e.status === "running" && (

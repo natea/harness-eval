@@ -16,6 +16,11 @@ import {
 	TableHeader,
 	TableRow,
 } from "../components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "../components/ui/tooltip";
 import type { RunSummary } from "../lib/api";
 import { fmtRunDate, runTs } from "./shared";
 
@@ -279,12 +284,22 @@ export function Runs() {
 																? e.stage
 																: e.status}
 														</Badge>
+														{e.error && (
+															<Tooltip>
+																<TooltipTrigger asChild>
+																	<button
+																		type="button"
+																		className="cursor-help text-[11px] text-danger underline decoration-dotted underline-offset-2"
+																	>
+																		why?
+																	</button>
+																</TooltipTrigger>
+																<TooltipContent className="max-w-[420px] whitespace-pre-wrap break-words">
+																	{e.error}
+																</TooltipContent>
+															</Tooltip>
+														)}
 													</span>
-													{e.error && (
-														<span className="ml-2 text-[12px] text-danger">
-															{e.error}
-														</span>
-													)}
 												</TableCell>
 												<TableCell className="text-[13px] text-muted-foreground">
 													{e.candidates.join(", ") || "—"}

@@ -35,6 +35,16 @@ import {
 	resolveLaunchPolicy,
 } from "./policy";
 
+/** Reject if `p` does not settle within `ms`; used to bound in-process grading
+ *  so a hung session can't leave the run stuck at "grading" indefinitely. */
+function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+	let timer: ReturnType<typeof setTimeout>;
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => reject(new Error(message)), ms);
+	});
+	return Promise.race([p, timeout]).finally(() => clearTimeout(timer)) as Promise<T>;
+}
+
 export interface QueueEntry {
 	runId: string;
 	kind: "dry" | "live";
@@ -343,13 +353,27 @@ function launchLive(
 
 			if (r.grade && !abort.signal.aborted) {
 				entry.stage = "grading";
-				await gradeTrials(trials, {
-					target,
-					design,
-					registry,
-					judgeModel: judgeProfile.name,
-					runDir,
-				});
+				// Bound grading so a hung evaluator/judge session can't wedge the
+				// run at "grading" forever (the in-process await otherwise never
+				// resolves and the status never advances). On timeout we throw,
+				// the outer catch flips status to "error", and the operator
+				// re-grades out of band with scripts/grade-trial.ts (checkpointed).
+				const graded = trials.filter(
+					(t) => t.provenance.status === "completed",
+				).length;
+				const gradeTimeoutMs = Math.max(graded, 1) * 30 * 60_000;
+				await withTimeout(
+					gradeTrials(trials, {
+						target,
+						design,
+						registry,
+						judgeModel: judgeProfile.name,
+						runDir,
+						signal: abort.signal,
+					}),
+					gradeTimeoutMs,
+					`grading exceeded ${Math.round(gradeTimeoutMs / 60_000)}m — re-grade with scripts/grade-trial.ts then scripts/finalize-run.ts`,
+				);
 			}
 			entry.stage = "finalizing";
 

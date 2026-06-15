@@ -20,6 +20,8 @@ export interface GradeOptions {
 	/** First fixture port; each trial increments it. */
 	basePort?: number;
 	log?: (msg: string) => void;
+	/** Cooperative cancellation: checked between trials so Cancel can interrupt. */
+	signal?: AbortSignal;
 }
 
 /**
@@ -38,6 +40,10 @@ export async function gradeTrials(
 	let mockPort = opts.basePort ?? 4280;
 
 	for (const trial of trials) {
+		if (opts.signal?.aborted) {
+			log("grading aborted before next trial");
+			break;
+		}
 		const trialDir = join(runDir, "trials", trial.provenance.trialId);
 		const workspace = join(trialDir, "workspace");
 		if (!existsSync(workspace)) continue;

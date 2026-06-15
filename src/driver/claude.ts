@@ -32,8 +32,15 @@ export async function runClaudeSession(
 	sandbox: Sandbox,
 	opts: ClaudeRunOptions,
 ): Promise<ClaudeResult> {
-	const promptFile = `/tmp/he-prompt-${opts.stepIndex}.txt`;
-	const outFile = `/tmp/he-out-${opts.stepIndex}.jsonl`;
+	// Namespace by sandbox id, not just step index: on shared-filesystem
+	// providers (worktree runs on the host shell, so /tmp is shared across
+	// trials) two concurrent trials at the same step would otherwise both write
+	// and `cat` the same /tmp/he-out-<step>.jsonl, cross-contaminating
+	// transcripts and session ids (a clobbered session id then breaks --resume
+	// with "No conversation found"). The sandbox id is unique per trial.
+	const slot = `${sandbox.id.replace(/[^a-zA-Z0-9_.-]/g, "_")}-${opts.stepIndex}`;
+	const promptFile = `/tmp/he-prompt-${slot}.txt`;
+	const outFile = `/tmp/he-out-${slot}.jsonl`;
 	await sandbox.writeFile(promptFile, opts.prompt);
 	const resume = opts.resumeSessionId
 		? `--resume ${JSON.stringify(opts.resumeSessionId)}`

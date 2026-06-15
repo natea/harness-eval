@@ -160,7 +160,7 @@ export function Runs() {
 											{e.link ? (
 												<a
 													href={`/runs/${e.runId}`}
-													className="font-mono text-[12px] text-primary-hover hover:underline"
+													className="font-mono text-[12px] text-primary-hover underline decoration-primary-hover/40 underline-offset-2 hover:decoration-primary-hover"
 												>
 													{e.runId}
 												</a>

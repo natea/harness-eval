@@ -25,11 +25,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
 import { type LoadedDesign, loadDesign } from "./designs";
-import { scoreDesignAdherence } from "./grading/design-adherence";
-import { runEvaluator } from "./grading/evaluator";
 import { loadManifest } from "./grading/integration";
-import { judgeQuality } from "./grading/judge";
-import { scrubWorkspace } from "./grading/scrub";
 import { loadTestPlan } from "./grading/testplan";
 import {
 	defaultCostSource,
@@ -39,19 +35,14 @@ import {
 	resolveProfile,
 	toModelRef,
 } from "./models";
+import { gradeTrials } from "./orchestrator/grade";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
 import { createProvider } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
-import {
-	loadTarget,
-	renderTargetPrompt,
-	scaffoldTarget,
-	startFixtures,
-	stopFixtures,
-} from "./targets";
-import { RunConfig, type TrialGrades, type TrialResult, Weights } from "./types";
+import { loadTarget, renderTargetPrompt, scaffoldTarget } from "./targets";
+import { RunConfig, type TrialResult, Weights } from "./types";
 
 const REGISTRY_PATH = "config/registry.yaml";
 const MANIFEST_PATH = "config/fixtures-manifest.yaml";
@@ -89,9 +80,12 @@ async function cmdRun(): Promise<void> {
 	// from run.defaults.yaml's budget block). Applies to every provider, not
 	// just the cloud preflight.
 	const trialMinutes = arg("trial-minutes");
-	const baseBudget = (defaults.budget as Record<string, unknown> | undefined) ?? {};
+	const baseBudget =
+		(defaults.budget as Record<string, unknown> | undefined) ?? {};
 	if (trialMinutes !== undefined && !(Number(trialMinutes) > 0)) {
-		throw new Error(`--trial-minutes must be a positive number, got ${trialMinutes}`);
+		throw new Error(
+			`--trial-minutes must be a positive number, got ${trialMinutes}`,
+		);
 	}
 	const budget =
 		trialMinutes !== undefined
@@ -123,7 +117,10 @@ async function cmdRun(): Promise<void> {
 	// Native Anthropic keeps the scheduler's OAuth/API-key fallback; third-party
 	// profiles (e.g. z.ai GLM) inject ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN.
 	const models = loadModels();
-	const workerProfile = resolveProfile(arg("worker-model") ?? config.model, models);
+	const workerProfile = resolveProfile(
+		arg("worker-model") ?? config.model,
+		models,
+	);
 	let workerEnv: Record<string, string> | undefined;
 	let workerModelFlag = workerProfile.modelId;
 	if (workerProfile.provider !== "anthropic") {
@@ -173,7 +170,6 @@ async function cmdRun(): Promise<void> {
 		design?.name,
 	);
 	const sha = target.prdSha256;
-	const plan = target.plan;
 	const planSha = target.testPlanSha256;
 
 	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
@@ -221,80 +217,14 @@ async function cmdRun(): Promise<void> {
 	);
 
 	if (flag("grade")) {
-		// Each trial gets fresh fixture processes on their own ports.
-		let mockPort = 4280;
-		for (const trial of trials) {
-			const trialDir = join(runDir, "trials", trial.provenance.trialId);
-			const workspace = join(trialDir, "workspace");
-			if (!existsSync(workspace)) continue;
-			console.log(`grading ${trial.provenance.trialId}…`);
-			mockPort++;
-			const fixtures = startFixtures(target, mockPort);
-			await new Promise((r) => setTimeout(r, 500));
-			writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
-			let adherence: Awaited<ReturnType<typeof runEvaluator>>;
-			let quality: Awaited<ReturnType<typeof judgeQuality>>;
-			try {
-				adherence = await runEvaluator(plan, {
-					model: config.judgeModel,
-					workspaceDir: workspace,
-					mockLinearUrl:
-						fixtures.find((f) => f.name === "mock-linear")?.value ??
-						`http://localhost:${mockPort}`,
-					stubAppServerPath:
-						fixtures.find((f) => f.name === "stub-app-server")?.value ?? "",
-				});
-				const blindDir = join(trialDir, "workspace-blind");
-				scrubWorkspace(workspace, blindDir, registry.candidates);
-				quality = await judgeQuality({
-					model: config.judgeModel,
-					blindWorkspaceDir: blindDir,
-				});
-			} finally {
-				stopFixtures(fixtures);
-			}
-			// Design adherence (static, no browser) when a UI design was selected.
-			let designAdherence: TrialGrades["designAdherence"] = null;
-			if (design && target.manifest.ui) {
-				const da = scoreDesignAdherence(
-					workspace,
-					design.spec,
-					design.fontAliases,
-				);
-				designAdherence = {
-					design: design.name,
-					designSha256: design.sha256,
-					provenance: {
-						upstream: design.source.upstream,
-						commit: design.source.commit,
-						license: design.source.license,
-					},
-					score: da.score,
-					colorScore: da.color.score,
-					typographyScore: da.typography.score,
-					colorsMatched: da.color.matches.filter((m) => m.matched).length,
-					colorsTotal: da.color.matches.length,
-					typographyMatched: da.typography.matches.filter((m) => m.matched).length,
-					typographyTotal: da.typography.matches.length,
-					filesScanned: da.realized.filesScanned,
-					note: da.note,
-				};
-				console.log(
-					`  design adherence (${design.name}): ${da.score} [color ${da.color.score}, type ${da.typography.score}]`,
-				);
-			}
-			trial.grades = {
-				trialId: trial.provenance.trialId,
-				adherence,
-				quality,
-				integration: null,
-				designAdherence,
-			};
-			writeFileSync(
-				join(trialDir, "grades.json"),
-				JSON.stringify(trial.grades, null, 2),
-			);
-		}
+		await gradeTrials(trials, {
+			target,
+			design,
+			registry,
+			judgeModel: config.judgeModel,
+			runDir,
+			log: (m) => console.log(m),
+		});
 	}
 
 	const results = buildResults({
@@ -318,7 +248,9 @@ async function cmdModel(): Promise<void> {
 	const sub = process.argv[3];
 	const ref = process.argv[4];
 	if (sub !== "probe" || !ref) {
-		throw new Error("usage: model probe <profile>   (1-token connectivity check)");
+		throw new Error(
+			"usage: model probe <profile>   (1-token connectivity check)",
+		);
 	}
 	const profile = resolveProfile(ref, loadModels());
 	if (profile.transport !== "claude-code") {

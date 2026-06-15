@@ -136,6 +136,7 @@ describe("e2e dry run on a non-Symphony target (task 4.2)", () => {
 				score: 60,
 			},
 			integration: null,
+			designAdherence: null,
 		};
 
 		const results = buildResults({

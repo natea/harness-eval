@@ -37,14 +37,42 @@ profiles, providers). Validation **mirrors the CLI exactly** — the studio uses
 the same `RunConfig.parse` + registry resolution, so a rejection in the studio is
 a rejection on the command line (e.g. a framework with no section for the chosen
 harness is unselectable, with the reason shown). It computes a budget envelope
-and emits the **equivalent CLI command** to copy and run.
+and offers three launch modes: a **real run**, a zero-spend **dry run**, or the
+**equivalent CLI command** to copy and run.
 
 ![Eval Studio configure: registry-driven selects, framework multi-select,
 re-weight sliders, budget envelope, and the copyable CLI command](studio-configure.png)
 
-> Launching runs directly from the studio (the run-launch endpoint + live
-> runs/status view) is on the roadmap; today the studio produces the exact,
-> validated command to run from your shell.
+## Launching real runs
+
+A **dry run** (worktree + a fake build) executes immediately with zero spend — it
+exercises the launch → status → review chain.
+
+A **real run** bills your subscription, so it must clear four gates before any
+sandbox is provisioned: a valid request, **launch authorization** (`canLaunch`),
+an acknowledged **budget confirmation** dialog (provider, trial matrix, USD +
+wall-clock caps), and the resolved caps the orchestrator enforces during the run.
+Real runs execute as **local background jobs**; the **Runs** view shows live
+per-trial status, the current **stage** (provisioning → installing → building →
+grading), and cost-so-far. **Cancel** tears down the in-flight sandbox so a stuck
+trial stops immediately (it doesn't wait for the wall-clock budget). A
+non-completed trial's failure reason is surfaced on its drill-down.
+
+**Concurrency** is selectable and defaults per provider — **1 on daytona** (its
+free tier is ~10 GiB / effectively concurrency-1, so a higher value gets sandboxes
+reclaimed mid-build), **2** elsewhere.
+
+- **Operator token (optional):** set `STUDIO_OPERATOR_TOKEN` to require a token
+  with each real launch. Unset, any localhost caller is the single operator. This
+  is a minimal guard, **not** an identity or billing system.
+- **Authorization seam:** every real launch passes through one `canLaunch(principal,
+  request)` decision resolved in `src/studio/policy.ts`. This is the plug-in point
+  for a future credit-ledger / paywall policy (`add-eval-credits`) — it can debit
+  on launch and refund on infra-failure via the `onLaunched`/`onSettled` hooks
+  without changing the launch path.
+
+The studio still binds to **localhost** by default and writes run artifacts only
+through the orchestrator's entry points.
 
 ## Theming
 

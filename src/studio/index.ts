@@ -1,16 +1,18 @@
 #!/usr/bin/env bun
 /**
- * harness-eval Eval Studio (local, read-only review; run-launch added in
- * task 3). Served via Bun.serve HTML imports; Tailwind is processed by
- * bun-plugin-tailwind (see bunfig.toml). Reuses the dashboard data layer and
- * the shared scoring module so the studio is CLI-parity by construction.
- *   bun run studio            # http://127.0.0.1:4871
+ * harness-eval Eval Studio (local review + run launch). Dry runs (zero spend)
+ * and authorized, budget-confirmed real runs both launch here as background
+ * jobs; status + cancel via /api/queue + /api/cancel. Served via Bun.serve HTML
+ * imports; Tailwind is processed by bun-plugin-tailwind (see bunfig.toml).
+ * Reuses the dashboard data layer and shared scoring module so the studio is
+ * CLI-parity by construction.
+ *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { loadTarget } from "../targets";
 import index from "./index.html";
-import { getQueue, launchRun } from "./launcher";
+import { cancelRun, getQueue, launchRun } from "./launcher";
 import {
 	type StudioRunRequest,
 	studioOptions,
@@ -46,15 +48,30 @@ const server = Bun.serve({
 			},
 		},
 
-		// Launch a run (dry-run only from the studio; real runs use the CLI
-		// command). Background; returns the runId immediately.
+		// Launch a run. dryRun → zero-spend preview. Real runs require launch
+		// authorization + an acknowledged budget confirmation; an unconfirmed real
+		// run returns { needsConfirmation, budget } instead of launching. Background;
+		// returns the runId immediately when it starts.
 		"/api/launch": {
 			POST: async (req) => {
-				const body = (await req.json().catch(() => ({}))) as Partial<
-					StudioRunRequest
-				> & { dryRun?: boolean };
-				const out = launchRun(body, { dryRun: body.dryRun === true });
-				return Response.json(out, { status: out.errors ? 400 : 200 });
+				const body = (await req
+					.json()
+					.catch(() => ({}))) as Partial<StudioRunRequest> & {
+					dryRun?: boolean;
+				};
+				const out = await launchRun(body, { dryRun: body.dryRun === true });
+				const status = "errors" in out ? 400 : 200;
+				return Response.json(out, { status });
+			},
+		},
+
+		// Cancel a running studio job: no new trial starts; in-flight sandboxes
+		// are torn down by the trial's teardown.
+		"/api/cancel": {
+			POST: async (req) => {
+				const body = (await req.json().catch(() => ({}))) as { runId?: string };
+				const out = cancelRun(body.runId ?? "");
+				return Response.json(out, { status: out.ok ? 200 : 400 });
 			},
 		},
 

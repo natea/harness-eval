@@ -45,7 +45,26 @@ export interface SchedulerDeps {
 	executeScript?: typeof executeSessionScript;
 	archive?: typeof archiveTrial;
 	now?: () => Date;
+	/**
+	 * Cooperative cancel (studio live runs): when aborted, no new trial starts —
+	 * remaining plans terminate as skipped/cancelled. In-flight trials finish
+	 * their current sandbox lifecycle, whose `finally` tears the sandbox down, so
+	 * a cancelled run leaks no cloud resources.
+	 */
+	abortSignal?: AbortSignal;
+	/**
+	 * Coarse per-trial progress for live UIs (studio): called as a trial moves
+	 * through provisioning → installing → building → archiving. Best-effort,
+	 * non-fatal; the host can't see inside the agent session.
+	 */
+	onStage?: (trialId: string, stage: TrialStage) => void;
 }
+
+export type TrialStage =
+	| "provisioning"
+	| "installing"
+	| "building"
+	| "archiving";
 
 /** Build the full trial matrix: candidates x trialsPerCandidate. */
 export function buildMatrix(
@@ -109,6 +128,12 @@ export async function runMatrix(
 			for (;;) {
 				const plan = queue.shift();
 				if (!plan) return;
+				if (deps.abortSignal?.aborted) {
+					results.push(
+						skippedResult(plan, config, deps, "run cancelled by operator"),
+					);
+					continue;
+				}
 				if (ledger.exceeded()) {
 					results.push(
 						skippedResult(plan, config, deps, "run cost ceiling reached"),
@@ -183,9 +208,19 @@ export async function runTrial(
 
 	for (let attempt = 0; ; attempt++) {
 		let sandbox: Sandbox | null = null;
+		let onAbort: (() => void) | undefined;
 		try {
 			const setupStart = Date.now();
+			deps.onStage?.(plan.trialId, "provisioning");
 			sandbox = await deps.provider.provision(plan.trialId);
+			// Cancel teardown: destroying the in-flight sandbox makes the pending
+			// exec/install throw immediately, so a cancel interrupts a stuck trial
+			// instead of waiting for the wall-clock budget (studio live-run cancel).
+			const s = sandbox;
+			onAbort = () => {
+				void s.destroy().catch(() => {});
+			};
+			deps.abortSignal?.addEventListener("abort", onAbort, { once: true });
 			await sandbox.writeFile(
 				join(sandbox.workspacePath, "SPEC.md"),
 				deps.prdContent,
@@ -198,6 +233,7 @@ export async function runTrial(
 			const setup = plan.candidate.harnesses[config.harness];
 			if (!setup)
 				throw new Error(`no ${config.harness} setup for ${plan.candidate.id}`);
+			deps.onStage?.(plan.trialId, "installing");
 			for (const cmd of setup.install) {
 				const res = await sandbox.exec(cmd, { timeoutMs: 10 * 60 * 1000 });
 				if (res.exitCode !== 0) {
@@ -232,6 +268,7 @@ export async function runTrial(
 					workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 				}
 			}
+			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
 				model: deps.workerModelFlag ?? config.model,
 				steps: script,
@@ -243,6 +280,7 @@ export async function runTrial(
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);
 			ledger.add(telemetry.totalCostUsd);
+			deps.onStage?.(plan.trialId, "archiving");
 			await archive(sandbox, trialDir, result.transcripts);
 
 			provenance.status = result.status === "capped" ? "capped" : "completed";
@@ -258,6 +296,17 @@ export async function runTrial(
 			persistProvenance(deps.runDir, provenance);
 			return { provenance, telemetry, grades: null };
 		} catch (err) {
+			// Cancelled mid-trial: the error is the torn-down sandbox, not real
+			// infra failure — terminate now, never retry.
+			if (deps.abortSignal?.aborted) {
+				provenance.status = "infra-failed";
+				provenance.endedAt = new Date().toISOString();
+				provenance.notes.push(
+					"cancelled by operator (in-flight sandbox torn down)",
+				);
+				persistProvenance(deps.runDir, provenance);
+				return { provenance, telemetry: null, grades: null };
+			}
 			if (isInfraFailure(err) && attempt < config.infraRetryLimit) {
 				provenance.notes.push(
 					`infra retry ${attempt + 1}: ${String(err).slice(0, 200)}`,
@@ -273,6 +322,7 @@ export async function runTrial(
 			persistProvenance(deps.runDir, provenance);
 			return { provenance, telemetry: null, grades: null };
 		} finally {
+			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
 			await sandbox?.destroy().catch(() => {});
 		}
 	}

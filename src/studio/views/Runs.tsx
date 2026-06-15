@@ -40,6 +40,7 @@ interface Row {
 	cost?: number;
 	link: boolean;
 	error?: string;
+	target?: { name: string; title: string } | null;
 }
 
 const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = {
@@ -66,6 +67,7 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			trialsLabel: total ? `${total}` : "—",
 			link: Boolean(r.summary),
 			error: r.error,
+			target: r.summary?.target ?? null,
 		});
 	}
 	for (const e of queue) {
@@ -82,6 +84,8 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			cost: e.kind === "live" ? e.costUsdSoFar : undefined,
 			link: e.status === "completed",
 			error: e.error,
+			// Live queue entries don't carry the target; keep the disk-resolved one.
+			target: byId.get(e.runId)?.target ?? null,
 		});
 	}
 	return [...byId.values()].sort((a, b) => b.runId.localeCompare(a.runId));
@@ -145,6 +149,7 @@ export function Runs() {
 							<TableHeader>
 								<TableRow>
 									<TableHead>Run</TableHead>
+									<TableHead>App / PRD</TableHead>
 									<TableHead>Status</TableHead>
 									<TableHead>Candidates</TableHead>
 									<TableHead>Trials</TableHead>
@@ -166,6 +171,18 @@ export function Runs() {
 												</a>
 											) : (
 												<span className="font-mono text-[12px]">{e.runId}</span>
+											)}
+										</TableCell>
+										<TableCell className="text-[13px]">
+											{e.target ? (
+												<>
+													{e.target.title}{" "}
+													<span className="font-mono text-[11px] text-muted-foreground">
+														({e.target.name})
+													</span>
+												</>
+											) : (
+												<span className="text-muted-foreground">—</span>
 											)}
 										</TableCell>
 										<TableCell>

@@ -44,7 +44,7 @@ function Nav() {
 function App() {
 	return (
 		<TooltipProvider delayDuration={150}>
-			<main className="mx-auto max-w-[1100px] p-6">
+			<main className="w-full px-6 py-6">
 				<Nav />
 				<Routed />
 			</main>
@@ -53,4 +53,10 @@ function App() {
 }
 
 const el = document.getElementById("root");
-if (el) createRoot(el).render(<App />);
+if (el) {
+	// Reuse the root across HMR re-evaluations; calling createRoot twice on the
+	// same container warns and double-mounts.
+	const g = globalThis as { __studioRoot?: ReturnType<typeof createRoot> };
+	const root = g.__studioRoot ?? (g.__studioRoot = createRoot(el));
+	root.render(<App />);
+}

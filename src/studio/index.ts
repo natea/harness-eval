@@ -9,6 +9,8 @@
  *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { loadTarget } from "../targets";
 import index from "./index.html";
@@ -21,6 +23,41 @@ import {
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
+
+interface RunTarget {
+	name: string;
+	/** Human title from the PRD's first heading (the app being built). */
+	title: string;
+	/** Step id → description + concrete check (drill-down tooltips). */
+	steps: Record<string, string>;
+}
+
+/** Identify which eval target a run built by matching its PRD content hash
+ *  against the target library, so the studio can name the app and show the
+ *  exact check behind each step — for whatever target the run actually used. */
+function resolveRunTarget(runId: string): RunTarget | null {
+	const sha = getRun(runId)?.results?.prdSha256;
+	if (!sha) return null;
+	for (const dir of readdirSync("targets")) {
+		if (!existsSync(join("targets", dir, "target.yaml"))) continue;
+		try {
+			const t = loadTarget(dir);
+			if (t.prdSha256 !== sha) continue;
+			const title = t.prdContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? dir;
+			const steps: Record<string, string> = {};
+			for (const step of t.plan.steps) {
+				steps[step.id] =
+					`${step.description}\n\nCheck: ${step.check.trim()}` +
+					(step.fatal ? "\n(FATAL gate)" : "") +
+					(step.bonus ? "\n(bonus — not scored)" : "");
+			}
+			return { name: dir, title, steps };
+		} catch {
+			// skip unloadable target
+		}
+	}
+	return null;
+}
 
 const server = Bun.serve({
 	hostname: "127.0.0.1",
@@ -135,22 +172,14 @@ const server = Bun.serve({
 			},
 		},
 
-		// Step descriptions for drill-down tooltips (default target).
-		"/api/steps": {
-			GET: () => {
-				try {
-					const t = loadTarget("symphony-daemon");
-					const out: Record<string, string> = {};
-					for (const step of t.plan.steps) {
-						out[step.id] =
-							`${step.description}\n\nCheck: ${step.check.trim()}` +
-							(step.fatal ? "\n(FATAL gate)" : "") +
-							(step.bonus ? "\n(bonus — not scored)" : "");
-					}
-					return Response.json(out);
-				} catch {
-					return Response.json({});
-				}
+		// Which app a run built (PRD title + name) and the concrete check behind
+		// each step — resolved from the run's actual target, not a hardcoded one.
+		"/api/runs/:id/target": {
+			GET: (req) => {
+				const t = resolveRunTarget(req.params.id);
+				return t
+					? Response.json(t)
+					: Response.json({ error: "not found" }, { status: 404 });
 			},
 		},
 	},

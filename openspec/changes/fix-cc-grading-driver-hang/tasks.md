@@ -20,6 +20,6 @@
 - [x] 3.1 Regression test: fixture artifact whose `start.sh` launches a long-lived
   foreground server; assert `runCC` returns the parsed result after the agent
   finishes and leaves no listener on the fixture port (group killed).
-- [ ] 3.2 Run one real `--driver cc` grade end-to-end; confirm it completes without
+- [x] 3.2 Run one real `--driver cc` grade end-to-end; confirm it completes without
   `exit 143` / "no result from claude".
 - [x] 3.3 `bun run test` green; `openspec validate fix-cc-grading-driver-hang`.

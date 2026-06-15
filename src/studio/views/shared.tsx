@@ -72,7 +72,7 @@ export function WeightControls({
 					<div key={k} className="flex items-center gap-3">
 						<span className="w-28 shrink-0 text-[13px]">{DIM_LABELS[k]}</span>
 						<Slider
-							className="flex-1"
+							className="min-w-0 flex-1 max-w-[200px]"
 							min={0}
 							max={100}
 							step={1}

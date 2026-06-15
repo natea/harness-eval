@@ -10,8 +10,19 @@ import {
 	TableHeader,
 	TableRow,
 } from "../components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "../components/ui/tooltip";
 import { useFetch } from "../lib/api";
 import { Evidence } from "./shared";
+
+interface RunTarget {
+	name: string;
+	title: string;
+	steps: Record<string, string>;
+}
 
 function Section({
 	title,
@@ -43,6 +54,7 @@ export function TrialView({
 	trialId: string;
 }) {
 	const t = useFetch<TrialResult>(`/api/runs/${runId}/trials/${trialId}`);
+	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
 	if (!t) return <p className="text-muted-foreground">loading…</p>;
 	if (!t.provenance) return <Badge variant="danger">not found</Badge>;
 	const a = t.grades?.adherence;
@@ -61,6 +73,14 @@ export function TrialView({
 				</a>
 			</p>
 			<h1 className="font-mono text-lg font-bold">{trialId}</h1>
+			{target && (
+				<p className="mt-1 text-[13px]">
+					🎯 Building <span className="font-semibold">{target.title}</span>{" "}
+					<span className="font-mono text-muted-foreground">
+						({target.name})
+					</span>
+				</p>
+			)}
 			<p className="font-mono text-[12px] text-muted-foreground">
 				{t.provenance.candidate}@{t.provenance.candidateVersion} ·{" "}
 				{t.provenance.harness} {t.provenance.harnessVersion} ·{" "}
@@ -98,7 +118,17 @@ export function TrialView({
 
 			{a && (
 				<Section
-					title={`PRD adherence: ${a.gradedScore.toFixed(2)}`}
+					title={
+						<>
+							PRD adherence: {a.gradedScore.toFixed(2)}
+							{target && (
+								<span className="font-normal text-muted-foreground">
+									{" "}
+									— {target.title}
+								</span>
+							)}
+						</>
+					}
 					right={
 						<>
 							{a.passAt1 && <Badge variant="ok">pass@1</Badge>}
@@ -121,7 +151,20 @@ export function TrialView({
 							{a.stepResults.map((s) => (
 								<TableRow key={s.stepId}>
 									<TableCell className="font-mono text-[12px]">
-										{s.stepId}
+										{target?.steps[s.stepId] ? (
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+														{s.stepId}
+													</span>
+												</TooltipTrigger>
+												<TooltipContent className="whitespace-pre-line">
+													{target.steps[s.stepId]}
+												</TooltipContent>
+											</Tooltip>
+										) : (
+											s.stepId
+										)}
 									</TableCell>
 									<TableCell className="text-[13px]">
 										{s.outcome === "pass"

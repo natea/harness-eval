@@ -7,6 +7,26 @@ import { DEFAULT_WEIGHTS, DIM_LABELS, HELP } from "../lib/api";
 
 export const DIM_KEYS = Object.keys(DIM_LABELS) as (keyof Weights)[];
 
+/** Extract the timestamp embedded in a run id (`run-2026-06-15T14-26-00-596Z…`,
+ *  including `-dry` and `combined:run-…` ids — the first match is used) as epoch
+ *  ms. More reliable than string-sorting run ids across suffixes/prefixes. */
+export function runTs(runId: string): number | null {
+	const m = runId.match(/(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z/);
+	if (!m) return null;
+	const t = Date.parse(`${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]}Z`);
+	return Number.isNaN(t) ? null : t;
+}
+
+export const fmtRunDate = (ts: number | null): string =>
+	ts == null
+		? "—"
+		: new Date(ts).toLocaleString(undefined, {
+				month: "short",
+				day: "numeric",
+				hour: "2-digit",
+				minute: "2-digit",
+			});
+
 /** Horizontal data bar + monospace value (the accent's only decorative use). */
 export function Bar({ v }: { v: number }) {
 	return (
@@ -72,7 +92,7 @@ export function WeightControls({
 					<div key={k} className="flex items-center gap-3">
 						<span className="w-28 shrink-0 text-[13px]">{DIM_LABELS[k]}</span>
 						<Slider
-							className="flex-1"
+							className="min-w-0 flex-1 max-w-[200px]"
 							min={0}
 							max={100}
 							step={1}

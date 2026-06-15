@@ -31,8 +31,20 @@ interface RunResults {
 	endedAt: string | null;
 }
 
-function StepComparison({ trials }: { trials: TrialResult[] }) {
-	const stepInfo = useFetch<Record<string, string>>("/api/steps");
+interface RunTarget {
+	name: string;
+	title: string;
+	steps: Record<string, string>;
+}
+
+function StepComparison({
+	trials,
+	steps,
+}: {
+	trials: TrialResult[];
+	steps: Record<string, string>;
+}) {
+	const stepInfo = steps;
 	const graded = trials.filter((t) => t.grades?.adherence);
 	if (graded.length < 2) return null;
 	const stepIds = [
@@ -110,6 +122,7 @@ export function RunView({ runId }: { runId: string }) {
 	const entry = useFetch<{ supported: boolean; error?: string; results?: RunResults }>(
 		`/api/runs/${runId}`,
 	);
+	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	if (!entry) return <p className="text-muted-foreground">loading…</p>;
 	if (!entry.supported || !entry.results)
@@ -134,6 +147,14 @@ export function RunView({ runId }: { runId: string }) {
 			<h1 className="font-mono text-lg font-bold">
 				{combined ? "Combined run" : runId}
 			</h1>
+			{target && (
+				<p className="mt-1 text-[13px]">
+					🎯 Building <span className="font-semibold">{target.title}</span>{" "}
+					<span className="font-mono text-muted-foreground">
+						({target.name})
+					</span>
+				</p>
+			)}
 			<p className="text-[13px] text-muted-foreground">
 				🗓 {fmt(r.startedAt)} → {fmt(r.endedAt)} · {String(r.config.harness)} /{" "}
 				{String(r.config.model)} on {String(r.config.provider)} · judge{" "}
@@ -252,7 +273,7 @@ export function RunView({ runId }: { runId: string }) {
 				</CardContent>
 			</Card>
 
-			<StepComparison trials={r.trials} />
+			<StepComparison trials={r.trials} steps={target?.steps ?? {}} />
 
 			{r.exclusions.length > 0 && (
 				<>

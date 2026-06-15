@@ -370,6 +370,12 @@ function launchLive(
 						judgeModel: judgeProfile.name,
 						runDir,
 						signal: abort.signal,
+						// Surface per-trial grading progress so the badge shows
+						// "evaluating…"/"scoring…" instead of the build's last
+						// "archiving" stage lingering through the grade.
+						onStage: (stage) => {
+							entry.stage = stage;
+						},
 					}),
 					gradeTimeoutMs,
 					`grading exceeded ${Math.round(gradeTimeoutMs / 60_000)}m — re-grade with scripts/grade-trial.ts then scripts/finalize-run.ts`,

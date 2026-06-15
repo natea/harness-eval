@@ -22,6 +22,9 @@ export interface GradeOptions {
 	log?: (msg: string) => void;
 	/** Cooperative cancellation: checked between trials so Cancel can interrupt. */
 	signal?: AbortSignal;
+	/** Coarse grading progress for live UI (e.g. "evaluating superpowers-t1 (1/2)").
+	 *  Lets the studio show grading distinctly from the build's archive phase. */
+	onStage?: (stage: string) => void;
 }
 
 /**
@@ -39,15 +42,18 @@ export async function gradeTrials(
 	const log = opts.log ?? (() => {});
 	let mockPort = opts.basePort ?? 4280;
 
-	for (const trial of trials) {
+	const total = trials.length;
+	for (const [idx, trial] of trials.entries()) {
 		if (opts.signal?.aborted) {
 			log("grading aborted before next trial");
 			break;
 		}
-		const trialDir = join(runDir, "trials", trial.provenance.trialId);
+		const trialId = trial.provenance.trialId;
+		const trialDir = join(runDir, "trials", trialId);
 		const workspace = join(trialDir, "workspace");
 		if (!existsSync(workspace)) continue;
-		log(`grading ${trial.provenance.trialId}…`);
+		log(`grading ${trialId}…`);
+		opts.onStage?.(`evaluating ${trialId} (${idx + 1}/${total})`);
 		mockPort++;
 		const fixtures = startFixtures(target, mockPort);
 		await new Promise((r) => setTimeout(r, 500));
@@ -66,6 +72,7 @@ export async function gradeTrials(
 			});
 			const blindDir = join(trialDir, "workspace-blind");
 			scrubWorkspace(workspace, blindDir, registry.candidates);
+			opts.onStage?.(`scoring ${trialId} (${idx + 1}/${total})`);
 			quality = await judgeQuality({
 				model: judgeModel,
 				blindWorkspaceDir: blindDir,

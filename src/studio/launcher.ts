@@ -77,7 +77,12 @@ export function getQueue(): QueueEntry[] {
 	const ids = new Set(inMemory.map((e) => e.runId));
 	const fromDisk = listRunStates()
 		.filter((s) => !ids.has(s.runId))
-		.filter((s) => s.status === "running" || s.status === "interrupted")
+		// Surface every non-completed disk run: running + interrupted, but also
+		// error/cancelled. A failed or cancelled detached run has no results.json,
+		// so /api/runs can't show it — without this it would silently vanish (the
+		// exact bug this change exists to prevent). Completed runs are shown via
+		// /api/runs from their results.json.
+		.filter((s) => s.status !== "completed")
 		.map(stateToEntry);
 	return [...inMemory, ...fromDisk].sort((a, b) =>
 		b.startedAt.localeCompare(a.startedAt),

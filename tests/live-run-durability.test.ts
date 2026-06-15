@@ -64,6 +64,27 @@ test("6.2 interrupted run (dead owner, no results.json) is reconciled and surfac
 	expect(existsSync(join(runDir, "results.json"))).toBe(false);
 });
 
+test("an errored detached run (no results.json) stays visible in getQueue", () => {
+	const { runId, runDir } = makeRunDir("errored");
+	writeRunState(runDir, {
+		runId,
+		kind: "live",
+		status: "error",
+		stage: null,
+		candidates: ["superpowers"],
+		trials: { "superpowers-t1": "completed" },
+		costUsdSoFar: 0.46,
+		startedAt: "2026-06-15T14:26:19.012Z",
+		updatedAt: "2026-06-15T14:27:55.096Z",
+		ownerPid: 2_147_483_646,
+		error: "400 invalid_request_error: credit balance too low",
+	});
+	const row = getQueue().find((e) => e.runId === runId);
+	expect(row?.status).toBe("error");
+	expect(row?.error).toContain("credit balance");
+	expect(existsSync(join(runDir, "results.json"))).toBe(false);
+});
+
 test(
 	"6.3 a dry run executes in the detached worker and completes on its own",
 	async () => {

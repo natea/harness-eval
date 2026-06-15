@@ -51,6 +51,8 @@ interface Row {
 	kind?: "dry" | "live";
 	candidates: string[];
 	trialsLabel: string;
+	/** Per-trial id:status breakdown, shown on hover (run-state runs only). */
+	trialsDetail?: string;
 	cost?: number;
 	link: boolean;
 	error?: string;
@@ -95,10 +97,15 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			stage: e.stage,
 			kind: e.kind,
 			candidates: e.candidates,
-			trialsLabel:
+			// Consistent count (like disk runs), with the per-trial breakdown on
+			// hover — not the long inline "id:status …" string.
+			trialsLabel: Object.keys(e.trials).length
+				? `${Object.values(e.trials).filter((s) => s === "completed").length}/${Object.keys(e.trials).length}`
+				: "—",
+			trialsDetail:
 				Object.entries(e.trials)
-					.map(([id, s]) => `${id}:${s}`)
-					.join("  ") || "—",
+					.map(([id, s]) => `${id}: ${s}`)
+					.join("\n") || undefined,
 			cost: e.kind === "live" ? e.costUsdSoFar : undefined,
 			link: e.status === "completed",
 			error:
@@ -120,6 +127,9 @@ export function Runs() {
 	const [disk, setDisk] = useState<RunSummary[]>([]);
 	const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 	const [appFilter, setAppFilter] = useState<string>("all");
+	// Runs we've asked to cancel — shows "cancelling…" until the status flips
+	// (cancellation is cooperative; an in-flight build finishes its step first).
+	const [cancelling, setCancelling] = useState<Set<string>>(new Set());
 
 	useEffect(() => {
 		const pollQueue = () =>
@@ -143,12 +153,32 @@ export function Runs() {
 		};
 	}, []);
 
-	const cancel = (runId: string) =>
+	const cancel = (runId: string) => {
+		setCancelling((s) => new Set(s).add(runId));
 		fetch("/api/cancel", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ runId }),
-		}).catch(() => {});
+		})
+			.then((r) => r.json())
+			.then((out) => {
+				// If the server couldn't cancel (already terminal), drop the pending
+				// state so the button returns instead of spinning forever.
+				if (!out?.ok)
+					setCancelling((s) => {
+						const n = new Set(s);
+						n.delete(runId);
+						return n;
+					});
+			})
+			.catch(() =>
+				setCancelling((s) => {
+					const n = new Set(s);
+					n.delete(runId);
+					return n;
+				}),
+			);
+	};
 
 	// Sort by the run's timestamp; nulls (unparseable ids) sink to the bottom.
 	const allRows = merge(disk, queue).sort((a, b) => {
@@ -305,7 +335,20 @@ export function Runs() {
 													{e.candidates.join(", ") || "—"}
 												</TableCell>
 												<TableCell className="font-mono text-[12px]">
-													{e.trialsLabel}
+													{e.trialsDetail ? (
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+																	{e.trialsLabel}
+																</span>
+															</TooltipTrigger>
+															<TooltipContent className="whitespace-pre-line">
+																{e.trialsDetail}
+															</TooltipContent>
+														</Tooltip>
+													) : (
+														e.trialsLabel
+													)}
 												</TableCell>
 												<TableCell className="font-mono text-[12px]">
 													{e.cost != null ? `$${e.cost.toFixed(2)}` : "—"}
@@ -324,15 +367,24 @@ export function Runs() {
 													)}
 												</TableCell>
 												<TableCell>
-													{e.status === "running" && (
-														<button
-															type="button"
-															className="rounded-md border border-border px-2 py-1 text-[12px] text-foreground hover:bg-muted"
-															onClick={() => cancel(e.runId)}
-														>
-															Cancel
-														</button>
-													)}
+													{e.status === "running" &&
+														(cancelling.has(e.runId) ? (
+															<span className="inline-flex items-center gap-1.5 px-2 py-1 text-[12px] text-muted-foreground">
+																<span
+																	aria-hidden
+																	className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+																/>
+																cancelling…
+															</span>
+														) : (
+															<button
+																type="button"
+																className="rounded-md border border-border px-2 py-1 text-[12px] text-foreground hover:bg-muted"
+																onClick={() => cancel(e.runId)}
+															>
+																Cancel
+															</button>
+														))}
 												</TableCell>
 											</TableRow>
 										))}

@@ -70,7 +70,7 @@ candidates:
   - id: agent-skills
     name: Agent Skills
     repo: https://github.com/addyosmani/agent-skills
-    pinnedVersion: d187883b7d76
+    pinnedVersion: 3a6fc6392823
     markerPaths: []
     harnesses:
       claude-code:
@@ -78,7 +78,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add addyosmani/agent-skills
           - claude plugin install agent-skills@addy-agent-skills
-          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: d187883b7d76'"
+          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 3a6fc6392823'"
         session:
           - prompt: "/agent-skills:spec {{BASE_PROMPT}}"
           - prompt: "/agent-skills:plan"

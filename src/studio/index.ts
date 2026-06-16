@@ -14,13 +14,13 @@ import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { loadTarget } from "../targets";
 import index from "./index.html";
-import { cancelRun, getQueue, launchRun } from "./launcher";
+import { cancelRun, getQueue, launchRun, regradeRun } from "./launcher";
 import {
 	type StudioRunRequest,
 	studioOptions,
 	validateRunRequest,
 } from "./options";
-import { reconcileRunStates } from "./run-state";
+import { reconcileRunStates, runNeedsGrading } from "./run-state";
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
@@ -139,6 +139,15 @@ const server = Bun.serve({
 		// Live status of studio-launched runs.
 		"/api/queue": { GET: () => Response.json(getQueue()) },
 
+		// Resume grading for a run with built-but-ungraded trials (no rebuild).
+		"/api/regrade": {
+			POST: async (req) => {
+				const body = (await req.json().catch(() => ({}))) as { runId?: string };
+				const out = regradeRun(body.runId ?? "");
+				return Response.json(out, { status: out.ok ? 200 : 400 });
+			},
+		},
+
 		// Leaderboard payload: index without per-trial step evidence (kept light;
 		// grades join happens on the trial route).
 		"/api/runs": {
@@ -149,6 +158,9 @@ const server = Bun.serve({
 					supported: e.supported,
 					schemaVersion: e.schemaVersion,
 					error: e.error,
+					// Built-but-ungraded trials remain (e.g. a partial finalize) → the
+					// run can be resumed-graded without rebuilding.
+					regradable: runNeedsGrading(e.dir),
 					summary: e.results
 						? {
 								config: {

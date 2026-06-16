@@ -29,6 +29,7 @@ import {
 	readRunState,
 	type RunState,
 	type RunStateStatus,
+	runNeedsGrading,
 	RUNS_DIR,
 	writeRunState,
 } from "./run-state";
@@ -43,6 +44,8 @@ export interface QueueEntry {
 	costUsdSoFar: number;
 	stage?: string;
 	error?: string;
+	/** Built artifacts still need grading — drives the "Resume grading" button. */
+	regradable?: boolean;
 }
 
 interface JobControl {
@@ -63,7 +66,29 @@ function stateToEntry(s: RunState): QueueEntry {
 		costUsdSoFar: s.costUsdSoFar,
 		stage: s.stage ?? undefined,
 		error: s.error ?? undefined,
+		// Only a terminal run can be resumed; running ones are mid-grade already.
+		regradable:
+			s.status !== "running" && runNeedsGrading(join(RUNS_DIR, s.runId)),
 	};
+}
+
+/**
+ * Resume grading for an existing run (no rebuild): spawn the regrade worker
+ * detached. It grades built-but-ungraded trials on the subscription (checkpointed
+ * resume) and finalizes, writing run-state so the studio shows live progress.
+ */
+export function regradeRun(runId: string): { ok: boolean; error?: string } {
+	const runDir = join(RUNS_DIR, runId);
+	if (!runNeedsGrading(runDir))
+		return { ok: false, error: "nothing to grade for this run" };
+	const log = openSync(join(runDir, "regrade.log"), "a");
+	const child = spawn("bun", ["scripts/regrade-run.ts", runDir], {
+		detached: true,
+		stdio: ["ignore", log, log],
+		env: process.env,
+	});
+	child.unref();
+	return { ok: true };
 }
 
 /**

@@ -8,6 +8,8 @@ export interface RunSummary {
 	supported: boolean;
 	schemaVersion?: number;
 	error?: string;
+	/** Built-but-ungraded trials remain → can be resumed-graded without rebuild. */
+	regradable?: boolean;
 	summary?: {
 		config: {
 			harness: string;

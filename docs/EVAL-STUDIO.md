@@ -17,18 +17,35 @@ classic dashboard, on shadcn components — reusing the **same scoring module th
 CLI uses**, so client-side re-weighting and composites are identical to
 `report --weights`.
 
-![Eval Studio review: leaderboard with re-weight sliders, dimension bars, and a
-runs table](studio-review.png)
+![Eval Studio leaderboard: candidate frameworks ranked by weighted composite with
+re-weight sliders and dimension bars, over a runs table tagged by app/PRD](studio-leaderboard.png)
 
 - **Leaderboard** — cross-run, aggregated by candidate/harness/worker-model, with
   re-weight sliders (live), dimension data bars, info-tooltips per column, and a
   mixed-candidate-set caveat.
 - **Run scorecard** (`/runs/:id`) — per-candidate composite + dimensions + ±σ,
   the trials table, a step-comparison matrix (✅ / 🟡 partial-credit / ❌ with
-  evidence on hover), exclusions, and provenance hashes.
+  evidence on hover), exclusions (with the reason), and provenance hashes.
+
+  ![Eval Studio run scorecard: per-candidate composite and dimension bars, trials
+  table, step-by-step adherence comparison, excluded trials with reasons, and
+  provenance](studio-run-scorecard.png)
+
 - **Trial drill-down** (`/runs/:id/trials/:id`) — provenance + telemetry, the
-  PRD-adherence step results with collapsible cited evidence, the blind judge's
-  per-criterion samples + justifications, the real-integration tier, and notes.
+  PRD-adherence step results with cited evidence and `↳ trace` links, the blind
+  judge's per-criterion samples + justifications, the real-integration tier, and a
+  non-completed trial's failure reason.
+
+  ![Eval Studio trial drill-down: PRD adherence steps with pass/partial/fail and
+  trace links, blind code-quality criteria with samples, and telemetry](studio-trial.png)
+
+- **Conversation replay** — the trial's full build transcript (request/response,
+  thinking, tool calls), with session jumps, an **error navigator** that steps
+  through the run's errors one at a time, and an outline trace to where a step
+  went wrong.
+
+  ![Eval Studio conversation viewer: request/response build replay with session
+  jumps, an error navigator, and an outline trace](studio-conversation.png)
 
 ## Configure
 
@@ -57,6 +74,9 @@ per-trial status, the current **stage** (provisioning → installing → buildin
 grading), and cost-so-far. **Cancel** tears down the in-flight sandbox so a stuck
 trial stops immediately (it doesn't wait for the wall-clock budget). A
 non-completed trial's failure reason is surfaced on its drill-down.
+
+![Eval Studio runs view: launched runs with live status, stage, cost-so-far and
+cancel, alongside historical runs from disk](studio-runs.png)
 
 **Concurrency** is selectable and defaults per provider — **1 on daytona** (its
 free tier is ~10 GiB / effectively concurrency-1, so a higher value gets sandboxes

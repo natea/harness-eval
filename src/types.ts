@@ -4,7 +4,9 @@ import { z } from "zod";
 // Identifiers and enums
 // ---------------------------------------------------------------------------
 
-export const HarnessId = z.enum(["claude-code", "opencode", "codex"]);
+// Only harnesses with an actual driver belong here. opencode/codex/goose/… are
+// added back as they're implemented (see openspec change add-pluggable-harnesses).
+export const HarnessId = z.enum(["claude-code"]);
 export type HarnessId = z.infer<typeof HarnessId>;
 
 export const IsolationProviderId = z.enum([

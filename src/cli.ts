@@ -104,6 +104,7 @@ async function cmdRun(): Promise<void> {
 		concurrency: Number(
 			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
 		),
+		...(arg("judge-model") ? { judgeModel: arg("judge-model") } : {}),
 		budget,
 	});
 	const candidates = resolveCandidates(

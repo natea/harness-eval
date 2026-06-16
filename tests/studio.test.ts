@@ -111,4 +111,34 @@ describe("eval-studio options + validation (tasks 3.1, 4.1)", () => {
 		expect(glm).toContain("--worker-model glm-4.7");
 		expect(glm).toContain("--grade");
 	});
+
+	test("accepts an explicit grader model that differs from the worker", () => {
+		const r = validateRunRequest({ ...VALID, judgeModel: "claude-haiku-4-5" });
+		expect(r.errors).toEqual([]);
+	});
+
+	test("rejects an unknown grader model", () => {
+		const r = validateRunRequest({ ...VALID, judgeModel: "llama-9000" });
+		expect(r.errors.some((e) => /judgeModel/.test(e))).toBe(true);
+	});
+
+	test("rejects a grader model equal to the worker (no self-grading)", () => {
+		const r = validateRunRequest({
+			...VALID,
+			workerModel: "claude-opus-4-6",
+			judgeModel: "claude-opus-4-6",
+		});
+		expect(
+			r.errors.some((e) => /judgeModel/.test(e) && /self-grading/.test(e)),
+		).toBe(true);
+	});
+
+	test("cliCommand omits the default grader model, includes overrides", () => {
+		expect(
+			cliCommand({ ...VALID, judgeModel: "claude-sonnet-4-6" }),
+		).not.toContain("--judge-model");
+		expect(cliCommand({ ...VALID, judgeModel: "claude-haiku-4-5" })).toContain(
+			"--judge-model claude-haiku-4-5",
+		);
+	});
 });

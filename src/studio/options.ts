@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
-import { loadModels, resolveProfile } from "../models";
+import { judgeWorkerRelation, loadModels, resolveProfile } from "../models";
 import { loadRegistry } from "../registry";
 import {
 	HarnessId,
@@ -55,6 +55,9 @@ export interface StudioRunRequest {
 	candidates: string[];
 	harness: string;
 	workerModel: string;
+	/** Grader (judge) model profile; defaults to claude-sonnet-4-6. Must differ
+	 *  from the worker model (self-grading is disallowed). */
+	judgeModel?: string;
 	provider: string;
 	trials: number;
 	weights: Weights;
@@ -121,12 +124,24 @@ export function validateRunRequest(
 		}
 	}
 
-	// Worker model must resolve (implicit claude-* or a declared profile).
+	// Worker + judge models must resolve (implicit claude-* or a declared profile),
+	// and the judge must differ from the worker (self-grading is disallowed — the
+	// same guardrail the CLI enforces). Cross-vendor judging is allowed.
+	const models = loadModels();
+	let workerProfile: ReturnType<typeof resolveProfile> | undefined;
 	if (req.workerModel) {
 		try {
-			resolveProfile(req.workerModel, loadModels());
+			workerProfile = resolveProfile(req.workerModel, models);
 		} catch (e) {
 			errors.push(`workerModel: ${(e as Error).message}`);
+		}
+	}
+	if (req.judgeModel) {
+		try {
+			const judgeProfile = resolveProfile(req.judgeModel, models);
+			if (workerProfile) judgeWorkerRelation(workerProfile, judgeProfile);
+		} catch (e) {
+			errors.push(`judgeModel: ${(e as Error).message}`);
 		}
 	}
 
@@ -137,6 +152,7 @@ export function validateRunRequest(
 			candidates: cands.length ? cands : ["_"],
 			harness: req.harness,
 			model: req.workerModel,
+			...(req.judgeModel ? { judgeModel: req.judgeModel } : {}),
 			trialsPerCandidate: req.trials,
 			provider: req.provider,
 			concurrency: req.concurrency ?? defaultConcurrency(req.provider),
@@ -185,6 +201,8 @@ export function cliCommand(req: StudioRunRequest): string {
 	];
 	if (req.workerModel && req.workerModel !== "claude-opus-4-6")
 		parts.push(`--worker-model ${req.workerModel}`);
+	if (req.judgeModel && req.judgeModel !== "claude-sonnet-4-6")
+		parts.push(`--judge-model ${req.judgeModel}`);
 	const conc = req.concurrency ?? defaultConcurrency(req.provider);
 	if (conc !== 2) parts.push(`--concurrency ${conc}`);
 	if (req.design) parts.push(`--design ${req.design}`);

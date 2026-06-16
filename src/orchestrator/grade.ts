@@ -31,6 +31,21 @@ export interface GradeOptions {
 	 *  directly (billed to the API account). Default cc so a $0 API balance never
 	 *  blocks grading a run the subscription already built. */
 	driver?: "cc" | "sdk";
+	/** Per-trial grading budget. A trial that exceeds it is left ungraded (with a
+	 *  note) and grading continues — one slow trial never fails the whole run.
+	 *  Default 60 min/trial. */
+	trialTimeoutMs?: number;
+}
+
+/** Reject if `p` does not settle within `ms`. */
+function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+	let timer: ReturnType<typeof setTimeout>;
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => reject(new Error(message)), ms);
+	});
+	return Promise.race([p, timeout]).finally(() =>
+		clearTimeout(timer),
+	) as Promise<T>;
 }
 
 /**
@@ -70,40 +85,59 @@ export async function gradeTrials(
 			`http://localhost:${mockPort}`;
 		const stubAppServerPath =
 			fixtures.find((f) => f.name === "stub-app-server")?.value ?? "";
-		let adherence: Awaited<ReturnType<typeof runEvaluator>>;
-		let quality: Awaited<ReturnType<typeof judgeQuality>>;
+		const trialBudgetMs = opts.trialTimeoutMs ?? 60 * 60_000;
+		let graded: {
+			adherence: Awaited<ReturnType<typeof runEvaluator>>;
+			quality: Awaited<ReturnType<typeof judgeQuality>>;
+		};
 		try {
-			adherence =
-				driver === "sdk"
-					? await runEvaluator(target.plan, {
-							model: judgeModel,
-							workspaceDir: workspace,
-							mockLinearUrl,
-							stubAppServerPath,
-						})
-					: await runEvaluatorCC(target.plan, {
-							model: judgeModel,
-							workspaceDir: workspace,
-							trialDir,
-							mockLinearUrl,
-							stubAppServerPath,
-						});
-			const blindDir = join(trialDir, "workspace-blind");
-			scrubWorkspace(workspace, blindDir, registry.candidates);
-			opts.onStage?.(`scoring ${trialId} (${idx + 1}/${total})`);
-			quality =
-				driver === "sdk"
-					? await judgeQuality({
-							model: judgeModel,
-							blindWorkspaceDir: blindDir,
-						})
-					: await judgeQualityCC({
-							model: judgeModel,
-							blindWorkspaceDir: blindDir,
-						});
-		} finally {
+			graded = await withTimeout(
+				(async () => {
+					const adherence =
+						driver === "sdk"
+							? await runEvaluator(target.plan, {
+									model: judgeModel,
+									workspaceDir: workspace,
+									mockLinearUrl,
+									stubAppServerPath,
+								})
+							: await runEvaluatorCC(target.plan, {
+									model: judgeModel,
+									workspaceDir: workspace,
+									trialDir,
+									mockLinearUrl,
+									stubAppServerPath,
+								});
+					const blindDir = join(trialDir, "workspace-blind");
+					scrubWorkspace(workspace, blindDir, registry.candidates);
+					opts.onStage?.(`scoring ${trialId} (${idx + 1}/${total})`);
+					const quality =
+						driver === "sdk"
+							? await judgeQuality({
+									model: judgeModel,
+									blindWorkspaceDir: blindDir,
+								})
+							: await judgeQualityCC({
+									model: judgeModel,
+									blindWorkspaceDir: blindDir,
+								});
+					return { adherence, quality };
+				})(),
+				trialBudgetMs,
+				`grading ${trialId} exceeded ${Math.round(trialBudgetMs / 60_000)}m`,
+			);
+		} catch (e) {
+			// One trial's grading timing out or failing must NOT fail the whole run:
+			// leave it ungraded (a later scripts/grade-trial.ts re-grade fills it in)
+			// and continue, so the run still finalizes with the grades that completed.
 			stopFixtures(fixtures);
+			const note = `grading incomplete: ${String(e).slice(0, 140)}`;
+			log(`  ${trialId}: ${note}`);
+			trial.provenance.notes.push(note);
+			continue;
 		}
+		stopFixtures(fixtures);
+		const { adherence, quality } = graded;
 
 		// Design adherence (static, no browser) when a UI design was selected.
 		let designAdherence: TrialGrades["designAdherence"] = null;

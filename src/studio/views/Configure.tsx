@@ -16,6 +16,11 @@ interface Options {
 	harnesses: string[];
 	models: { name: string; provider: string }[];
 	providers: string[];
+	providerStatus?: {
+		id: string;
+		requires?: string;
+		configured: boolean;
+	}[];
 	defaults: Record<string, unknown>;
 }
 
@@ -215,11 +220,16 @@ export function Configure() {
 							value={provider}
 							onChange={(e) => setProvider(e.target.value)}
 						>
-							{opts.providers.map((p) => (
-								<option key={p} value={p}>
-									{p}
-								</option>
-							))}
+							{opts.providers.map((p) => {
+								const st = opts.providerStatus?.find((s) => s.id === p);
+								const unconfigured = st ? !st.configured : false;
+								return (
+									<option key={p} value={p} disabled={unconfigured}>
+										{p}
+										{unconfigured ? ` — missing ${st?.requires}` : ""}
+									</option>
+								);
+							})}
 						</select>
 
 						<label htmlFor="trials" className="text-[13px]">

@@ -8,6 +8,11 @@ import {
 	RunConfig,
 	type Weights,
 } from "../types";
+import {
+	type ProviderStatus,
+	providerAvailability,
+	providerUnavailableReason,
+} from "./provider-availability";
 
 const REGISTRY_PATH = "config/registry.yaml";
 const DEFAULTS_PATH = "config/run.defaults.yaml";
@@ -18,6 +23,8 @@ export interface StudioOptions {
 	harnesses: string[];
 	models: { name: string; provider: string }[];
 	providers: string[];
+	/** Per-provider configuration status (e.g. daytona/e2b need an API key). */
+	providerStatus: ProviderStatus[];
 	defaults: Record<string, unknown>;
 }
 
@@ -46,6 +53,7 @@ export function studioOptions(): StudioOptions {
 			provider: m.provider,
 		})),
 		providers: IsolationProviderId.options,
+		providerStatus: providerAvailability(),
 		defaults,
 	};
 }
@@ -107,6 +115,10 @@ export function validateRunRequest(
 		errors.push(`harness: unknown '${req.harness}'`);
 	if (req.provider && !opts.providers.includes(req.provider))
 		errors.push(`provider: unknown '${req.provider}'`);
+	else if (req.provider) {
+		const reason = providerUnavailableReason(req.provider);
+		if (reason) errors.push(`provider: ${reason}`);
+	}
 
 	const cands = req.candidates ?? [];
 	if (cands.length === 0) errors.push("candidates: select at least one");

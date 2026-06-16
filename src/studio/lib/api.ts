@@ -30,6 +30,8 @@ export interface RunSummary {
 		judgeModelRef?: ModelRef;
 		crossVendorJudge?: boolean;
 		costSource?: string;
+		/** Total run cost (sum of per-trial telemetry), or undefined if untracked. */
+		costUsd?: number;
 	};
 }
 

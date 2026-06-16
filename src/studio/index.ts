@@ -183,6 +183,15 @@ const server = Bun.serve({
 								judgeModelRef: e.results.judgeModel,
 								crossVendorJudge: e.results.crossVendorJudge,
 								costSource: e.results.costSource,
+								// Total run cost = sum of per-trial telemetry (build spend);
+								// undefined when no trial reported telemetry (so the column
+								// shows "—" rather than a misleading $0.00).
+								costUsd: e.results.trials.some((t) => t.telemetry)
+									? e.results.trials.reduce(
+											(a, t) => a + (t.telemetry?.totalCostUsd ?? 0),
+											0,
+										)
+									: undefined,
 							}
 						: undefined,
 				}));

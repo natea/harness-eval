@@ -34,6 +34,7 @@ interface QueueEntry {
 	costUsdSoFar: number;
 	stage?: string;
 	error?: string;
+	regradable?: boolean;
 }
 
 type RowStatus =
@@ -59,6 +60,8 @@ interface Row {
 	target?: { name: string; title: string } | null;
 	/** Epoch ms parsed from the run id timestamp (for sorting), or null. */
 	ts: number | null;
+	/** Built-but-ungraded trials remain → show "Resume grading". */
+	regradable?: boolean;
 }
 
 const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = {
@@ -88,6 +91,7 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			error: r.error,
 			target: r.summary?.target ?? null,
 			ts: runTs(r.runId),
+			regradable: r.regradable,
 		});
 	}
 	for (const e of queue) {
@@ -116,6 +120,7 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			// Live queue entries don't carry the target; keep the disk-resolved one.
 			target: byId.get(e.runId)?.target ?? null,
 			ts: runTs(e.runId),
+			regradable: e.regradable,
 		});
 	}
 	return [...byId.values()];
@@ -130,6 +135,7 @@ export function Runs() {
 	// Runs we've asked to cancel — shows "cancelling…" until the status flips
 	// (cancellation is cooperative; an in-flight build finishes its step first).
 	const [cancelling, setCancelling] = useState<Set<string>>(new Set());
+	const [regrading, setRegrading] = useState<Set<string>>(new Set());
 
 	useEffect(() => {
 		const pollQueue = () =>
@@ -178,6 +184,28 @@ export function Runs() {
 					return n;
 				}),
 			);
+	};
+
+	const regrade = (runId: string) => {
+		setRegrading((s) => new Set(s).add(runId));
+		const drop = () =>
+			setRegrading((s) => {
+				const n = new Set(s);
+				n.delete(runId);
+				return n;
+			});
+		fetch("/api/regrade", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ runId }),
+		})
+			.then((r) => r.json())
+			.then((out) => {
+				// The worker writes run-state; once it's running, the regradable flag
+				// clears on the next poll. Drop our optimistic flag if it failed.
+				if (!out?.ok) drop();
+			})
+			.catch(drop);
 	};
 
 	// Sort by the run's timestamp; nulls (unparseable ids) sink to the bottom.
@@ -367,8 +395,8 @@ export function Runs() {
 													)}
 												</TableCell>
 												<TableCell>
-													{e.status === "running" &&
-														(cancelling.has(e.runId) ? (
+													{e.status === "running" ? (
+														cancelling.has(e.runId) ? (
 															<span className="inline-flex items-center gap-1.5 px-2 py-1 text-[12px] text-muted-foreground">
 																<span
 																	aria-hidden
@@ -384,7 +412,27 @@ export function Runs() {
 															>
 																Cancel
 															</button>
-														))}
+														)
+													) : e.regradable ? (
+														regrading.has(e.runId) ? (
+															<span className="inline-flex items-center gap-1.5 px-2 py-1 text-[12px] text-muted-foreground">
+																<span
+																	aria-hidden
+																	className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+																/>
+																resuming…
+															</span>
+														) : (
+															<button
+																type="button"
+																className="whitespace-nowrap rounded-md border border-primary/40 px-2 py-1 text-[12px] text-primary-hover hover:bg-muted"
+																title="Grade built-but-ungraded trials on your subscription (no rebuild)"
+																onClick={() => regrade(e.runId)}
+															>
+																Resume grading
+															</button>
+														)
+													) : null}
 												</TableCell>
 											</TableRow>
 										))}

@@ -113,3 +113,33 @@ export function reconcileRunStates(
 	}
 	return reconciled;
 }
+
+/**
+ * Does a run have build artifacts that still need grading? True when a completed
+ * (built) trial has no grades.json, or when grades exist but results.json was never
+ * assembled. Drives the studio's "Resume grading" affordance — grading is resumable
+ * (checkpointed) without rebuilding.
+ */
+export function runNeedsGrading(runDir: string): boolean {
+	const trialsDir = join(runDir, "trials");
+	if (!existsSync(trialsDir)) return false;
+	let builtUngraded = false;
+	let anyGraded = false;
+	for (const id of readdirSync(trialsDir)) {
+		const td = join(trialsDir, id);
+		const provPath = join(td, "provenance.json");
+		if (!existsSync(provPath) || !existsSync(join(td, "workspace"))) continue;
+		let status = "";
+		try {
+			status = (JSON.parse(readFileSync(provPath, "utf8")) as { status?: string })
+				.status ?? "";
+		} catch {
+			continue;
+		}
+		if (status !== "completed") continue; // only built trials are gradeable
+		if (existsSync(join(td, "grades.json"))) anyGraded = true;
+		else builtUngraded = true;
+	}
+	const hasResults = existsSync(join(runDir, "results.json"));
+	return builtUngraded || (!hasResults && anyGraded);
+}

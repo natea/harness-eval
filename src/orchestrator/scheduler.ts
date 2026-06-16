@@ -1,6 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getHarnessDriver, type HarnessDriver } from "../driver";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
 import { aggregateTelemetry } from "../driver/telemetry";
@@ -48,13 +47,8 @@ export interface SchedulerDeps {
 	/** Resolved worker profile identity for provenance (never the key). */
 	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */
-	driver?: HarnessDriver;
 	executeScript?: typeof executeSessionScript;
-	archive?: (
-		sandbox: Sandbox,
-		trialDir: string,
-		transcripts: string[],
-	) => Promise<unknown>;
+	archive?: typeof archiveTrial;
 	now?: () => Date;
 	/**
 	 * Cooperative cancel (studio live runs): when aborted, no new trial starts —
@@ -213,7 +207,6 @@ export async function runTrial(
 ): Promise<TrialResult> {
 	const exec = deps.executeScript ?? executeSessionScript;
 	const archive = deps.archive ?? archiveTrial;
-	const driver = deps.driver ?? getHarnessDriver(config.harness);
 	const provenance = baseProvenance(plan, config, deps, "running");
 	const trialDir = join(deps.runDir, "trials", plan.trialId);
 	mkdirSync(trialDir, { recursive: true });
@@ -282,7 +275,6 @@ export async function runTrial(
 			}
 			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
-				driver,
 				model: deps.workerModelFlag ?? config.model,
 				steps: script,
 				continuation: setup.continuation,

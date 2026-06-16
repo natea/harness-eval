@@ -100,7 +100,7 @@ export function resolveRunInputs(r: StudioRunRequest) {
 	);
 	const models = loadModels();
 	const workerProfile = resolveProfile(r.workerModel, models);
-	const judgeProfile = resolveProfile("claude-sonnet-4-6", models);
+	const judgeProfile = resolveProfile(r.judgeModel ?? "claude-sonnet-4-6", models);
 	let workerEnv: Record<string, string> | undefined;
 	let workerModelFlag = workerProfile.modelId;
 	if (workerProfile.provider !== "anthropic") {

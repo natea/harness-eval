@@ -39,6 +39,7 @@ export function Configure() {
 	const [candidates, setCandidates] = useState<string[]>([]);
 	const [harness, setHarness] = useState("claude-code");
 	const [workerModel, setWorkerModel] = useState("claude-opus-4-6");
+	const [judgeModel, setJudgeModel] = useState("claude-sonnet-4-6");
 	const [provider, setProvider] = useState("worktree");
 	const [trials, setTrials] = useState(1);
 	const [concurrency, setConcurrency] = useState(2);
@@ -61,6 +62,7 @@ export function Configure() {
 				candidates,
 				harness,
 				workerModel,
+				judgeModel,
 				provider: dryRun ? "worktree" : provider,
 				trials,
 				concurrency,
@@ -111,6 +113,7 @@ export function Configure() {
 			candidates,
 			harness,
 			workerModel,
+			judgeModel,
 			provider,
 			trials,
 			concurrency,
@@ -130,6 +133,7 @@ export function Configure() {
 		candidates,
 		harness,
 		workerModel,
+		judgeModel,
 		provider,
 		trials,
 		concurrency,
@@ -205,6 +209,29 @@ export function Configure() {
 								</option>
 							))}
 						</select>
+
+						<label htmlFor="judge" className="text-[13px]">
+							Grader model
+						</label>
+						<span className="flex flex-wrap items-center gap-2">
+							<select
+								id="judge"
+								className={selectCls}
+								value={judgeModel}
+								onChange={(e) => setJudgeModel(e.target.value)}
+							>
+								{opts.models.map((m) => (
+									<option key={m.name} value={m.name}>
+										{m.name} ({m.provider})
+									</option>
+								))}
+							</select>
+							{judgeModel === workerModel && (
+								<span className="text-[12px] text-warn">
+									judge must differ from worker (no self-grading)
+								</span>
+							)}
+						</span>
 
 						<label htmlFor="provider" className="text-[13px]">
 							Provider

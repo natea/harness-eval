@@ -34,6 +34,8 @@ harnesses that can run the same model, or (b) explicitly reported as a
 harness+model comparison (provenance + scorecard caveat), never as a pure harness
 comparison.
 
+
+**Judge neutrality:** the blind judge SHALL be neutral to the harnesses being compared — for a Gemini-vs-Grok run, a judge from neither vendor (e.g. Claude `claude-sonnet`) avoids self-preference bias; the judge SHALL NOT be Gemini when Gemini is under comparison. (Per the `harness-drivers` judge-neutrality requirement; a non-neutral judge is flagged as a self-preference caveat.)
 ## Capabilities
 
 ### Modified Capabilities

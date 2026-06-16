@@ -50,3 +50,23 @@ conflated with a model comparison.
 - **WHEN** a run evaluates the same candidate under two harnesses
 - **THEN** both receive the identical base prompt and the identical pinned worker
   model, and results are grouped by (candidate, harness, worker model)
+
+### Requirement: Judge neutrality across compared harnesses
+The blind code-quality judge SHALL be a model independent of every harness/model under
+comparison in a run, to avoid self-preference bias (a model rating its own family's
+output more favorably). The judge model SHALL NOT be from a vendor whose harness or
+worker model is being compared in that run; when no fully neutral judge is configured,
+the run SHALL flag a self-preference-bias caveat in provenance and the scorecard. This
+extends the existing judge≠worker rule: not only must the judge differ from the worker,
+it must be neutral to all compared harnesses.
+
+#### Scenario: Neutral judge for a cross-vendor harness comparison
+- **WHEN** a run compares `gemini-cli` (Gemini) against `grok-cli` (Grok)
+- **THEN** the judge is a model from neither vendor (e.g. a Claude judge), and the run
+  records that the judge is neutral to both compared harnesses
+
+#### Scenario: Self-preference risk flagged
+- **WHEN** a run compares harnesses including one whose vendor matches the judge's
+  vendor (e.g. a Claude judge while `claude-code` is under comparison)
+- **THEN** the run flags a self-preference-bias caveat in provenance and the scorecard
+  so the result is not read as bias-free

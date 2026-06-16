@@ -82,9 +82,9 @@ function StepComparison({
 						<TableHeader>
 							<TableRow>
 								<TableHead>Step</TableHead>
-								{graded.map((t) => (
+								{graded.map((t, ti) => (
 									<TableHead
-										key={t.provenance.trialId}
+										key={`-`}
 										className="font-mono normal-case"
 									>
 										{t.provenance.trialId}
@@ -103,8 +103,8 @@ function StepComparison({
 											<TooltipContent>{stepInfo?.[id] ?? "…"}</TooltipContent>
 										</Tooltip>
 									</TableCell>
-									{graded.map((t) => (
-										<TableCell key={t.provenance.trialId}>
+									{graded.map((t, ti) => (
+										<TableCell key={`-`}>
 											{cell(t, id)}
 										</TableCell>
 									))}
@@ -231,8 +231,8 @@ export function RunView({ runId }: { runId: string }) {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{r.trials.map((t) => (
-								<TableRow key={t.provenance.trialId}>
+							{r.trials.map((t, ti) => (
+								<TableRow key={`-`}>
 									<TableCell>
 										<a
 											href={`/runs/${runId}/trials/${t.provenance.trialId}`}

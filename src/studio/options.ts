@@ -1,13 +1,9 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
+import { listHarnesses, loadHarnesses } from "../harnesses";
 import { judgeWorkerRelation, loadModels, resolveProfile } from "../models";
 import { loadRegistry } from "../registry";
-import {
-	HarnessId,
-	IsolationProviderId,
-	RunConfig,
-	type Weights,
-} from "../types";
+import { IsolationProviderId, RunConfig, type Weights } from "../types";
 import {
 	type ProviderStatus,
 	providerAvailability,
@@ -30,7 +26,8 @@ export interface StudioOptions {
 
 /** Registry-driven option sources for the Configure view (eval-studio spec). */
 export function studioOptions(): StudioOptions {
-	const registry = loadRegistry(REGISTRY_PATH);
+	const harnessRegistry = loadHarnesses();
+	const registry = loadRegistry(REGISTRY_PATH, harnessRegistry);
 	const models = loadModels();
 	const defaults = existsSync(DEFAULTS_PATH)
 		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
@@ -47,7 +44,7 @@ export function studioOptions(): StudioOptions {
 			name: c.name,
 			harnesses: Object.keys(c.harnesses),
 		})),
-		harnesses: HarnessId.options,
+		harnesses: listHarnesses(harnessRegistry).map((h) => h.id),
 		models: [...models.values()].map((m) => ({
 			name: m.name,
 			provider: m.provider,

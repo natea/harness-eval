@@ -10,7 +10,7 @@
  *       from a spec document. Fill the TODOs + human review before validate.
  *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
- *       [--provider worktree|daytona] [--snapshot harness-eval-base:v2] \
+ *       [--harness claude-code] [--provider worktree|daytona] [--snapshot harness-eval-base:v2] \
  *       [--target <name>] [--design <name>] [--trial-minutes M] [--grade]
  *       Execute the matrix. Builds happen with real Claude Code sessions —
  *       REAL SPEND. --design places a frozen DESIGN.md in each workspace and
@@ -20,13 +20,12 @@
  *   bun run src/cli.ts report <run-dir> [--weights a,q,s,t]
  *       (Re)generate results.json + scorecard.md from stored trials.
  */
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
 import { type LoadedDesign, loadDesign } from "./designs";
 import { loadManifest } from "./grading/integration";
-import { loadTestPlan } from "./grading/testplan";
+import { loadHarnesses, resolveHarness } from "./harnesses";
 import {
 	defaultCostSource,
 	judgeWorkerRelation,
@@ -72,7 +71,8 @@ async function cmdValidate(): Promise<void> {
 }
 
 async function cmdRun(): Promise<void> {
-	const registry = loadRegistry(REGISTRY_PATH);
+	const harnesses = loadHarnesses();
+	const registry = loadRegistry(REGISTRY_PATH, harnesses);
 	const defaults = existsSync(DEFAULTS_PATH)
 		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
 		: {};
@@ -96,6 +96,7 @@ async function cmdRun(): Promise<void> {
 		candidates: (
 			arg("candidates") ?? registry.candidates.map((c) => c.id).join(",")
 		).split(","),
+		harness: arg("harness") ?? (defaults.harness as string | undefined),
 		trialsPerCandidate: Number(
 			arg("trials") ?? (defaults.trialsPerCandidate as number | undefined) ?? 3,
 		),
@@ -111,7 +112,9 @@ async function cmdRun(): Promise<void> {
 		registry,
 		config.candidates,
 		config.harness,
+		harnesses,
 	);
+	const harness = resolveHarness(config.harness, harnesses);
 
 	// Worker model resolution (model-registry). `--worker-model` (or config.model)
 	// names a profile; bare claude-* ids resolve to implicit native profiles.
@@ -210,7 +213,7 @@ async function cmdRun(): Promise<void> {
 			prdSha256: sha,
 			testPlanSha256: planSha,
 			designContent: design?.content,
-			harnessVersion: arg("harness-version") ?? "2.1.170",
+			harnessVersion: arg("harness-version") ?? harness.defaultVersion,
 			workerEnv,
 			workerModelFlag,
 			workerModelRef,

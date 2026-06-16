@@ -4,9 +4,7 @@ import { z } from "zod";
 // Identifiers and enums
 // ---------------------------------------------------------------------------
 
-// Only harnesses with an actual driver belong here. opencode/codex/goose/… are
-// added back as they're implemented (see openspec change add-pluggable-harnesses).
-export const HarnessId = z.enum(["claude-code"]);
+export const HarnessId = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
 export type HarnessId = z.infer<typeof HarnessId>;
 
 export const IsolationProviderId = z.enum([
@@ -81,7 +79,11 @@ export const CandidateEntry = z.object({
 		}),
 	/** Paths the framework creates that identify it; scrubbed before blind judging. */
 	markerPaths: z.array(z.string().min(1)).default([]),
-	harnesses: z.partialRecord(HarnessId, HarnessSetup),
+	harnesses: z
+		.record(HarnessId, HarnessSetup)
+		.refine((h) => Object.keys(h).length > 0, {
+			message: "candidate must declare at least one harness section",
+		}),
 });
 export type CandidateEntry = z.infer<typeof CandidateEntry>;
 

@@ -6,7 +6,9 @@
  * or spawns a worker that calls it, while both emit the same state updates.
  */
 import { join } from "node:path";
+import { loadDesign } from "../designs";
 import type { SessionScriptResult } from "../driver/session";
+import { loadHarnesses } from "../harnesses";
 import {
 	loadModels,
 	resolveClaudeCodeEnv,
@@ -24,7 +26,6 @@ import { WorktreeProvider } from "../providers/worktree";
 import { loadRegistry, resolveCandidates } from "../registry";
 import { writeScorecard } from "../report/markdown";
 import { buildResults, writeResults } from "../report/results";
-import { loadDesign } from "../designs";
 import { loadTarget, renderTargetPrompt } from "../targets";
 import { type HarnessId, type IsolationProviderId, RunConfig } from "../types";
 import { defaultConcurrency, type StudioRunRequest } from "./options";
@@ -85,7 +86,8 @@ export function defaultProvider(provider: IsolationProviderId, runDir: string) {
 
 /** Everything a run needs, derived from the request (in either process). */
 export function resolveRunInputs(r: StudioRunRequest) {
-	const registry = loadRegistry("config/registry.yaml");
+	const harnesses = loadHarnesses();
+	const registry = loadRegistry("config/registry.yaml", harnesses);
 	const target = loadTarget(r.target);
 	const design = r.design ? loadDesign(r.design) : null;
 	registry.basePrompt = renderTargetPrompt(
@@ -97,6 +99,7 @@ export function resolveRunInputs(r: StudioRunRequest) {
 		registry,
 		r.candidates,
 		r.harness as HarnessId,
+		harnesses,
 	);
 	const models = loadModels();
 	const workerProfile = resolveProfile(r.workerModel, models);
@@ -197,11 +200,11 @@ export async function executeRun(
 				designContent: inp.design?.content,
 				harnessVersion: dryRun ? "studio-dry" : "studio-live",
 				workerEnv: dryRun ? undefined : inp.workerEnv,
-				workerModelFlag: dryRun ? inp.workerProfile.modelId : inp.workerModelFlag,
+				workerModelFlag: dryRun
+					? inp.workerProfile.modelId
+					: inp.workerModelFlag,
 				workerModelRef: toModelRef(inp.workerProfile),
-				executeScript: dryRun
-					? (fakeExecutor as never)
-					: opts.executeScript,
+				executeScript: dryRun ? (fakeExecutor as never) : opts.executeScript,
 				abortSignal,
 				onStage: (_id, stage) => onUpdate({ stage }),
 			},

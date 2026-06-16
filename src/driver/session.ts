@@ -1,6 +1,7 @@
 import type { Sandbox } from "../providers/types";
 import type { ContinuationPolicy, SessionRecord, SessionStep } from "../types";
-import { type ClaudeResult, runClaudeSession } from "./claude";
+import { claudeCodeDriver } from "./claude";
+import type { DriverResult, HarnessDriver, RunDriverSession } from "./types";
 
 export interface SessionScriptResult {
 	records: SessionRecord[];
@@ -17,8 +18,10 @@ export interface SessionScriptOptions {
 	wallClockBudgetMs: number;
 	costBudgetUsd: number;
 	env?: Record<string, string>;
-	/** Injected for tests; real runs use runClaudeSession. */
-	runSession?: typeof runClaudeSession;
+	/** Harness implementation; defaults to Claude Code for compatibility. */
+	driver?: HarnessDriver;
+	/** Injected for focused tests; overrides `driver`. */
+	runSession?: RunDriverSession;
 }
 
 /** Heuristic gate detection: the framework paused awaiting approval. */
@@ -41,7 +44,8 @@ export async function executeSessionScript(
 	sandbox: Sandbox,
 	opts: SessionScriptOptions,
 ): Promise<SessionScriptResult> {
-	const run = opts.runSession ?? runClaudeSession;
+	const run =
+		opts.runSession ?? opts.driver?.runSession ?? claudeCodeDriver.runSession;
 	const records: SessionRecord[] = [];
 	const transcripts: string[] = [];
 	const notes: string[] = [];
@@ -63,7 +67,7 @@ export async function executeSessionScript(
 		if (remainingMs() <= 0) return capped("wall-clock");
 		if (spentUsd >= opts.costBudgetUsd) return capped("cost");
 
-		let result: ClaudeResult;
+		let result: DriverResult;
 		try {
 			result = await run(sandbox, {
 				model: opts.model,

@@ -33,6 +33,10 @@ before implementation:
   **GLM via z.ai validated end-to-end**, a `model probe` connectivity check,
   and cross-vendor-judge + cost-basis caveats in results/scorecards.
   ([`add-pluggable-models`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-pluggable-models))
+- **Pluggable providers/harnesses** — Docker, E2B, macOS Virtualization, and
+  worktree providers share the same sandbox contract; harness registry entries
+  are validated per implemented driver. See
+  [docs/HARNESS-ONBOARDING.md](docs/HARNESS-ONBOARDING.md).
 
 In review on branches: the **Eval Studio web UI** (review + configure on
 shadcn/ui — this branch). **Not yet built:** a language-effectiveness
@@ -69,15 +73,13 @@ run config (budgets, weights) ─┘        │                                 
    Symphony daemon). Bring your own spec: see
    [docs/BRING-YOUR-OWN-PRD.md](docs/BRING-YOUR-OWN-PRD.md).
 3. **Isolation providers** — every trial runs in a fresh environment behind
-   one `SandboxProvider` interface. On `main`: **Daytona** (cloud) and
-   **git worktrees** (zero-dependency local fallback). Built and live-validated
-   on the [`pluggable-providers`](https://github.com/natea/harness-eval/tree/pluggable-providers)
-   branch (pending merge): **Docker** (local), **E2B** (cloud, Firecracker),
-   and **macOS Virtualization** (Apple-Silicon per-trial micro-VMs via Apple's
-   `container` CLI). All container/VM providers share one pinned trial image
-   (`infra/trial-image/Dockerfile`: Node 22, Bun, Claude Code at an exact
-   version) and preflight before any spend (image present, tier lifetime caps,
-   daemon health).
+   one `SandboxProvider` interface: **Daytona** and **E2B** for cloud runs,
+   **Docker** and **macOS Virtualization** for local container/VM runs, and
+   **git worktrees** as a zero-dependency local fallback. Container/VM
+   providers share one pinned trial image (`infra/trial-image/Dockerfile`:
+   Node 22, Bun, Claude Code at an exact version) and preflight before any
+   spend or long-running work (image present, tier lifetime caps, daemon
+   health).
 4. **Build phase** — the orchestrator drives Claude Code headless
    (`claude -p`, stream-JSON) through the candidate's session script, with
    per-trial wall-clock/cost caps, generic continuation handling at approval
@@ -144,8 +146,10 @@ bun run src/cli.ts report runs/<run-dir> --weights 0.5,0.35,0.075,0.075
 Build the local trial image once: `docker build -t harness-eval-trial:2.1.170-1 infra/trial-image/`.
 Provider setup guides: [docs/MACOS-VZ-SETUP.md](docs/MACOS-VZ-SETUP.md),
 `infra/e2b-template/README.md`, `infra/daytona-snapshot` notes in the
-Dockerfile header. Cloud (laptop-free) runs: `infra/run-all-cloud.sh`
-pattern — orchestrator-in-a-sandbox.
+Dockerfile header. Harness/provider onboarding:
+[docs/HARNESS-ONBOARDING.md](docs/HARNESS-ONBOARDING.md). Cloud
+(laptop-free) runs: `infra/run-all-cloud.sh` pattern —
+orchestrator-in-a-sandbox.
 
 ## Results dashboard
 

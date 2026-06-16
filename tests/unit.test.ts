@@ -43,9 +43,11 @@ describe("registry validation (8.1)", () => {
 	test("shipped registry loads; unknown harness fails at load time", () => {
 		const registry = loadRegistry("config/registry.yaml");
 		expect(registry.candidates).toHaveLength(4);
-		expect(() => resolveCandidates(registry, ["gsd"], "opencode")).toThrow(
-			/opencode/,
-		);
+		// A harness with no candidate setup is rejected (cast: `opencode` is no
+		// longer a HarnessId until its driver lands).
+		expect(() =>
+			resolveCandidates(registry, ["gsd"], "opencode" as never),
+		).toThrow(/opencode/);
 	});
 });
 

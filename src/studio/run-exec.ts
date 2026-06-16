@@ -215,27 +215,22 @@ export async function executeRun(
 
 		if (!dryRun && r.grade && !abortSignal.aborted) {
 			onUpdate({ stage: "grading" });
-			const graded = trials.filter(
-				(t) => t.provenance.status === "completed",
-			).length;
-			const gradeTimeoutMs = Math.max(graded, 1) * 30 * 60_000;
-			await withTimeout(
-				gradeTrials(trials, {
-					target: inp.target,
-					design: inp.design,
-					registry: inp.registry,
-					judgeModel: inp.judgeProfile.name,
-					runDir,
-					signal: abortSignal,
-					onStage: (stage) => onUpdate({ stage }),
-					// Grade on the Claude Code subscription, not the Anthropic API
-					// account — a real studio run is built on the subscription and
-					// must be gradeable on it (no API balance required).
-					driver: "cc",
-				}),
-				gradeTimeoutMs,
-				`grading exceeded ${Math.round(gradeTimeoutMs / 60_000)}m — re-grade with scripts/grade-trial.ts then scripts/finalize-run.ts`,
-			);
+			// gradeTrials self-bounds each trial (per-trial timeout) and never throws
+			// on a slow/failed trial — it leaves that trial ungraded and continues, so
+			// the run always reaches finalize with the grades that completed (the build
+			// spend is never lost to a grading timeout). Ungraded trials are re-graded
+			// later with scripts/grade-trial.ts + scripts/finalize-run.ts.
+			await gradeTrials(trials, {
+				target: inp.target,
+				design: inp.design,
+				registry: inp.registry,
+				judgeModel: inp.judgeProfile.name,
+				runDir,
+				signal: abortSignal,
+				onStage: (stage) => onUpdate({ stage }),
+				// Grade on the Claude Code subscription, not the Anthropic API account.
+				driver: "cc",
+			});
 		}
 
 		onUpdate({ stage: "finalizing" });

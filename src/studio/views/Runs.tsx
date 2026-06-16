@@ -92,6 +92,13 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 			target: r.summary?.target ?? null,
 			ts: runTs(r.runId),
 			regradable: r.regradable,
+			cost: r.summary?.costUsd,
+			// Disk runs don't record kind; derive it (combined runs have no mode).
+			kind: r.runId.startsWith("combined:")
+				? undefined
+				: r.runId.endsWith("-dry")
+					? "dry"
+					: "live",
 		});
 	}
 	for (const e of queue) {

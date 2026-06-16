@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { getHarnessDriver, type HarnessDriver } from "../driver";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
 import { aggregateTelemetry } from "../driver/telemetry";
@@ -19,6 +20,11 @@ export interface TrialPlan {
 	candidate: CandidateEntry;
 	trialIndex: number;
 }
+
+/** Hard cap on per-trial teardown. Larger than the provider's internal ladder
+ *  budget (TEARDOWN_STEP_MS × steps + reap), so it only fires if teardown hangs
+ *  somewhere unexpected. */
+const TEARDOWN_CAP_MS = 90_000;
 
 export interface SchedulerDeps {
 	provider: SandboxProvider;
@@ -42,8 +48,13 @@ export interface SchedulerDeps {
 	/** Resolved worker profile identity for provenance (never the key). */
 	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */
+	driver?: HarnessDriver;
 	executeScript?: typeof executeSessionScript;
-	archive?: typeof archiveTrial;
+	archive?: (
+		sandbox: Sandbox,
+		trialDir: string,
+		transcripts: string[],
+	) => Promise<unknown>;
 	now?: () => Date;
 	/**
 	 * Cooperative cancel (studio live runs): when aborted, no new trial starts —
@@ -202,6 +213,7 @@ export async function runTrial(
 ): Promise<TrialResult> {
 	const exec = deps.executeScript ?? executeSessionScript;
 	const archive = deps.archive ?? archiveTrial;
+	const driver = deps.driver ?? getHarnessDriver(config.harness);
 	const provenance = baseProvenance(plan, config, deps, "running");
 	const trialDir = join(deps.runDir, "trials", plan.trialId);
 	mkdirSync(trialDir, { recursive: true });
@@ -270,6 +282,7 @@ export async function runTrial(
 			}
 			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
+				driver,
 				model: deps.workerModelFlag ?? config.model,
 				steps: script,
 				continuation: setup.continuation,
@@ -323,7 +336,24 @@ export async function runTrial(
 			return { provenance, telemetry: null, grades: null };
 		} finally {
 			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
-			await sandbox?.destroy().catch(() => {});
+			// Time-box teardown: destroy() is itself bounded + escalating, but cap
+			// the whole thing so an unexpected hang (e.g. a slow OS-level reap) can
+			// never stall the run. A sandbox that outlives the cap is logged as a
+			// leak rather than silently awaited forever (harden-container-teardown).
+			if (sandbox) {
+				const s = sandbox;
+				await Promise.race([
+					s.destroy().catch(() => {}),
+					new Promise<void>((resolve) =>
+						setTimeout(() => {
+							console.warn(
+								`[scheduler] teardown of ${s.id} exceeded ${TEARDOWN_CAP_MS / 1000}s — moving on; run \`bun run src/cli.ts cleanup\` to reap any leaked VM`,
+							);
+							resolve();
+						}, TEARDOWN_CAP_MS),
+					),
+				]);
+			}
 		}
 	}
 }

@@ -173,8 +173,8 @@ export function TrialView({
 					— this trial did not complete cleanly and is excluded from scoring.
 					{t.provenance.notes.length > 0 && (
 						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
-							{t.provenance.notes.map((n) => (
-								<li key={n.slice(0, 24)}>• {n}</li>
+							{t.provenance.notes.map((n, i) => (
+								<li key={`${i}-${n.slice(0, 24)}`}>• {n}</li>
 							))}
 						</ul>
 					)}
@@ -226,8 +226,8 @@ export function TrialView({
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{a.stepResults.map((s) => (
-								<TableRow key={s.stepId}>
+							{a.stepResults.map((s, i) => (
+								<TableRow key={`${i}-${s.stepId}`}>
 									<TableCell className="font-mono text-[12px]">
 										{target?.steps[s.stepId] ? (
 											<Tooltip>
@@ -304,8 +304,8 @@ export function TrialView({
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{q.criteria.map((c) => (
-								<TableRow key={c.criterion}>
+							{q.criteria.map((c, i) => (
+								<TableRow key={`${i}-${c.criterion}`}>
 									<TableCell className="text-[13px]">{c.criterion}</TableCell>
 									<TableCell className="font-mono text-[12px]">
 										{c.samples.join(", ")}
@@ -340,8 +340,8 @@ export function TrialView({
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{integ.fixtures.map((f) => (
-								<TableRow key={f.fixtureId}>
+							{integ.fixtures.map((f, i) => (
+								<TableRow key={`${i}-${f.fixtureId}`}>
 									<TableCell className="font-mono text-[12px]">
 										{f.fixtureId}
 									</TableCell>
@@ -363,8 +363,8 @@ export function TrialView({
 					<>
 						<h2 className="mt-7 text-base font-semibold">Notes</h2>
 						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
-							{t.provenance.notes.map((n) => (
-								<li key={n}>{n}</li>
+							{t.provenance.notes.map((n, i) => (
+								<li key={`${i}-${n.slice(0, 32)}`}>{n}</li>
 							))}
 						</ul>
 					</>
@@ -624,7 +624,7 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 									{data.sessions.map((s, si) => (
 										<button
 											type="button"
-											key={s.name}
+											key={`pill-${si}`}
 											onClick={() => jumpTo(`sess-${si}`)}
 											className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground hover:bg-muted hover:text-primary-hover"
 										>
@@ -687,7 +687,7 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 									</div>
 								)}
 								{data.sessions.map((s, si) => (
-									<div key={s.name} className={si > 0 ? "mt-5" : ""}>
+									<div key={`sess-block-${si}`} className={si > 0 ? "mt-5" : ""}>
 										<p
 											id={`sess-${si}`}
 											className="mb-2 scroll-mt-24 font-mono text-[12px] font-semibold text-muted-foreground"

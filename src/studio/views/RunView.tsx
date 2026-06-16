@@ -84,7 +84,7 @@ function StepComparison({
 								<TableHead>Step</TableHead>
 								{graded.map((t, ti) => (
 									<TableHead
-										key={`-`}
+										key={`${t.provenance.trialId}-${ti}`}
 										className="font-mono normal-case"
 									>
 										{t.provenance.trialId}
@@ -104,7 +104,7 @@ function StepComparison({
 										</Tooltip>
 									</TableCell>
 									{graded.map((t, ti) => (
-										<TableCell key={`-`}>
+										<TableCell key={`${t.provenance.trialId}-${ti}`}>
 											{cell(t, id)}
 										</TableCell>
 									))}
@@ -232,7 +232,7 @@ export function RunView({ runId }: { runId: string }) {
 						</TableHeader>
 						<TableBody>
 							{r.trials.map((t, ti) => (
-								<TableRow key={`-`}>
+								<TableRow key={`${t.provenance.trialId}-${ti}`}>
 									<TableCell>
 										<a
 											href={`/runs/${runId}/trials/${t.provenance.trialId}`}
@@ -279,8 +279,8 @@ export function RunView({ runId }: { runId: string }) {
 				<>
 					<h2 className="mt-7 text-base font-semibold">Excluded trials</h2>
 					<ul className="mt-1 text-[13px] text-muted-foreground">
-						{r.exclusions.map((e) => (
-							<li key={e.trialId}>
+						{r.exclusions.map((e, i) => (
+							<li key={`${i}-${e.trialId}`}>
 								<span className="font-mono">{e.trialId}</span> — {e.status}:{" "}
 								{e.reason}
 							</li>

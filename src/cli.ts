@@ -372,23 +372,53 @@ async function cmdReport(): Promise<void> {
 }
 
 async function cmdCleanup(): Promise<void> {
-	// Remove orphaned he-* trial containers left by crashed runs (docker
-	// and, when present, Apple container CLI).
-	const { cli } = await import("./providers/cli-container");
-	for (const binary of ["docker", "container"]) {
-		const ls = await cli(binary, ["ps", "-a", "--format", "{{.Names}}"], {
-			timeoutMs: 15_000,
-		});
-		if (ls.exitCode !== 0) continue;
-		const orphans = ls.stdout.split("\n").filter((n) => n.startsWith("he-"));
+	// Reap orphaned he-* trial containers left by crashed runs, using each CLI's
+	// OWN listing verb (the Apple `container` CLI has no docker-style
+	// `ps --format`, so the old docker-shaped query silently skipped macos-vz and
+	// never freed a wedged VM) and the same bounded escalating teardown as
+	// per-trial destroy (harden-container-teardown).
+	const { cli, tearDownContainer, parseContainerListNames } = await import(
+		"./providers/cli-container"
+	);
+	const { reapAppleContainer } = await import("./providers/reap");
+
+	const clis = [
+		{
+			binary: "docker",
+			listArgs: ["ps", "-a", "--format", "{{.Names}}"],
+			parse: (o: string) => o.split("\n").map((s) => s.trim()).filter(Boolean),
+			reapProcesses: undefined as undefined | ((n: string) => Promise<number>),
+		},
+		{
+			binary: "container",
+			listArgs: ["list", "-a"],
+			parse: parseContainerListNames,
+			reapProcesses: (n: string) => reapAppleContainer(n),
+		},
+	];
+
+	for (const c of clis) {
+		const ls = await cli(c.binary, c.listArgs, { timeoutMs: 15_000 });
+		if (ls.exitCode !== 0) {
+			console.log(`${c.binary}: unavailable — skipped`);
+			continue;
+		}
+		const orphans = c.parse(ls.stdout).filter((n) => n.startsWith("he-"));
+		if (orphans.length === 0) {
+			console.log(`${c.binary}: no orphaned he-* containers`);
+			continue;
+		}
 		for (const name of orphans) {
-			const rm = await cli(binary, ["rm", "-f", name]);
+			const res = await tearDownContainer({
+				binary: c.binary,
+				name,
+				reapProcesses: c.reapProcesses,
+				log: (m) => console.log(m),
+			});
 			console.log(
-				`${binary}: removed ${name}${rm.exitCode === 0 ? "" : " (failed)"}`,
+				`${c.binary}: ${name} → ${res.freed ? `freed (${res.method})` : "LEAKED — see message above"}`,
 			);
 		}
-		if (orphans.length === 0)
-			console.log(`${binary}: no orphaned he-* containers`);
 	}
 }
 

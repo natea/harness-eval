@@ -31,6 +31,17 @@ export interface ContainerCliSpec {
 	execCopy?: boolean;
 	/** Verify host support; throw PreflightError with remediation if unmet. */
 	platformCheck?: () => Promise<void>;
+	/** Force-remove a container (default `["rm","-f",name]`). */
+	removeArgs?: (name: string) => string[];
+	/** Kill a running container (default `["kill",name]`). */
+	killArgs?: (name: string) => string[];
+	/**
+	 * OS-level fallback when the CLI itself wedges: reap the container's own
+	 * runtime/VM processes (matched by name) and return the count signalled.
+	 * Undefined → the teardown ladder stops at the CLI level (docker: the daemon
+	 * owns VM lifecycle, so there is nothing to reap).
+	 */
+	reapProcesses?: (name: string) => Promise<number>;
 }
 
 export interface ResourceLimits {
@@ -63,6 +74,95 @@ export async function cli(
 			stderr: e.stderr ?? String(err),
 		};
 	}
+}
+
+/** Per-step teardown budget. Short, so a wedged guest can't stall the run; the
+ *  ladder escalates rather than waiting out a long hang. */
+export const TEARDOWN_STEP_MS = 20_000;
+
+export interface TeardownOptions {
+	binary: string;
+	name: string;
+	removeArgs?: string[];
+	killArgs?: string[];
+	reapProcesses?: (name: string) => Promise<number>;
+	log?: (message: string) => void;
+	/** Injectable command runner (tests); defaults to the bounded `cli`. */
+	run?: typeof cli;
+}
+
+export interface TeardownResult {
+	freed: boolean;
+	method: "remove" | "kill" | "reap" | "leaked";
+}
+
+/**
+ * Bounded, escalating container teardown (harden-container-teardown). Each step
+ * is time-boxed so a wedged runtime can't hang the run:
+ *   force-remove → kill → OS-level reap → (still here) report a leak.
+ * Never throws; never blocks past its step budgets. Shared by per-trial
+ * `destroy()` and the `cleanup` command so they cannot drift.
+ */
+export async function tearDownContainer(
+	opts: TeardownOptions,
+): Promise<TeardownResult> {
+	const { binary, name } = opts;
+	const rawRun = opts.run ?? cli;
+	const log = opts.log ?? (() => {});
+	const removeArgs = opts.removeArgs ?? ["rm", "-f", name];
+	const killArgs = opts.killArgs ?? ["kill", name];
+
+	// `cli` never rejects, but an injected runner might — treat any rejection as a
+	// failed step so teardown honors its never-throws contract.
+	const run: typeof cli = (b, a, o) =>
+		rawRun(b, a, o).catch((e) => ({
+			exitCode: 1,
+			stdout: "",
+			stderr: String(e),
+		}));
+
+	const r1 = await run(binary, removeArgs, { timeoutMs: TEARDOWN_STEP_MS });
+	if (r1.exitCode === 0) return { freed: true, method: "remove" };
+	log(
+		`[teardown] ${binary} ${removeArgs.join(" ")} failed/timed out; escalating to kill`,
+	);
+
+	const r2 = await run(binary, killArgs, { timeoutMs: TEARDOWN_STEP_MS });
+	if (r2.exitCode === 0) {
+		// Container is dead; its record may linger — best-effort cleanup, ignore result.
+		await run(binary, removeArgs, { timeoutMs: TEARDOWN_STEP_MS });
+		return { freed: true, method: "kill" };
+	}
+
+	if (opts.reapProcesses) {
+		log(`[teardown] ${binary} CLI wedged for ${name}; reaping OS processes`);
+		const signalled = await opts.reapProcesses(name).catch(() => 0);
+		if (signalled > 0) {
+			await run(binary, removeArgs, { timeoutMs: TEARDOWN_STEP_MS });
+			return { freed: true, method: "reap" };
+		}
+	}
+
+	log(
+		`[teardown] WARNING: ${name} survived teardown and may still hold memory — ` +
+			`remove manually: \`${binary} ${removeArgs.join(" ")}\` ` +
+			`(if that hangs, kill -9 its ${name} runtime + VM — see docs/MACOS-VZ-SETUP.md)`,
+	);
+	return { freed: false, method: "leaked" };
+}
+
+/**
+ * Parse `container list -a` (Apple CLI table) into container IDs. The Apple CLI
+ * has no docker-style `--format`, so we take the first column of each non-header
+ * row — used by `cleanup` to find orphaned `he-*` VMs.
+ */
+export function parseContainerListNames(stdout: string): string[] {
+	return stdout
+		.split("\n")
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0 && !/^ID\b/i.test(l))
+		.map((l) => l.split(/\s+/)[0] ?? "")
+		.filter(Boolean);
 }
 
 /** Shared implementation for CLI-driven container providers (docker, macos-vz). */
@@ -253,6 +353,15 @@ class CliContainerSandbox implements Sandbox {
 	}
 
 	async destroy(): Promise<void> {
-		await cli(this.binary, ["rm", "-f", this.name]);
+		// Bounded escalating teardown so a wedged guest never hangs the run and
+		// always frees its memory (harden-container-teardown).
+		await tearDownContainer({
+			binary: this.binary,
+			name: this.name,
+			removeArgs: this.spec.removeArgs?.(this.name),
+			killArgs: this.spec.killArgs?.(this.name),
+			reapProcesses: this.spec.reapProcesses,
+			log: (m) => console.warn(m),
+		});
 	}
 }

@@ -5,6 +5,7 @@ import {
 	type ResourceLimits,
 } from "./cli-container";
 import { DEFAULT_TRIAL_IMAGE } from "./docker";
+import { reapAppleContainer } from "./reap";
 import { PreflightError } from "./types";
 
 /** Minimum Apple Containerization CLI version (macos-vz change D3). */
@@ -37,6 +38,10 @@ export function createMacosVzProvider(
 			runArgs: (l) => ["--memory", `${l.memoryGb}g`, "--cpus", String(l.cpus)],
 			infoArgs: ["system", "status"],
 			execCopy: true, // Apple container CLI (0.7.x) has no cp verb
+			// OS-level last-rung teardown: when the CLI wedges (a trial daemon holds
+			// the guest channel open), reap the runtime helper + paired VM by name
+			// so the committed memory is freed (harden-container-teardown).
+			reapProcesses: (name) => reapAppleContainer(name),
 			platformCheck: async () => {
 				if (platform() !== "darwin" || arch() !== "arm64") {
 					throw new PreflightError(

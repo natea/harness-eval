@@ -83,3 +83,73 @@ container system status           # daemon health
 bun run src/cli.ts cleanup        # removes orphaned he-* containers/VMs
 container system stop             # stop services when not in use
 ```
+
+## Troubleshooting: wedged VMs / the whole `container` CLI hangs
+
+**Symptom.** `container delete -f`, `container stop`, `container kill`, and even
+`container system stop` all hang and never return; `container list` keeps
+showing trial VMs in `running` state. The memory (`memoryGb × N`) is never
+freed.
+
+**Why it happens.** Each trial VM runs a guest `vminitd` init that the host
+`container-runtime-linux` helper drives over a vsock gRPC channel; the
+`apiserver` brokers every CLI command to that helper via XPC. Teardown asks the
+runtime to signal the guest and **waits for the guest to acknowledge process
+exit**. If the guest is unresponsive, that ack never comes and the command
+blocks. Common causes, in order of likelihood here:
+
+1. **An agent-built daemon holds a channel open.** The trial's agent starts the
+   app it built (a server with `start.sh`) and it inherits the exec/stdout
+   stream — the same hazard behind the "redirect headless output to a file"
+   rule. The runtime can't observe a clean exit, so `delete -f` waits forever.
+2. **Guest OOM/stall.** macos-vz commits VM memory up-front; under host memory
+   pressure a guest can stall and stop answering vsock.
+3. **Broken vsock / crashed runtime helper.**
+
+Crucially, once one teardown is stuck on a wedged runtime, the **apiserver
+serializes later operations behind it** — so `list` / `stop` / `system stop`
+queue up and the entire CLI appears frozen. `container system stop` does a
+graceful "stopping containers" pass first, so it inherits the same hang.
+
+This is an `apple/container` 0.x rough edge (young runtime), not a harness bug —
+but the harness's `destroy()`/`cleanup` should survive it (see
+`harden-container-teardown`).
+
+**Diagnose first (each call is itself bounded — Ctrl-C if it hangs):**
+
+```sh
+container system logs | tail -20            # apiserver/runtime helper activity
+container logs --boot he-<trial-id>         # guest kernel + vminitd boot log
+```
+
+**Recovery — escalation ladder (stop at the first that frees the VM):**
+
+```sh
+# 1. Bounded graceful, then force, via the CLI. Run with a timeout so a hang
+#    doesn't trap you; if it returns, you're done.
+container kill --all            # SIGKILL guests, bypasses graceful wait
+container delete --all --force  # remove the (now-dead) container records
+
+# 2. If those hang, the apiserver is poisoned — go OS-level. Find the trial's
+#    runtime helper(s); each is named with its container uuid:
+ps -axo pid,lstart,command | grep 'container-runtime-linux .*--uuid he-'
+#    …and the paired guest VM processes (match by START time to the trials):
+ps -axo pid,lstart,command | grep 'Virtualization.VirtualMachine'
+
+# 3. SIGKILL the he-* runtime helpers AND their paired VM processes:
+kill -9 <runtime-pids> <vm-pids>
+#    ⚠ ONLY the he-* trials. A Virtualization.VirtualMachine with an OLD start
+#    time (days ago) or no he-* files open (`lsof -p <pid> | grep he-`) belongs
+#    to some OTHER app — do NOT kill it.
+
+# 4. Kill any stuck CLI invocations still holding the apiserver lock:
+ps -axo pid,command | grep -E 'container (delete|stop|kill)'   # kill -9 those
+
+# 5. If the CLI is still confused, bounce the daemon (now unblocked) and verify:
+container system stop && container system start
+container list                 # should be empty; memory is freed
+container system status        # apiserver is running
+```
+
+`bun run src/cli.ts cleanup` performs steps 1–4 for every orphaned `he-*` VM
+automatically; reach for the manual ladder only if the daemon itself is wedged.

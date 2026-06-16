@@ -50,6 +50,19 @@ executed bare on the reviewer's host.
 Out of scope: hosting demos on a public/remote URL, persistent always-on demos,
 and diffing artifacts across trials (possible follow-ons).
 
+## Related Changes
+
+- **`add-trial-transcript-audit`** is the *process* half of trial inspection
+  (replay the build conversation from `trials/<id>/transcripts/*.jsonl`); this
+  change is the *output* half (audit the built deliverable + boot it as a live
+  demo). They share no data source and no risky surface — this one executes
+  agent code under sandbox isolation, that one is a pure read of already-redacted
+  text. They DO both extend the studio Trial drill-down (`TrialView.tsx`): this
+  adds **Artifacts** + **Demo**, that adds **Conversation**. Whichever lands
+  second MUST rebase its `eval-studio` trial-view delta so the drill-down ends
+  with one coherent set of sibling tabs (Artifacts / Demo / Conversation), not
+  two diverging "trial view" requirement sets.
+
 ## Impact
 
 - New spec: `artifact-preview`. Affected spec: `eval-studio` (audit panel + demo

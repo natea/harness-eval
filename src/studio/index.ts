@@ -21,6 +21,7 @@ import {
 	validateRunRequest,
 } from "./options";
 import { reconcileRunStates, runNeedsGrading } from "./run-state";
+import { trialTranscript } from "./transcript";
 
 const portIdx = process.argv.indexOf("--port");
 const port = portIdx >= 0 ? Number(process.argv[portIdx + 1]) : 4871;
@@ -217,6 +218,18 @@ const server = Bun.serve({
 				if (!trial)
 					return Response.json({ error: "not found" }, { status: 404 });
 				return Response.json(trial);
+			},
+		},
+
+		// Readable build conversation for a trial (trial-transcript-audit): the
+		// SAME parser that writes conversation.md, served as structured turns so
+		// the Conversation tab can lane request/response and collapse payloads.
+		"/api/runs/:id/trials/:trialId/transcript": {
+			GET: (req) => {
+				const t = trialTranscript(req.params.id, req.params.trialId);
+				return t
+					? Response.json(t)
+					: Response.json({ error: "no transcripts" }, { status: 404 });
 			},
 		},
 

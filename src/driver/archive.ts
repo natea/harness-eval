@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import type { Sandbox } from "../providers/types";
+import { renderTrial } from "../report/transcript-render";
 
 const REDACTED = "[REDACTED:secret]";
 
@@ -165,5 +166,32 @@ export async function archiveTrial(
 			`[archive] redacted ${redactions} secret occurrence(s) in ${trialDir}`,
 		);
 	}
+
+	// Readable audit rendering (trial-transcript-audit). renderTrial re-reads the
+	// redacted `.jsonl` we just wrote, so the Markdown only ever derives from
+	// already-redacted content — no new secret-egress path. The `.jsonl` stays the
+	// unabridged ground truth; the Markdown is a derived convenience artifact.
+	if (transcriptPaths.length > 0) {
+		try {
+			const rendered = renderTrial(trialDir);
+			for (const s of rendered.sessions) {
+				writeFileSync(
+					join(transcriptsDir, s.name.replace(/\.jsonl$/, ".md")),
+					s.md,
+				);
+			}
+			writeFileSync(
+				join(transcriptsDir, "conversation.md"),
+				rendered.conversationMd,
+			);
+		} catch (e) {
+			// Rendering is best-effort: a malformed transcript must never fail the
+			// archive (the `.jsonl` ground truth is already safely written).
+			console.warn(
+				`[archive] transcript rendering skipped for ${trialDir}: ${String(e).slice(0, 120)}`,
+			);
+		}
+	}
+
 	return { workspaceDir, transcriptPaths, redactions };
 }

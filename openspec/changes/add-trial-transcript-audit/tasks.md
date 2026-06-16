@@ -37,6 +37,12 @@
       delineation, collapsible payloads, per-result cost/usage
 - [x] 4.3 Studio test: the route returns turns and request/response turns are
       distinguishable
+- [x] 4.4 Navigation: sticky page-level section jump bar; in-conversation sticky
+      toolbar (session pills, error cycler, collapsible narration outline); each
+      turn anchored + highlight-on-jump
+- [x] 4.5 Step→conversation trace: a "↳ trace" control on partial/failed
+      adherence steps extracts the evidence's probed tokens, opens the replay,
+      and scrolls to the best-matching build turn (unit-tested matcher)
 
 ## 5. Validation
 

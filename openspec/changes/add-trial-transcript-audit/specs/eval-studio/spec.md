@@ -26,3 +26,25 @@ be shown where the transcript records it.
 - **THEN** the turns are produced by the same parser that writes
   `conversation.md`, so the studio replay and the on-disk Markdown reflect the
   identical turn sequence
+
+### Requirement: Trial conversation navigation
+The Conversation replay SHALL be navigable without linear scrolling: the Trial
+view MUST provide jump targets to its major sections and, within the
+conversation, to each session, to errored turns, and through an outline of the
+agent's narration. From a graded step whose outcome is not a full pass, the
+operator SHALL be able to jump directly to the conversation turn that best
+explains that outcome, so "why did this fail / get partial credit" is one click
+from the score, not a manual scroll.
+
+#### Scenario: Jump from a partial/failed step to the explaining turn
+- **WHEN** an operator activates the trace control on an adherence step that
+  scored partial or fail
+- **THEN** the studio opens the Conversation replay and scrolls to the build
+  turn that best matches the step's evidence (the tokens the evaluator probed
+  for), highlighting it; if no turn matches, it scrolls to the conversation
+  section rather than doing nothing
+
+#### Scenario: Navigate a long transcript
+- **WHEN** the conversation is long
+- **THEN** the operator can jump to any session, step through errored turns, and
+  open an outline of narration "chapters", each entry scrolling to its turn

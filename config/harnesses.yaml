@@ -1,0 +1,10 @@
+# Harness registry - agent backends the orchestrator knows how to drive.
+# Candidate registry harness sections and run configs are validated against
+# these IDs. Driver support remains intentionally narrow: Claude Code is the
+# only implemented backend today.
+
+harnesses:
+  - id: claude-code
+    name: Claude Code
+    driver: claude-code
+    defaultVersion: 2.1.170

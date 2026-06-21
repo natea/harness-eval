@@ -120,3 +120,14 @@ profiles:
     transport: codex
     authEnv: OPENAI_API_KEY
     authKind: api-key
+
+  # Codex via a ChatGPT Plus/Pro OAuth sign-in (no API key / no per-token billing).
+  # The driver copies the operator's Codex login (auth.json from $CODEX_HOME, or
+  # ~/.codex) into the trial's isolated CODEX_HOME. modelId "default" → no --model.
+  # Works on host/worktree runs; cloud sandboxes would need the login shipped in.
+  - name: codex-oauth
+    provider: openai
+    modelId: default
+    transport: codex
+    authEnv: CODEX_HOME
+    authKind: oauth

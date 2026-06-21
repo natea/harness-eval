@@ -17,13 +17,18 @@ const runCodexExec = createPrintCliSessionRunner({
 		const resume = opts.resumeSessionId
 			? `resume ${JSON.stringify(opts.resumeSessionId)}`
 			: "";
-		// Dual auth (Codex supports both modes, per its model-agnostic design):
-		//  - API key present  → write it via `codex login --with-api-key` into an
-		//    isolated, per-slot CODEX_HOME (verified: a bare $OPENAI_API_KEY env
-		//    still 401s; isolation avoids cross-trial collisions and any ambient
-		//    sign-in taking precedence). This is the eval path (fresh sandboxes).
-		//  - no API key       → use the ambient CODEX_HOME (an existing ChatGPT
-		//    sign-in), for host/dev runs.
+		// Three auth modes (Codex's real auth surfaces, per its model-agnostic
+		// design), resolved per-run by the CLI and signalled via env:
+		//  - $CODEX_OAUTH_HOME set → ChatGPT OAuth: copy that login's auth.json into
+		//    an isolated per-slot CODEX_HOME (a ChatGPT Plus/Pro sign-in). Lets a
+		//    run use the operator's subscription instead of an API key.
+		//  - else $OPENAI_API_KEY set → write it via `codex login --with-api-key`
+		//    into an isolated CODEX_HOME (verified: a bare key env still 401s). The
+		//    primary eval path for fresh sandboxes.
+		//  - else → the ambient CODEX_HOME (an existing sign-in), for host/dev runs.
+		// The isolated home lives under /tmp (NOT the archived workspace), so OAuth
+		// tokens / api-key auth never land in run artifacts; isolation also avoids
+		// cross-trial collisions on a shared filesystem.
 		const codexHome = opts.outFile.replace(
 			/he-out-(.+)\.jsonl$/,
 			"he-codex-$1",
@@ -48,12 +53,15 @@ const runCodexExec = createPrintCliSessionRunner({
 		]
 			.filter(Boolean)
 			.join(" ");
-		// Conditional api-key login; `;`-joined so exec always runs and captures any
+		// Auth setup, `;`-joined before exec so exec always runs and captures any
 		// auth error in outFile.
-		return [
-			`if [ -n "$OPENAI_API_KEY" ]; then export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true; fi`,
-			exec,
-		].join("; ");
+		const auth =
+			`if [ -n "$CODEX_OAUTH_HOME" ]; then ` +
+			`mkdir -p ${codexHome}; cp "$CODEX_OAUTH_HOME/auth.json" ${codexHome}/auth.json 2>/dev/null; export CODEX_HOME=${codexHome}; ` +
+			`elif [ -n "$OPENAI_API_KEY" ]; then ` +
+			`export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true; ` +
+			`fi`;
+		return [auth, exec].join("; ");
 	},
 	parseOutput: parseCodexJsonl,
 });

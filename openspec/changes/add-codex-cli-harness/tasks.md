@@ -11,6 +11,11 @@
   `CODEX_HOME`; `codex` transport + env resolution wired in the CLI; OpenAI profile
   added to `config/models.yaml`. (Non-OpenAI `model_providers`/`--oss` is the noted
   follow-up; OpenAI-provider path implemented.)
+- [x] 1.4 Auth modes: the driver supports (a) api-key (`codex login
+  --with-api-key`), (b) **ChatGPT OAuth** — copies the operator's `~/.codex`
+  login into the trial's isolated `CODEX_HOME` (profile `codex-oauth`, no API
+  billing), and (c) ambient sign-in. A ChatGPT account rejects an explicit
+  `--model`, so oauth/default profiles omit it.
 - [x] 1.3 Map `codex exec --json` to `SessionRecord` (thread_id→sessionId, turns,
   usage, agent_message→resultText); cost-source per the harness-driver rule
   (codex reports no $ → profile-priced / tokens-only). Verified against REAL codex
@@ -29,19 +34,16 @@
 ## 4. Validation
 - [x] 4.1 Probe: `codex exec` 1-shot returns output — verified (real `codex exec`
   built and ran `hello.py` printing the expected text).
-- [x] 4.2 Harness-ORCHESTRATED smoke — verified end-to-end. `cli.ts run
-  --candidates codex-baseline --harness codex --worker-model codex-default
-  --provider worktree --target notes` ran the full path (orchestrator → codex
-  driver → `codex exec` → telemetry → provenance/results/scorecard). Provenance
-  recorded `harness: codex`, `harnessVersion: 0.50.0`, `workerModel: codex-default
-  (openai)`; telemetry + cost-source recorded; `parseCodexJsonl` parsed the real
-  stream (incl. correct `isError` detection). Codex's build ability is separately
-  proven by a direct `codex exec` smoke (built + ran hello.py). NOTE: in that
-  orchestrated run the build step itself hit a 401 because the worktree gives each
-  trial an isolated `HOME` (by design), so the ambient ChatGPT sign-in is
-  unreachable and no API key was available (`op` locked). A build THROUGH the
-  orchestrator needs `OPENAI_API_KEY` in the env (real spend): `OPENAI_API_KEY=…
-  bun run src/cli.ts run --candidates codex-baseline --harness codex
-  --worker-model gpt-5-codex --trials 1 --provider worktree --target notes`.
+- [x] 4.2 Harness-ORCHESTRATED smoke — verified end-to-end with a SUCCESSFUL
+  build. `cli.ts run --candidates codex-baseline --harness codex --worker-model
+  codex-oauth --provider worktree --target notes` ran the full path (orchestrator
+  → codex driver → `codex exec` via ChatGPT OAuth → telemetry →
+  provenance/results/scorecard). The trial built a contract-aligned notes service
+  (server.js: unlock + auth-gated CRUD + search + derived title/preview + UTC
+  updatedAt), `isError: false`, real usage (185767 in / 4929 out / 148608 cache).
+  Provenance recorded `harness: codex@0.50.0` + `workerModel`; cost-source
+  recorded; `parseCodexJsonl` parsed the real stream. (`OPENAI_API_KEY` is now in
+  `.env` for the api-key path too; the api-key build is the same command with
+  `--worker-model gpt-5-codex`.)
 - [x] 4.3 `bun run test` green (incl. the driver-contract suite);
   `openspec validate add-codex-cli-harness --strict` passes.

@@ -21,13 +21,22 @@ or sit behind a translating gateway (LiteLLM/OpenRouter).
 
 **Auth mechanism (verified against codex 0.139.0).** Codex authenticates from
 `$CODEX_HOME/auth.json`, NOT from `$OPENAI_API_KEY` directly — a bare key env still
-returns `401 Missing bearer`. The driver therefore runs
-`printenv OPENAI_API_KEY | codex login --with-api-key` into an isolated, per-slot
-`CODEX_HOME` before `codex exec`. The fresh trial sandbox has no ambient sign-in, so
-the run's key is used; on a dev host an existing ChatGPT sign-in would otherwise take
-precedence (and rejects API-only models like `gpt-5-codex`). The model id is passed
-through to `codex exec --model`. (OpenAI-provider path; a non-OpenAI worker model is
-the `model_providers` follow-up.)
+returns `401 Missing bearer`. The driver supports three modes, signalled by env from
+the CLI's worker-profile resolution, into an isolated per-slot `CODEX_HOME` under
+`/tmp` (so credentials never reach the archived workspace):
+1. **api-key** (`authKind: api-key`) — `printenv OPENAI_API_KEY | codex login
+   --with-api-key`. The primary eval path; fresh sandboxes have no ambient login.
+2. **ChatGPT OAuth** (`authKind: oauth`, profile `codex-oauth`) — copies the
+   operator's `~/.codex/auth.json` (a Plus/Pro sign-in) into the trial CODEX_HOME;
+   no API billing. Verified end-to-end: an orchestrated worktree trial built a
+   contract-aligned notes service via OAuth. (Works on host/worktree; a cloud
+   sandbox would need the login shipped in.)
+3. **ambient** — an existing sign-in already present in the sandbox.
+
+A ChatGPT account rejects an explicit `--model`, so oauth/default profiles use
+modelId `default` and the driver omits the flag; the api-key path passes the model
+id through to `codex exec --model`. (Non-OpenAI worker models are the
+`model_providers` follow-up.)
 
 ## Telemetry
 Map `codex exec --json` (JSONL event stream) to `SessionRecord` (duration, tokens,

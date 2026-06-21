@@ -40,6 +40,12 @@ import { createProvider } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
+import {
+	CATALOG_PATH,
+	checkCatalog,
+	generateCatalog,
+	loadCatalog,
+} from "./catalog";
 import { loadTarget, renderTargetPrompt, scaffoldTarget } from "./targets";
 import { RunConfig, type TrialResult, Weights } from "./types";
 
@@ -68,6 +74,39 @@ async function cmdValidate(): Promise<void> {
 	console.log(
 		`fixture manifest OK: ${manifest.fixtures.length} fixtures, sha ${msha.slice(0, 12)}…`,
 	);
+
+	// Catalog: list every target with its selection metadata, then enforce that
+	// the generated docs/TARGETS.md is not stale (eval-targets spec).
+	const entries = loadCatalog();
+	console.log(`\ntarget catalog (${entries.length}):`);
+	for (const e of entries) {
+		console.log(`  ${e.name} — ${e.summary} [${e.shape}, ui:${e.expectedUI}]`);
+	}
+	const { stale } = checkCatalog();
+	if (stale) {
+		throw new Error(
+			`${CATALOG_PATH} is stale — run \`bun run src/cli.ts catalog\` to regenerate it`,
+		);
+	}
+	console.log(`catalog OK: ${CATALOG_PATH} up to date`);
+}
+
+async function cmdCatalog(): Promise<void> {
+	const { writeFileSync } = await import("node:fs");
+	const md = generateCatalog();
+	if (flag("check")) {
+		const { stale } = checkCatalog();
+		if (stale) {
+			console.error(
+				`✗ ${CATALOG_PATH} is stale — run \`bun run src/cli.ts catalog\` to regenerate`,
+			);
+			process.exit(1);
+		}
+		console.log(`✓ ${CATALOG_PATH} up to date`);
+		return;
+	}
+	writeFileSync(CATALOG_PATH, md);
+	console.log(`wrote ${CATALOG_PATH} (${md.split("\n").length} lines)`);
 }
 
 async function cmdRun(): Promise<void> {
@@ -429,6 +468,7 @@ const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
 	validate: cmdValidate,
 	init: cmdInit,
+	catalog: cmdCatalog,
 	model: cmdModel,
 	run: cmdRun,
 	report: cmdReport,
@@ -437,7 +477,7 @@ const commands: Record<string, () => Promise<void>> = {
 const handler = commands[cmd ?? ""];
 if (!handler) {
 	console.error(
-		"usage: cli.ts <validate|init|model|run|report> [options]   (see file header)",
+		"usage: cli.ts <validate|init|catalog|model|run|report> [options]   (see file header)",
 	);
 	process.exit(2);
 }

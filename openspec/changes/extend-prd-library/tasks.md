@@ -33,25 +33,25 @@
 
 ## 3. Generated, drift-checked catalog document
 
-- [ ] 3.1 Write a catalog generator (CLI `catalog` subcommand or
+- [x] 3.1 Write a catalog generator (CLI `catalog` subcommand or
   `scripts/gen-catalog.ts`) that reads all manifests and emits `docs/TARGETS.md`
   (name, summary, description, shape, expectedUI, provenance), line-ending-normalized
-- [ ] 3.2 Add a drift check (folded into `validate`) that regenerates in-memory and
+- [x] 3.2 Add a drift check (folded into `validate`) that regenerates in-memory and
   fails if `docs/TARGETS.md` is stale
-- [ ] 3.3 Generate and commit `docs/TARGETS.md`
+- [x] 3.3 Generate and commit `docs/TARGETS.md`
 
 ## 4. Surface descriptions at selection time
 
-- [ ] 4.1 CLI: target listing + the `no target '<name>'` available-list +
+- [x] 4.1 CLI: target listing + the `no target '<name>'` available-list +
   `validate` summary show `name — summary [shape, expectedUI]`
-- [ ] 4.2 Studio: configure-view target picker shows `summary`, `shape`,
+- [x] 4.2 Studio: configure-view target picker shows `summary`, `shape`,
   `expectedUI` (eval-studio delta) reading from the loaded manifest
 
 ## 5. Validation
 
 - [ ] 5.1 `bun run src/cli.ts validate` passes for the whole library (schema, hash
   freshness, attestation presence, complete provenance, catalog drift check)
-- [ ] 5.2 Unit tests: required-field enforcement; prompt-exclusion of catalog
+- [x] 5.2 Unit tests: required-field enforcement; prompt-exclusion of catalog
   metadata; generator output stable; drift check fails on a mutated manifest
 - [ ] 5.3 Smoke (n=1) at least one new HTTP-light target end-to-end (build → grade)
   to confirm the test plan is graders-observable

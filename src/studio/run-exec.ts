@@ -11,8 +11,8 @@ import type { SessionScriptResult } from "../driver/session";
 import { loadHarnesses } from "../harnesses";
 import {
 	loadModels,
-	resolveClaudeCodeEnv,
 	resolveProfile,
+	resolveWorkerEnv,
 	toModelRef,
 } from "../models";
 import { gradeTrials } from "../orchestrator/grade";
@@ -104,13 +104,11 @@ export function resolveRunInputs(r: StudioRunRequest) {
 	const models = loadModels();
 	const workerProfile = resolveProfile(r.workerModel, models);
 	const judgeProfile = resolveProfile(r.judgeModel ?? "claude-sonnet-4-6", models);
-	let workerEnv: Record<string, string> | undefined;
-	let workerModelFlag = workerProfile.modelId;
-	if (workerProfile.provider !== "anthropic") {
-		const resolved = resolveClaudeCodeEnv(workerProfile);
-		workerEnv = resolved.env;
-		workerModelFlag = resolved.modelFlag;
-	}
+	// Single shared resolver (handles codex/oauth/api-key/third-party/native) so
+	// the studio and CLI run paths can't drift.
+	const rw = resolveWorkerEnv(workerProfile);
+	const workerEnv = rw.env;
+	const workerModelFlag = rw.modelFlag;
 	const config = RunConfig.parse({
 		candidates: r.candidates,
 		harness: r.harness,

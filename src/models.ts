@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 
@@ -170,6 +171,57 @@ export function resolveClaudeCodeEnv(
 	env.ANTHROPIC_API_KEY = token;
 	if (p.baseUrl) env.ANTHROPIC_BASE_URL = p.baseUrl;
 	return { env, modelFlag: p.modelId };
+}
+
+export interface ResolvedWorker {
+	/** Worker env to merge into the trial exec (undefined → inherit ambient). */
+	env?: Record<string, string>;
+	/** Model flag passed to the harness (e.g. mapped slot, or "default"). */
+	modelFlag: string;
+	/** Human-readable note for logs (auth mode). */
+	note?: string;
+}
+
+/**
+ * Resolve the worker env + model flag for ANY transport — the single place both
+ * the CLI and the studio run path use, so they can't drift (a past drift left
+ * the studio throwing on `codex` profiles). Handles:
+ *  - `codex` (model-agnostic): oauth → copy the operator's Codex login
+ *    (CODEX_OAUTH_HOME) into the trial; api-key → OPENAI_API_KEY; else ambient.
+ *  - third-party Claude-Code transports → `resolveClaudeCodeEnv`.
+ *  - native Anthropic → ambient OAuth/API-key fallback (no env override).
+ */
+export function resolveWorkerEnv(
+	p: ModelProfile,
+	lookup: NodeJS.ProcessEnv = process.env,
+): ResolvedWorker {
+	if (p.transport === "codex") {
+		if (p.authKind === "oauth") {
+			const src =
+				lookup[p.authEnv] || (lookup.HOME ? join(lookup.HOME, ".codex") : "");
+			if (!src || !existsSync(join(src, "auth.json"))) {
+				throw new ModelError(
+					`worker model '${p.name}' needs a Codex OAuth login: no auth.json at ${src || "<unset>"} (run \`codex login\`, or set ${p.authEnv})`,
+				);
+			}
+			return {
+				env: { CODEX_OAUTH_HOME: src },
+				modelFlag: p.modelId,
+				note: `oauth sign-in from ${src}`,
+			};
+		}
+		const key = lookup[p.authEnv];
+		return {
+			env: key ? { OPENAI_API_KEY: key } : undefined,
+			modelFlag: p.modelId,
+			note: key ? "api-key" : "ambient sign-in",
+		};
+	}
+	if (p.provider !== "anthropic") {
+		const r = resolveClaudeCodeEnv(p, lookup);
+		return { env: r.env, modelFlag: r.modelFlag };
+	}
+	return { modelFlag: p.modelId };
 }
 
 /**

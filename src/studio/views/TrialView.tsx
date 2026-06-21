@@ -93,6 +93,11 @@ export function TrialView({
 }) {
 	const t = useFetch<TrialResult>(`/api/runs/${runId}/trials/${trialId}`);
 	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
+	// Live jobs (this session's running runs) — used to show the live build stream
+	// for a trial whose run hasn't finished/indexed yet (live-build-stream).
+	const queue = useFetch<{ runId: string; status: string; stage?: string }[]>(
+		"/api/queue",
+	);
 	// Build-conversation state lifted here so a step row can command it: open it
 	// and jump to the turn that best explains the step's outcome.
 	const convo = useTranscript(runId, trialId);
@@ -125,7 +130,31 @@ export function TrialView({
 	);
 
 	if (!t) return <p className="text-muted-foreground">loading…</p>;
-	if (!t.provenance) return <Badge variant="danger">not found</Badge>;
+	if (!t.provenance) {
+		// The run isn't finalized/indexed yet. If it's a running live job, show the
+		// live build stream; otherwise it's genuinely not found.
+		const job = queue?.find((q) => q.runId === runId);
+		if (job?.status === "running") {
+			return (
+				<>
+					<p>
+						<a
+							href={`/runs/${runId}`}
+							className="text-primary-hover hover:underline"
+						>
+							← {runId}
+						</a>
+					</p>
+					<h1 className="font-mono text-lg font-bold">{trialId}</h1>
+					<p className="mt-1 text-[13px] text-muted-foreground">
+						building{job.stage ? ` · ${job.stage}` : ""} — streaming live
+					</p>
+					<LiveStream runId={runId} trialId={trialId} />
+				</>
+			);
+		}
+		return <Badge variant="danger">not found</Badge>;
+	}
 	const a = t.grades?.adherence;
 	const q = t.grades?.quality;
 	const integ = t.grades?.integration;

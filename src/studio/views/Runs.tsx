@@ -314,6 +314,17 @@ export function Runs() {
 														>
 															{e.runId}
 														</a>
+													) : e.status === "running" &&
+														e.kind === "live" &&
+														e.candidates[0] ? (
+														// Watch the (first) building trial live (live-build-stream).
+														<a
+															href={`/runs/${e.runId}/trials/${e.candidates[0]}-t1`}
+															title="watch the live build"
+															className="font-mono text-[12px] text-primary-hover underline decoration-primary-hover/40 underline-offset-2 hover:decoration-primary-hover"
+														>
+															{e.runId}
+														</a>
 													) : (
 														<span className="font-mono text-[12px]">
 															{e.runId}

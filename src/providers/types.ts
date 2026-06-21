@@ -30,9 +30,26 @@ export interface Sandbox {
 	destroy(): Promise<void>;
 }
 
+export type ProviderId = "daytona" | "e2b" | "docker" | "macos-vz" | "worktree";
+
+export interface PreflightContext {
+	/** Per-trial wall-clock budget the provider must be able to sustain. */
+	trialWallClockMs: number;
+	concurrency: number;
+}
+
+export class PreflightError extends Error {}
+
 export interface SandboxProvider {
-	readonly id: "daytona" | "worktree";
-	/** Identifier of the base image/snapshot, or null when not applicable. */
+	readonly id: ProviderId;
+	/** Identifier of the base image/snapshot/template, or null when not applicable. */
 	readonly snapshotId: string | null;
+	/**
+	 * Validate the provider can run this configuration BEFORE any trial is
+	 * dispatched (daemon reachable, image/template present, lifetime and
+	 * resource policies admit the budget). Throws PreflightError with
+	 * remediation guidance on failure.
+	 */
+	preflight?(ctx: PreflightContext): Promise<void>;
 	provision(trialId: string): Promise<Sandbox>;
 }

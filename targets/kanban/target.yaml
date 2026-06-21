@@ -1,0 +1,47 @@
+name: kanban
+summary: Sprint board API — four fixed columns with ordered, movable cards.
+description: >
+  An HTTP/JSON kanban board: a single board with four fixed ordered columns
+  (Backlog / In Progress / Review / Done) holding cards with a required title,
+  optional description, and a story-points enum. Create, edit, move between
+  columns (status change), delete, and bulk Clear-Done — with within-column
+  ordering as part of the contract. Ordered-collection shape. HTTP-light: the
+  real-time/presence/co-editing features of the upstream PRD are out of scope.
+  No rendered UI.
+tags:
+  domain: project-management
+  shape: rest-api-ordered-collection
+  expectedUI: none
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: 658428b0d80a0d77e5acbf30a588415abd0374a4f1b7086547fce00608f1e544
+testplanFile: testplan.yaml
+conformanceSection: 'section 6 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-21: every REQUIRED item R1-R10 maps to >=1 test-plan
+  step (R1:S-1; R2:BRD-1; R3:CRT-1; R4:CRT-2; R5:VIEW-1; R6:EDIT-1; R7:MOVE-1;
+  R8:DEL-1; R9:CLR-1; R10:MOVE-1). All checks are HTTP-observable (status codes +
+  JSON bodies), including within-column ordering via GET /api/board. The
+  upstream PRD's real-time sync, presence avatars, live co-editing, and
+  drag-position indices are dropped for the HTTP-light v1 evaluator.
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/collabrative_kaban
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `collabrative_kaban` real-time board PRD into an
+    HTTP/JSON board+card API; WebSocket/presence/co-editing concerns out of
+    scope, ordering reduced to insertion/most-recent-move.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the board service on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 6 is the Definition of Done; Section 7 lists non-goals (no real-time
+  sync, no presence, no drag positions). The four column names are fixed and
+  ordered. storyPoints is one of null/1/2/3/5/8/13. Moving a card = setting its
+  status to another column; it appends to the end of the target column.
+  In-process persistence is acceptable.
+fixtures: []

@@ -14,7 +14,13 @@
  * Spawns a mock tracker, runs the adaptive evaluator (frozen test plan),
  * scrubs the workspace, runs the blind code-quality judge, writes grades.json.
  */
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { judgeQualityCC, runEvaluatorCC } from "../src/grading/cc-driver";
 import { runEvaluator } from "../src/grading/evaluator";
@@ -40,10 +46,34 @@ const workspace = join(trialDir, "workspace");
 if (!existsSync(workspace)) throw new Error(`no workspace at ${workspace}`);
 
 const registry = loadRegistry("config/registry.yaml");
+// Resolve the target from the trial's recorded PRD hash so we grade against the
+// run's ACTUAL test plan — not a hardcoded default (a wrong default grades a
+// rest-api build against the symphony plan, producing a meaningless score).
+// `--target <name>` overrides.
 const targetIdx = process.argv.indexOf("--target");
-const target = loadTarget(
-	targetIdx >= 0 ? (process.argv[targetIdx + 1] as string) : "symphony-daemon",
-);
+let targetName = targetIdx >= 0 ? (process.argv[targetIdx + 1] as string) : "";
+if (!targetName) {
+	const prov = JSON.parse(
+		readFileSync(join(trialDir, "provenance.json"), "utf8"),
+	) as { prdSha256?: string };
+	for (const d of readdirSync("targets")) {
+		if (!existsSync(join("targets", d, "target.yaml"))) continue;
+		try {
+			if (loadTarget(d).prdSha256 === prov.prdSha256) {
+				targetName = d;
+				break;
+			}
+		} catch {
+			// skip unloadable target
+		}
+	}
+}
+if (!targetName)
+	throw new Error(
+		"could not resolve the run's target from its PRD hash; pass --target <name>",
+	);
+const target = loadTarget(targetName);
+console.log(`[grade] target: ${targetName}`);
 const { plan } = target;
 const judgeModel = "claude-sonnet-4-6";
 

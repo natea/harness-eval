@@ -34,7 +34,21 @@ targets/my-api/
 4. **Declare fixtures** if the evaluator needs live dependencies (mock APIs,
    stub processes). Each gets a name, a `{port}`-templated command, and the
    env var the evaluator receives (see symphony-daemon's mock-linear).
-5. **Validate and run:**
+5. **Adapting someone else's spec?** If your PRD/test plan is derived from a
+   third-party source (rather than authored fresh), add a `source:` block to
+   `target.yaml` and preserve the upstream notice:
+   ```yaml
+   source:
+     upstream: vibench-public
+     repo: https://github.com/ViBench/vibench-public
+     commit: <full-or-short-sha>
+     originalDir: prds/barber
+     license: Apache-2.0
+   ```
+   All five fields are required when `source` is present, and a
+   `targets/NOTICE` file must carry the upstream attribution text — validation
+   fails otherwise. (Fresh, self-authored targets omit `source` entirely.)
+6. **Validate and run:**
    ```sh
    bun run src/cli.ts validate --target my-api
    bun run src/cli.ts run --target my-api --candidates superpowers --trials 1 --provider docker
@@ -44,6 +58,8 @@ targets/my-api/
 
 - PRD hash drift fails the load (re-freeze deliberately, never silently).
 - `attested` mode without an attestation blocks the run.
+- A `source` block (adapted targets) must have all fields, and `targets/NOTICE`
+  must exist — missing provenance or notice fails the load.
 - The rendered base prompt is identical for every candidate in a run.
 - Scores are never aggregated across targets (different plans = different
   scales); run each target's matrix separately.

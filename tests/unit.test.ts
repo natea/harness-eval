@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { redactSecrets } from "../src/driver/archive";
-import { parseStreamJson } from "../src/driver/claude";
-import { looksLikeGate } from "../src/driver/session";
+import { type ClaudeResult, parseStreamJson } from "../src/driver/claude";
+import type { SessionScriptResult } from "../src/driver/session";
+import { executeSessionScript, looksLikeGate } from "../src/driver/session";
 import { aggregateTelemetry } from "../src/driver/telemetry";
 import { scoreAdherence } from "../src/grading/evaluator";
 import { median } from "../src/grading/judge";
@@ -15,9 +16,24 @@ import {
 	stats,
 } from "../src/grading/scoring";
 import { loadTestPlan } from "../src/grading/testplan";
-import { buildMatrix, isInfraFailure } from "../src/orchestrator/scheduler";
-import { loadRegistry, resolveCandidates } from "../src/registry";
-import type { SessionRecord, TestPlan, Weights } from "../src/types";
+import {
+	buildMatrix,
+	isInfraFailure,
+	RunLedger,
+	runTrial,
+} from "../src/orchestrator/scheduler";
+import type { Sandbox, SandboxProvider } from "../src/providers/types";
+import {
+	loadRegistry,
+	renderSessionScript,
+	resolveCandidates,
+} from "../src/registry";
+import {
+	RunConfig,
+	type SessionRecord,
+	type TestPlan,
+	type Weights,
+} from "../src/types";
 
 const tmp = mkdtempSync(join(tmpdir(), "he-unit-"));
 
@@ -40,11 +56,66 @@ describe("registry validation (8.1)", () => {
 		expect(() => loadRegistry(p)).toThrow(/latest/);
 	});
 
+	test("rejects duplicate candidate ids", () => {
+		const p = join(tmp, "duplicate-registry.yaml");
+		writeFileSync(
+			p,
+			`basePrompt: x\ncandidates:\n  - id: foo\n    name: Foo\n    repo: https://example.com/foo\n    pinnedVersion: 1.0.0\n    harnesses:\n      claude-code:\n        install: ["true"]\n        session:\n          - prompt: "p"\n  - id: foo\n    name: Foo Again\n    repo: https://example.com/foo2\n    pinnedVersion: 2.0.0\n    harnesses:\n      claude-code:\n        install: ["true"]\n        session:\n          - prompt: "p"\n`,
+		);
+		expect(() => loadRegistry(p)).toThrow(/duplicate candidate id: foo/);
+	});
+
+	test("rejects unimplemented harness keys instead of ignoring them", () => {
+		const p = join(tmp, "unknown-harness-registry.yaml");
+		writeFileSync(
+			p,
+			`basePrompt: x\ncandidates:\n  - id: foo\n    name: Foo\n    repo: https://example.com/foo\n    pinnedVersion: 1.0.0\n    harnesses:\n      claude-code:\n        install: ["true"]\n        session:\n          - prompt: "p"\n      opencode:\n        install: ["true"]\n        session:\n          - prompt: "p"\n`,
+		);
+		expect(() => loadRegistry(p)).toThrow(
+			/invalid harness section .*opencode|Invalid key/,
+		);
+	});
+
+	test("renders the shared base prompt into harness session scripts", () => {
+		const registry = loadRegistry("config/registry.yaml");
+		const firstCandidate = registry.candidates[0];
+		if (!firstCandidate) throw new Error("missing registry fixture candidate");
+		const candidate = {
+			...firstCandidate,
+			harnesses: {
+				"claude-code": {
+					install: ["true"],
+					session: [
+						{
+							prompt: "/wrap {{BASE_PROMPT}} then {{BASE_PROMPT}}",
+							newSession: true,
+						},
+					],
+					continuation: {
+						allowlist: ["proceed", "continue with the plan"],
+						maxContinuations: 10,
+					},
+				},
+			},
+		};
+		const rendered = renderSessionScript(
+			{ basePrompt: "SHARED TASK" },
+			candidate,
+			"claude-code",
+		);
+		expect(rendered).toEqual([
+			{
+				prompt: "/wrap SHARED TASK then SHARED TASK",
+				newSession: true,
+			},
+		]);
+	});
+
 	test("shipped registry loads; unknown harness fails at load time", () => {
 		const registry = loadRegistry("config/registry.yaml");
-		expect(registry.candidates).toHaveLength(4);
+		expect(registry.candidates).toHaveLength(5);
 		expect(() => resolveCandidates(registry, ["gsd"], "opencode")).toThrow(
-			/opencode/,
+			/unknown harness 'opencode'/,
 		);
 	});
 });
@@ -105,6 +176,240 @@ describe("stream-json parsing and telemetry (8.1)", () => {
 		expect(t.setupDurationMs).toBe(240000);
 		expect(t.totalCostUsd).toBe(1.5);
 		expect(t.totalTokens.inputTokens).toBe(20);
+	});
+});
+
+describe("harness driver dispatch", () => {
+	test("executes session scripts with env, resume semantics, and generic continuations", async () => {
+		const calls: Array<{
+			prompt: string;
+			stepIndex: number;
+			resumeSessionId?: string;
+			env?: Record<string, string>;
+		}> = [];
+		const runSession = async (
+			_sandbox: Sandbox,
+			opts: {
+				prompt: string;
+				stepIndex: number;
+				resumeSessionId?: string;
+				env?: Record<string, string>;
+			},
+		): Promise<ClaudeResult> => {
+			calls.push(opts);
+			const resultText =
+				opts.prompt === "first" ? "Plan ready. Shall I proceed?" : "done";
+			const sessionId = opts.stepIndex < 2 ? "s-a" : "s-b";
+			return {
+				record: {
+					sessionId,
+					stepIndex: opts.stepIndex,
+					durationMs: 10,
+					numTurns: 1,
+					costUsd: 0,
+					usage: {
+						inputTokens: 1,
+						outputTokens: 1,
+						cacheReadTokens: 0,
+						cacheCreationTokens: 0,
+					},
+					isError: false,
+				},
+				resultText,
+				sessionId,
+				transcript: "{}",
+			};
+		};
+
+		const result = await executeSessionScript({} as Sandbox, {
+			model: "m",
+			steps: [
+				{ prompt: "first", newSession: false },
+				{ prompt: "second", newSession: true },
+			],
+			continuation: { allowlist: ["approve"], maxContinuations: 2 },
+			wallClockBudgetMs: 60_000,
+			costBudgetUsd: 1,
+			env: { ANTHROPIC_BASE_URL: "https://models.test" },
+			runSession: runSession as never,
+		});
+
+		expect(result.status).toBe("completed");
+		expect(calls.map((c) => c.prompt)).toEqual(["first", "approve", "second"]);
+		expect(calls.map((c) => c.resumeSessionId)).toEqual([
+			undefined,
+			"s-a",
+			undefined,
+		]);
+		expect(calls.every((c) => c.env?.ANTHROPIC_BASE_URL)).toBe(true);
+		expect(result.notes).toContain("step 0: continuation 1 ('approve')");
+	});
+});
+
+class MemorySandbox implements Sandbox {
+	id = "mem-trial";
+	workspacePath = "/workspace";
+	writes = new Map<string, string>();
+	execs: Array<{ command: string; env?: Record<string, string> }> = [];
+	destroyed = false;
+
+	async exec(command: string, opts?: { env?: Record<string, string> }) {
+		this.execs.push({ command, env: opts?.env });
+		return { exitCode: 0, stdout: "", stderr: "" };
+	}
+	async copyOut() {}
+	async writeFile(sandboxPath: string, content: string) {
+		this.writes.set(sandboxPath, content);
+	}
+	async destroy() {
+		this.destroyed = true;
+	}
+}
+
+class MemoryProvider implements SandboxProvider {
+	id = "worktree" as const;
+	snapshotId = "memory-snapshot";
+	sandboxes: MemorySandbox[] = [];
+	async provision() {
+		const sandbox = new MemorySandbox();
+		this.sandboxes.push(sandbox);
+		return sandbox;
+	}
+}
+
+describe("scheduler integration with pluggable providers and harness setup", () => {
+	test("installs registry setup, injects worker model env, archives, and records provenance", async () => {
+		const registry = loadRegistry("config/registry.yaml");
+		const firstCandidate = registry.candidates[0];
+		if (!firstCandidate) throw new Error("missing registry fixture candidate");
+		const candidate = {
+			...firstCandidate,
+			harnesses: {
+				"claude-code": {
+					install: ["setup-one", "setup-two"],
+					session: [{ prompt: "do {{BASE_PROMPT}}", newSession: false }],
+					continuation: { allowlist: ["go"], maxContinuations: 3 },
+				},
+			},
+		};
+		const provider = new MemoryProvider();
+		const config = RunConfig.parse({
+			candidates: [candidate.id],
+			trialsPerCandidate: 1,
+			provider: "worktree",
+			model: "worker-profile",
+		});
+		const seen: {
+			model?: string;
+			steps?: unknown;
+			continuation?: unknown;
+			env?: Record<string, string>;
+		} = {};
+		const executeScript = async (
+			sandbox: Sandbox,
+			opts: {
+				model: string;
+				steps: unknown;
+				continuation: unknown;
+				env?: Record<string, string>;
+			},
+		): Promise<SessionScriptResult> => {
+			seen.model = opts.model;
+			seen.steps = opts.steps;
+			seen.continuation = opts.continuation;
+			seen.env = opts.env;
+			await sandbox.writeFile("artifact.txt", "built");
+			return {
+				records: [
+					{
+						sessionId: "s",
+						stepIndex: 0,
+						durationMs: 1,
+						numTurns: 1,
+						costUsd: 0,
+						usage: {
+							inputTokens: 1,
+							outputTokens: 1,
+							cacheReadTokens: 0,
+							cacheCreationTokens: 0,
+						},
+						isError: false,
+					},
+				],
+				transcripts: ["{}"],
+				status: "completed",
+				cappedBy: null,
+				notes: [],
+			};
+		};
+		const archived: string[] = [];
+
+		const trial = await runTrial(
+			{ trialId: "superpowers-t1", candidate, trialIndex: 0 },
+			config,
+			{
+				provider,
+				registry: {
+					...registry,
+					basePrompt: "same task",
+					candidates: [candidate],
+				},
+				runDir: join(tmp, "scheduler-integration"),
+				prdContent: "# PRD",
+				prdSha256: "prd",
+				testPlanSha256: "plan",
+				designContent: "# Design",
+				harnessVersion: "harness-v1",
+				workerEnv: { ANTHROPIC_AUTH_TOKEN: "secret-token" },
+				workerModelFlag: "opus",
+				executeScript: executeScript as never,
+				archive: async (_sandbox, trialDir) => {
+					archived.push(trialDir);
+					return {
+						workspaceDir: `${trialDir}/workspace`,
+						transcriptPaths: [],
+						redactions: 0,
+					};
+				},
+			},
+			new RunLedger(10),
+		);
+
+		const sandbox = provider.sandboxes[0];
+		if (!sandbox) throw new Error("provider was not provisioned");
+		expect(sandbox.execs.map((e) => e.command)).toEqual([
+			"setup-one",
+			"setup-two",
+		]);
+		expect(sandbox.writes.get("/workspace/SPEC.md")).toBe("# PRD");
+		expect(sandbox.writes.get("/workspace/DESIGN.md")).toBe("# Design");
+		expect(seen.model).toBe("opus");
+		expect(seen.env).toEqual({ ANTHROPIC_AUTH_TOKEN: "secret-token" });
+		expect(seen.steps).toEqual([{ prompt: "do same task", newSession: false }]);
+		expect(seen.continuation).toEqual({
+			allowlist: ["go"],
+			maxContinuations: 3,
+		});
+		expect(trial.provenance.provider).toBe("worktree");
+		expect(trial.provenance.snapshotId).toBe("memory-snapshot");
+		expect(trial.provenance.harness).toBe("claude-code");
+		expect(trial.provenance.harnessVersion).toBe("harness-v1");
+		expect(trial.provenance.sessionScript[0]?.prompt).toBe("do same task");
+		expect(archived[0]).toMatch(
+			/scheduler-integration\/trials\/superpowers-t1$/,
+		);
+		expect(sandbox.destroyed).toBe(true);
+		expect(
+			existsSync(
+				join(
+					tmp,
+					"scheduler-integration",
+					"trials",
+					"superpowers-t1",
+					"provenance.json",
+				),
+			),
+		).toBe(true);
 	});
 });
 
@@ -250,9 +555,9 @@ describe("scheduler helpers (8.1)", () => {
 	test("matrix interleaves candidates and sizes correctly", () => {
 		const registry = loadRegistry("config/registry.yaml");
 		const plans = buildMatrix(registry.candidates, 3);
-		expect(plans).toHaveLength(12);
-		const firstFour = plans.slice(0, 4).map((p) => p.candidate.id);
-		expect(new Set(firstFour).size).toBe(4); // round-robin, not 3x same candidate
+		expect(plans).toHaveLength(15); // 5 candidates × 3 trials
+		const firstFive = plans.slice(0, 5).map((p) => p.candidate.id);
+		expect(new Set(firstFive).size).toBe(5); // round-robin, not 3x same candidate
 	});
 
 	test("infra vs candidate failure classification", () => {

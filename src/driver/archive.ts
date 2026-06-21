@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import type { Sandbox } from "../providers/types";
+import { renderTrial } from "../report/transcript-render";
 
 const REDACTED = "[REDACTED:secret]";
 
@@ -15,6 +16,11 @@ const SECRET_ENV_VARS = [
 	"DAYTONA_API_KEY",
 	"ANTHROPIC_API_KEY",
 	"LINEAR_API_KEY",
+	"ZAI_API_KEY",
+	"KIMI_API_KEY",
+	"MINIMAX_API_KEY",
+	"DASHSCOPE_API_KEY",
+	"OPENAI_API_KEY",
 ];
 
 /** Patterns matching well-known credential shapes, independent of env. */
@@ -22,8 +28,10 @@ const SECRET_PATTERNS: RegExp[] = [
 	/lin_api_[A-Za-z0-9]{20,}/g,
 	/dtn_[a-f0-9]{32,}/g,
 	/sk-ant-[A-Za-z0-9-_]{20,}/g,
+	/sk-proj-[A-Za-z0-9-_]{20,}/g,
 	/sk-[A-Za-z0-9]{32,}/g,
 	/gh[pousr]_[A-Za-z0-9]{20,}/g,
+	/e2b_[A-Za-z0-9]{20,}/g,
 ];
 
 export function collectSecretValues(
@@ -160,5 +168,32 @@ export async function archiveTrial(
 			`[archive] redacted ${redactions} secret occurrence(s) in ${trialDir}`,
 		);
 	}
+
+	// Readable audit rendering (trial-transcript-audit). renderTrial re-reads the
+	// redacted `.jsonl` we just wrote, so the Markdown only ever derives from
+	// already-redacted content — no new secret-egress path. The `.jsonl` stays the
+	// unabridged ground truth; the Markdown is a derived convenience artifact.
+	if (transcriptPaths.length > 0) {
+		try {
+			const rendered = renderTrial(trialDir);
+			for (const s of rendered.sessions) {
+				writeFileSync(
+					join(transcriptsDir, s.name.replace(/\.jsonl$/, ".md")),
+					s.md,
+				);
+			}
+			writeFileSync(
+				join(transcriptsDir, "conversation.md"),
+				rendered.conversationMd,
+			);
+		} catch (e) {
+			// Rendering is best-effort: a malformed transcript must never fail the
+			// archive (the `.jsonl` ground truth is already safely written).
+			console.warn(
+				`[archive] transcript rendering skipped for ${trialDir}: ${String(e).slice(0, 120)}`,
+			);
+		}
+	}
+
 	return { workspaceDir, transcriptPaths, redactions };
 }

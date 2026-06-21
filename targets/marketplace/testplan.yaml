@@ -1,0 +1,110 @@
+# Frozen test plan for the `marketplace` target (Marketplace Service MVP).
+# Adapted from the ViBench `market_place` test plans, re-authored as
+# HTTP-observable checks (no browser; HTTP-light v1).
+# ViBench semantics: sequential, weighted, fatal gates halt.
+# Evidence = requests issued (curl) + observed status codes / JSON bodies.
+# The single-winner / atomicity rule is checked SEQUENTIALLY (true concurrency
+# is out of scope for the HTTP-light evaluator).
+version: "1.0.0"
+prdSha256: c843ba877f57cf656bd7ab7fcd549ff9d9c7c29932f8007ae60bc634285e3c40
+
+steps:
+  - id: S-1
+    covers: ["7.R1"]
+    description: setup.sh installs deps and start.sh boots the service on $PORT
+    check: >
+      Run ./setup.sh in a clean copy (exit 0). Then PORT=3000 ./start.sh & ;
+      poll the service until it answers within 30s. Fatal: if the service never
+      serves, it cannot be evaluated.
+    weight: 4
+    fatal: true
+
+  - id: LST-1
+    covers: ["1", "7.R2"]
+    description: create listing with validation
+    check: >
+      POST /api/products with a full valid body (price 25.00, category
+      "Electronics", condition "good", valid email) → 201 with id, sellerToken,
+      status "available". Each of these → 400: price 0; category "Gadgets";
+      condition "broken"; malformed email; missing title.
+    weight: 5
+
+  - id: BRW-1
+    covers: ["2", "7.R3"]
+    description: browse shows available only, filtered, no token leak
+    check: >
+      GET /api/products lists the available product, most recent first, and the
+      JSON contains no sellerToken/buyerToken/buyer contact. GET
+      /api/products?category=Electronics includes it; ?category=Books excludes it.
+    weight: 4
+
+  - id: DET-1
+    covers: ["3", "7.R4"]
+    description: detail shows status, hides tokens; unknown 404
+    check: >
+      GET /api/products/<id> → 200 with full info and status "available", and
+      WITHOUT sellerToken, buyerToken, or buyer contact. GET /api/products/nope
+      → 404.
+    weight: 4
+
+  - id: CO-1
+    covers: ["4", "7.R5"]
+    description: checkout claims an available product
+    check: >
+      POST /api/products/<id>/checkout {buyerName:"Jo",buyerEmail:"jo@x.io",
+      buyerPhone:"555-0100"} → 201 with orderId + buyerToken. GET
+      /api/products/<id> now shows status "pending"; GET /api/products no longer
+      lists it. Checkout with buyerName "J" (too short) or bad email → 400.
+    weight: 5
+
+  - id: CO-2
+    covers: ["4", "7.R6"]
+    description: single-winner — second checkout fails
+    check: >
+      With the product now pending (CO-1), POST /api/products/<id>/checkout with
+      a different buyer → 409.
+    weight: 4
+
+  - id: SEL-1
+    covers: ["5", "7.R7"]
+    description: seller page reveals buyer contact when pending; bad token 404
+    check: >
+      GET /api/seller/<sellerToken> → 200 with status "pending" and the buyer
+      contact (name/email/phone). GET /api/seller/wrong-token → 404.
+    weight: 4
+
+  - id: SEL-2
+    covers: ["5", "7.R8"]
+    description: confirm sells the product permanently
+    check: >
+      POST /api/seller/<sellerToken>/confirm → 200, status "sold". GET
+      /api/products/<id> shows "sold" and it is absent from GET /api/products;
+      POST /checkout → 409. A second confirm (not pending) → 409.
+    weight: 5
+
+  - id: SEL-3
+    covers: ["5", "7.R9"]
+    description: cancel returns a pending product to available
+    check: >
+      On a fresh product taken to pending via checkout, POST
+      /api/seller/<sellerToken>/cancel → 200, status "available"; GET
+      /api/products lists it again and a new checkout → 201. Cancel when not
+      pending → 409.
+    weight: 5
+
+  - id: BUY-1
+    covers: ["6", "7.R10"]
+    description: buyer page shows seller contact + order status; bad token 404
+    check: >
+      GET /api/buyer/<buyerToken> → 200 with seller contact (name/email/location)
+      and order status. GET /api/buyer/wrong-token → 404.
+    weight: 3
+
+  - id: SEC-1
+    covers: ["0", "7.R11"]
+    description: tokens are distinct and never leaked publicly
+    check: >
+      For an ordered product, sellerToken, buyerToken, and the public id are
+      pairwise different, and neither token (nor buyer contact) appears in GET
+      /api/products or GET /api/products/<id>.
+    weight: 4

@@ -1,0 +1,88 @@
+[
+  {
+    "runId": "run-2026-06-15T23-36-40-794Z",
+    "app": "Apex Logistics Quote & ROI API (MVP)",
+    "target": "rest-api",
+    "candidates": [
+      "agent-skills",
+      "compound-engineering",
+      "gsd",
+      "superpowers"
+    ],
+    "provider": "worktree",
+    "model": "claude-opus-4-6",
+    "trials": 4,
+    "completed": 3,
+    "startedAt": "2026-06-15T23:36:41.564Z"
+  },
+  {
+    "runId": "run-2026-06-15T02-57-24-244Z",
+    "app": "Symphony Service Specification",
+    "target": "symphony-daemon",
+    "candidates": [
+      "compound-engineering"
+    ],
+    "provider": "worktree",
+    "model": "claude-opus-4-6",
+    "trials": 1,
+    "completed": 1,
+    "startedAt": "2026-06-15T02:57:24.247Z"
+  },
+  {
+    "runId": "run-2026-06-15T00-02-10-768Z",
+    "app": "Barber Shop Scheduling (MVP)",
+    "target": "web-app",
+    "candidates": [
+      "gsd"
+    ],
+    "provider": "daytona",
+    "model": "claude-opus-4-6",
+    "trials": 1,
+    "completed": 1,
+    "startedAt": "2026-06-15T00:02:10.786Z"
+  },
+  {
+    "runId": "run-2026-06-12T14-52-59-889Z",
+    "app": "Symphony Service Specification",
+    "target": "symphony-daemon",
+    "candidates": [
+      "superpowers",
+      "compound-engineering"
+    ],
+    "provider": "daytona",
+    "model": "claude-opus-4-6",
+    "trials": 2,
+    "completed": 2,
+    "startedAt": "2026-06-12T14:52:59.890Z"
+  },
+  {
+    "runId": "run-2026-06-11T16-28-46-887Z",
+    "app": "Symphony Service Specification",
+    "target": "symphony-daemon",
+    "candidates": [
+      "gsd",
+      "agent-skills"
+    ],
+    "provider": "daytona",
+    "model": "claude-opus-4-6",
+    "trials": 6,
+    "completed": 6,
+    "startedAt": "2026-06-11T16:28:46.888Z"
+  },
+  {
+    "runId": "run-2026-06-11T11-23-01-397Z",
+    "app": "Symphony Service Specification",
+    "target": "symphony-daemon",
+    "candidates": [
+      "superpowers",
+      "compound-engineering",
+      "agent-skills",
+      "gsd"
+    ],
+    "provider": "daytona",
+    "model": "claude-opus-4-6",
+    "trials": 12,
+    "completed": 4,
+    "startedAt": "2026-06-11T11:23:01.398Z"
+  }
+]

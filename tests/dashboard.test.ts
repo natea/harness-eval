@@ -18,7 +18,9 @@ describe("dashboard run index (tasks 1.1/1.2)", () => {
 		);
 		mkdirSync(join(runsDir, "run-junk"), { recursive: true });
 		writeFileSync(join(runsDir, "run-junk", "results.json"), "not json");
-		cpSync("runs/combined-n1", join(runsDir, "combined-n1"), {
+		// Committed synthetic fixture (not gitignored runs/), so this is portable
+		// across fresh clones and CI.
+		cpSync("tests/fixtures/combined-n1", join(runsDir, "combined-n1"), {
 			recursive: true,
 		});
 
@@ -35,7 +37,7 @@ describe("dashboard run index (tasks 1.1/1.2)", () => {
 	});
 
 	test("re-weighting parity: dashboard composite === CLI composite (task 1.1)", () => {
-		const index = loadRunIndex("runs");
+		const index = loadRunIndex("tests/fixtures");
 		const real = index.find(
 			(e) => e.supported && e.results && e.results.scores.length > 0,
 		);

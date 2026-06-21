@@ -6,3 +6,5 @@ node_modules/
 runs/
 *.log
 skills/
+.DS_Store
+.playwright-mcp/

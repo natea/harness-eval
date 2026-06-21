@@ -25,6 +25,16 @@ code { padding: 1px 5px; font-size: 14px; }
 .pipeline { color: #8b949e; font-size: 13px; }
 footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; color: #8b949e; font-size: 14px; }
 .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; background: #1d4a2a; color: #9bffb0; margin-left: 8px; vertical-align: middle; }
+.shots { display: grid; gap: 22px; margin-top: 18px; }
+.shot { background: #161b22; border: 1px solid #21262d; border-radius: 10px; overflow: hidden; }
+.shot a.frame { display: block; line-height: 0; background: #010102; border-bottom: 1px solid #21262d; }
+.shot img { display: block; width: 100%; }
+.shot .cap { padding: 14px 16px; }
+.shot .step { display: inline-block; font-size: 12px; font-weight: 700; color: #9bd1ff; background: #10263f; border: 1px solid #1f4a73; border-radius: 12px; padding: 2px 10px; }
+.shot h3 { margin: 8px 0 5px; font-size: 16px; }
+.shot p { margin: 0; color: #8b949e; font-size: 14px; }
+.flow { color: #8b949e; font-size: 13px; margin-top: 6px; }
+.flow b { color: #e6edf3; font-weight: 600; }
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="02050033-3400-4ace-9669-2c2bf81b6017"></script>
 </head>
@@ -56,6 +66,68 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		<div class="card"><h3><a href="https://addyosmani.com/blog/agent-skills/">Agent Skills</a></h3><p>Addy Osmani's SDLC skill pack on the Agent Skills standard — /spec → /plan → /build → /test → /review with verification checkpoints. <a href="https://github.com/addyosmani/agent-skills">GitHub</a></p></div>
 		<div class="card"><h3><a href="https://opengsd.net/">GSD</a></h3><p>"Git. Ship. Done." — spec-driven context engineering: durable plans in .planning/, fresh contexts per phase, verification with evidence. <a href="https://github.com/open-gsd/gsd-core">GitHub</a></p></div>
 		<div class="card" style="border-style: dashed; border-color: #58a6ff; background: transparent;"><h3><a href="https://docs.google.com/forms/d/e/1FAIpQLSeXoZxsOHmKMe1FUBOBur__gqBJcmeDYduHQLTldlPhwrPbJA/viewform">Your coding harness?</a></h3><p>Built or use a framework we should measure? Tell us how to install and invoke it — we'll run it through the same gauntlet.</p></div>
+	</div>
+
+	<h2>See it in action</h2>
+	<p class="flow">The whole lifecycle, from the ranked result down to the agent's every keystroke:
+		<b>Configure</b> → <b>Run</b> → <b>Review</b> → <b>Inspect a trial</b> → <b>Replay the build</b>.
+		Click any screenshot to enlarge.</p>
+	<div class="shots">
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-1-leaderboard.png" target="_blank" rel="noopener"><img src="./assets/gallery-1-leaderboard.png" alt="Eval Studio leaderboard: candidate frameworks ranked by weighted composite with re-weight sliders, and a runs table tagged by app/PRD" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">The payoff · Leaderboard</span>
+				<h3>The ranked leaderboard</h3>
+				<p>The home view. Every framework that built the same spec, ranked by a weighted composite of PRD adherence, code quality, speed and token spend — with the dimension weights re-balanceable live (the sliders). Each row shows the harness + model it ran under; the table below lists the individual runs feeding the board, tagged by the app/PRD each one built.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-2-configure.png" target="_blank" rel="noopener"><img src="./assets/gallery-2-configure.png" alt="Configure screen: pick eval target, candidate frameworks, harness, worker and grader models, sandbox provider, trials and concurrency" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Stage 1 · Set up</span>
+				<h3>Configure an evaluation</h3>
+				<p>Choose the eval target (the spec to build), the candidate frameworks, the harness and worker/grader models, the sandbox provider, trials and concurrency. Every candidate gets the <em>identical</em> rendered prompt — the framework is the only variable. The studio validates the combination against the same rules the CLI enforces, then lets you launch a real run, a zero-spend dry run, or copy the equivalent command.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-3-runs.png" target="_blank" rel="noopener"><img src="./assets/gallery-3-runs.png" alt="Runs screen: launched runs with live status, stage, cost-so-far and cancel, alongside historical runs from disk" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Stage 2 · Launch &amp; monitor</span>
+				<h3>Watch runs execute live</h3>
+				<p>Launched runs stream their status here — provisioning → installing → building → grading — with a spinner, running cost, and a Cancel that tears down the in-flight sandbox. Historical runs from disk sit alongside the live ones; completed runs link straight to their scorecard.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-4-run.png" target="_blank" rel="noopener"><img src="./assets/gallery-4-run.png" alt="Run scorecard: per-candidate composite and dimension bars, trials table, step-by-step adherence comparison, excluded trials with reasons, and provenance" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Stage 3 · Review the run</span>
+				<h3>The run scorecard</h3>
+				<p>One run, every candidate side by side: composite + per-dimension bars (re-weightable), a trials table (graded score, quality, agent time, cost, turns), a step-by-step adherence comparison across frameworks, and explicit <em>excluded trials</em> with the reason — here, a framework whose pinned plugin version drifted. Provenance records the frozen PRD/test-plan hashes and the blind judge model.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-5-trial.png" target="_blank" rel="noopener"><img src="./assets/gallery-5-trial.png" alt="Trial drill-down: PRD adherence steps with pass/partial/fail outcomes and trace links, blind code-quality criteria with samples, and run telemetry" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Stage 4 · Inspect a trial</span>
+				<h3>Drill into one framework's build</h3>
+				<p>A single trial's grading, unpacked: every PRD test-plan step with its pass / partial / fail outcome, weighted credit, and a <code>↳ trace</code> link to the cited evidence; the blind judge's five code-quality criteria (three samples each, medians); and the run's telemetry — agent time, cost, turns, tokens.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-6-conversation.png" target="_blank" rel="noopener"><img src="./assets/gallery-6-conversation.png" alt="Conversation viewer: request/response build replay with session jumps, an error navigator stepping through the trial's errors, and an outline trace" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Stage 5 · Trace the build</span>
+				<h3>Replay the agent &amp; navigate errors</h3>
+				<p>The full build replay — every request/response between the harness and the model, with thinking, tool calls and outputs. Jump between sessions, step through the trial's errors one at a time (<code>◀ ⚠ 9 errors ▶</code>), or open the outline to trace exactly where a step went wrong.</p>
+			</figcaption>
+		</figure>
+
 	</div>
 
 	<h2>Architecture</h2>

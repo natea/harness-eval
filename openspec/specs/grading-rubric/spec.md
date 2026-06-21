@@ -1,0 +1,138 @@
+# grading-rubric Specification
+
+## Purpose
+TBD - created by archiving change setup-harness-eval-framework. Update Purpose after archive.
+## Requirements
+### Requirement: Frozen PRD-adherence test plan
+The system SHALL grade PRD adherence against a versioned, frozen test plan resolved from the selected eval target (`targets/<name>/testplan.yaml`). The plan SHALL assign each step an identifier, weight, and observable check, MAY mark steps fatal or bonus, and MUST NOT change within a run; the run SHALL record the plan's content hash. Coverage SHALL be validated per the target's coverage mode: in `spec-checklist` mode every REQUIRED item of the PRD's own conformance checklist maps to at least one non-bonus step (validated programmatically); in `attested` mode the target carries a human coverage attestation recorded in provenance.
+
+#### Scenario: Test plan freeze
+- **WHEN** a graded run starts
+- **THEN** the run records the content hash of the selected target's test plan, and every trial in the run is graded against that identical plan
+
+#### Scenario: Checklist coverage (spec-checklist targets)
+- **WHEN** a `spec-checklist` target (e.g. symphony-daemon) is validated
+- **THEN** every REQUIRED conformance item maps to at least one non-bonus test-plan step, and OPTIONAL items are marked as non-scoring bonus
+
+#### Scenario: Per-target fixtures drive evaluation
+- **WHEN** the evaluator grades a trial
+- **THEN** the fixture processes declared in the target manifest (e.g. mock tracker, stub app-server, HTTP harness) are started for that trial, exposed to the evaluator via declared env vars, and stopped afterward
+
+### Requirement: ViBench-style adaptive functional evaluation
+The system SHALL evaluate PRD adherence by executing the test plan against the candidate's built artifact with an adaptive LLM evaluator that can run the service, drive it with a provided mock Linear tracker API and stub coding-agent app-server, inspect logs and the filesystem, and record per-step outcomes of pass, partial, or fail with evidence. The evaluator SHALL produce three metrics per trial: Graded Score (weighted partial credit, 0–100), Pass@1 (all REQUIRED steps pass), and Complete Failure Rate inputs (no REQUIRED step passes).
+
+#### Scenario: Daemon evaluated against mock tracker
+- **WHEN** the evaluator grades a workspace
+- **THEN** it starts the candidate's service configured against the harness-provided mock Linear API and stub app-server, executes test-plan steps (e.g., issue dispatch, retry backoff, workspace cleanup, structured log fields), and records each step's outcome with captured evidence (commands run, output observed)
+
+#### Scenario: Unbuildable artifact
+- **WHEN** the candidate workspace fails to build or start after the evaluator's documented bounded setup attempts
+- **THEN** functional steps are scored fail with evidence, static steps (file/config presence) are still evaluated, and the trial is flagged toward Complete Failure Rate
+
+### Requirement: Real Integration Profile (bonus tier)
+The system SHALL support an optional real-integration evaluation tier per Symphony spec §17.8: the built artifact is configured against a dedicated real Linear project ("Symphony Eval Fixtures" in the Jazkarta workspace) containing a frozen set of 5–8 tiny, deterministic fixture coding tasks with mechanically checkable outcomes. This tier SHALL be scored as a non-composite bonus signal (reported alongside, not inside, the weighted composite), and fixture issue states MUST be reset to an identical baseline before each trial.
+
+#### Scenario: Real-tracker evaluation run
+- **WHEN** the real-integration tier is enabled for a trial
+- **THEN** the evaluator resets the fixture project's issue states to baseline, starts the candidate's built service against the real Linear API with scoped credentials, and records per-fixture outcomes (polled, dispatched, workspace created, agent run completed, handoff state reached) as bonus-tier evidence
+
+#### Scenario: Tier disabled by default
+- **WHEN** a run config does not enable the real-integration tier
+- **THEN** all PRD-adherence scoring derives from the mock-tracker test plan, and the report marks the bonus tier as not run
+
+#### Scenario: Fixture set integrity
+- **WHEN** the real-integration tier starts and the fixture project's issue set does not match the frozen fixture manifest (content hash)
+- **THEN** the tier is skipped for that trial with an integrity error recorded, rather than grading against a drifted fixture set
+
+### Requirement: Code-quality judge with tools
+The system SHALL grade code quality with an LLM judge given tool access (test runner, linter, type-checker, coverage, and the PRD text) and a fixed criterion list covering at minimum: meaningful and passing tests, architectural conformance to the spec's §3.2 abstraction layers, error-handling robustness, absence of dead/duplicated code, and documentation adequacy. Each criterion SHALL yield a 0–10 score with written justification citing evidence.
+
+#### Scenario: Judge runs the test suite
+- **WHEN** the code-quality judge grades a workspace
+- **THEN** it executes the candidate's own test suite and includes the observed pass/fail/coverage results as evidence in the tests criterion score, rather than scoring from code reading alone
+
+### Requirement: Judge independence and bias controls
+Judging SHALL use a pinned judge model that is not the worker model (not Opus 4.6), temperature 0, with 3 independent samples per judgment and the median taken. Workspaces SHALL be scrubbed of framework-identifying markers (per the candidate registry's marker paths) before code-quality judging, so the judge cannot identify which framework produced the artifact. PRD-adherence functional evaluation MAY run pre-scrub.
+
+#### Scenario: Blind code-quality judging
+- **WHEN** a workspace produced by GSD (containing `.planning/`) is submitted for code-quality judging
+- **THEN** the judged copy contains no `.planning/` directory or other registered framework markers, and judge prompts contain no candidate names
+
+#### Scenario: Median of three samples
+- **WHEN** three judge samples for a criterion return 6, 7, and 9
+- **THEN** the recorded criterion score is 7, with all three samples retained in the grading record
+
+### Requirement: Objective speed and token-spend scoring
+Speed and token spend SHALL be scored from telemetry only (no LLM judgment): per-trial agent working time and total cost/tokens, normalized within the run matrix (best candidate mean = 100, worst = 0, linear in between), computed on per-candidate means across trials.
+
+#### Scenario: Normalization within run
+- **WHEN** candidate mean working times are 30, 45, 60, and 90 minutes
+- **THEN** speed scores are 100 for 30 min, 0 for 90 min, and linearly interpolated for the others (75 and 50)
+
+#### Scenario: Capped trial scoring
+- **WHEN** a trial was terminated at its budget cap
+- **THEN** its speed and token metrics are recorded at the cap values and flagged, and the report notes the candidate's metrics are right-censored
+
+### Requirement: Weighted composite score
+The system SHALL compute a composite score per candidate as a weighted sum of normalized dimension scores with configurable weights, defaulting to: PRD adherence 40%, code quality 25%, speed 17.5%, token spend 17.5%. Weights SHALL be recorded in the report, and changing weights SHALL be possible at report time without re-running trials or re-judging.
+
+#### Scenario: Re-weighting without re-running
+- **WHEN** the operator regenerates a report from an existing run with different weights
+- **THEN** the new report is produced from stored per-dimension scores alone, with the new weights recorded
+
+### Requirement: Grading sessions capture output independently of started services
+The harness SHALL capture a grading session's result without depending on the
+session's live output stream reaching end-of-file. A grading session (functional
+evaluator or code-quality judge) hosted on headless Claude Code SHALL redirect its
+output to a file and read that file after the process exits, rather than reading the
+live process stream. A long-lived process the grading agent starts (e.g. the service
+under test via `start.sh`) SHALL NOT be able to keep the capture open, and each
+grading session SHALL run in its own process group so that a per-call timeout tears
+down the session and any process it started.
+
+#### Scenario: Daemon under test does not wedge the grade
+- **WHEN** the evaluator or judge starts the built service (which inherits the
+  session's output descriptors) and leaves it running
+- **THEN** the grading session's result is still captured once the agent's turn ends,
+  and the call does not block waiting on the service's output stream
+
+#### Scenario: Timeout tears down the whole session group
+- **WHEN** a grading session exceeds its per-call timeout
+- **THEN** the harness kills the session's entire process group (not only the
+  `claude` process), leaving no orphaned service holding the output stream or a port,
+  and records the timeout as a judge/evaluator infra failure rather than artifact
+  signal
+
+#### Scenario: Capture artifacts do not contaminate grading
+- **WHEN** a grading session writes its redirected output to a file
+- **THEN** that file is written outside the graded workspace (and the blind copy) or
+  removed after reading, so it never appears to the code-quality judge or alters the
+  artifact under evaluation
+
+### Requirement: Default grading driver is the subscription
+The system SHALL grade orchestrated runs on the subscription by default. The shared
+`gradeTrials` path used by the studio and the CLI `run --grade` SHALL default to the
+subscription-backed Claude Code grading driver, with the direct-SDK driver available
+only as an explicit opt-in. The default SHALL
+NOT require an Anthropic API balance: a studio run whose worker built on the
+subscription SHALL be gradeable on the same subscription, so an empty API balance
+never silently blocks grading. The choice of driver SHALL NOT change grading
+semantics — the same evaluator test plan and blind code-quality judging run on the
+same scrubbed, workspace-blind copy regardless of transport.
+
+#### Scenario: Studio run grades on the subscription
+- **WHEN** a real studio run completes its build and grading begins with no Anthropic
+  API credit available
+- **THEN** grading runs on the subscription (Claude Code) driver and completes,
+  producing adherence and code-quality scores without a credit-balance error
+
+#### Scenario: SDK driver remains an explicit opt-in
+- **WHEN** an operator selects the SDK grading driver
+- **THEN** grading runs against the Anthropic API and is billed to the API account,
+  exactly as before — the default is subscription, the SDK path is opt-in
+
+#### Scenario: Driver does not affect what is judged
+- **WHEN** the same artifact is graded by either driver
+- **THEN** both execute the same frozen test plan and the same blind code-quality
+  criteria on the framework-marker-scrubbed copy; only the transport and billing differ
+

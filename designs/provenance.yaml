@@ -1,0 +1,21 @@
+# Provenance for vendored design systems (design-adherence capability).
+# Vendored verbatim from awesome-design-md at a pinned commit; re-vendoring is a
+# deliberate edit (same freeze discipline as PRD/test-plan/plugin pins). The MIT
+# attribution is preserved in designs/NOTICE.
+upstream: awesome-design-md
+repo: https://github.com/VoltAgent/awesome-design-md
+commit: 962e08c334dc5c42de3f9d14d2aa8ead9cc6cff9
+license: MIT
+vendoredAt: 2026-06-14
+designs:
+  linear:
+    originalDir: design-md/linear.app
+    # Linear's brand fonts are proprietary + non-distributable; a faithful build
+    # substitutes their open-source basis. Crediting these is a scoring decision
+    # validated by the 4.3 smoke (gsd built the palette exactly but used Inter).
+    fontAliases:
+      "Linear Display": [Inter]
+      "Linear Text": [Inter]
+      "Linear Mono": [JetBrains Mono, Roboto Mono, IBM Plex Mono]
+  notion:
+    originalDir: design-md/notion

@@ -177,6 +177,7 @@ describe("e2e dry run (task 8.2)", () => {
 				score: 62,
 			},
 			integration: null,
+			designAdherence: null,
 		};
 
 		// Results JSON + scorecard.

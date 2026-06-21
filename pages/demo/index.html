@@ -20,10 +20,25 @@ tr:hover td { background: #161b22; }
 .weights label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .weights input[type="range"] { flex: 1; min-width: 60px; }
 .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; background: #5a3e00; color: #f0c674; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; background: #10263f; color: #9bd1ff; border: 1px solid #1f4a73; }
+.ok { color: #56d364; }
 .tip { position: relative; cursor: help; }
 .tip::after { content: attr(data-tip); position: absolute; left: 0; top: 100%; z-index: 10; display: none; width: max-content; max-width: 380px; background: #1c2128; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; margin-top: 4px; font: 12px/1.45 ui-sans-serif, system-ui; font-weight: 400; text-transform: none; white-space: pre-wrap; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
 .tip:hover::after { display: block; }
-h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; }
+h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 30px; } h2 .badge { vertical-align: middle; }
+.feat { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.feat .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 12px 14px; }
+.feat .card b { display: block; margin-bottom: 3px; }
+.feat .card p { margin: 0; color: #8b949e; font-size: 13px; }
+.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.shots figure { margin: 0; background: #161b22; border: 1px solid #21262d; border-radius: 8px; overflow: hidden; }
+.shots a { display: block; line-height: 0; background: #010102; border-bottom: 1px solid #21262d; }
+.shots img { width: 100%; display: block; }
+.shots figcaption { padding: 9px 12px; color: #8b949e; font-size: 12px; }
+.shots figcaption b { color: #e6edf3; }
+@media (max-width: 720px) { .shots { grid-template-columns: 1fr; } }
+.cta { display: inline-block; background: #2f81f7; color: #fff; padding: 8px 14px; border-radius: 7px; font-weight: 600; margin: 12px 10px 0 0; }
+.cta.ghost { background: transparent; border: 1px solid #30363d; color: #e6edf3; }
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="02050033-3400-4ace-9669-2c2bf81b6017"></script>
 </head>
@@ -32,18 +47,39 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; }
 	<p><a href="../">← about harness-eval</a></p>
 	<h1>🏆 Demo leaderboard <span class="badge">static snapshot</span></h1>
 	<p class="muted" id="meta"></p>
+
+	<h2>Leaderboard <span class="muted" style="font-size:12px;text-transform:none">— one PRD, framework is the only variable</span></h2>
 	<div class="weights">
 		<strong>Re-weight (client-side, same formula as the CLI)</strong>
 		<button type="button" id="reset">reset</button>
 		<div class="sliders" id="sliders"></div>
 	</div>
 	<div id="board"></div>
+
 	<h2>Per-trial telemetry</h2>
 	<div id="trials"></div>
-	<p class="muted">This is a read-only snapshot of a real n=1 baseline run
-	(see <a href="https://github.com/natea/harness-eval/blob/main/docs/LEADERBOARD-n1.md">the
-	write-up</a>). The full dashboard — run drill-downs, step-level evidence,
-	judge samples — runs locally: <span class="mono">bun run dashboard</span>.</p>
+
+	<h2>Runs across apps</h2>
+	<p class="muted">The harness builds the <em>same</em> spec with every framework — and it now runs many specs.
+		Each run is graded against its own frozen PRD and test plan; cross-PRD scores aren't pooled (different specs, different difficulty).</p>
+	<div id="runs"></div>
+
+	<h2>Beyond this snapshot — the full Eval Studio</h2>
+	<p class="muted">This page is a read-only leaderboard. The local studio (<span class="mono">bun run studio</span>) adds the whole workflow:</p>
+	<div class="feat">
+		<div class="card"><b>Configure &amp; launch</b><p>Pick target, frameworks, harness, worker/grader models, sandbox provider, trials and concurrency — then launch a real run, a zero-spend dry run, or copy the CLI command.</p></div>
+		<div class="card"><b>Live runs</b><p>Watch each run stream provisioning → installing → building → grading, with cost-so-far and a cancel that tears down the in-flight sandbox.</p></div>
+		<div class="card"><b>Run scorecards</b><p>Per-candidate composite + dimensions, a step-by-step adherence comparison, excluded trials with reasons, and frozen provenance hashes.</p></div>
+		<div class="card"><b>Trial drill-down</b><p>Every PRD test-plan step with pass/partial/fail, weighted credit and cited evidence, plus the blind judge's five criteria with samples.</p></div>
+		<div class="card"><b>Conversation replay</b><p>The full build transcript — request/response, thinking, tool calls — with session jumps, an error navigator, and an outline trace to where a step went wrong.</p></div>
+		<div class="card"><b>Pluggable</b><p>Five sandbox providers, swappable worker/judge models, design-system adherence scoring, and bring-your-own PRD targets.</p></div>
+	</div>
+	<div class="shots">
+		<figure><a href="../assets/gallery-4-run.png" target="_blank" rel="noopener"><img src="../assets/gallery-4-run.png" alt="Run scorecard with dimension bars, trials table, step comparison and excluded trials" loading="lazy" /></a><figcaption><b>Run scorecard</b> — every candidate, side by side, with step-level adherence.</figcaption></figure>
+		<figure><a href="../assets/gallery-6-conversation.png" target="_blank" rel="noopener"><img src="../assets/gallery-6-conversation.png" alt="Conversation viewer with an error navigator stepping through the run's errors" loading="lazy" /></a><figcaption><b>Conversation &amp; trace</b> — replay the build and step through errors.</figcaption></figure>
+	</div>
+	<a class="cta" href="../#see-it-in-action">See the full walkthrough →</a>
+	<a class="cta ghost" href="https://github.com/natea/harness-eval">Run it yourself</a>
 </main>
 <script>
 const HELP = {
@@ -121,6 +157,17 @@ fetch("./data/combined-n1.json").then((r) => r.json()).then((d) => {
 		<td class="mono">$${t.telemetry.totalCostUsd.toFixed(2)}</td>
 		<td class="mono">${t.telemetry.totalTurns}</td></tr>`).join("")}</tbody></table>`;
 });
+
+// Runs across apps — each row is one real run tagged by the app/PRD it built.
+fetch("./data/runs.json").then((r) => r.json()).then((runs) => {
+	document.getElementById("runs").innerHTML = `<table><thead><tr>
+		<th>App / PRD</th><th>Target</th><th>Frameworks</th><th>Provider</th><th>Trials</th><th>Date</th>
+	</tr></thead><tbody>${runs.map((r) =>
+		`<tr><td><strong>${r.app}</strong></td><td><span class="pill">${r.target}</span></td>
+		<td>${r.candidates.join(", ")}</td><td class="mono">${r.provider}</td>
+		<td class="mono"><span class="ok">${r.completed}</span>/${r.trials}</td>
+		<td class="mono">${new Date(r.startedAt).toLocaleDateString()}</td></tr>`).join("")}</tbody></table>`;
+}).catch(() => {});
 </script>
 </body>
 </html>

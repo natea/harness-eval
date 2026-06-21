@@ -1,0 +1,48 @@
+name: pilot-logbook
+summary: Pilot logbook API — aircraft management, a strict flight validation matrix, and range analytics.
+description: >
+  An HTTP/JSON pilot logbook: aircraft CRUD with canonical-registration
+  uniqueness and active/inactive gating, flight logging under a dense cross-field
+  validation matrix (day+night==total, PIC/SIC exclusivity, 0.1-hour increments,
+  ≤-total bounds), AND-combined logbook filters, and analytics totals summed over
+  an explicit date range. Validation-and-aggregation shape. HTTP-light: graded
+  over JSON only; clock-relative currency, future-date rules, and CSV export are
+  out of scope. No rendered UI.
+tags:
+  domain: aviation
+  shape: rest-api-validation-aggregation
+  expectedUI: none
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: 307ce4c9fa6fed96902c56bacee8e61bb108336e4f68c505c4d55445a13d49a7
+testplanFile: testplan.yaml
+conformanceSection: 'section 5 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-21: every REQUIRED item R1-R12 maps to >=1 test-plan
+  step (R1:S-1; R2:AC-1; R3:AC-2; R4:AC-3; R5:AC-4; R6:FL-2; R7:FL-3; R8:FL-1;
+  R9:FILT-1; R10:FL-5; R11:FL-4; R12:AN-1). All checks are HTTP-observable
+  (status codes + JSON bodies). The upstream PRD's clock-relative features
+  (Day/Night + Instrument currency windows, future-date rejection) and CSV
+  export are dropped for the HTTP-light, clock-independent v1 evaluator;
+  analytics are graded over an explicit from/to range with hand-computed totals.
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/pilot_logbook
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `pilot_logbook` browser-driven PRD into an HTTP/JSON
+    API target focused on aircraft management, the flight validation matrix, and
+    range-scoped analytics; currency/export/future-date concerns out of scope.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the logbook service on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 5 is the Definition of Done; Section 6 lists non-goals (no currency,
+  no future-date rule, no CSV export). All dates are UTC ISO `YYYY-MM-DD`. Times
+  are decimal hours in 0.1 increments. Registration uniqueness is canonical
+  (uppercase, spaces/hyphens removed) but the original formatting is preserved.
+  In-process persistence is acceptable.
+fixtures: []

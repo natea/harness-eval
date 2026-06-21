@@ -1,0 +1,46 @@
+name: web-app
+summary: Barber-shop appointment scheduling — HTTP/JSON API behind a served root page.
+description: >
+  A single-shop scheduling service: list/create/view/edit/cancel appointments
+  over /api/appointments with double-booking, slot, and date validation, plus a
+  GET / that serves an HTML shell. HTTP-light grading: the JSON API is what is
+  graded; the root page is only checked for being served (its CONTENT is not
+  graded), so a conformant build may render a stub page over a working API
+  rather than a full interactive UI.
+tags:
+  domain: scheduling
+  shape: web-api-served-page
+  expectedUI: served-page
+version: "1.0.0"
+ui: true
+prdFile: PRD.md
+prdSha256: 88c9a868edefb3742eaadf24609009553688b17f84351dac0325301121dfcf2d
+testplanFile: testplan.yaml
+conformanceSection: 'section 7 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-13: every REQUIRED item R1-R10 maps to >=1
+  test-plan step (R1:S-1; R2:PAGE-1; R3:SCH-1; R4:CRT-1; R5:CRT-2; R6:CRT-3;
+  R7:VIEW-1; R8:EDIT-1; R9:EDIT-2; R10:DEL-1). All checks are HTTP-observable
+  (status codes + JSON bodies). Checks use a fixed seed date (2026-07-01) so
+  grading is clock-independent; full DOM/interaction testing is out of scope
+  in v1 per the PRD note.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the scheduling service on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 7 is the Definition of Done; Section 8 lists non-goals. Shop config
+  (UTC, 09:00-18:00, 30-min slots, barbers Alex/Lucy/George) is fixed. The root
+  page need only serve HTML; the API is what is graded. In-process persistence
+  is acceptable.
+fixtures: []
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/barber
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `barber` browser-driven PRD into an HTTP/JSON API
+    target plus a served root page; full DOM/interaction testing dropped for
+    the HTTP-light v1 evaluator.

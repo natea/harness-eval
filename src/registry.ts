@@ -1,6 +1,18 @@
 import { readFileSync } from "node:fs";
 import { parse } from "yaml";
-import { type CandidateEntry, type HarnessId, Registry } from "./types";
+import type { z } from "zod";
+import {
+	type HarnessRegistry,
+	loadHarnesses,
+	resolveHarness,
+} from "./harnesses";
+import {
+	type CandidateEntry,
+	type HarnessId,
+	HarnessSetup,
+	Registry,
+	SessionStep,
+} from "./types";
 
 export class RegistryError extends Error {}
 
@@ -9,7 +21,10 @@ export class RegistryError extends Error {}
  * violation — missing pinned version, malformed entry, etc. — so no sandbox is
  * ever provisioned against an invalid registry.
  */
-export function loadRegistry(path: string): Registry {
+export function loadRegistry(
+	path: string,
+	harnesses: HarnessRegistry = loadHarnesses(),
+): Registry {
 	let raw: unknown;
 	try {
 		raw = parse(readFileSync(path, "utf8"));
@@ -28,6 +43,15 @@ export function loadRegistry(path: string): Registry {
 		if (ids.has(c.id))
 			throw new RegistryError(`duplicate candidate id: ${c.id}`);
 		ids.add(c.id);
+		for (const harness of Object.keys(c.harnesses)) {
+			try {
+				resolveHarness(harness, harnesses);
+			} catch (err) {
+				throw new RegistryError(
+					`candidate '${c.id}' declares invalid harness section 'harnesses.${harness}': ${(err as Error).message}`,
+				);
+			}
+		}
 	}
 	return result.data;
 }
@@ -41,7 +65,9 @@ export function resolveCandidates(
 	registry: Registry,
 	requested: string[],
 	harness: HarnessId,
+	harnesses: HarnessRegistry = loadHarnesses(),
 ): CandidateEntry[] {
+	resolveHarness(harness, harnesses);
 	const byId = new Map(registry.candidates.map((c) => [c.id, c]));
 	return requested.map((id) => {
 		const entry = byId.get(id);
@@ -59,19 +85,25 @@ export function resolveCandidates(
 	});
 }
 
+type RenderableCandidate = {
+	id: string;
+	harnesses: Record<string, z.input<typeof HarnessSetup>>;
+};
+
 /** Render a candidate's session script, substituting the shared base prompt. */
 export function renderSessionScript(
-	registry: Registry,
-	candidate: CandidateEntry,
+	registry: Pick<Registry, "basePrompt"> & { candidates?: unknown },
+	candidate: RenderableCandidate,
 	harness: HarnessId,
 ) {
-	const setup = candidate.harnesses[harness];
+	const rawSetup = candidate.harnesses[harness];
+	const setup = rawSetup ? HarnessSetup.parse(rawSetup) : undefined;
 	if (!setup)
 		throw new RegistryError(
 			`candidate '${candidate.id}' has no '${harness}' section`,
 		);
 	return setup.session.map((step) => ({
-		...step,
+		...SessionStep.parse(step),
 		prompt: step.prompt.replaceAll("{{BASE_PROMPT}}", registry.basePrompt),
 	}));
 }

@@ -15,7 +15,7 @@ basePrompt: |
   {{DELIVERABLES}}
 
   {{NOTES}}
-
+  {{DESIGN}}
   You may use any tooling, commands, or workflow available in this
   environment. Choose the implementation language and structure yourself
   unless {{PRD_FILE}} constrains it. When you consider the work complete,
@@ -36,6 +36,19 @@ candidates:
           - claude plugin marketplace add obra/superpowers-marketplace
           - claude plugin install superpowers@superpowers-marketplace
           - "claude plugin list | grep -A1 'superpowers@' | grep -q 'Version: 5.1.0'"
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 10
+      # Codex: platform-agnostic SKILL.md discovered from the workspace
+      # `.agents/skills` (no plugin TUI). The using-superpowers gatekeeper
+      # (AGENTS.md) auto-engages the methodology, so the session is the base prompt.
+      codex:
+        install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com:"
+          - "git clone -q https://github.com/obra/superpowers .agents/_src && git -C .agents/_src checkout -q v5.1.0"
+          - "mkdir -p .agents/skills && cp -R .agents/_src/skills/. .agents/skills/ && cp -f .agents/_src/AGENTS.md ./AGENTS.md && rm -rf .agents/_src"
         session:
           - prompt: "{{BASE_PROMPT}}"
         continuation:
@@ -70,7 +83,7 @@ candidates:
   - id: agent-skills
     name: Agent Skills
     repo: https://github.com/addyosmani/agent-skills
-    pinnedVersion: d187883b7d76
+    pinnedVersion: 3a6fc6392823
     markerPaths: []
     harnesses:
       claude-code:
@@ -78,13 +91,26 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add addyosmani/agent-skills
           - claude plugin install agent-skills@addy-agent-skills
-          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: d187883b7d76'"
+          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 3a6fc6392823'"
         session:
           - prompt: "/agent-skills:spec {{BASE_PROMPT}}"
           - prompt: "/agent-skills:plan"
           - prompt: "/agent-skills:build"
           - prompt: "/agent-skills:test"
           - prompt: "/agent-skills:review"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 15
+      # Codex: plain SKILL.md auto-discovered from the workspace `.agents/skills`
+      # (repo scan). The using-agent-skills meta-skill (AGENTS.md) gatekeeps the
+      # spec→build→test lifecycle, so the session is the base prompt.
+      codex:
+        install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com:"
+          - "git clone -q https://github.com/addyosmani/agent-skills .agents/_src && git -C .agents/_src checkout -q 3a6fc6392823"
+          - "mkdir -p .agents/skills && cp -R .agents/_src/skills/. .agents/skills/ && cp -f .agents/_src/AGENTS.md ./AGENTS.md && rm -rf .agents/_src"
+        session:
+          - prompt: "{{BASE_PROMPT}}"
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 15
@@ -107,3 +133,36 @@ candidates:
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 20
+      # Codex: GSD's multi-runtime installer writes Codex-native skills for the
+      # project (`--codex`, project scope). GSD commands become Codex skill
+      # mentions ($gsd-*); the session drives the same protocol.
+      codex:
+        install:
+          - npx --yes @opengsd/gsd-core@1.4.3 --codex --scope=project --profile=standard --non-interactive
+        session:
+          - prompt: "$gsd-new-project --auto {{BASE_PROMPT}}"
+          - prompt: "$gsd-plan-phase"
+          - prompt: "$gsd-execute-phase"
+          - prompt: "$gsd-verify-work"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 20
+
+  # Baseline: the Codex CLI used directly, with no plugin framework. Holds the
+  # harness fixed for a framework-vs-bare comparison and exercises the `codex`
+  # harness driver end-to-end. The CLI is preinstalled in the trial image, so
+  # there is no install step; auth + model come from the worker-model profile
+  # (e.g. --worker-model gpt-5-codex). Run with `--harness codex`.
+  - id: codex-baseline
+    name: Codex (no framework)
+    repo: https://github.com/openai/codex
+    pinnedVersion: 0.50.0
+    markerPaths: []
+    harnesses:
+      codex:
+        install: []
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue"]
+          maxContinuations: 10

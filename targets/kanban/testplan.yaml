@@ -1,0 +1,88 @@
+# Frozen test plan for the `kanban` target (Team Sprint Board MVP).
+# Adapted from the ViBench `collabrative_kaban` test plans, re-authored as
+# HTTP-observable checks (no browser, no sockets; HTTP-light v1).
+# ViBench semantics: sequential, weighted, fatal gates halt.
+# Evidence = requests issued (curl) + observed status codes / JSON bodies.
+version: "1.0.0"
+prdSha256: 658428b0d80a0d77e5acbf30a588415abd0374a4f1b7086547fce00608f1e544
+
+steps:
+  - id: S-1
+    covers: ["6.R1"]
+    description: setup.sh installs deps and start.sh boots the service on $PORT
+    check: >
+      Run ./setup.sh in a clean copy (exit 0). Then PORT=3000 ./start.sh & ;
+      poll the service until it answers within 30s. Fatal: if the service never
+      serves, it cannot be evaluated.
+    weight: 4
+    fatal: true
+
+  - id: BRD-1
+    covers: ["1", "6.R2"]
+    description: board returns four fixed columns in order
+    check: >
+      GET /api/board → 200 with exactly four columns named, in order, Backlog,
+      In Progress, Review, Done, each carrying an (initially empty) ordered
+      `cards` array.
+    weight: 4
+
+  - id: CRT-1
+    covers: ["2", "6.R3"]
+    description: create a card, defaulting to Backlog
+    check: >
+      POST /api/cards {"title":"Set up CI","storyPoints":3} → 201 with an id,
+      status "Backlog". GET /api/board shows the card at the end of the Backlog
+      column.
+    weight: 4
+
+  - id: CRT-2
+    covers: ["2", "6.R4"]
+    description: create validation
+    check: >
+      POST /api/cards {"title":""} → 400. POST {"title":"x","storyPoints":4}
+      (4 not in {1,2,3,5,8,13}) → 400. POST {"title":"x","status":"Archive"}
+      (unknown column) → 400.
+    weight: 4
+
+  - id: VIEW-1
+    covers: ["3", "6.R5"]
+    description: fetch by id and unknown-id 404
+    check: >
+      GET /api/cards/<id from CRT-1> → 200 with full card incl. description and
+      storyPoints; GET /api/cards/nope → 404.
+    weight: 2
+
+  - id: EDIT-1
+    covers: ["3", "6.R6"]
+    description: edit fields with validation
+    check: >
+      PATCH /api/cards/<id> {"description":"use GH Actions","storyPoints":5}
+      → 200 reflecting the new values. PATCH {"title":""} → 400. PATCH
+      {"storyPoints":7} → 400. PATCH /api/cards/nope {...} → 404.
+    weight: 4
+
+  - id: MOVE-1
+    covers: ["3", "6.R7", "6.R10"]
+    description: changing status moves the card between columns, ordered
+    check: >
+      PATCH /api/cards/<id> {"status":"In Progress"} → 200. GET /api/board: the
+      card is no longer in Backlog and appears at the END of In Progress. Create
+      a second In Progress card; it appears after the moved card (newest last).
+    weight: 5
+
+  - id: DEL-1
+    covers: ["4", "6.R8"]
+    description: delete removes the card everywhere
+    check: >
+      DELETE /api/cards/<id> → 204. GET /api/cards/<id> → 404 and the card is
+      absent from GET /api/board. DELETE again → 404.
+    weight: 3
+
+  - id: CLR-1
+    covers: ["5", "6.R9"]
+    description: clear Done removes only Done cards
+    check: >
+      Create cards and move one to Done (PATCH status "Done"); leave at least one
+      card in another column. POST /api/board/done/clear → 200. GET /api/board:
+      Done is empty; the other column still holds its card(s).
+    weight: 4

@@ -4,7 +4,7 @@ import { z } from "zod";
 // Identifiers and enums
 // ---------------------------------------------------------------------------
 
-export const HarnessId = z.enum(["claude-code", "opencode", "codex"]);
+export const HarnessId = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
 export type HarnessId = z.infer<typeof HarnessId>;
 
 export const IsolationProviderId = z.enum([
@@ -79,7 +79,11 @@ export const CandidateEntry = z.object({
 		}),
 	/** Paths the framework creates that identify it; scrubbed before blind judging. */
 	markerPaths: z.array(z.string().min(1)).default([]),
-	harnesses: z.partialRecord(HarnessId, HarnessSetup),
+	harnesses: z
+		.record(HarnessId, HarnessSetup)
+		.refine((h) => Object.keys(h).length > 0, {
+			message: "candidate must declare at least one harness section",
+		}),
 });
 export type CandidateEntry = z.infer<typeof CandidateEntry>;
 
@@ -174,6 +178,25 @@ export type TrialTelemetry = z.infer<typeof TrialTelemetry>;
 // Provenance
 // ---------------------------------------------------------------------------
 
+/**
+ * Resolved model profile recorded in provenance/results — identity only, never
+ * the credential (model-registry capability).
+ */
+export const ModelRef = z.object({
+	name: z.string(),
+	provider: z.string(),
+	modelId: z.string(),
+	endpointHost: z.string().nullable().default(null),
+});
+export type ModelRef = z.infer<typeof ModelRef>;
+
+export const CostSource = z.enum([
+	"harness-reported",
+	"profile-priced",
+	"tokens-only",
+]);
+export type CostSource = z.infer<typeof CostSource>;
+
 export const TrialProvenance = z.object({
 	runId: z.string(),
 	trialId: z.string(),
@@ -182,6 +205,8 @@ export const TrialProvenance = z.object({
 	harness: HarnessId,
 	harnessVersion: z.string(),
 	model: z.string(),
+	/** Resolved worker profile (optional; absent on pre-registry runs). */
+	workerModel: ModelRef.optional(),
 	provider: IsolationProviderId,
 	snapshotId: z.string().nullable(),
 	prdSha256: z.string(),
@@ -296,11 +321,39 @@ export const IntegrationResult = z.object({
 });
 export type IntegrationResult = z.infer<typeof IntegrationResult>;
 
+/**
+ * Design-adherence grade (design-adherence capability). Records how closely a
+ * build's declared visual tokens match the chosen DESIGN.md, plus the frozen
+ * identity of that design (name + content hash + upstream provenance) so a score
+ * is always attributable to an exact spec. Null when no `--design` was selected.
+ */
+export const DesignAdherenceGrade = z.object({
+	design: z.string(),
+	designSha256: z.string().length(64),
+	provenance: z.object({
+		upstream: z.string(),
+		commit: z.string(),
+		license: z.string(),
+	}),
+	score: z.number().min(0).max(100),
+	colorScore: z.number().min(0).max(100),
+	typographyScore: z.number().min(0).max(100),
+	colorsMatched: z.number().int().min(0),
+	colorsTotal: z.number().int().min(0),
+	typographyMatched: z.number().int().min(0),
+	typographyTotal: z.number().int().min(0),
+	filesScanned: z.number().int().min(0),
+	note: z.string(),
+});
+export type DesignAdherenceGrade = z.infer<typeof DesignAdherenceGrade>;
+
 export const TrialGrades = z.object({
 	trialId: z.string(),
 	adherence: AdherenceResult.nullable(),
 	quality: QualityResult.nullable(),
 	integration: IntegrationResult.nullable(),
+	/** Present only when the run selected a design (design-adherence). */
+	designAdherence: DesignAdherenceGrade.nullable().default(null),
 });
 export type TrialGrades = z.infer<typeof TrialGrades>;
 
@@ -346,6 +399,12 @@ export const RunResults = z.object({
 	testPlanSha256: z.string().nullable(),
 	startedAt: z.iso.datetime(),
 	endedAt: z.iso.datetime().nullable(),
+	/** Resolved worker/judge profiles + judge-bias and cost caveats. Optional so
+	 * pre-registry results still parse (run-telemetry / model-registry). */
+	workerModel: ModelRef.optional(),
+	judgeModel: ModelRef.optional(),
+	crossVendorJudge: z.boolean().default(false),
+	costSource: CostSource.default("harness-reported"),
 	scores: z.array(CandidateScore),
 	trials: z.array(TrialResult),
 	exclusions: z.array(

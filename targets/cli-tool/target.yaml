@@ -1,4 +1,15 @@
 name: cli-tool
+summary: A line-oriented tally/aggregation CLI over newline-delimited records.
+description: >
+  `tally` — a single-binary command-line tool that counts and summarizes
+  newline-delimited records from stdin or files, with flags for grouping and
+  output formatting (POSIX `wc` semantics where specified). Graded by invoking
+  the built binary through `run.sh` and asserting stdout + exit codes against
+  the frozen Definition of Done. No rendered UI.
+tags:
+  domain: developer-tooling
+  shape: cli
+  expectedUI: none
 version: "1.0.0"
 prdFile: PRD.md
 prdSha256: b3b9e3f11a3d4035c14fc2b580ba3c2cc1ad8955a7801259c3ed940fa75f48d7

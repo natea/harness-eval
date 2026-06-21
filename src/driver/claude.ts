@@ -1,24 +1,38 @@
 import type { Sandbox } from "../providers/types";
 import { type SessionRecord, TokenUsage } from "../types";
+import { createPrintCliSessionRunner } from "./print-cli";
+import type { DriverResult, DriverRunOptions, HarnessDriver } from "./types";
 
-export interface ClaudeResult {
-	record: SessionRecord;
-	/** Final result text from the session (used for gate detection). */
-	resultText: string;
-	sessionId: string;
-	/** Raw stream-json transcript (one JSON object per line). */
-	transcript: string;
-}
+export type ClaudeResult = DriverResult;
+export type ClaudeRunOptions = DriverRunOptions;
 
-export interface ClaudeRunOptions {
-	model: string;
-	prompt: string;
-	stepIndex: number;
-	/** Resume an existing session instead of starting fresh. */
-	resumeSessionId?: string;
-	timeoutMs: number;
-	env?: Record<string, string>;
-}
+const runClaudePrintCli = createPrintCliSessionRunner({
+	buildCommand: (opts) => {
+		const resume = opts.resumeSessionId
+			? `--resume ${JSON.stringify(opts.resumeSessionId)}`
+			: "";
+		// Output goes to a FILE, not the exec stream: agents routinely spawn
+		// daemons (e.g. the service they just built) that inherit stdout and
+		// would otherwise hold the exec stream open forever after claude exits.
+		return [
+			`cat ${opts.promptFile} |`,
+			"claude -p",
+			`--model ${JSON.stringify(opts.model)}`,
+			"--output-format stream-json --verbose",
+			"--dangerously-skip-permissions",
+			resume,
+			`> ${opts.outFile} 2>&1`,
+		]
+			.filter(Boolean)
+			.join(" ");
+	},
+	parseOutput: parseStreamJson,
+});
+
+export const claudeCodeDriver: HarnessDriver = {
+	id: "claude-code",
+	runSession: runClaudePrintCli,
+};
 
 /**
  * Run one headless Claude Code session inside a sandbox and parse its
@@ -32,33 +46,7 @@ export async function runClaudeSession(
 	sandbox: Sandbox,
 	opts: ClaudeRunOptions,
 ): Promise<ClaudeResult> {
-	const promptFile = `/tmp/he-prompt-${opts.stepIndex}.txt`;
-	const outFile = `/tmp/he-out-${opts.stepIndex}.jsonl`;
-	await sandbox.writeFile(promptFile, opts.prompt);
-	const resume = opts.resumeSessionId
-		? `--resume ${JSON.stringify(opts.resumeSessionId)}`
-		: "";
-	// Output goes to a FILE, not the exec stream: agents routinely spawn
-	// daemons (e.g. the service they just built) that inherit stdout and
-	// would otherwise hold the exec stream open forever after claude exits.
-	const cmd = [
-		`cat ${promptFile} |`,
-		"claude -p",
-		`--model ${JSON.stringify(opts.model)}`,
-		"--output-format stream-json --verbose",
-		"--dangerously-skip-permissions",
-		resume,
-		`> ${outFile} 2>&1`,
-	]
-		.filter(Boolean)
-		.join(" ");
-
-	const res = await sandbox.exec(cmd, {
-		timeoutMs: opts.timeoutMs,
-		env: opts.env,
-	});
-	const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
-	return parseStreamJson(read.stdout, opts.stepIndex, res.exitCode);
+	return claudeCodeDriver.runSession(sandbox, opts);
 }
 
 export function parseStreamJson(

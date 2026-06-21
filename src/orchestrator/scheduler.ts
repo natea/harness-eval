@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { getHarnessDriver, type HarnessDriver } from "../driver";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
 import { aggregateTelemetry } from "../driver/telemetry";
@@ -20,6 +21,11 @@ export interface TrialPlan {
 	trialIndex: number;
 }
 
+/** Hard cap on per-trial teardown. Larger than the provider's internal ladder
+ *  budget (TEARDOWN_STEP_MS × steps + reap), so it only fires if teardown hangs
+ *  somewhere unexpected. */
+const TEARDOWN_CAP_MS = 90_000;
+
 export interface SchedulerDeps {
 	provider: SandboxProvider;
 	registry: Registry;
@@ -27,12 +33,49 @@ export interface SchedulerDeps {
 	prdContent: string;
 	prdSha256: string;
 	testPlanSha256: string | null;
+	/** Frozen DESIGN.md placed in each workspace when a design is selected
+	 *  (design-adherence). Identical bytes for every candidate. */
+	designContent?: string;
 	harnessVersion: string;
+	/**
+	 * Resolved worker-model env (model-registry): the secret/base-url/auth-token
+	 * bundle injected into the session. When omitted, falls back to the native
+	 * Anthropic worker-auth rule below (backward compatible).
+	 */
+	workerEnv?: Record<string, string>;
+	/** Resolved worker `--model` flag; defaults to config.model. */
+	workerModelFlag?: string;
+	/** Resolved worker profile identity for provenance (never the key). */
+	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */
+	driver?: HarnessDriver;
 	executeScript?: typeof executeSessionScript;
-	archive?: typeof archiveTrial;
+	archive?: (
+		sandbox: Sandbox,
+		trialDir: string,
+		transcripts: string[],
+	) => Promise<unknown>;
 	now?: () => Date;
+	/**
+	 * Cooperative cancel (studio live runs): when aborted, no new trial starts —
+	 * remaining plans terminate as skipped/cancelled. In-flight trials finish
+	 * their current sandbox lifecycle, whose `finally` tears the sandbox down, so
+	 * a cancelled run leaks no cloud resources.
+	 */
+	abortSignal?: AbortSignal;
+	/**
+	 * Coarse per-trial progress for live UIs (studio): called as a trial moves
+	 * through provisioning → installing → building → archiving. Best-effort,
+	 * non-fatal; the host can't see inside the agent session.
+	 */
+	onStage?: (trialId: string, stage: TrialStage) => void;
 }
+
+export type TrialStage =
+	| "provisioning"
+	| "installing"
+	| "building"
+	| "archiving";
 
 /** Build the full trial matrix: candidates x trialsPerCandidate. */
 export function buildMatrix(
@@ -96,6 +139,12 @@ export async function runMatrix(
 			for (;;) {
 				const plan = queue.shift();
 				if (!plan) return;
+				if (deps.abortSignal?.aborted) {
+					results.push(
+						skippedResult(plan, config, deps, "run cancelled by operator"),
+					);
+					continue;
+				}
 				if (ledger.exceeded()) {
 					results.push(
 						skippedResult(plan, config, deps, "run cost ceiling reached"),
@@ -124,7 +173,8 @@ function baseProvenance(
 		candidateVersion: plan.candidate.pinnedVersion,
 		harness: config.harness,
 		harnessVersion: deps.harnessVersion,
-		model: config.model,
+		model: deps.workerModelRef?.name ?? config.model,
+		workerModel: deps.workerModelRef,
 		provider: deps.provider.id,
 		snapshotId: deps.provider.snapshotId,
 		prdSha256: deps.prdSha256,
@@ -163,22 +213,39 @@ export async function runTrial(
 ): Promise<TrialResult> {
 	const exec = deps.executeScript ?? executeSessionScript;
 	const archive = deps.archive ?? archiveTrial;
+	const driver = deps.driver ?? getHarnessDriver(config.harness);
 	const provenance = baseProvenance(plan, config, deps, "running");
 	const trialDir = join(deps.runDir, "trials", plan.trialId);
 	mkdirSync(trialDir, { recursive: true });
 
 	for (let attempt = 0; ; attempt++) {
 		let sandbox: Sandbox | null = null;
+		let onAbort: (() => void) | undefined;
 		try {
 			const setupStart = Date.now();
+			deps.onStage?.(plan.trialId, "provisioning");
 			sandbox = await deps.provider.provision(plan.trialId);
+			// Cancel teardown: destroying the in-flight sandbox makes the pending
+			// exec/install throw immediately, so a cancel interrupts a stuck trial
+			// instead of waiting for the wall-clock budget (studio live-run cancel).
+			const s = sandbox;
+			onAbort = () => {
+				void s.destroy().catch(() => {});
+			};
+			deps.abortSignal?.addEventListener("abort", onAbort, { once: true });
 			await sandbox.writeFile(
 				join(sandbox.workspacePath, "SPEC.md"),
 				deps.prdContent,
 			);
+			if (deps.designContent)
+				await sandbox.writeFile(
+					join(sandbox.workspacePath, "DESIGN.md"),
+					deps.designContent,
+				);
 			const setup = plan.candidate.harnesses[config.harness];
 			if (!setup)
 				throw new Error(`no ${config.harness} setup for ${plan.candidate.id}`);
+			deps.onStage?.(plan.trialId, "installing");
 			for (const cmd of setup.install) {
 				const res = await sandbox.exec(cmd, { timeoutMs: 10 * 60 * 1000 });
 				if (res.exitCode !== 0) {
@@ -194,20 +261,29 @@ export async function runTrial(
 				plan.candidate,
 				config.harness,
 			);
-			// Worker auth: the only secret that enters the sandbox. Prefer the
-			// subscription OAuth token; pass the API key ONLY as a fallback when
-			// no OAuth token exists (Claude Code prioritizes ANTHROPIC_API_KEY
-			// when both are set, which would silently bill the API account).
-			const workerAuth: Record<string, string> = {};
-			if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
-				workerAuth.CLAUDE_CODE_OAUTH_TOKEN =
-					process.env.CLAUDE_CODE_OAUTH_TOKEN;
-				workerAuth.ANTHROPIC_API_KEY = "";
-			} else if (process.env.ANTHROPIC_API_KEY) {
-				workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+			// Worker auth: the only secret that enters the sandbox. A resolved
+			// model-registry profile (deps.workerEnv) takes precedence; otherwise
+			// fall back to the native rule — prefer the subscription OAuth token,
+			// pass the API key ONLY when no OAuth token exists (Claude Code
+			// prioritizes ANTHROPIC_API_KEY when both are set, silently billing
+			// the API account).
+			let workerAuth: Record<string, string>;
+			if (deps.workerEnv) {
+				workerAuth = deps.workerEnv;
+			} else {
+				workerAuth = {};
+				if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+					workerAuth.CLAUDE_CODE_OAUTH_TOKEN =
+						process.env.CLAUDE_CODE_OAUTH_TOKEN;
+					workerAuth.ANTHROPIC_API_KEY = "";
+				} else if (process.env.ANTHROPIC_API_KEY) {
+					workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+				}
 			}
+			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
-				model: config.model,
+				driver,
+				model: deps.workerModelFlag ?? config.model,
 				steps: script,
 				continuation: setup.continuation,
 				wallClockBudgetMs: config.budget.trialWallClockMs,
@@ -217,6 +293,7 @@ export async function runTrial(
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);
 			ledger.add(telemetry.totalCostUsd);
+			deps.onStage?.(plan.trialId, "archiving");
 			await archive(sandbox, trialDir, result.transcripts);
 
 			provenance.status = result.status === "capped" ? "capped" : "completed";
@@ -232,6 +309,17 @@ export async function runTrial(
 			persistProvenance(deps.runDir, provenance);
 			return { provenance, telemetry, grades: null };
 		} catch (err) {
+			// Cancelled mid-trial: the error is the torn-down sandbox, not real
+			// infra failure — terminate now, never retry.
+			if (deps.abortSignal?.aborted) {
+				provenance.status = "infra-failed";
+				provenance.endedAt = new Date().toISOString();
+				provenance.notes.push(
+					"cancelled by operator (in-flight sandbox torn down)",
+				);
+				persistProvenance(deps.runDir, provenance);
+				return { provenance, telemetry: null, grades: null };
+			}
 			if (isInfraFailure(err) && attempt < config.infraRetryLimit) {
 				provenance.notes.push(
 					`infra retry ${attempt + 1}: ${String(err).slice(0, 200)}`,
@@ -247,7 +335,25 @@ export async function runTrial(
 			persistProvenance(deps.runDir, provenance);
 			return { provenance, telemetry: null, grades: null };
 		} finally {
-			await sandbox?.destroy().catch(() => {});
+			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
+			// Time-box teardown: destroy() is itself bounded + escalating, but cap
+			// the whole thing so an unexpected hang (e.g. a slow OS-level reap) can
+			// never stall the run. A sandbox that outlives the cap is logged as a
+			// leak rather than silently awaited forever (harden-container-teardown).
+			if (sandbox) {
+				const s = sandbox;
+				await Promise.race([
+					s.destroy().catch(() => {}),
+					new Promise<void>((resolve) =>
+						setTimeout(() => {
+							console.warn(
+								`[scheduler] teardown of ${s.id} exceeded ${TEARDOWN_CAP_MS / 1000}s — moving on; run \`bun run src/cli.ts cleanup\` to reap any leaked VM`,
+							);
+							resolve();
+						}, TEARDOWN_CAP_MS),
+					),
+				]);
+			}
 		}
 	}
 }

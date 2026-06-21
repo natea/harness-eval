@@ -1,5 +1,16 @@
 # Eval target: Symphony Service Specification (the original harness-eval target).
 name: symphony-daemon
+summary: A long-running daemon that orchestrates coding agents to complete project work.
+description: >
+  Service implementing the Symphony spec: accept work, schedule agent sessions,
+  expose status/control over its API, and persist state across the process
+  lifecycle. Graded against the frozen Symphony conformance checklist via
+  observable behavior (process lifecycle, API responses, logs) with supporting
+  fixtures — no source reading. No rendered UI.
+tags:
+  domain: developer-tooling
+  shape: daemon-service
+  expectedUI: none
 version: "1.1.0"
 prdFile: PRD.md
 prdSha256: fa9d7c252cc72d10afdaf4e46e0d890aae28cf4331dc531c94413bc8ea199452

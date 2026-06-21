@@ -9,6 +9,7 @@
  * short-lived `tail` (not `tail -f`), so the daemon-stdout footgun is avoided and
  * the post-exit read + archived transcript stay byte-identical.
  */
+import { existsSync, readFileSync } from "node:fs";
 import type { Sandbox } from "../providers/types";
 import { collectSecretValues, redactSecrets } from "../driver/archive";
 import { type Turn, parseTranscript } from "../report/transcript-render";
@@ -16,6 +17,21 @@ import { type Turn, parseTranscript } from "../report/transcript-render";
 /** Reads session lines from a 1-indexed start line to EOF (may end mid-line). */
 export interface LineReader {
 	read(fromLine: number): Promise<string>;
+}
+
+/**
+ * Reads a host-local file from a 1-indexed line offset to EOF — used by the
+ * studio's out-of-process SSE endpoint to tail a worktree trial's output file
+ * directly (the build runs in a detached worker; the file is on shared disk).
+ * Read-only; tolerates the file not existing yet and a partial trailing line.
+ */
+export function fileLineReader(path: string): LineReader {
+	return {
+		async read(fromLine: number): Promise<string> {
+			if (!existsSync(path)) return "";
+			return readFileSync(path, "utf8").split("\n").slice(fromLine - 1).join("\n");
+		},
+	};
 }
 
 /**

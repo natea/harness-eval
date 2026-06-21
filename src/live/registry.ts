@@ -1,19 +1,30 @@
 /**
- * Process-wide registry of in-progress trial sessions, so the studio's live
- * stream endpoint can find the file a building trial is currently writing
- * (live-build-stream). Populated best-effort by the driver while a session runs
- * and cleared when it ends; the SSE endpoint falls back to the archived
- * transcript when no live source is present (graceful degradation).
+ * Cross-process registry of in-progress trial sessions (live-build-stream).
+ *
+ * Real runs execute in a DETACHED run-worker process (crash durability), so the
+ * studio HTTP process can't share memory with the build. The worker therefore
+ * drops a small pointer file on shared local disk naming the session's output
+ * file; the studio's SSE endpoint reads it and tails that file. `local` marks a
+ * host-readable file (worktree provider) — the only case the HTTP process can
+ * tail directly; remote-sandbox files need a push transport (follow-up).
  */
-import type { LineReader } from "./tap";
+import {
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
+import { join } from "node:path";
+
+const DIR = "/tmp/he-live";
 
 export interface LiveSource {
-	reader: LineReader;
-	/** The current session's output file (for diagnostics). */
+	/** Absolute path of the session's JSONL output. */
 	outFile: string;
+	/** True when `outFile` is on the host filesystem (worktree provider). */
+	local: boolean;
 }
-
-const sources = new Map<string, LiveSource>();
 
 /** Bare trial id from a sandbox id (e.g. `worktree:gsd-t1` → `gsd-t1`). */
 export function trialIdFromSandbox(sandboxId: string): string {
@@ -21,16 +32,33 @@ export function trialIdFromSandbox(sandboxId: string): string {
 	return i >= 0 ? sandboxId.slice(i + 1) : sandboxId;
 }
 
-export function registerLiveSource(trialId: string, source: LiveSource): void {
-	sources.set(trialId, source);
+function pointerPath(trialId: string): string {
+	return join(DIR, `${trialId.replace(/[^a-zA-Z0-9_.-]/g, "_")}.json`);
 }
 
-/** Remove a source. If `source` is given, only removes it if still current
- *  (avoids a later step's source being clobbered by an earlier step's cleanup). */
-export function unregisterLiveSource(trialId: string, source?: LiveSource): void {
-	if (!source || sources.get(trialId) === source) sources.delete(trialId);
+export function registerLiveSource(trialId: string, source: LiveSource): void {
+	try {
+		mkdirSync(DIR, { recursive: true });
+		writeFileSync(pointerPath(trialId), JSON.stringify(source));
+	} catch {
+		// best-effort; never affect the build
+	}
+}
+
+export function unregisterLiveSource(trialId: string): void {
+	try {
+		rmSync(pointerPath(trialId), { force: true });
+	} catch {
+		// ignore
+	}
 }
 
 export function getLiveSource(trialId: string): LiveSource | undefined {
-	return sources.get(trialId);
+	try {
+		const p = pointerPath(trialId);
+		if (!existsSync(p)) return undefined;
+		return JSON.parse(readFileSync(p, "utf8")) as LiveSource;
+	} catch {
+		return undefined;
+	}
 }

@@ -5,7 +5,7 @@
  * via the live registry's read-only tap — never mutates anything.
  */
 import { getLiveSource } from "../live/registry";
-import { LiveTurnStream } from "../live/tap";
+import { LiveTurnStream, fileLineReader } from "../live/tap";
 import { trialTranscript } from "./transcript";
 
 const POLL_MS = 700;
@@ -17,7 +17,7 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 	const encoder = new TextEncoder();
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let closed = false;
-	let current: ReturnType<typeof getLiveSource>;
+	let currentFile: string | undefined; // outFile currently being tailed
 	let stream: LiveTurnStream | undefined;
 	let idle = 0;
 	let ticks = 0;
@@ -57,20 +57,23 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 				if (ticks > MAX_TICKS) return close({ type: "done", reason: "max-duration" });
 				try {
 					const src = getLiveSource(trialId);
-					if (src && src !== current) {
-						current = src;
-						stream = new LiveTurnStream(src.reader); // new step/file
+					// Only host-local files are tailable from this (separate) process;
+					// remote-sandbox streaming is a push follow-up.
+					const tailable = src?.local ? src : undefined;
+					if (tailable && tailable.outFile !== currentFile) {
+						currentFile = tailable.outFile; // new step/file
+						stream = new LiveTurnStream(fileLineReader(tailable.outFile));
 					}
-					if (current && stream) {
+					if (tailable && stream) {
 						const fresh = await stream.poll();
 						if (fresh.length) {
 							idle = 0;
 							if (!send({ type: "turns", turns: fresh })) return close();
 						}
 					}
-					if (!src) {
+					if (!tailable) {
 						idle++;
-						// Source gone: hand off once the trial is archived, else wait
+						// No live source: hand off once the trial is archived, else wait
 						// out the brief archival gap, then give up.
 						if (trialTranscript(runId, trialId)) return close({ type: "done" });
 						if (idle > MAX_IDLE_TICKS) return close({ type: "done", reason: "idle" });

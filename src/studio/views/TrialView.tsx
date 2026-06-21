@@ -793,6 +793,19 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 	>("connecting");
 	const doneRef = useRef(false);
 
+	// On terminal close, replace the (possibly partial) live turns with the full
+	// archived transcript — a seamless handoff so the panel shows the COMPLETE
+	// conversation, not the last frame it happened to stream before close.
+	const loadArchived = useCallback(() => {
+		fetch(`/api/runs/${runId}/trials/${trialId}/transcript`)
+			.then((r) => (r.ok ? r.json() : null))
+			.then((d: { sessions?: { turns: Turn[] }[] } | null) => {
+				const all = d?.sessions?.flatMap((s) => s.turns) ?? [];
+				if (all.length) setTurns(all);
+			})
+			.catch(() => {});
+	}, [runId, trialId]);
+
 	useEffect(() => {
 		const es = new EventSource(`/api/runs/${runId}/trials/${trialId}/stream`);
 		es.onmessage = (e) => {
@@ -807,6 +820,7 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 					doneRef.current = true;
 					setState("done");
 					es.close();
+					loadArchived();
 				}
 			} catch {
 				/* ignore malformed frame */
@@ -819,22 +833,21 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 			es.close();
 			if (doneRef.current) return;
 			setState((s) => (s === "connecting" ? "error" : "done"));
+			loadArchived();
 		};
 		return () => es.close();
-	}, [runId, trialId]);
+	}, [runId, trialId, loadArchived]);
 
-	// Finished/ended with turns already shown → keep them with a handoff note (the
-	// archived Conversation below is the full replay). Nothing streamed → step aside.
-	if (state === "done" || state === "error") {
-		if (turns.length === 0) return null;
-	}
+	// Terminal with nothing to show → step aside (the page's archived Conversation,
+	// if any, stands in).
+	if ((state === "done" || state === "error") && turns.length === 0) return null;
 
 	const live = state === "streaming" || state === "connecting";
 	const label =
 		state === "streaming"
 			? "streaming"
 			: state === "done"
-				? "✓ finished — full replay in Conversation below (reload if needed)"
+				? "✓ finished"
 				: state === "error"
 					? "stream ended"
 					: "connecting…";

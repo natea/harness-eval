@@ -146,7 +146,8 @@ export function TrialView({
 						</a>
 					</p>
 					<h1 className="font-mono text-lg font-bold">{trialId}</h1>
-					<p className="mt-1 text-[13px] text-muted-foreground">
+					<p className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
+						<Spinner />
 						building{job.stage ? ` · ${job.stage}` : ""} — streaming live
 					</p>
 					<LiveStream runId={runId} trialId={trialId} />
@@ -760,6 +761,26 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 
 /** One conversation turn. Request lane (agent → env) and response lane
  *  (env → agent) are visually distinct; oversized payloads are <details>. */
+/** Small spinning ring — "something is happening" while a live build runs. */
+function Spinner() {
+	return (
+		<span
+			aria-label="working"
+			className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent"
+		/>
+	);
+}
+
+/** Pulsing dot for the live-streaming header indicator. */
+function PulseDot() {
+	return (
+		<span className="relative inline-flex h-2 w-2 shrink-0">
+			<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+			<span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+		</span>
+	);
+}
+
 /**
  * Live build stream (live-build-stream): subscribes to the trial's SSE stream and
  * renders redacted turns as the agent works, then hands off to the archived
@@ -808,9 +829,10 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 		if (turns.length === 0) return null;
 	}
 
+	const live = state === "streaming" || state === "connecting";
 	const label =
 		state === "streaming"
-			? "● streaming"
+			? "streaming"
 			: state === "done"
 				? "✓ finished — full replay in Conversation below (reload if needed)"
 				: state === "error"
@@ -821,18 +843,29 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 		<>
 			<h2 className="mt-7 flex items-center gap-2 text-base font-semibold">
 				Live build
-				<span className="font-normal text-muted-foreground">({label})</span>
+				<span className="flex items-center gap-1.5 font-normal text-muted-foreground">
+					{live && <PulseDot />}({label})
+				</span>
 			</h2>
 			<Card className="mt-2">
 				<CardContent className="space-y-2 px-3 pb-3 pt-3">
 					{turns.length === 0 ? (
-						<p className="text-[12px] text-muted-foreground">
+						<p className="flex items-center gap-2 text-[12px] text-muted-foreground">
+							<Spinner />
 							waiting for the agent to start…
 						</p>
 					) : (
-						turns.map((turn, i) => (
-							<TurnBlock key={`live-${i}-${turn.kind}`} turn={turn} />
-						))
+						<>
+							{turns.map((turn, i) => (
+								<TurnBlock key={`live-${i}-${turn.kind}`} turn={turn} />
+							))}
+							{live && (
+								<p className="flex items-center gap-2 pt-1 text-[12px] text-muted-foreground">
+									<Spinner />
+									working…
+								</p>
+							)}
+						</>
 					)}
 				</CardContent>
 			</Card>

@@ -4,12 +4,18 @@
  * signals `done` so the client can hand off to the archived replay. Reads only
  * via the live registry's read-only tap — never mutates anything.
  */
+import { join } from "node:path";
 import { getLiveSource } from "../live/registry";
 import { LiveTurnStream, fileLineReader } from "../live/tap";
+import { readRunState } from "./run-state";
 import { trialTranscript } from "./transcript";
 
 const POLL_MS = 700;
-const MAX_IDLE_TICKS = 30; // ~21s with no live source before giving up
+// Grace after the run is no longer running (terminal but not yet archived) before
+// giving up — covers the brief session-end → archival gap. While the run is still
+// running (e.g. a long framework install before the agent writes anything), the
+// stream keeps waiting regardless, capped only by MAX_TICKS.
+const MAX_IDLE_TICKS = 30; // ~21s
 const MAX_TICKS = Math.ceil((30 * 60_000) / POLL_MS); // ~30 min safety cap
 
 /** SSE Response streaming live turns for a building trial. */
@@ -72,11 +78,19 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 						}
 					}
 					if (!tailable) {
-						idle++;
-						// No live source: hand off once the trial is archived, else wait
-						// out the brief archival gap, then give up.
+						// Archived → hand off immediately.
 						if (trialTranscript(runId, trialId)) return close({ type: "done" });
-						if (idle > MAX_IDLE_TICKS) return close({ type: "done", reason: "idle" });
+						// Still running (installing / between steps / agent starting up) →
+						// keep waiting; the agent just hasn't written yet.
+						const rs = readRunState(join("runs", runId));
+						if (rs?.status === "running") {
+							idle = 0;
+						} else {
+							// Terminal but not yet archived → wait out the brief gap, then stop.
+							idle++;
+							if (idle > MAX_IDLE_TICKS)
+								return close({ type: "done", reason: "idle" });
+						}
 					}
 				} catch {
 					// transient read error — keep polling

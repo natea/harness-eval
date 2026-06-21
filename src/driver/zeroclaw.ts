@@ -1,7 +1,18 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+	registerLiveSource,
+	trialIdFromSandbox,
+	unregisterLiveSource,
+} from "../live/registry";
 import { type SessionRecord, TokenUsage } from "../types";
 import { SessionParseError } from "./claude";
-import { createPrintCliSessionRunner } from "./print-cli";
-import { type DriverResult, type HarnessDriver, InfraError } from "./types";
+import {
+	type DriverResult,
+	type HarnessDriver,
+	InfraError,
+	type RunDriverSession,
+} from "./types";
 
 /**
  * ZeroClaw (zerocode) harness driver.
@@ -41,80 +52,106 @@ import { type DriverResult, type HarnessDriver, InfraError } from "./types";
  */
 export const ACP_PROTOCOL_VERSION = 1;
 
-/** Pinned-release-dependent invocation surface; verified against v0.8.1. */
-const ZC = {
-	bin: "zeroclaw",
-	/** Bundled headless ACP stdio client (COPYed into the image). */
-	client: "/opt/zeroclaw/acp-client.ts",
-	/** Pre-built, secret-free trial config (agent + full-auto risk profile). */
-	template: "/opt/zeroclaw/trial-config.toml",
-	/** Per-trial, isolated config dir (lives in the trial's HOME). */
-	configDir: '"$HOME/.zeroclaw"',
-	/** Agent alias defined in the template; the ACP client names it in session/new. */
-	agent: "trial",
-	/** One-time setup marker so config copy/pin run once per trial, not per step. */
-	marker: '"$HOME/.zeroclaw/.he-setup-done"',
-	/**
-	 * Env-override for the Anthropic provider credential (verified v0.8.1). Setting
-	 * `ZEROCLAW_<dotted__path>` populates the config field at load — the ONLY
-	 * headless credential path: auth-profiles authenticate the catalog but not
-	 * generation, and the config secret field needs a TTY. ZeroClaw routes a
-	 * `sk-ant-oat…` value as OAuth, so the Claude Max subscription token works here
-	 * (no API spend); an `sk-ant-api…` key works too. Env-only — never baked.
-	 */
-	credEnv: "ZEROCLAW_providers__models__anthropic__anthropic__api_key",
-};
+/**
+ * Env-override for the Anthropic provider credential (verified v0.8.1). Setting
+ * `ZEROCLAW_<dotted__path>` populates the config field at load — the ONLY headless
+ * credential path: auth-profiles authenticate the catalog but not generation, and
+ * the config secret field needs a TTY. ZeroClaw routes a `sk-ant-oat…` value as
+ * OAuth, so the Claude Max subscription token works here (no API spend); an
+ * `sk-ant-api…` key works too. Env-only — never baked into the image.
+ */
+const CRED_ENV = "ZEROCLAW_providers__models__anthropic__anthropic__api_key";
+
+/**
+ * The bundled ACP client + secret-free trial config are shipped INTO the sandbox
+ * at runtime (not referenced at a baked image path), so zerocode runs on ANY
+ * provider/image: worktree (using the host's own `zeroclaw` on PATH) or any
+ * docker/daytona image. Read once from the repo — the orchestrator host always
+ * has them. The image's COPYs are now just a convenience, not a dependency.
+ */
+const CLIENT_SRC = readFileSync(
+	join(import.meta.dir, "../../infra/trial-image/zeroclaw-acp-client.ts"),
+	"utf8",
+);
+const CONFIG_SRC = readFileSync(
+	join(import.meta.dir, "../../infra/trial-image/zeroclaw-trial-config.toml"),
+	"utf8",
+);
 
 /** Handshake-version / protocol failure: environmental, so it retries as infra. */
 export class ZeroclawProtocolError extends InfraError {}
 
-const runZeroclawAcp = createPrintCliSessionRunner({
-	buildCommand: (opts) => {
-		// Resume reuses the persistent ACP session id (ZeroClaw sessions persist by
-		// design); absent on a new session / the first turn.
-		const resume = opts.resumeSessionId
-			? `--resume ${JSON.stringify(opts.resumeSessionId)}`
-			: "";
-		// Per-trial setup, run once (marker-gated): drop in the secret-free template
-		// (defines the `trial` agent + a full-auto, sandbox-off risk profile with an
-		// empty forbidden_paths so the workspace is writable), then pin the SAME
-		// model id Claude Code receives (opts.model). `config set`/`models set` both
-		// register the provider entry and set the default model; the observed model
-		// echoes back in the ACP `initialize` _meta.defaultModel for post-hoc parity.
-		const setup =
-			`mkdir -p ${ZC.configDir}; ` +
-			`if [ ! -f ${ZC.marker} ]; then ` +
-			`cp ${ZC.template} ${ZC.configDir}/config.toml; ` +
-			`${ZC.bin} config set providers.models.anthropic.anthropic.model ` +
-			`${JSON.stringify(opts.model)} --config-dir ${ZC.configDir} > /dev/null 2>&1; ` +
-			`${ZC.bin} models set ${JSON.stringify(opts.model)} ` +
-			`--config-dir ${ZC.configDir} > /dev/null 2>&1 || true; ` +
-			`touch ${ZC.marker}; ` +
-			`fi`;
-		// Credential via the env-override, exported INSIDE this shell so it reaches
-		// the `zeroclaw acp` the client spawns (the "export inside bash -lc" rule).
-		// Prefer the Max subscription token; fall back to an API key. The scheduler
-		// blanks the unused one, so `${VAR:-…}` selects whichever is set.
-		const cred =
-			`export ${ZC.credEnv}="\${CLAUDE_CODE_OAUTH_TOKEN:-$ANTHROPIC_API_KEY}"`;
-		// One ACP turn via the bundled stdio client; transcript JSONL → outFile.
-		const turn = [
+/**
+ * Drive one ACP turn. Ships the client + config into the sandbox, pins the model,
+ * injects the credential via the env-override, and runs the bundled stdio client.
+ * Uses a per-trial config dir under /tmp (NOT $HOME/.zeroclaw) so a worktree run
+ * never clobbers the host's own ZeroClaw config, and concurrent worktree trials on
+ * the shared host don't collide. Transcript JSONL → outFile, read back separately
+ * (a service the agent starts can't hold the capture open); the outFile is tapped
+ * for the studio live stream.
+ */
+const runZeroclawAcp: RunDriverSession = async (sandbox, run) => {
+	const id = sandbox.id.replace(/[^a-zA-Z0-9_.-]/g, "_");
+	const slot = `${id}-${run.stepIndex}`;
+	const cfgDir = `/tmp/he-zc-${id}`;
+	const clientFile = `/tmp/he-zc-client-${id}.ts`;
+	const configSrcFile = `/tmp/he-zc-config-${id}.toml`;
+	const promptFile = `/tmp/he-prompt-${slot}.txt`;
+	const outFile = `/tmp/he-out-${slot}.jsonl`;
+
+	// Ship the client + config + prompt into the sandbox (provider-agnostic).
+	await sandbox.writeFile(clientFile, CLIENT_SRC);
+	await sandbox.writeFile(configSrcFile, CONFIG_SRC);
+	await sandbox.writeFile(promptFile, run.prompt);
+
+	const resume = run.resumeSessionId
+		? `--resume ${JSON.stringify(run.resumeSessionId)}`
+		: "";
+	// Install the config (defines the `trial` agent + a full-auto, sandbox-off risk
+	// profile with empty forbidden_paths so the workspace is writable), pin the SAME
+	// model id Claude Code gets (run.model — echoed back in _meta.defaultModel for
+	// parity), inject the credential (Max token preferred; scheduler blanks the
+	// unused one), then run one ACP turn naming the `trial` agent.
+	const cmd = [
+		`mkdir -p ${cfgDir}`,
+		`cp ${configSrcFile} ${cfgDir}/config.toml`,
+		`zeroclaw config set providers.models.anthropic.anthropic.model ${JSON.stringify(run.model)} --config-dir ${cfgDir} > /dev/null 2>&1`,
+		`zeroclaw models set ${JSON.stringify(run.model)} --config-dir ${cfgDir} > /dev/null 2>&1 || true`,
+		`export ${CRED_ENV}="\${CLAUDE_CODE_OAUTH_TOKEN:-$ANTHROPIC_API_KEY}"`,
+		[
 			"bun",
-			ZC.client,
-			`--prompt-file ${opts.promptFile}`,
+			clientFile,
+			`--prompt-file ${promptFile}`,
 			'--cwd "$PWD"',
-			`--agent ${ZC.agent}`,
+			"--agent trial",
 			`--protocol-version ${ACP_PROTOCOL_VERSION}`,
-			`--config-dir ${ZC.configDir}`,
+			`--config-dir ${cfgDir}`,
 			resume,
-			`> ${opts.outFile} 2>&1`,
+			`> ${outFile} 2>&1`,
 		]
 			.filter(Boolean)
-			.join(" ");
-		return [setup, cred, turn].join("; ");
-	},
-	parseOutput: parseZeroclawAcp,
-});
+			.join(" "),
+	].join("; ");
+
+	// Live tap: drop a disk pointer so the studio can tail the transcript while the
+	// build runs (host-local files only — worktree streams, container providers are
+	// a push follow-up). Never affects the build.
+	const trialId = trialIdFromSandbox(sandbox.id);
+	registerLiveSource(trialId, {
+		outFile,
+		local: sandbox.id.startsWith("worktree:"),
+	});
+	try {
+		const res = await sandbox.exec(cmd, {
+			timeoutMs: run.timeoutMs,
+			env: run.env,
+		});
+		const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
+		return parseZeroclawAcp(read.stdout, run.stepIndex, res.exitCode);
+	} finally {
+		unregisterLiveSource(trialId);
+	}
+};
 
 export const zerocodeDriver: HarnessDriver = {
 	id: "zerocode",

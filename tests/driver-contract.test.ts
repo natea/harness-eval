@@ -163,9 +163,11 @@ describe.each(CASES)("driver contract: $harnessId", (c) => {
 
 	test("output captured to a file, read after the run exec returns", async () => {
 		const { sandbox } = await run();
-		// Prompt written to a namespaced file before the run.
-		expect(sandbox.writes.length).toBe(1);
-		expect(sandbox.writes[0]?.path).toMatch(/^\/tmp\/he-prompt-.*\.txt$/);
+		// Prompt written to a namespaced file before the run (drivers may stage
+		// additional files, e.g. zerocode's ACP client + config).
+		expect(
+			sandbox.writes.some((w) => /^\/tmp\/he-prompt-.*\.txt$/.test(w.path)),
+		).toBe(true);
 		// The transcript read is a SEPARATE exec, and it is the LAST exec — it
 		// cannot precede or share the run exec, so a service started by the run
 		// cannot hold the capture open.
@@ -208,9 +210,12 @@ describe.each(CASES)("driver contract: $harnessId", (c) => {
 
 	test("fairness: the base prompt reaches the sandbox unmutated", async () => {
 		const { sandbox } = await run();
-		expect(sandbox.writes[0]?.content).toBe(
-			"BASE PROMPT — identical across harnesses",
+		// Drivers may stage extra files (e.g. zerocode ships its ACP client +
+		// config), so locate the prompt write rather than assuming index 0.
+		const promptWrite = sandbox.writes.find((w) =>
+			w.path.startsWith("/tmp/he-prompt-"),
 		);
+		expect(promptWrite?.content).toBe("BASE PROMPT — identical across harnesses");
 	});
 });
 

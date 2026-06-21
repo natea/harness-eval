@@ -152,18 +152,19 @@ export function validateRunRequest(
 		}
 	}
 
-	// Harness/provider compatibility: harnesses whose binary lives only in the
-	// trial image (zerocode's `zeroclaw` + bundled ACP client; Codex's CLI) cannot
-	// run on the `worktree` provider, which executes on the host. Require an
-	// image-based provider (docker / daytona / e2b / macos-vz).
-	const IMAGE_ONLY_HARNESSES = new Set(["zerocode", "codex"]);
+	// Harness/provider compatibility: Codex's CLI lives only in the trial image, so
+	// it can't run on the `worktree` provider (which executes on the host). zerocode
+	// ships its client + config into the sandbox at runtime, so it runs on any
+	// provider PROVIDED the `zeroclaw` binary is on the host's PATH for worktree —
+	// not validated here (a clear "zeroclaw: command not found" surfaces if absent).
+	const IMAGE_ONLY_HARNESSES = new Set(["codex"]);
 	if (
 		req.harness &&
 		IMAGE_ONLY_HARNESSES.has(req.harness) &&
 		req.provider === "worktree"
 	) {
 		errors.push(
-			`harness '${req.harness}' needs an image-based provider (docker, daytona, e2b, macos-vz) — the worktree provider runs on the host, which has no '${req.harness}' binary. Build the trial image and select e.g. provider=docker.`,
+			`harness '${req.harness}' needs an image-based provider (docker, daytona, e2b, macos-vz) — the worktree provider runs on the host, which has no '${req.harness}' CLI. Build the trial image and select e.g. provider=docker.`,
 		);
 	}
 

@@ -191,12 +191,20 @@ describe("zerocode driver wiring", () => {
 			timeoutMs: 600_000,
 			env: { CLAUDE_CODE_OAUTH_TOKEN: "max-token" },
 		});
-		// Prompt written unmutated to a namespaced file (fairness).
-		expect(sandbox.writes).toHaveLength(1);
-		expect(sandbox.writes[0]?.content).toBe("BUILD IT");
+		// Provider-agnostic: the driver ships the ACP client + config + prompt INTO
+		// the sandbox (not a baked image path), so it runs on worktree/docker alike.
+		const prompt = sandbox.writes.find((w) =>
+			w.path.startsWith("/tmp/he-prompt-"),
+		);
+		expect(prompt?.content).toBe("BUILD IT"); // base prompt unmutated (fairness)
+		expect(sandbox.writes.some((w) => w.path.endsWith("client-trial.zc-1.ts"))).toBe(
+			true,
+		);
+		expect(sandbox.writes.some((w) => w.path.endsWith(".toml"))).toBe(true);
 		const runCmd = sandbox.execs[0]?.command ?? "";
-		// Secret-free template copied in (defines the `trial` agent + full-auto).
-		expect(runCmd).toContain("cp /opt/zeroclaw/trial-config.toml");
+		// Config installed into an ISOLATED /tmp config dir (never $HOME — no clobber).
+		expect(runCmd).toContain("/tmp/he-zc-trial.zc-1/config.toml");
+		expect(runCmd).not.toContain("$HOME/.zeroclaw");
 		// The chosen worker model is pinned into ZeroClaw (parity with Claude Code).
 		expect(runCmd).toContain('models set "claude-opus-4-6"');
 		// Credential via the env-override (Max token preferred, API-key fallback);
@@ -206,8 +214,8 @@ describe("zerocode driver wiring", () => {
 		);
 		expect(runCmd).toContain("${CLAUDE_CODE_OAUTH_TOKEN:-$ANTHROPIC_API_KEY}");
 		expect(runCmd).not.toContain("auth paste-token");
-		// One ACP turn via the bundled stdio client, naming the configured agent.
-		expect(runCmd).toContain("acp-client.ts");
+		// One ACP turn via the shipped stdio client, naming the configured agent.
+		expect(runCmd).toContain("bun /tmp/he-zc-client-trial.zc-1.ts");
 		expect(runCmd).toContain("--agent trial");
 		expect(runCmd).not.toContain("zeroclaw daemon");
 		expect(runCmd).not.toContain("--resume"); // first turn: no resume

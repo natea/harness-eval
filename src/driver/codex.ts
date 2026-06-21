@@ -17,22 +17,18 @@ const runCodexExec = createPrintCliSessionRunner({
 		const resume = opts.resumeSessionId
 			? `resume ${JSON.stringify(opts.resumeSessionId)}`
 			: "";
-		// Three auth modes (Codex's real auth surfaces, per its model-agnostic
-		// design), resolved per-run by the CLI and signalled via env:
-		//  - $CODEX_OAUTH_HOME set → ChatGPT OAuth: copy that login's auth.json into
-		//    an isolated per-slot CODEX_HOME (a ChatGPT Plus/Pro sign-in). Lets a
-		//    run use the operator's subscription instead of an API key.
-		//  - else $OPENAI_API_KEY set → write it via `codex login --with-api-key`
-		//    into an isolated CODEX_HOME (verified: a bare key env still 401s). The
-		//    primary eval path for fresh sandboxes.
-		//  - else → the ambient CODEX_HOME (an existing sign-in), for host/dev runs.
-		// The isolated home lives under /tmp (NOT the archived workspace), so OAuth
-		// tokens / api-key auth never land in run artifacts; isolation also avoids
-		// cross-trial collisions on a shared filesystem.
-		const codexHome = opts.outFile.replace(
-			/he-out-(.+)\.jsonl$/,
-			"he-codex-$1",
-		);
+		// CODEX_HOME is the trial's own `$HOME/.codex`: per-trial isolated (the
+		// sandbox gives each trial a dedicated HOME) AND the same place a framework
+		// installer writes Codex skills/agents (e.g. GSD `--codex --scope=project`
+		// lands gsd-* skills + agents in `~/.codex`), so `codex exec` actually
+		// discovers them. Three auth modes, resolved per-run by the CLI via env:
+		//  - $CODEX_OAUTH_HOME set → ChatGPT OAuth: copy that login's auth.json in.
+		//  - else $OPENAI_API_KEY set → `codex login --with-api-key` (a bare key env
+		//    still 401s).
+		//  - else → an ambient sign-in already in the sandbox's CODEX_HOME.
+		// auth.json lands only in the trial's (gitignored, torn-down) HOME, never in
+		// the archived workspace.
+		const codexHome = '"$HOME/.codex"';
 		// A ChatGPT account rejects an explicit `--model`; omit it for the account
 		// default (model "default"/empty) and pass it otherwise (API-key path).
 		const modelFlag =
@@ -54,12 +50,14 @@ const runCodexExec = createPrintCliSessionRunner({
 			.filter(Boolean)
 			.join(" ");
 		// Auth setup, `;`-joined before exec so exec always runs and captures any
-		// auth error in outFile.
+		// auth error in outFile. CODEX_HOME is exported for every mode so a
+		// framework's installed skills (in the same dir) are on codex's path.
 		const auth =
+			`export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; ` +
 			`if [ -n "$CODEX_OAUTH_HOME" ]; then ` +
-			`mkdir -p ${codexHome}; cp "$CODEX_OAUTH_HOME/auth.json" ${codexHome}/auth.json 2>/dev/null; export CODEX_HOME=${codexHome}; ` +
+			`cp -f "$CODEX_OAUTH_HOME/auth.json" ${codexHome}/auth.json 2>/dev/null; ` +
 			`elif [ -n "$OPENAI_API_KEY" ]; then ` +
-			`export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true; ` +
+			`printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true; ` +
 			`fi`;
 		return [auth, exec].join("; ");
 	},

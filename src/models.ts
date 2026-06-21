@@ -9,7 +9,11 @@ import { z } from "zod";
  * and optional pricing for cost estimation when the harness reports tokens only.
  */
 
-export const ModelTransport = z.enum(["claude-code", "anthropic-sdk"]);
+export const ModelTransport = z.enum([
+	"claude-code",
+	"anthropic-sdk",
+	"codex",
+]);
 export type ModelTransport = z.infer<typeof ModelTransport>;
 
 /**

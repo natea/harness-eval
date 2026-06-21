@@ -86,12 +86,135 @@ function resultText(content: unknown): string {
 }
 
 /**
- * Parse one session's stream-json into ordered, role/direction-tagged turns.
- * Bootstrap `system` noise is dropped; the single `init` event becomes a
+ * Parse one session's transcript into ordered, role/direction-tagged turns.
+ * Detects the harness format and delegates: Claude Code `stream-json` (the
+ * default) or the Codex CLI `exec --json` event stream. Returning the same
+ * `Turn[]` shape means the Markdown renderer and studio replay are
+ * harness-agnostic.
+ */
+export function parseTranscript(jsonl: string): Turn[] {
+	// Codex events are top-level `thread.*` / `turn.*` / `item.*`; Claude uses
+	// `type: system|assistant|user|result`. Sniff a few lines for a codex marker.
+	if (/"type"\s*:\s*"(thread\.started|turn\.completed|turn\.started)"/.test(jsonl)) {
+		return parseCodexTranscript(jsonl);
+	}
+	return parseClaudeTranscript(jsonl);
+}
+
+/**
+ * Parse the Codex CLI `exec --json` event stream into turns. Codex does NOT echo
+ * the user prompt as an event (it arrives via stdin), so the rendered replay
+ * begins at the agent's first action. Items map: reasoning→thinking,
+ * command_execution/file_change/mcp_tool_call/web_search→tool_use (+ a
+ * tool_result for a command's captured output), agent_message→assistant.
+ */
+export function parseCodexTranscript(jsonl: string): Turn[] {
+	const turns: Turn[] = [];
+	let numTurns = 0;
+	let itemSeq = 0;
+	for (const line of jsonl.split("\n")) {
+		const trimmed = line.trim();
+		if (!trimmed.startsWith("{")) continue;
+		let o: Record<string, unknown>;
+		try {
+			o = JSON.parse(trimmed) as Record<string, unknown>;
+		} catch {
+			continue;
+		}
+		const type = o.type as string | undefined;
+		if (type === "turn.started") {
+			numTurns++;
+			continue;
+		}
+		if (type === "turn.completed" || type === "turn.failed") {
+			const usage = (o.usage ?? {}) as Record<string, unknown>;
+			const err = (o.error ?? {}) as Record<string, unknown>;
+			turns.push({
+				kind: "result",
+				dir: "info",
+				role: "system",
+				status: type === "turn.failed" ? "error" : "success",
+				durationMs: 0, // not emitted by codex exec --json
+				costUsd: 0, // codex reports no dollar cost
+				numTurns: Math.max(1, numTurns),
+				usage: {
+					inputTokens: Number(usage.input_tokens ?? 0),
+					outputTokens: Number(usage.output_tokens ?? 0),
+				},
+			});
+			if (type === "turn.failed" && typeof err.message === "string") {
+				turns.push({
+					kind: "assistant",
+					dir: "response",
+					role: "assistant",
+					text: `⚠ turn failed: ${err.message}`,
+				});
+			}
+			continue;
+		}
+		if (type !== "item.completed") continue;
+		const item = (o.item ?? {}) as Record<string, unknown>;
+		const itemType = item.type as string | undefined;
+		const id = String(item.id ?? `item-${itemSeq++}`);
+		if (itemType === "agent_message" && typeof item.text === "string") {
+			if (item.text.trim())
+				turns.push({ kind: "assistant", dir: "response", role: "assistant", text: item.text });
+		} else if (itemType === "reasoning" && typeof item.text === "string") {
+			if (item.text.trim())
+				turns.push({ kind: "thinking", dir: "info", role: "assistant", text: item.text });
+		} else if (itemType === "command_execution") {
+			const command = String(item.command ?? "");
+			turns.push({
+				kind: "tool_use",
+				dir: "request",
+				role: "assistant",
+				id,
+				tool: "command",
+				input: { command, ...(item.cwd ? { cwd: item.cwd } : {}) },
+			});
+			const output = item.aggregated_output ?? item.output;
+			const exit = item.exit_code;
+			if (output != null || exit != null) {
+				turns.push({
+					kind: "tool_result",
+					dir: "response",
+					role: "tool",
+					forId: id,
+					tool: "command",
+					output: typeof output === "string" ? output : JSON.stringify(output ?? ""),
+					isError: exit != null && Number(exit) !== 0,
+				});
+			}
+		} else if (itemType === "file_change") {
+			turns.push({
+				kind: "tool_use",
+				dir: "request",
+				role: "assistant",
+				id,
+				tool: "file_change",
+				input: item.changes ?? item,
+			});
+		} else if (itemType === "mcp_tool_call" || itemType === "web_search") {
+			turns.push({
+				kind: "tool_use",
+				dir: "request",
+				role: "assistant",
+				id,
+				tool: itemType,
+				input: item,
+			});
+		}
+	}
+	return turns;
+}
+
+/**
+ * Parse one session's Claude Code stream-json into ordered, role/direction-tagged
+ * turns. Bootstrap `system` noise is dropped; the single `init` event becomes a
  * compact header. Tool calls (`tool_use`) and their results (`tool_result`) are
  * linked by id and the result inherits the call's tool name for labeling.
  */
-export function parseTranscript(jsonl: string): Turn[] {
+export function parseClaudeTranscript(jsonl: string): Turn[] {
 	const turns: Turn[] = [];
 	const toolNameById = new Map<string, string>();
 	for (const line of jsonl.split("\n")) {

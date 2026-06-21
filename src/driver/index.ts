@@ -1,9 +1,11 @@
 import { type HarnessRegistry, resolveHarness } from "../harnesses";
 import { claudeCodeDriver } from "./claude";
+import { codexDriver } from "./codex";
 import type { HarnessDriver } from "./types";
 
 const DRIVERS_BY_BACKEND: Record<string, HarnessDriver> = {
 	[claudeCodeDriver.id]: claudeCodeDriver,
+	[codexDriver.id]: codexDriver,
 };
 
 export function getHarnessDriver(

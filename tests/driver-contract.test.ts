@@ -96,6 +96,22 @@ const CASES: DriverContractCase[] = [
 			numTurns: 7,
 		},
 	},
+	{
+		// Codex reports tokens but NO dollar cost, so the source falls through to
+		// the profile pricing rule; against a non-anthropic, unpriced profile that
+		// is tokens-only (costUsd null). thread_id is the session id; one
+		// `codex exec` invocation is a single turn.
+		harnessId: "codex",
+		fixture: "codex.jsonl",
+		profile: () => resolveProfile("glm-5.1", loadModels()),
+		expected: {
+			costSource: "tokens-only",
+			costUsd: null,
+			isError: false,
+			sessionId: "0199c0de-c0de-7000-8000-000000000abc",
+			numTurns: 1,
+		},
+	},
 ];
 
 // Sanity: every runnable driver has a contract case. If this fails, a driver was

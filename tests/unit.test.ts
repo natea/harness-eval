@@ -113,7 +113,7 @@ describe("registry validation (8.1)", () => {
 
 	test("shipped registry loads; unknown harness fails at load time", () => {
 		const registry = loadRegistry("config/registry.yaml");
-		expect(registry.candidates).toHaveLength(4);
+		expect(registry.candidates).toHaveLength(5);
 		expect(() => resolveCandidates(registry, ["gsd"], "opencode")).toThrow(
 			/unknown harness 'opencode'/,
 		);
@@ -555,9 +555,9 @@ describe("scheduler helpers (8.1)", () => {
 	test("matrix interleaves candidates and sizes correctly", () => {
 		const registry = loadRegistry("config/registry.yaml");
 		const plans = buildMatrix(registry.candidates, 3);
-		expect(plans).toHaveLength(12);
-		const firstFour = plans.slice(0, 4).map((p) => p.candidate.id);
-		expect(new Set(firstFour).size).toBe(4); // round-robin, not 3x same candidate
+		expect(plans).toHaveLength(15); // 5 candidates × 3 trials
+		const firstFive = plans.slice(0, 5).map((p) => p.candidate.id);
+		expect(new Set(firstFive).size).toBe(5); // round-robin, not 3x same candidate
 	});
 
 	test("infra vs candidate failure classification", () => {

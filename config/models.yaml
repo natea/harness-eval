@@ -99,3 +99,35 @@ profiles:
     baseUrl: https://dashscope-us.aliyuncs.com/apps/anthropic
     authEnv: DASHSCOPE_API_KEY
     authKind: auth-token
+
+  # --- OpenAI via the Codex CLI harness (transport: codex) ---
+  # Codex is model-agnostic; this profile drives its built-in OpenAI provider.
+  # The codex driver runs `codex login --with-api-key` reading $OPENAI_API_KEY.
+  # gpt-5-codex requires an API account (not a ChatGPT sign-in). Pricing omitted
+  # → tokens-only (add $/Mtok here to enable profile-priced estimates).
+  - name: gpt-5-codex
+    provider: openai
+    modelId: gpt-5-codex
+    transport: codex
+    authEnv: OPENAI_API_KEY
+    authKind: api-key
+
+  # Codex on the account-default model: omits `--model` (a ChatGPT sign-in rejects
+  # an explicit model). Uses the API key if present, else the ambient sign-in.
+  - name: codex-default
+    provider: openai
+    modelId: default
+    transport: codex
+    authEnv: OPENAI_API_KEY
+    authKind: api-key
+
+  # Codex via a ChatGPT Plus/Pro OAuth sign-in (no API key / no per-token billing).
+  # The driver copies the operator's Codex login (auth.json from $CODEX_HOME, or
+  # ~/.codex) into the trial's isolated CODEX_HOME. modelId "default" → no --model.
+  # Works on host/worktree runs; cloud sandboxes would need the login shipped in.
+  - name: codex-oauth
+    provider: openai
+    modelId: default
+    transport: codex
+    authEnv: CODEX_HOME
+    authKind: oauth

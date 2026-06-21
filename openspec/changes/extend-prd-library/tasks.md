@@ -24,7 +24,7 @@
   target.yaml (attestation mapping, `source:` provenance, catalog fields), freeze hash
 - [ ] 2.3 Adapt target **quiz** (stateful sessions + scoring) — same deliverables as 2.2
 - [x] 2.4 Adapt target **kanban** (ordered collections + move ops) — same deliverables
-- [ ] 2.5 Adapt target **marketplace** (multi-actor offers + state) — same deliverables
+- [x] 2.5 Adapt target **marketplace** (multi-actor offers + state) — same deliverables
 - [x] 2.6 Adapt target **pilot-logbook** (validation + aggregation/totals) — same deliverables
 - [ ] 2.7 Adapt target **resume-builder** (nested structured document + validation) — same deliverables
   (swap any of 2.2–2.7 that proves a poor HTTP fit during 2.1; keep ≥4 shipped)

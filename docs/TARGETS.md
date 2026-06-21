@@ -9,6 +9,7 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 | --- | --- | --- | --- |
 | `cli-tool` | cli | none | A line-oriented tally/aggregation CLI over newline-delimited records. |
 | `kanban` | rest-api-ordered-collection | none | Sprint board API — four fixed columns with ordered, movable cards. |
+| `marketplace` | rest-api-state-machine | none | Marketplace API with a capability-link order lifecycle (available → pending → sold). |
 | `notes` | rest-api | none | Password-gated plain-text notes service — HTTP/JSON CRUD with search. |
 | `pilot-logbook` | rest-api-validation-aggregation | none | Pilot logbook API — aircraft management, a strict flight validation matrix, and range analytics. |
 | `rest-api` | rest-api | none | Logistics quote/ROI + lead-capture HTTP/JSON API with an authenticated admin view. |
@@ -31,6 +32,15 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 - **Adapted from:** vibench-public
 
 An HTTP/JSON kanban board: a single board with four fixed ordered columns (Backlog / In Progress / Review / Done) holding cards with a required title, optional description, and a story-points enum. Create, edit, move between columns (status change), delete, and bulk Clear-Done — with within-column ordering as part of the contract. Ordered-collection shape. HTTP-light: the real-time/presence/co-editing features of the upstream PRD are out of scope. No rendered UI.
+
+## `marketplace` (v1.0.0)
+
+- **Domain:** commerce
+- **Shape:** rest-api-state-machine
+- **Expected UI:** none
+- **Adapted from:** vibench-public
+
+An HTTP/JSON marketplace: sellers create listings and receive a secret seller token; buyers check out and receive a secret buyer token; access is by unguessable capability link, not accounts. Drives a multi-actor state machine — available → pending → sold, or back to available on cancel — with a single-winner checkout rule and strict token/contact privacy on public endpoints. HTTP-light: image upload is a URL string, pages are JSON reads, and concurrency is checked sequentially. No rendered UI.
 
 ## `notes` (v1.0.0)
 

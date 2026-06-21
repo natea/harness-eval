@@ -32,6 +32,7 @@ import {
 	loadModels,
 	resolveClaudeCodeEnv,
 	resolveProfile,
+	resolveWorkerEnv,
 	toModelRef,
 } from "./models";
 import { gradeTrials } from "./orchestrator/grade";
@@ -164,43 +165,14 @@ async function cmdRun(): Promise<void> {
 		arg("worker-model") ?? config.model,
 		models,
 	);
-	let workerEnv: Record<string, string> | undefined;
-	let workerModelFlag = workerProfile.modelId;
-	if (workerProfile.transport === "codex") {
-		// Codex auth modes (see the codex driver):
-		//  - oauth   → reuse a ChatGPT sign-in: resolve the operator's Codex login
-		//    dir (authEnv, default $HOME/.codex) and hand it to the driver, which
-		//    copies its auth.json into the trial's isolated CODEX_HOME.
-		//  - api-key → the profile's key (authEnv) is logged in via the driver.
-		//  - neither → the ambient sign-in in the sandbox.
-		// A ChatGPT sign-in rejects an explicit `--model`, so oauth/ambient profiles
-		// use modelId "default" (the driver omits the flag).
-		if (workerProfile.authKind === "oauth") {
-			const src =
-				process.env[workerProfile.authEnv] ||
-				(process.env.HOME ? join(process.env.HOME, ".codex") : "");
-			if (!src || !existsSync(join(src, "auth.json"))) {
-				throw new Error(
-					`worker model '${workerProfile.name}' needs a Codex OAuth login: no auth.json at ${src || "<unset>"} (run \`codex login\`, or set ${workerProfile.authEnv})`,
-				);
-			}
-			workerEnv = { CODEX_OAUTH_HOME: src };
-			console.log(
-				`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via codex (oauth sign-in from ${src})`,
-			);
-		} else {
-			const key = process.env[workerProfile.authEnv];
-			workerEnv = key ? { OPENAI_API_KEY: key } : undefined;
-			console.log(
-				`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via codex (${key ? "api-key" : "ambient sign-in"})`,
-			);
-		}
-	} else if (workerProfile.provider !== "anthropic") {
-		const resolved = resolveClaudeCodeEnv(workerProfile);
-		workerEnv = resolved.env;
-		workerModelFlag = resolved.modelFlag; // mapped slot (e.g. "opus") for z.ai
+	// Single shared resolver (codex/oauth/api-key/third-party/native) — identical
+	// to the studio run path so they can't drift.
+	const rw = resolveWorkerEnv(workerProfile);
+	const workerEnv = rw.env;
+	const workerModelFlag = rw.modelFlag;
+	if (rw.note) {
 		console.log(
-			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via ${workerProfile.baseUrl}`,
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via ${workerProfile.transport === "codex" ? `codex (${rw.note})` : workerProfile.baseUrl}`,
 		);
 	} else if (workerProfile.name !== "claude-opus-4-6") {
 		console.log(`worker model: ${workerProfile.name} (anthropic)`);

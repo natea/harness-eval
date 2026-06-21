@@ -1,4 +1,11 @@
 import type { Sandbox } from "../providers/types";
+import {
+	type LiveSource,
+	registerLiveSource,
+	trialIdFromSandbox,
+	unregisterLiveSource,
+} from "../live/registry";
+import { sandboxLineReader } from "../live/tap";
 import type { DriverResult, DriverRunOptions, RunDriverSession } from "./types";
 
 export interface PrintCliCommandContext extends DriverRunOptions {
@@ -35,11 +42,26 @@ export function createPrintCliSessionRunner(
 		const outFile = `/tmp/he-out-${slot}.jsonl`;
 		await sandbox.writeFile(promptFile, run.prompt);
 		const command = opts.buildCommand({ ...run, promptFile, outFile });
-		const res = await sandbox.exec(command, {
-			timeoutMs: run.timeoutMs,
-			env: run.env,
-		});
-		const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
-		return opts.parseOutput(read.stdout, run.stepIndex, res.exitCode);
+		// Best-effort live tap: register a read-only reader over the output file so
+		// the studio can stream this session while it runs. Never affects the build;
+		// the post-exit read below is unchanged (byte-identical telemetry/archive).
+		const trialId = trialIdFromSandbox(sandbox.id);
+		let liveSource: LiveSource | undefined;
+		try {
+			liveSource = { reader: sandboxLineReader(sandbox, outFile), outFile };
+			registerLiveSource(trialId, liveSource);
+		} catch {
+			liveSource = undefined;
+		}
+		try {
+			const res = await sandbox.exec(command, {
+				timeoutMs: run.timeoutMs,
+				env: run.env,
+			});
+			const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
+			return opts.parseOutput(read.stdout, run.stepIndex, res.exitCode);
+		} finally {
+			if (liveSource) unregisterLiveSource(trialId, liveSource);
+		}
 	};
 }

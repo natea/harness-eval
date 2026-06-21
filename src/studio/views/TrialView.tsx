@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type * as React from "react";
 import type { TrialResult } from "../../types";
 import type { Turn } from "../../report/transcript-render";
@@ -357,6 +357,10 @@ export function TrialView({
 			)}
 
 			<Artifacts runId={runId} trialId={trialId} />
+
+			{t.provenance.status !== "completed" && (
+				<LiveStream runId={runId} trialId={trialId} />
+			)}
 
 			<Conversation convo={convo} />
 
@@ -727,6 +731,78 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 
 /** One conversation turn. Request lane (agent → env) and response lane
  *  (env → agent) are visually distinct; oversized payloads are <details>. */
+/**
+ * Live build stream (live-build-stream): subscribes to the trial's SSE stream and
+ * renders redacted turns as the agent works, then hands off to the archived
+ * Conversation replay below on `done`. Read-only; auto-cleans the EventSource.
+ */
+function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
+	const [turns, setTurns] = useState<Turn[]>([]);
+	const [state, setState] = useState<
+		"connecting" | "streaming" | "done" | "error"
+	>("connecting");
+
+	useEffect(() => {
+		const es = new EventSource(`/api/runs/${runId}/trials/${trialId}/stream`);
+		es.onmessage = (e) => {
+			try {
+				const msg = JSON.parse(e.data) as { type: string; turns?: Turn[] };
+				if (msg.type === "turns" && msg.turns) {
+					setState("streaming");
+					setTurns((prev) => [...prev, ...msg.turns!]);
+				} else if (msg.type === "open") {
+					setState("streaming");
+				} else if (msg.type === "done") {
+					setState("done");
+					es.close();
+				}
+			} catch {
+				/* ignore malformed frame */
+			}
+		};
+		es.onerror = () => {
+			setState("error");
+			es.close();
+		};
+		return () => es.close();
+	}, [runId, trialId]);
+
+	// Nothing to show live (already archived / no stream) → let the archived
+	// Conversation replay below stand in (graceful fallback).
+	if (turns.length === 0 && (state === "done" || state === "error")) return null;
+
+	const label =
+		state === "streaming"
+			? "● streaming"
+			: state === "done"
+				? "finished — see Conversation below"
+				: state === "error"
+					? "stream unavailable"
+					: "connecting…";
+
+	return (
+		<>
+			<h2 className="mt-7 flex items-center gap-2 text-base font-semibold">
+				Live build
+				<span className="font-normal text-muted-foreground">({label})</span>
+			</h2>
+			<Card className="mt-2">
+				<CardContent className="space-y-2 px-3 pb-3 pt-3">
+					{turns.length === 0 ? (
+						<p className="text-[12px] text-muted-foreground">
+							waiting for the agent to start…
+						</p>
+					) : (
+						turns.map((turn, i) => (
+							<TurnBlock key={`live-${i}-${turn.kind}`} turn={turn} />
+						))
+					)}
+				</CardContent>
+			</Card>
+		</>
+	);
+}
+
 function TurnBlock({ turn }: { turn: Turn }) {
 	switch (turn.kind) {
 		case "init":

@@ -26,6 +26,7 @@ import {
 	stopTrialPreview,
 	trialInventory,
 } from "../preview/studio";
+import { liveStreamResponse } from "./live-stream";
 import { reconcileRunStates, runNeedsGrading } from "./run-state";
 import { trialTranscript } from "./transcript";
 
@@ -237,6 +238,13 @@ const server = Bun.serve({
 					? Response.json(t)
 					: Response.json({ error: "no transcripts" }, { status: 404 });
 			},
+		},
+
+		// Live build stream (live-build-stream): SSE of an in-progress trial's
+		// redacted turns as they are written, then a `done` event for the client to
+		// hand off to the archived transcript above. Read-only; localhost-bound.
+		"/api/runs/:id/trials/:trialId/stream": {
+			GET: (req) => liveStreamResponse(req.params.id, req.params.trialId),
 		},
 
 		// Which app a run built (PRD title + name) and the concrete check behind

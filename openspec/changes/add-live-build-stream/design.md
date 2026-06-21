@@ -66,9 +66,19 @@ handoff so nothing is lost or doubled.
 - **Tap perturbing the build** → read-only, separate from the build exec; an
   integration test asserts identical archived transcript with and without the tap.
 
+## Resolved during implementation
+
+- **claude-replay reuse** → reuse OUR `transcript-render` parser (already
+  multi-harness incl. Codex), not claude-replay's, to keep the single-parser
+  invariant; render with the existing `TurnBlock`. claude-replay's design validated
+  the approach (line-by-line grouping, redaction, live-watch); its player remains an
+  optional future enhancement and no dependency was added.
+- **Provider read primitive** → no `Sandbox` interface change. A provider-agnostic
+  `sandboxLineReader` uses the existing `exec` with a short-lived `tail -n +N`
+  (read-only; works on every provider). A native incremental read on daytona/e2b is
+  a possible optimization but unnecessary for correctness.
+
 ## Open Questions
 
-- Vendoring claude-replay's player vs. extending the existing Conversation view —
-  decide during implementation by prototyping both against a real Codex stream.
-- Provider read primitive shape (a generic `readRange(path, offset)` on `Sandbox`)
-  and whether daytona/e2b expose an efficient incremental read.
+- Cloud-provider poll latency tuning and an eventual push transport (worktree is
+  effectively immediate today).

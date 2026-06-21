@@ -19,8 +19,15 @@ which fits the headless trial flow.
   - **Headless run**: `codex exec "<prompt>"` (non-interactive automation mode) in
     the workspace; continuation, if needed, only from the registry's content-free
     allowlist.
-  - **Model + auth**: `OPENAI_API_KEY` (or ChatGPT/Codex sign-in) + the OpenAI model
-    id (e.g. `gpt-5-codex`) via `--model`/config, resolved from the model registry.
+  - **Model + auth (model-agnostic)**: Codex is **not** OpenAI-only — it drives any
+    model via `[model_providers.<id>]` config (`base_url`, `env_key`, `wire_api`) or
+    the built-in `openai`/`ollama`/`lmstudio` providers, plus `--oss` for local
+    models. The driver configures Codex's provider + model from the run's pinned
+    worker-model profile (key/endpoint from the model registry). **Wire constraint:**
+    since Feb 2026 Codex speaks only the OpenAI **Responses API**
+    (`wire_api = "responses"`), so a non-OpenAI endpoint must expose the Responses
+    API or sit behind a translating gateway (e.g. LiteLLM/OpenRouter) — verify at
+    impl.
   - **Telemetry**: map `codex exec --json` (JSONL event stream) to `SessionRecord`;
     cost via the harness-driver cost-source rule (`harness-reported` if Codex emits
     dollars, else `profile-priced` from OpenAI pricing, else `tokens-only`). Output
@@ -30,30 +37,38 @@ which fits the headless trial flow.
     telemetry normalization, cost-source, unknown-id rejection).
 - **Candidate-registry**: candidates may add a `codex:` harness block.
 
-## Fairness note (harness↔model confound)
+## Fairness note (model-agnostic harness)
 
-Like the Gemini and Grok CLIs, the Codex CLI **only drives OpenAI models**, so
-comparing it against Claude Code (Claude models) confounds the **harness** with the
-**model**. The eval SHALL flag this: a fair head-to-head is either restricted to
-harnesses that can run the same model, or explicitly reported as a harness+model
-comparison (provenance + scorecard caveat), never as a pure harness comparison.
+Unlike the Gemini and Grok CLIs, the Codex CLI is **model-agnostic** (custom
+`model_providers` + `--oss`), like Goose and OpenHands. So it can **hold the worker
+model fixed** and take part in a *pure* harness comparison — provided the same model
+is reachable by every harness in the run. The practical limiter is the wire
+protocol: Codex requires the Responses API, while e.g. Claude Code drives Anthropic
+models, so the set of models both can drive directly is narrow (a shared gateway can
+widen it). The generic cross-harness rule still applies: a run pins one worker-model
+profile across harnesses and is keyed by (candidate, harness, workerModel); a run
+where harnesses end up on *different* models is reported as a harness+model
+comparison (provenance + scorecard caveat) — but this is the ordinary cross-model
+caveat, **not** a model-lock intrinsic to Codex.
 
 **Judge neutrality:** the blind judge SHALL be neutral to the harnesses being
-compared — for a Codex-vs-Claude-Code run, a judge from neither vendor (e.g. a
-non-OpenAI, non-Anthropic model) avoids self-preference bias; the judge SHALL NOT be
-an OpenAI model when Codex is under comparison. (Per the `harness-drivers`
-judge-neutrality requirement; a non-neutral judge is flagged as a caveat.)
+compared — a judge from neither compared vendor avoids self-preference bias (per the
+`harness-drivers` judge-neutrality requirement; a non-neutral judge is flagged as a
+caveat).
 
 ## Capabilities
 
 ### Modified Capabilities
 
-- `harness-drivers`: adds the Codex CLI driver (with contract-suite conformance) and
-  the harness↔model-confound caveat for this model-locked harness.
+- `harness-drivers`: adds the Codex CLI driver (model-agnostic via `model_providers`,
+  with contract-suite conformance).
 
 ## Impact
 
 - New driver under `src/driver/harnesses/` registered for `codex`; trial image gains
-  a pinned `@openai/codex`; `OPENAI_API_KEY` added to `.env.example` + redaction.
+  a pinned `@openai/codex`; the worker-model's auth env var (the configured
+  provider's `env_key`, e.g. `OPENAI_API_KEY` for the OpenAI provider) added to
+  `.env.example` + redaction.
 - A Codex conformance fixture added to the driver-contract test suite.
-- Probe + one smoke trial before matrix use; results carry the harness+model caveat.
+- Probe + one smoke trial before matrix use; provenance records the resolved
+  provider + model so cross-model runs carry the ordinary harness+model caveat.

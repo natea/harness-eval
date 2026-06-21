@@ -4,22 +4,24 @@
 
 ### Requirement: Codex CLI harness driver
 The system SHALL provide a Codex CLI harness driver that installs a pinned Codex CLI
-in the sandbox, runs a non-interactive `codex exec` session against the workspace on
-a configured OpenAI model, and parses its output into the common session record.
-Because the Codex CLI is restricted to OpenAI models, a run comparing it against a
-harness on a different model SHALL be recorded as a harness-and-model comparison
-(provenance + scorecard caveat), not a pure harness comparison. The driver SHALL
-pass the shared driver-contract test suite via a Codex conformance fixture.
+in the sandbox, runs a non-interactive `codex exec` session against the workspace,
+and parses its output into the common session record. The Codex CLI is
+**model-agnostic**: the driver SHALL configure Codex's model and provider from the
+run's pinned worker-model profile using Codex's `model_providers` mechanism
+(`base_url`, `env_key`, `wire_api`) or its built-in/`--oss` providers, so the worker
+model can be held fixed across harnesses where reachable. The driver SHALL pass the
+shared driver-contract test suite via a Codex conformance fixture.
 
-#### Scenario: Codex CLI headless run
-- **WHEN** a run is configured with harness `codex` and an OpenAI model
+#### Scenario: Codex CLI headless run on the configured model
+- **WHEN** a run is configured with harness `codex` and a worker-model profile
 - **THEN** trial sessions run the Codex CLI non-interactively (`codex exec`) in the
-  workspace, and provenance records harness `codex` with its version
+  workspace against that profile's model/provider, and provenance records harness
+  `codex` with its version and the resolved provider + model
 
-#### Scenario: Model-locked confound flagged
-- **WHEN** a run pits `codex` (OpenAI) against `claude-code` (Claude)
-- **THEN** the run is flagged as a harness+model comparison in provenance and the
-  scorecard, not a pure harness comparison
+#### Scenario: Cross-model run flagged generically
+- **WHEN** a run places `codex` and another harness on different worker models
+- **THEN** the run is recorded as a harness+model comparison (provenance + scorecard
+  caveat) under the ordinary cross-harness rule — not because Codex is model-locked
 
 #### Scenario: Driver passes the contract suite
 - **WHEN** the driver-contract test suite runs against the Codex conformance fixture

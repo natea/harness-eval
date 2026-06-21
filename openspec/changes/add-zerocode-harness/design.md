@@ -34,8 +34,63 @@ ZeroClaw (github.com/zeroclaw-labs/zeroclaw, Rust, MIT/Apache-2.0) is an agent *
 - [Fairness asymmetry: frameworks unavailable on zerocode] → compare only like-for-like keys (bare vs bare); leaderboard already groups by (candidate, harness, model) and never merges across harnesses.
 - [Telemetry parity (cache tokens, turn counts may not map 1:1)] → record what exists; null/0 for unavailable fields with a provenance note; never fabricate.
 
+## ACP surface — VERIFIED against ZeroClaw v0.8.1 (driver `src/driver/zeroclaw.ts`)
+
+Verified by running the real v0.8.1 binary (2026-06-21), which corrected two
+guesses in the original proposal:
+
+1. **`zeroclaw acp` is a JSON-RPC 2.0 server over _stdio_**, not a socket client
+   to a separate daemon. There is no `zeroclaw daemon --socket/--workspace` step;
+   the agent loop runs inside the ACP server process. We drive it with a bundled
+   bun stdio client (`infra/trial-image/zeroclaw-acp-client.ts`, baked into the
+   image at `/opt/zeroclaw/acp-client.ts`) that the driver invokes per turn.
+2. **Auth supports the Claude Max subscription** — `zeroclaw auth paste-token
+   --model-provider anthropic --auth-kind authorization --token "$CLAUDE_CODE_OAUTH_TOKEN"`
+   (the same token Claude Code uses; non-interactive via `--token`). The proposal's
+   "no subscription path, API credits only" was wrong. API key and 74 other
+   providers (incl. MiniMax) also work. `reportsCost: false` still holds (ZeroClaw
+   reports tokens, no billed USD; on Max there is no per-token bill).
+
+Method names/versions are pinned to ZeroClaw **v0.8.1**, `ACP_PROTOCOL_VERSION = 1`
+(observed in the live `initialize` response). Re-pin in lockstep with the image's
+`ZEROCLAW_VERSION` if the release moves.
+
+- **Handshake** — `initialize` → response `result.protocolVersion`. Asserted ===
+  `ACP_PROTOCOL_VERSION`; mismatch *or absence* (daemon never came up) throws
+  `ZeroclawProtocolError extends InfraError`, so the scheduler classifies the
+  trial **infra-failed** (retried) rather than grading a broken workspace. The
+  session executor re-throws `InfraError` instead of recording a candidate error
+  (the new `isInfraError` seam, used by both `session.ts` and `scheduler.ts`).
+- **Session** — `session/new` (params `{cwd, mcpServers:[]}`) → `result.sessionId`
+  (verified). Resume reuses that id via `session/load` (capability
+  `sessionCapabilities.resume`); `newSession` steps omit it.
+- **Prompt turn** — `session/prompt` (params `{sessionId, prompt:[{type:text,text}]}`),
+  streaming `session/update` notifications until the prompt response returns a
+  `result.stopReason`. Errors arrive as `{error:{code,message}}` responses.
+- **Streamed updates consumed** — `agent_message_chunk` (concatenated into the
+  result text used for gate detection), `tool_call` (`status: completed` counts a
+  turn when `_meta.numTurns` is absent), `usage` (`tokens.{input,output,cacheRead}`).
+- **Telemetry mapping** — tokens from the `usage` update or the prompt result's
+  `_meta.usage`; `numTurns` from `_meta.numTurns` else completed tool-calls;
+  `durationMs` from `_meta.durationMs` else 0. **`costUsd` is always 0**: ZeroClaw
+  reports no billed USD, so run cost is resolved as profile-priced/tokens-only via
+  `costSourceForHarness`, never harness-reported — `reportsCost: false`.
+- **Auth + full-auto** — applied once per trial (marker-gated) in the driver:
+  `zeroclaw auth paste-token` (Max `authorization` token from
+  `CLAUDE_CODE_OAUTH_TOKEN`, else `api-key` from `ANTHROPIC_API_KEY`) into the
+  trial's `--config-dir`, plus `zeroclaw config set
+  security_ops.require_approval_for_actions false`. Env exported inside the shell.
+
 ## Open Questions
 
-- Exact ACP method names/versions ZeroClaw implements (verify against the pinned release's docs/source at implementation time; the protocol is Zed's Agent Client Protocol).
-- Whether `zeroclaw agent` has a non-interactive print mode worth using for simple steps (cheaper than ACP for one-shot prompts).
-- Whether ZeroClaw's per-session environment snapshot needs explicit worker-auth injection or inherits the daemon's env (mirrors our Claude Code auth-precedence lesson — test both orders).
+- **Model pinning for parity** — RESOLVED in the driver: it runs
+  `zeroclaw models set <opts.model>` (the run's worker-model id, identical to the
+  one Claude Code gets via `--model`), so both harnesses run the same Opus build.
+  The studio Configure screen's Worker-model dropdown flows through the same path.
+  Live check (3.2): confirm the id is accepted by the pinned binary's Anthropic
+  catalog and that the ACP `initialize` `_meta.defaultModel` reflects it.
+- **Full-auto coverage** — `security_ops.require_approval_for_actions` is verified
+  in the config schema; confirm it (and any sandbox/permission keys) suppress
+  every approval gate during a real ACP turn.
+- **Max-token acceptance** — confirm `CLAUDE_CODE_OAUTH_TOKEN` is accepted by
+  `auth paste-token --auth-kind authorization` end-to-end during the live probe.

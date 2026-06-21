@@ -166,3 +166,37 @@ candidates:
         continuation:
           allowlist: ["proceed", "continue"]
           maxContinuations: 10
+
+  # Harness-agnostic baseline: NO framework install, the shared base prompt as
+  # the only session step, valid on every harness (candidate-registry spec D5).
+  # `bare` on claude-code vs `bare` on zerocode is the controlled harness-vs-
+  # harness comparison — same model + target, differing only in harness. Also a
+  # cheap smoke candidate. There is no framework, so `pinnedVersion` is a sentinel
+  # and `markerPaths` is empty (nothing for the blind-judge scrubber to strip).
+  - id: bare
+    name: Bare (no framework)
+    repo: https://github.com/natea/harness-eval
+    pinnedVersion: none
+    markerPaths: []
+    harnesses:
+      claude-code:
+        install: []
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue"]
+          maxContinuations: 10
+      codex:
+        install: []
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue"]
+          maxContinuations: 10
+      zerocode:
+        install: []
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue"]
+          maxContinuations: 10

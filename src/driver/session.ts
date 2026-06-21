@@ -1,7 +1,12 @@
 import type { Sandbox } from "../providers/types";
 import type { ContinuationPolicy, SessionRecord, SessionStep } from "../types";
 import { claudeCodeDriver } from "./claude";
-import type { DriverResult, HarnessDriver, RunDriverSession } from "./types";
+import {
+	type DriverResult,
+	type HarnessDriver,
+	isInfraError,
+	type RunDriverSession,
+} from "./types";
 
 export interface SessionScriptResult {
 	records: SessionRecord[];
@@ -78,6 +83,11 @@ export async function executeSessionScript(
 				env: opts.env,
 			});
 		} catch (err) {
+			// Environmental failures (dead daemon, unreachable socket, ACP
+			// handshake mismatch) are not the candidate's fault — propagate so the
+			// scheduler classifies the trial as infra-failed (and retries), rather
+			// than grading a broken workspace as a candidate result.
+			if (isInfraError(err)) throw err;
 			notes.push(`step ${i} failed: ${err}`);
 			return { records, transcripts, status: "error", cappedBy: null, notes };
 		}

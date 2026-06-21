@@ -1,0 +1,7 @@
+{"jsonrpc":"2.0","id":0,"result":{"protocolVersion":1,"agentCapabilities":{"promptCapabilities":{"image":false}}}}
+{"jsonrpc":"2.0","id":1,"result":{"sessionId":"zc-sess-contract-abcd"}}
+{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"zc-sess-contract-abcd","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"Reading the spec and "}}}}
+{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"zc-sess-contract-abcd","update":{"sessionUpdate":"tool_call","toolCallId":"tc-1","title":"write src/index.ts","status":"completed"}}}
+{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"zc-sess-contract-abcd","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"implementing the daemon."}}}}
+{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"zc-sess-contract-abcd","update":{"sessionUpdate":"usage","tokens":{"inputTokens":1200,"outputTokens":800,"cacheReadTokens":100}}}}
+{"jsonrpc":"2.0","id":2,"result":{"stopReason":"end_turn","_meta":{"numTurns":2,"durationMs":45000}}}

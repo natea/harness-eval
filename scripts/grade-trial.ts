@@ -15,12 +15,15 @@
  * scrubs the workspace, runs the blind code-quality judge, writes grades.json.
  */
 import {
+	cpSync,
 	existsSync,
+	mkdtempSync,
 	readdirSync,
 	readFileSync,
 	rmSync,
 	writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { judgeQualityCC, runEvaluatorCC } from "../src/grading/cc-driver";
 import { runEvaluator } from "../src/grading/evaluator";
@@ -91,8 +94,17 @@ const mockPort = 4290 + Math.floor(Math.random() * 100);
 const fixtures = startFixtures(target, mockPort);
 await new Promise((r) => setTimeout(r, 500));
 
+// Boot the app-under-test from a copy OUTSIDE the repo tree: under runs/, Node's
+// ancestor `package.json` resolution hits the harness repo's ("type":"module")
+// and crashes a no-package.json CommonJS app at boot (false-negative). See
+// src/orchestrator/grade.ts for the full rationale. Declared before the try so the
+// finally can clean it up.
+const isolatedRoot = mkdtempSync(join(tmpdir(), `he-grade-${trialId}-`));
+const evalWorkspace = join(isolatedRoot, "workspace");
+
 try {
 	writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
+	cpSync(workspace, evalWorkspace, { recursive: true });
 	console.log(
 		`[grade] evaluator starting (driver ${driver}, model ${judgeModel}, mock :${mockPort})`,
 	);
@@ -115,7 +127,7 @@ try {
 		driver === "cc"
 			? await runEvaluatorCC(plan, {
 					model: judgeModel,
-					workspaceDir: workspace,
+					workspaceDir: evalWorkspace,
 					trialDir,
 					mockLinearUrl:
 						fixtures.find((f) => f.name === "mock-linear")?.value ??
@@ -125,7 +137,7 @@ try {
 				})
 			: await runEvaluator(plan, {
 					model: judgeModel,
-					workspaceDir: workspace,
+					workspaceDir: evalWorkspace,
 					mockLinearUrl:
 						fixtures.find((f) => f.name === "mock-linear")?.value ??
 						`http://localhost:${mockPort}`,
@@ -195,4 +207,5 @@ try {
 	);
 } finally {
 	stopFixtures(fixtures);
+	rmSync(isolatedRoot, { recursive: true, force: true });
 }

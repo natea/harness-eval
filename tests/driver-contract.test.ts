@@ -112,6 +112,25 @@ const CASES: DriverContractCase[] = [
 			numTurns: 1,
 		},
 	},
+	{
+		// ZeroClaw drives the agent over ACP and reports usage but NO billed USD
+		// (record.costUsd = 0), so the parsed record carries no dollars; against an
+		// unpriced non-anthropic profile that classifies tokens-only. sessionId is
+		// the ACP session/new result; numTurns comes from the prompt result _meta.
+		// (Production resolves the run-level cost source via costSourceForHarness,
+		// which keeps zerocode profile-priced/tokens-only even on an Anthropic
+		// profile — see models.costSourceForHarness.)
+		harnessId: "zerocode",
+		fixture: "zerocode.jsonl",
+		profile: () => resolveProfile("glm-5.1", loadModels()),
+		expected: {
+			costSource: "tokens-only",
+			costUsd: null,
+			isError: false,
+			sessionId: "zc-sess-contract-abcd",
+			numTurns: 2,
+		},
+	},
 ];
 
 // Sanity: every runnable driver has a contract case. If this fails, a driver was

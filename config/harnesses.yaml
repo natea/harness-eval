@@ -1,7 +1,6 @@
 # Harness registry - agent backends the orchestrator knows how to drive.
 # Candidate registry harness sections and run configs are validated against
-# these IDs. Driver support remains intentionally narrow: Claude Code is the
-# only implemented backend today.
+# these IDs. Claude Code, Codex, and zerocode (ZeroClaw) have runnable drivers.
 
 harnesses:
   - id: claude-code
@@ -11,7 +10,21 @@ harnesses:
 
   # OpenAI Codex CLI — model-agnostic (configure model/provider per worker
   # profile). Headless via `codex exec --json`. Re-pin defaultVersion at impl.
+  # Codex reports tokens but no billed USD → cost is profile-priced/tokens-only.
   - id: codex
     name: Codex CLI
     driver: codex
     defaultVersion: 0.50.0
+    reportsCost: false
+
+  # ZeroClaw (zerocode) — Rust agent runtime; driven headlessly per trial via
+  # `zeroclaw acp` (JSON-RPC 2.0 over stdio), one ACP turn per session step.
+  # Auth is a ZeroClaw profile: the Claude Max subscription token (verified
+  # v0.8.1 — true Opus parity with Claude Code, no API spend) or an API key.
+  # ZeroClaw reports usage but no billed USD → cost is profile-priced/tokens-only,
+  # never harness-reported.
+  - id: zerocode
+    name: zerocode (ZeroClaw)
+    driver: zerocode
+    defaultVersion: 0.8.1
+    reportsCost: false

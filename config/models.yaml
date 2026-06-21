@@ -14,6 +14,17 @@
 
 profiles:
   # --- Native Anthropic (Claude Code / Max subscription) ---
+  # Current flagship; ZeroClaw's ACP default is also claude-opus-4-8, so pass this
+  # as --worker-model to BOTH --harness claude-code and --harness zerocode for a
+  # like-for-like head-to-head (the zerocode driver runs `zeroclaw models set`
+  # with this id; Claude Code passes it via --model).
+  - name: claude-opus-4-8
+    provider: anthropic
+    modelId: claude-opus-4-8
+    transport: claude-code
+    authEnv: CLAUDE_CODE_OAUTH_TOKEN
+    authKind: oauth
+
   - name: claude-opus-4-6
     provider: anthropic
     modelId: claude-opus-4-6
@@ -35,6 +46,25 @@ profiles:
     transport: claude-code
     authEnv: CLAUDE_CODE_OAUTH_TOKEN
     authKind: oauth
+
+  # Native Anthropic via an explicit API key — OPTIONAL ZeroClaw (zerocode) route
+  # for accounts without a Max subscription. ZeroClaw ALSO supports the Claude Max
+  # subscription (verified v0.8.1: `zeroclaw auth paste-token --auth-kind
+  # authorization`, reusing CLAUDE_CODE_OAUTH_TOKEN) — prefer the native
+  # `claude-opus-4-6` profile for that (parity with Claude Code, no API spend).
+  # This api-key profile is the fallback: resolveWorkerEnv injects
+  # ANTHROPIC_API_KEY and blanks the OAuth token. Pricing set so token-only runs
+  # report profile-priced cost (Opus list price $/Mtok; re-verify). Use with
+  # `--harness zerocode --worker-model claude-opus-4-6-api`.
+  - name: claude-opus-4-6-api
+    provider: anthropic
+    modelId: claude-opus-4-6
+    transport: anthropic-sdk
+    authEnv: ANTHROPIC_API_KEY
+    authKind: api-key
+    pricing:
+      inputPerMtokUsd: 15
+      outputPerMtokUsd: 75
 
   # --- z.ai GLM via Claude Code (Anthropic-compatible coding endpoint) ---
   # Endpoint + integration per docs.z.ai/devpack/tool/claude. z.ai maps Claude's

@@ -221,6 +221,24 @@ export function resolveWorkerEnv(
 		const r = resolveClaudeCodeEnv(p, lookup);
 		return { env: r.env, modelFlag: r.modelFlag };
 	}
+	// Native Anthropic via an explicit API key (the ZeroClaw route: ZeroClaw bills
+	// the API account — there is no subscription path). Inject the key and blank
+	// the OAuth token so the scheduler's native fallback can't override it with a
+	// subscription token (the worker-auth precedence rule, inverted: here the API
+	// key is the intended credential, not the silent-billing hazard).
+	if (p.authKind === "api-key") {
+		const token = lookup[p.authEnv];
+		if (!token) {
+			throw new ModelError(
+				`${p.authEnv} is not set (required by model profile '${p.name}')`,
+			);
+		}
+		return {
+			env: { ANTHROPIC_API_KEY: token, CLAUDE_CODE_OAUTH_TOKEN: "" },
+			modelFlag: p.modelId,
+			note: "anthropic api-key",
+		};
+	}
 	return { modelFlag: p.modelId };
 }
 
@@ -283,6 +301,21 @@ export function defaultCostSource(p: ModelProfile): CostSource {
 	if (p.provider === "anthropic") return "harness-reported";
 	if (p.pricing) return "profile-priced";
 	return "tokens-only";
+}
+
+/**
+ * Cost source for a profile run on a specific harness. Claude Code reports
+ * Anthropic-billed USD, so native runs are `harness-reported`. Token-only
+ * harnesses (Codex, ZeroClaw) report no billed USD even on the Anthropic route,
+ * so cost falls back to model-registry pricing (`profile-priced`) or recorded
+ * tokens (`tokens-only`) — never a fabricated harness-reported figure.
+ */
+export function costSourceForHarness(
+	p: ModelProfile,
+	harnessReportsCost: boolean,
+): CostSource {
+	if (harnessReportsCost) return defaultCostSource(p);
+	return p.pricing ? "profile-priced" : "tokens-only";
 }
 
 export interface CostEstimate {

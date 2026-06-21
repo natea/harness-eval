@@ -1,4 +1,11 @@
-import { existsSync, writeFileSync } from "node:fs";
+import {
+	cpSync,
+	existsSync,
+	mkdtempSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { LoadedDesign } from "../designs";
 import { judgeQualityCC, runEvaluatorCC } from "../grading/cc-driver";
@@ -79,6 +86,20 @@ export async function gradeTrials(
 		const fixtures = startFixtures(target, mockPort);
 		await new Promise((r) => setTimeout(r, 500));
 		writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
+		// Run the app-under-test from a copy OUTSIDE the repo tree. The evaluator
+		// boots the built app (`node server.js`), and Node resolves `package.json`
+		// by climbing ancestor dirs — a workspace under `runs/` hits the harness
+		// repo's own `package.json` ("type":"module"), which makes Node treat a
+		// no-package.json CommonJS app as ESM and crash it at boot (a false-negative
+		// that fatal-fails the whole test plan). A tmp copy (os.tmpdir() is never
+		// under the repo) breaks that ancestor chain, so the app's own package.json —
+		// or its absence (→ CommonJS default) — governs. Quality/design judging read
+		// files only (no app boot), so they keep using the archived workspace.
+		const isolatedRoot = mkdtempSync(join(tmpdir(), `he-grade-${trialId}-`));
+		const evalWorkspace = join(isolatedRoot, "workspace");
+		cpSync(workspace, evalWorkspace, { recursive: true });
+		const cleanupIsolated = () =>
+			rmSync(isolatedRoot, { recursive: true, force: true });
 		const driver = opts.driver ?? "cc";
 		const mockLinearUrl =
 			fixtures.find((f) => f.name === "mock-linear")?.value ??
@@ -97,13 +118,13 @@ export async function gradeTrials(
 						driver === "sdk"
 							? await runEvaluator(target.plan, {
 									model: judgeModel,
-									workspaceDir: workspace,
+									workspaceDir: evalWorkspace,
 									mockLinearUrl,
 									stubAppServerPath,
 								})
 							: await runEvaluatorCC(target.plan, {
 									model: judgeModel,
-									workspaceDir: workspace,
+									workspaceDir: evalWorkspace,
 									trialDir,
 									mockLinearUrl,
 									stubAppServerPath,
@@ -131,12 +152,14 @@ export async function gradeTrials(
 			// leave it ungraded (a later scripts/grade-trial.ts re-grade fills it in)
 			// and continue, so the run still finalizes with the grades that completed.
 			stopFixtures(fixtures);
+			cleanupIsolated();
 			const note = `grading incomplete: ${String(e).slice(0, 140)}`;
 			log(`  ${trialId}: ${note}`);
 			trial.provenance.notes.push(note);
 			continue;
 		}
 		stopFixtures(fixtures);
+		cleanupIsolated();
 		const { adherence, quality } = graded;
 
 		// Design adherence (static, no browser) when a UI design was selected.

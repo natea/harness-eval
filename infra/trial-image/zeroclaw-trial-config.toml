@@ -1,0 +1,139 @@
+# ZeroClaw trial config — harness-eval (add-zerocode-harness).
+#
+# A complete, SECRET-FREE config the zerocode driver copies into each trial's
+# config-dir. ZeroClaw's `risk_profiles`/`runtime_profiles` entries cannot be
+# created field-by-field via `config set` (only `quickstart`, which is
+# interactive, writes them), so they are authored here once. Per trial the driver
+# adds auth (`zeroclaw auth paste-token`) and pins the model
+# (`config set providers.models.anthropic.anthropic.model <id>` + `models set`).
+#
+# NEVER put a credential here (no api_key / tokens) — secrets are env-only and
+# injected at runtime via the auth profile (CLAUDE.md invariant).
+#
+# Derived from a quickstart-generated config; channels/gateway/peer_groups
+# stripped. Verified to load + run an ACP coding turn on ZeroClaw v0.8.1.
+schema_version = 3
+
+[onboard_state]
+quickstart_completed = true
+
+[providers]
+[providers.models]
+[providers.models.anthropic]
+[providers.models.anthropic.anthropic]
+# Overridden per trial by `config set` to the run's worker-model id.
+model = "claude-opus-4-8"
+
+[memory]
+backend = "sqlite.sqlite"
+
+# The trial agent the ACP client names (`session/new` agentAlias = "trial").
+[agents]
+[agents.trial]
+model_provider = "anthropic.anthropic"
+risk_profile = "trial"
+runtime_profile = "unbounded"
+classifier_provider = ""
+transcription_provider = ""
+tts_provider = ""
+channels = []
+cron_jobs = []
+delegates = []
+delegate_same_risk_profile = true
+enabled = true
+knowledge_bundles = []
+mcp_bundles = []
+skill_bundles = []
+
+[agents.trial.identity]
+format = "openclaw"
+
+[agents.trial.memory]
+backend = "sqlite"
+
+[agents.trial.workspace]
+read_memory_from = []
+unrestricted_filesystem = false
+
+[agents.trial.workspace.access]
+
+# Full-auto risk profile (design D3): no approvals, no OS sandbox (the trial is
+# already a disposable sandbox). forbidden_paths is EMPTY so the agent can write
+# the trial workspace under /home/ubuntu/workspace (the upstream `yolo` profile
+# forbids /home, which would block every edit).
+[risk_profiles]
+[risk_profiles.trial]
+level = "full"
+allowed_commands = ["*"]
+block_high_risk_commands = false
+require_approval_for_medium_risk = false
+sandbox_enabled = false
+workspace_only = false
+allowed_roots = []
+allowed_tools = []
+always_ask = []
+auto_approve = []
+excluded_tools = []
+firejail_args = []
+forbidden_paths = []
+shell_env_passthrough = []
+
+[risk_profiles.trial.delegation_policy]
+mode = "forbidden"
+
+[runtime_profiles]
+[runtime_profiles.unbounded]
+agentic = true
+agentic_timeout_secs = 1800
+compact_context = false
+delegation_timeout_secs = 900
+keep_tool_context_turns = 8
+max_actions_per_hour = 4294967295
+max_context_tokens = 128000
+max_cost_per_day_cents = 4294967295
+max_delegation_depth = 8
+max_history_messages = 200
+max_system_prompt_chars = 64000
+max_tool_iterations = 100
+max_tool_result_chars = 64000
+memory_recall_limit = 10
+parallel_tools = true
+shell_timeout_secs = 600
+strict_tool_parsing = false
+tool_call_dedup_exempt = []
+tool_filter_groups = []
+
+[runtime_profiles.unbounded.thinking]
+default_level = "medium"
+native_thinking = false
+
+[runtime_profiles.unbounded.thinking.budget_tokens]
+
+[runtime_profiles.unbounded.context_compression]
+enabled = true
+identifier_policy = "strict"
+max_passes = 3
+protect_first_n = 3
+protect_last_n = 4
+source_max_chars = 50000
+summary_max_chars = 4000
+threshold_ratio = 0.5
+timeout_secs = 60
+tool_result_retrim_chars = 2000
+tool_result_trim_exempt = []
+
+[runtime_profiles.unbounded.eval]
+enabled = false
+max_retries = 1
+min_quality_score = 0.5
+
+[runtime_profiles.unbounded.history_pruning]
+collapse_tool_results = true
+enabled = false
+keep_recent = 4
+max_tokens = 8192
+
+[runtime_profiles.unbounded.tool_receipts]
+enabled = false
+inject_system_prompt = true
+show_in_response = false

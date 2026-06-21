@@ -27,7 +27,7 @@ import { type LoadedDesign, loadDesign } from "./designs";
 import { loadManifest } from "./grading/integration";
 import { loadHarnesses, resolveHarness } from "./harnesses";
 import {
-	defaultCostSource,
+	costSourceForHarness,
 	judgeWorkerRelation,
 	loadModels,
 	resolveClaudeCodeEnv,
@@ -189,7 +189,10 @@ async function cmdRun(): Promise<void> {
 	}
 	const workerModelRef = toModelRef(workerProfile);
 	const judgeModelRef = toModelRef(judgeProfile);
-	const costSource = defaultCostSource(workerProfile);
+	// Token-only harnesses (Codex, ZeroClaw) report no billed USD even on the
+	// Anthropic route, so cost is profile-priced/tokens-only — never the harness's
+	// (absent) dollar figure.
+	const costSource = costSourceForHarness(workerProfile, harness.reportsCost);
 
 	const target = loadTarget(arg("target") ?? "symphony-daemon");
 

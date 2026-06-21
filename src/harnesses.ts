@@ -5,7 +5,7 @@ import { HarnessId, type HarnessId as HarnessIdType } from "./types";
 
 export class HarnessError extends Error {}
 
-export const HarnessDriver = z.enum(["claude-code", "codex"]);
+export const HarnessDriver = z.enum(["claude-code", "codex", "zerocode"]);
 export type HarnessDriver = z.infer<typeof HarnessDriver>;
 
 export const HarnessDefinition = z.object({
@@ -13,6 +13,13 @@ export const HarnessDefinition = z.object({
 	name: z.string().min(1),
 	driver: HarnessDriver,
 	defaultVersion: z.string().min(1),
+	/**
+	 * Whether the harness reports per-run dollar cost (Claude Code's
+	 * `total_cost_usd`). Token-only harnesses (Codex, ZeroClaw) report usage but
+	 * no billed USD, so cost is estimated from model-registry pricing or recorded
+	 * tokens-only — never as a fabricated/harness-reported figure.
+	 */
+	reportsCost: z.boolean().default(true),
 });
 export type HarnessDefinition = z.infer<typeof HarnessDefinition>;
 
@@ -52,6 +59,20 @@ export function listHarnesses(
 	registry: HarnessRegistry = loadHarnesses(),
 ): HarnessDefinition[] {
 	return [...registry.values()];
+}
+
+/**
+ * Whether the given harness reports billed USD. Unknown ids default to `true`
+ * (the Claude Code assumption) rather than throwing — cost labeling is a
+ * best-effort hint, not a load-time invariant.
+ */
+export function harnessReportsCost(
+	id: string,
+	registry: HarnessRegistry = loadHarnesses(),
+): boolean {
+	const parsed = HarnessId.safeParse(id);
+	if (!parsed.success) return true;
+	return registry.get(parsed.data)?.reportsCost ?? true;
 }
 
 export function resolveHarness(

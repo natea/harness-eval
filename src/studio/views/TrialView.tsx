@@ -770,6 +770,7 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 	const [state, setState] = useState<
 		"connecting" | "streaming" | "done" | "error"
 	>("connecting");
+	const doneRef = useRef(false);
 
 	useEffect(() => {
 		const es = new EventSource(`/api/runs/${runId}/trials/${trialId}/stream`);
@@ -780,8 +781,9 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 					setState("streaming");
 					setTurns((prev) => [...prev, ...msg.turns!]);
 				} else if (msg.type === "open") {
-					setState("streaming");
+					setState((s) => (s === "connecting" ? "streaming" : s));
 				} else if (msg.type === "done") {
+					doneRef.current = true;
 					setState("done");
 					es.close();
 				}
@@ -789,24 +791,30 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 				/* ignore malformed frame */
 			}
 		};
+		// EventSource fires `onerror` on a NORMAL server close too, so don't treat a
+		// post-`done` (or post-stream) close as a failure — only surface an error if
+		// we never got past the initial connect.
 		es.onerror = () => {
-			setState("error");
 			es.close();
+			if (doneRef.current) return;
+			setState((s) => (s === "connecting" ? "error" : "done"));
 		};
 		return () => es.close();
 	}, [runId, trialId]);
 
-	// Nothing to show live (already archived / no stream) → let the archived
-	// Conversation replay below stand in (graceful fallback).
-	if (turns.length === 0 && (state === "done" || state === "error")) return null;
+	// Finished/ended with turns already shown → keep them with a handoff note (the
+	// archived Conversation below is the full replay). Nothing streamed → step aside.
+	if (state === "done" || state === "error") {
+		if (turns.length === 0) return null;
+	}
 
 	const label =
 		state === "streaming"
 			? "● streaming"
 			: state === "done"
-				? "finished — see Conversation below"
+				? "✓ finished — full replay in Conversation below (reload if needed)"
 				: state === "error"
-					? "stream unavailable"
+					? "stream ended"
 					: "connecting…";
 
 	return (

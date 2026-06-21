@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
+import { loadCatalogSafe } from "../catalog";
 import { listHarnesses, loadHarnesses } from "../harnesses";
 import { judgeWorkerRelation, loadModels, resolveProfile } from "../models";
 import { loadRegistry } from "../registry";
@@ -13,8 +14,17 @@ import {
 const REGISTRY_PATH = "config/registry.yaml";
 const DEFAULTS_PATH = "config/run.defaults.yaml";
 
+export interface TargetOption {
+	name: string;
+	summary: string;
+	shape: string;
+	expectedUI: string;
+}
+
 export interface StudioOptions {
 	targets: string[];
+	/** Catalog metadata per target so the picker shows what will be built. */
+	targetCatalog: TargetOption[];
 	candidates: { id: string; name: string; harnesses: string[] }[];
 	harnesses: string[];
 	models: { name: string; provider: string }[];
@@ -37,8 +47,17 @@ export function studioOptions(): StudioOptions {
 				existsSync(`targets/${d}/target.yaml`),
 			)
 		: [];
+	// Catalog metadata for the picker (eval-studio: show what will be built before
+	// launch). Loaded defensively so a mid-edit target never 500s the options API.
+	const targetCatalog: TargetOption[] = loadCatalogSafe().map((e) => ({
+		name: e.name,
+		summary: e.summary,
+		shape: e.shape,
+		expectedUI: e.expectedUI,
+	}));
 	return {
 		targets,
+		targetCatalog,
 		candidates: registry.candidates.map((c) => ({
 			id: c.id,
 			name: c.name,

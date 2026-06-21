@@ -32,7 +32,29 @@ export const SourceProvenance = z.object({
 });
 export type SourceProvenance = z.infer<typeof SourceProvenance>;
 
+/**
+ * Catalog metadata so an operator knows what a target builds before selecting it
+ * (eval-targets spec: "Target definition and manifest"). Descriptive only — it
+ * is NEVER injected into the rendered base prompt (fairness invariant), it just
+ * powers `validate`/listing in the CLI, the Studio target picker, and the
+ * generated `docs/TARGETS.md`. `expectedUI` states how much rendered UI a
+ * CONFORMANT build will actually have given the (HTTP-light) test plan — it is
+ * documentation, not something the harness enforces.
+ */
+export const CatalogTags = z.object({
+	domain: z.string().min(1),
+	shape: z.string().min(1),
+	expectedUI: z.enum(["none", "served-page", "interactive"]),
+});
+export type CatalogTags = z.infer<typeof CatalogTags>;
+
 export const TargetManifest = z.object({
+	/** One-line catalog summary (what this target builds). */
+	summary: z.string().min(1),
+	/** Longer catalog description: the deliverable and what is graded. */
+	description: z.string().min(1),
+	/** Catalog tags: domain, software shape, and expected rendered UI. */
+	tags: CatalogTags,
 	name: z.string().regex(/^[a-z0-9-]+$/),
 	version: z.string(),
 	prdFile: z.string(),
@@ -214,6 +236,14 @@ steps:
 	writeFileSync(
 		manifestPath,
 		`name: ${name}
+summary: TODO — one line on what a conformant build of this target produces
+description: >
+  TODO — a few sentences on the deliverable and what is graded, so an operator
+  knows what to expect before selecting this target.
+tags:
+  domain: TODO # e.g. scheduling, developer-tooling, logistics
+  shape: TODO # e.g. rest-api, cli, daemon-service, web-api-served-page
+  expectedUI: none # none | served-page | interactive (what a graded build actually renders)
 version: "0.1.0"
 prdFile: PRD.md
 prdSha256: ${prdSha256}

@@ -1,0 +1,119 @@
+# Frozen test plan for the `notes` target (Notes Service MVP).
+# Adapted from the ViBench `notes` test plans, re-authored as HTTP-observable
+# checks (no browser; the harness evaluator is HTTP-light in v1).
+# ViBench semantics: sequential, weighted, fatal gates halt.
+# Evidence = requests issued (curl) + observed status codes / JSON bodies.
+#
+# Clock-independence: notes carry a server-generated `updatedAt`. Checks assert
+# its FORMAT (regex) and RELATIVE ordering across notes — never an absolute time
+# — so grading does not depend on "today".
+version: "1.0.0"
+prdSha256: 0333c2ba5365d714b4650ca270c5cbb307ab37f353ea6f99675c606281687d3a
+
+steps:
+  - id: S-1
+    covers: ["9.R1"]
+    description: setup.sh installs deps and start.sh boots the service on $PORT
+    check: >
+      Run ./setup.sh in a clean copy (exit 0). Then PORT=3000 ./start.sh & ;
+      poll http://localhost:3000/ or any documented endpoint until the service
+      answers within 30s. Fatal: if the service never serves, it cannot be
+      evaluated.
+    weight: 4
+    fatal: true
+
+  - id: AUTH-1
+    covers: ["1", "9.R2"]
+    description: unlock check returns 200 / 400 / 401
+    check: >
+      POST /api/unlock {"password":"my-notes-are-mine"} → 200 with {"ok":true}.
+      POST /api/unlock {} (or empty password) → 400 with an `error` field.
+      POST /api/unlock {"password":"nope"} → 401 with an `error` field.
+    weight: 3
+
+  - id: AUTH-2
+    covers: ["0", "9.R3"]
+    description: the password header gates all note endpoints
+    check: >
+      GET /api/notes with no X-Notes-Password → 401; with
+      X-Notes-Password: wrong → 401; neither response body contains note data.
+      GET /api/notes with X-Notes-Password: my-notes-are-mine → 200. (All
+      subsequent steps send the correct header.)
+    weight: 4
+    fatal: true
+
+  - id: LIST-1
+    covers: ["3", "9.R4"]
+    description: empty store lists as []
+    check: >
+      On a fresh store, GET /api/notes → 200 with [].
+    weight: 2
+
+  - id: CRT-1
+    covers: ["4", "9.R5"]
+    description: create a note and see it listed
+    check: >
+      POST /api/notes {"body":"Groceries\nmilk and eggs"} → 201 with a
+      server-assigned id and the echoed body. Then GET /api/notes includes a row
+      with that id.
+    weight: 4
+
+  - id: DRV-1
+    covers: ["2", "9.R6", "9.R7"]
+    description: derived title and preview
+    check: >
+      For the note created in CRT-1, title is "Groceries" (first non-empty
+      trimmed line) and preview is "milk and eggs" (first non-empty line after
+      the title). POST /api/notes {"body":""} → 201 with title exactly
+      "New Note" and preview "".
+    weight: 5
+
+  - id: DRV-2
+    covers: ["2", "9.R8"]
+    description: updatedAt format
+    check: >
+      Every returned updatedAt matches the regex
+      ^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$ (YYYY-MM-DD hh:mm, 24-hour UTC).
+    weight: 3
+
+  - id: VIEW-1
+    covers: ["5", "9.R9"]
+    description: fetch by id and unknown-id 404
+    check: >
+      GET /api/notes/<id from CRT-1> → 200 with the full note including body;
+      GET /api/notes/does-not-exist → 404.
+    weight: 2
+
+  - id: EDIT-1
+    covers: ["6", "9.R10"]
+    description: edit updates derived fields and advances updatedAt
+    check: >
+      Record updatedAt of the CRT-1 note. PUT /api/notes/<id>
+      {"body":"Shopping\nbread"} → 200 with title "Shopping", preview "bread",
+      and updatedAt >= the recorded value. PUT /api/notes/does-not-exist → 404.
+    weight: 4
+
+  - id: SORT-1
+    covers: ["3", "9.R4", "9.R10"]
+    description: list is sorted by last-edited time descending
+    check: >
+      With at least two notes, the most-recently-PUT/POSTed note appears first
+      in GET /api/notes, and updatedAt values are non-increasing down the list.
+    weight: 3
+
+  - id: SRCH-1
+    covers: ["7", "9.R11"]
+    description: case-insensitive substring search over title or body
+    check: >
+      GET /api/notes?q=BREAD returns the note whose body contains "bread"
+      (case-insensitive) and excludes non-matching notes; results stay in
+      last-edited descending order. GET /api/notes with empty q returns all.
+    weight: 4
+
+  - id: DEL-1
+    covers: ["8", "9.R12"]
+    description: delete removes the note everywhere
+    check: >
+      DELETE /api/notes/<id> → 204. GET /api/notes/<id> → 404 and GET /api/notes
+      no longer lists it. DELETE /api/notes/<id> again (unknown) → 404.
+    weight: 4

@@ -10,8 +10,16 @@ import {
 import { DEFAULT_WEIGHTS, useFetch } from "../lib/api";
 import { WeightControls } from "./shared";
 
+interface TargetOption {
+	name: string;
+	summary: string;
+	shape: string;
+	expectedUI: string;
+}
+
 interface Options {
 	targets: string[];
+	targetCatalog?: TargetOption[];
 	candidates: { id: string; name: string; harnesses: string[] }[];
 	harnesses: string[];
 	models: { name: string; provider: string }[];
@@ -182,6 +190,22 @@ export function Configure() {
 								</option>
 							))}
 						</select>
+
+						{(() => {
+							const meta = opts.targetCatalog?.find((c) => c.name === target);
+							if (!meta) return null;
+							return (
+								<>
+									<span />
+									<p className="text-[12px] text-muted-foreground">
+										{meta.summary}{" "}
+										<span className="text-muted-foreground/70">
+											[{meta.shape}, ui:{meta.expectedUI}]
+										</span>
+									</p>
+								</>
+							);
+						})()}
 
 						<label htmlFor="harness" className="text-[13px]">
 							Harness

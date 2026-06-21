@@ -1,0 +1,48 @@
+name: marketplace
+summary: Marketplace API with a capability-link order lifecycle (available → pending → sold).
+description: >
+  An HTTP/JSON marketplace: sellers create listings and receive a secret seller
+  token; buyers check out and receive a secret buyer token; access is by
+  unguessable capability link, not accounts. Drives a multi-actor state machine
+  — available → pending → sold, or back to available on cancel — with a
+  single-winner checkout rule and strict token/contact privacy on public
+  endpoints. HTTP-light: image upload is a URL string, pages are JSON reads, and
+  concurrency is checked sequentially. No rendered UI.
+tags:
+  domain: commerce
+  shape: rest-api-state-machine
+  expectedUI: none
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: c843ba877f57cf656bd7ab7fcd549ff9d9c7c29932f8007ae60bc634285e3c40
+testplanFile: testplan.yaml
+conformanceSection: 'section 7 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-21: every REQUIRED item R1-R11 maps to >=1 test-plan
+  step (R1:S-1; R2:LST-1; R3:BRW-1; R4:DET-1; R5:CO-1; R6:CO-2; R7:SEL-1;
+  R8:SEL-2; R9:SEL-3; R10:BUY-1; R11:SEC-1). All checks are HTTP-observable
+  (status codes + JSON bodies). The upstream PRD's image file upload becomes an
+  imageUrl string and its rendered pages become JSON reads; true concurrency is
+  out of scope, so the single-winner rule is checked sequentially.
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/market_place
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `market_place` browser-driven PRD into an HTTP/JSON
+    API target: capability links as tokens, product image as a URL string,
+    seller/buyer pages as JSON reads; file upload and true concurrency dropped.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the marketplace service on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 7 is the Definition of Done; Section 8 lists non-goals (no image
+  upload, no accounts, no payments). Product image is an `imageUrl` string.
+  Access is via secret seller/buyer tokens that must be distinct from each other
+  and the public id and never leaked by public endpoints. Lifecycle:
+  available → pending (checkout) → sold (confirm) or → available (cancel).
+  In-process persistence is acceptable.
+fixtures: []

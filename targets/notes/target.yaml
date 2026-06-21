@@ -1,0 +1,47 @@
+name: notes
+summary: Password-gated plain-text notes service — HTTP/JSON CRUD with search.
+description: >
+  A single-space notes API behind a fixed password header: create/list/view/
+  edit/delete plain-text notes plus case-insensitive substring search. Exercises
+  derived fields (title = first non-empty line, preview = next line), a
+  YYYY-MM-DD hh:mm UTC timestamp format, last-edited-descending sort, and a
+  401 auth gate. HTTP-light: graded over JSON only (no browser); in-process
+  persistence is acceptable. No rendered UI.
+tags:
+  domain: productivity
+  shape: rest-api
+  expectedUI: none
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: 0333c2ba5365d714b4650ca270c5cbb307ab37f353ea6f99675c606281687d3a
+testplanFile: testplan.yaml
+conformanceSection: 'section 9 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-21: every REQUIRED item R1-R12 maps to >=1 test-plan
+  step (R1:S-1; R2:AUTH-1; R3:AUTH-2; R4:LIST-1,SORT-1; R5:CRT-1; R6:DRV-1;
+  R7:DRV-1; R8:DRV-2; R9:VIEW-1; R10:EDIT-1,SORT-1; R11:SRCH-1; R12:DEL-1). All
+  checks are HTTP-observable (status codes + JSON bodies). The browser-only
+  concerns of the upstream PRD (masked field, editor cursor, confirmation
+  dialog, tab-session re-lock, per-note URLs) are dropped for the HTTP-light v1
+  evaluator. updatedAt is graded by format + relative ordering only, so checks
+  are clock-independent.
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/notes
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `notes` browser-driven PRD into an HTTP/JSON API
+    target: the password gate becomes an `X-Notes-Password` header, autosave
+    becomes an explicit PUT, and DOM/URL/session concerns are out of scope.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the notes service on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 9 is the Definition of Done; Section 10 lists non-goals. The password
+  is fixed (`my-notes-are-mine`) and sent via the `X-Notes-Password` header.
+  Derived `title`/`preview` rules and the `YYYY-MM-DD hh:mm` UTC `updatedAt`
+  format are graded exactly. In-process persistence is acceptable.
+fixtures: []

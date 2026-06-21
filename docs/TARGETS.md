@@ -8,6 +8,7 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 | Target | Shape | Expected UI | Summary |
 | --- | --- | --- | --- |
 | `cli-tool` | cli | none | A line-oriented tally/aggregation CLI over newline-delimited records. |
+| `notes` | rest-api | none | Password-gated plain-text notes service — HTTP/JSON CRUD with search. |
 | `rest-api` | rest-api | none | Logistics quote/ROI + lead-capture HTTP/JSON API with an authenticated admin view. |
 | `symphony-daemon` | daemon-service | none | A long-running daemon that orchestrates coding agents to complete project work. |
 | `web-app` | web-api-served-page | served-page | Barber-shop appointment scheduling — HTTP/JSON API behind a served root page. |
@@ -19,6 +20,15 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 - **Expected UI:** none
 
 `tally` — a single-binary command-line tool that counts and summarizes newline-delimited records from stdin or files, with flags for grouping and output formatting (POSIX `wc` semantics where specified). Graded by invoking the built binary through `run.sh` and asserting stdout + exit codes against the frozen Definition of Done. No rendered UI.
+
+## `notes` (v1.0.0)
+
+- **Domain:** productivity
+- **Shape:** rest-api
+- **Expected UI:** none
+- **Adapted from:** vibench-public
+
+A single-space notes API behind a fixed password header: create/list/view/ edit/delete plain-text notes plus case-insensitive substring search. Exercises derived fields (title = first non-empty line, preview = next line), a YYYY-MM-DD hh:mm UTC timestamp format, last-edited-descending sort, and a 401 auth gate. HTTP-light: graded over JSON only (no browser); in-process persistence is acceptable. No rendered UI.
 
 ## `rest-api` (v1.0.0)
 

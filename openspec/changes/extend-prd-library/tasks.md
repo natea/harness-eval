@@ -17,9 +17,9 @@
 
 ## 2. Adapt the ViBench catalog subset (HTTP-light, frozen, attested)
 
-- [ ] 2.1 Fetch the candidate ViBench PRDs at a pinned commit and vet each for
+- [x] 2.1 Fetch the candidate ViBench PRDs at a pinned commit and vet each for
   HTTP-observability; record the final selection (≥4) and pinned commit
-- [ ] 2.2 Adapt target **notes** (CRUD + search): PRD.md, HTTP-observable
+- [x] 2.2 Adapt target **notes** (CRUD + search): PRD.md, HTTP-observable
   weighted testplan.yaml (fatal cold-start gate + one step per REQUIRED item),
   target.yaml (attestation mapping, `source:` provenance, catalog fields), freeze hash
 - [ ] 2.3 Adapt target **quiz** (stateful sessions + scoring) — same deliverables as 2.2

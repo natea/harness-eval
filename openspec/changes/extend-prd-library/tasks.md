@@ -22,12 +22,16 @@
 - [x] 2.2 Adapt target **notes** (CRUD + search): PRD.md, HTTP-observable
   weighted testplan.yaml (fatal cold-start gate + one step per REQUIRED item),
   target.yaml (attestation mapping, `source:` provenance, catalog fields), freeze hash
-- [ ] 2.3 Adapt target **quiz** (stateful sessions + scoring) — same deliverables as 2.2
+- [~] 2.3 ~~quiz~~ — SWAPPED OUT during 2.1 vetting: upstream relies on random
+  question sampling / "Surprise Me!" which can't be graded deterministically over
+  HTTP without a seed contract; poor HTTP-light fit. Replaced by marketplace.
 - [x] 2.4 Adapt target **kanban** (ordered collections + move ops) — same deliverables
 - [x] 2.5 Adapt target **marketplace** (multi-actor offers + state) — same deliverables
 - [x] 2.6 Adapt target **pilot-logbook** (validation + aggregation/totals) — same deliverables
-- [ ] 2.7 Adapt target **resume-builder** (nested structured document + validation) — same deliverables
-  (swap any of 2.2–2.7 that proves a poor HTTP fit during 2.1; keep ≥4 shipped)
+- [~] 2.7 resume-builder — DEFERRED: 4 distinct-shape new targets shipped (notes,
+  pilot-logbook, kanban, marketplace), meeting the spec's ≥4; resume-builder is a
+  good future addition via the same recipe.
+  (swap clause applied: quiz vetted out, ≥4 still shipped)
 - [x] 2.8 Verify `targets/NOTICE` covers every adapted target's upstream; each
   manifest `source` block is complete (upstream, repo, pinned commit, originalDir, license)
 
@@ -49,10 +53,12 @@
 
 ## 5. Validation
 
-- [ ] 5.1 `bun run src/cli.ts validate` passes for the whole library (schema, hash
-  freshness, attestation presence, complete provenance, catalog drift check)
+- [x] 5.1 `bun run src/cli.ts validate` passes for the whole library (all 8
+  targets validate; schema, hash freshness, attestation, provenance, catalog
+  drift check all green)
 - [x] 5.2 Unit tests: required-field enforcement; prompt-exclusion of catalog
   metadata; generator output stable; drift check fails on a mutated manifest
 - [ ] 5.3 Smoke (n=1) at least one new HTTP-light target end-to-end (build → grade)
-  to confirm the test plan is graders-observable
-- [ ] 5.4 `openspec validate extend-prd-library --strict` passes
+  — DEFERRED: requires REAL SPEND (a worker session). Run when ready, e.g.
+  `bun run src/cli.ts run --candidates gsd --trials 1 --provider worktree --target notes --grade`
+- [x] 5.4 `openspec validate extend-prd-library --strict` passes

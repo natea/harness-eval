@@ -356,6 +356,8 @@ export function TrialView({
 				</Section>
 			)}
 
+			<Artifacts runId={runId} trialId={trialId} />
+
 			<Conversation convo={convo} />
 
 			{t.provenance.status === "completed" &&
@@ -832,5 +834,208 @@ function Payload({ text }: { text: string }) {
 				{text}
 			</pre>
 		</details>
+	);
+}
+
+interface Inventory {
+	trialId: string;
+	files: { path: string; bytes: number }[];
+	totalBytes: number;
+	truncated: boolean;
+	vendoredPresent: string[];
+	coldStartContract: string[];
+	hasSetupScript: boolean;
+	hasStartScript: boolean;
+	blindCopyPresent: boolean;
+	grades: { adherence: number | null; quality: number | null } | null;
+	target: string | null;
+	web: boolean;
+}
+
+interface PreviewRec {
+	state: "starting" | "ready" | "failed" | "stopped";
+	url: string | null;
+	trust: "sandboxed" | "host-unsafe";
+	router: string;
+	error?: string;
+}
+
+/** Read-only Artifacts audit panel + the Demo control (artifact-preview). */
+function Artifacts({ runId, trialId }: { runId: string; trialId: string }) {
+	const inv = useFetch<Inventory>(
+		`/api/runs/${runId}/trials/${trialId}/inventory`,
+	);
+	const [showFiles, setShowFiles] = useState(false);
+	if (!inv || (inv as { error?: string }).error) return null;
+
+	const fmtBytes = (b: number) =>
+		b > 1024 * 1024
+			? `${(b / 1024 / 1024).toFixed(1)} MB`
+			: b > 1024
+				? `${(b / 1024).toFixed(0)} KB`
+				: `${b} B`;
+
+	return (
+		<>
+			<h2 className="mt-7 flex scroll-mt-16 items-center gap-2 text-base font-semibold">
+				Artifacts
+				<span className="font-normal text-muted-foreground">
+					(what the agent built — read-only)
+				</span>
+			</h2>
+			<Card className="mt-2">
+				<CardContent className="px-3 pb-3 pt-3">
+					<Demo runId={runId} trialId={trialId} web={inv.web} />
+
+					<div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[13px] sm:grid-cols-4">
+						<Stat label="Files" value={`${inv.files.length}${inv.truncated ? "+" : ""}`} />
+						<Stat label="Size" value={fmtBytes(inv.totalBytes)} />
+						<Stat
+							label="Cold-start"
+							value={`${inv.hasSetupScript ? "setup.sh" : "—"} / ${inv.hasStartScript ? "start.sh" : "—"}`}
+						/>
+						<Stat label="Blind copy" value={inv.blindCopyPresent ? "✓ scrubbed" : "—"} />
+					</div>
+
+					{inv.vendoredPresent.length > 0 && (
+						<p className="mt-2 text-[12px] text-muted-foreground">
+							deps installed: {inv.vendoredPresent.join(", ")}
+						</p>
+					)}
+
+					{inv.coldStartContract.length > 0 && (
+						<div className="mt-3">
+							<p className="text-[12px] font-semibold text-muted-foreground">
+								Cold-start contract
+							</p>
+							<ul className="mt-1 text-[12px] text-muted-foreground">
+								{inv.coldStartContract.map((c, i) => (
+									<li key={`${i}-${c.slice(0, 24)}`}>• {c}</li>
+								))}
+							</ul>
+						</div>
+					)}
+
+					<button
+						type="button"
+						onClick={() => setShowFiles((v) => !v)}
+						className="mt-3 text-[12px] text-muted-foreground hover:text-primary-hover"
+					>
+						{showFiles ? "▼" : "▶"} file tree ({inv.files.length})
+					</button>
+					{showFiles && (
+						<div className="mt-1 max-h-72 overflow-y-auto rounded border border-border bg-muted/30 p-2 font-mono text-[11px]">
+							{inv.files.map((f) => (
+								<div key={f.path} className="flex justify-between gap-4">
+									<span className="truncate">{f.path}</span>
+									<span className="shrink-0 text-muted-foreground">
+										{fmtBytes(f.bytes)}
+									</span>
+								</div>
+							))}
+						</div>
+					)}
+				</CardContent>
+			</Card>
+		</>
+	);
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+	return (
+		<div>
+			<div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+				{label}
+			</div>
+			<div className="font-medium">{value}</div>
+		</div>
+	);
+}
+
+/** Start/stop an isolated live demo (web) or captured cold-start run (non-web). */
+function Demo({
+	runId,
+	trialId,
+	web,
+}: {
+	runId: string;
+	trialId: string;
+	web: boolean;
+}) {
+	const [rec, setRec] = useState<PreviewRec>();
+	const [busy, setBusy] = useState(false);
+	const [note, setNote] = useState<string>();
+
+	const post = (path: string) =>
+		fetch(path, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ runId, trialId }),
+		}).then((r) => r.json());
+
+	const start = () => {
+		setBusy(true);
+		setNote(undefined);
+		post("/api/preview/start")
+			.then((d: PreviewRec & { refused?: string; error?: string }) => {
+				if (d.refused || d.error) setNote(d.refused ?? d.error);
+				else setRec(d);
+			})
+			.catch((e) => setNote(String(e)))
+			.finally(() => setBusy(false));
+	};
+	const stop = () => {
+		setBusy(true);
+		post("/api/preview/stop")
+			.then(() => setRec(undefined))
+			.finally(() => setBusy(false));
+	};
+
+	const running = rec && rec.state !== "stopped" && rec.state !== "failed";
+
+	return (
+		<div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+			<span className="text-[13px] font-medium">
+				{web ? "Live demo" : "Cold-start run"}
+			</span>
+			{!running ? (
+				<button
+					type="button"
+					disabled={busy}
+					onClick={start}
+					className="rounded-md bg-primary px-2.5 py-1 text-[12px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+				>
+					{busy ? "starting…" : web ? "▶ Start demo" : "▶ Run cold-start"}
+				</button>
+			) : (
+				<>
+					{rec?.url ? (
+						<a
+							href={rec.url}
+							target="_blank"
+							rel="noreferrer"
+							className="rounded-md border border-border px-2.5 py-1 text-[12px] text-primary-hover hover:bg-muted"
+						>
+							open {rec.url} ↗
+						</a>
+					) : (
+						<Badge variant="ok">cold-start captured</Badge>
+					)}
+					<Badge variant="outline">{rec?.trust}</Badge>
+					<button
+						type="button"
+						disabled={busy}
+						onClick={stop}
+						className="rounded-md border border-border px-2.5 py-1 text-[12px] hover:bg-muted disabled:opacity-50"
+					>
+						{busy ? "stopping…" : "Stop"}
+					</button>
+				</>
+			)}
+			{rec?.state === "failed" && (
+				<Badge variant="danger">cold-start failed — see logs</Badge>
+			)}
+			{note && <span className="text-[12px] text-warn">{note}</span>}
+		</div>
 	);
 }

@@ -20,6 +20,12 @@ import {
 	studioOptions,
 	validateRunRequest,
 } from "./options";
+import {
+	previewManager,
+	startTrialPreview,
+	stopTrialPreview,
+	trialInventory,
+} from "../preview/studio";
 import { reconcileRunStates, runNeedsGrading } from "./run-state";
 import { trialTranscript } from "./transcript";
 
@@ -243,8 +249,60 @@ const server = Bun.serve({
 					: Response.json({ error: "not found" }, { status: 404 });
 			},
 		},
+
+		// Read-only artifact audit for a trial (artifact-preview): built file tree,
+		// cold-start contract, blind-copy presence, grades — never mutates the archive.
+		"/api/runs/:id/trials/:trialId/inventory": {
+			GET: (req) => {
+				const inv = trialInventory(req.params.id, req.params.trialId);
+				return inv
+					? Response.json(inv)
+					: Response.json({ error: "not found" }, { status: 404 });
+			},
+		},
+
+		// Start/stop an isolated live demo of a trial's built artifact. Sandboxed
+		// (docker) by default; host execution requires an explicit opt-in.
+		"/api/preview/start": {
+			POST: async (req) => {
+				const b = (await req.json().catch(() => ({}))) as {
+					runId?: string;
+					trialId?: string;
+					unsafeHost?: boolean;
+					router?: "port" | "portless";
+				};
+				if (!b.runId || !b.trialId)
+					return Response.json({ error: "runId + trialId required" }, { status: 400 });
+				const out = await startTrialPreview(b.runId, b.trialId, {
+					unsafeHost: b.unsafeHost,
+					router: b.router,
+				});
+				const bad = "error" in out || "refused" in out;
+				return Response.json(out, { status: bad ? 409 : 200 });
+			},
+		},
+		"/api/preview/stop": {
+			POST: async (req) => {
+				const b = (await req.json().catch(() => ({}))) as {
+					runId?: string;
+					trialId?: string;
+				};
+				if (!b.runId || !b.trialId)
+					return Response.json({ error: "runId + trialId required" }, { status: 400 });
+				return Response.json(await stopTrialPreview(b.runId, b.trialId));
+			},
+		},
+		"/api/preview/list": { GET: () => Response.json(previewManager.list()) },
 	},
 	development: { hmr: true, console: true },
 });
 
 console.log(`Eval Studio: http://127.0.0.1:${server.port}`);
+
+// Tear down any running previews on shutdown so a container/port never leaks
+// past the studio process (artifact-preview lifecycle).
+for (const sig of ["SIGINT", "SIGTERM"] as const) {
+	process.on(sig, () => {
+		void previewManager.stopAll().finally(() => process.exit(0));
+	});
+}

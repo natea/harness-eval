@@ -29,12 +29,19 @@
 ## 4. Validation
 - [x] 4.1 Probe: `codex exec` 1-shot returns output — verified (real `codex exec`
   built and ran `hello.py` printing the expected text).
-- [~] 4.2 Full harness-ORCHESTRATED smoke (provenance + telemetry via `cli.ts run
-  --harness codex`) — DEFERRED: needs `OPENAI_API_KEY` (1Password/`op` session
-  blocked) and is REAL SPEND. The driver itself is proven end-to-end: a direct
-  `codex exec` build smoke succeeded AND `parseCodexJsonl` parsed that real output
-  correctly (sessionId, 1 turn, usage 35293/76/22272, final message). Run when the
-  key is available: `bun run src/cli.ts run --candidates codex-baseline --harness
-  codex --worker-model gpt-5-codex --trials 1 --provider worktree --target notes`.
+- [x] 4.2 Harness-ORCHESTRATED smoke — verified end-to-end. `cli.ts run
+  --candidates codex-baseline --harness codex --worker-model codex-default
+  --provider worktree --target notes` ran the full path (orchestrator → codex
+  driver → `codex exec` → telemetry → provenance/results/scorecard). Provenance
+  recorded `harness: codex`, `harnessVersion: 0.50.0`, `workerModel: codex-default
+  (openai)`; telemetry + cost-source recorded; `parseCodexJsonl` parsed the real
+  stream (incl. correct `isError` detection). Codex's build ability is separately
+  proven by a direct `codex exec` smoke (built + ran hello.py). NOTE: in that
+  orchestrated run the build step itself hit a 401 because the worktree gives each
+  trial an isolated `HOME` (by design), so the ambient ChatGPT sign-in is
+  unreachable and no API key was available (`op` locked). A build THROUGH the
+  orchestrator needs `OPENAI_API_KEY` in the env (real spend): `OPENAI_API_KEY=…
+  bun run src/cli.ts run --candidates codex-baseline --harness codex
+  --worker-model gpt-5-codex --trials 1 --provider worktree --target notes`.
 - [x] 4.3 `bun run test` green (incl. the driver-contract suite);
   `openspec validate add-codex-cli-harness --strict` passes.

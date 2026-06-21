@@ -111,3 +111,12 @@ profiles:
     transport: codex
     authEnv: OPENAI_API_KEY
     authKind: api-key
+
+  # Codex on the account-default model: omits `--model` (a ChatGPT sign-in rejects
+  # an explicit model). Uses the API key if present, else the ambient sign-in.
+  - name: codex-default
+    provider: openai
+    modelId: default
+    transport: codex
+    authEnv: OPENAI_API_KEY
+    authKind: api-key

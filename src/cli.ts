@@ -167,19 +167,16 @@ async function cmdRun(): Promise<void> {
 	let workerEnv: Record<string, string> | undefined;
 	let workerModelFlag = workerProfile.modelId;
 	if (workerProfile.transport === "codex") {
-		// Codex driver authenticates via `codex login --with-api-key` reading
-		// $OPENAI_API_KEY (the OpenAI-provider path; a non-OpenAI worker model
-		// would use a `model_providers` block — see the add-codex-cli-harness
-		// design). The model id is passed straight through to `codex exec --model`.
+		// Codex dual auth: if the profile's API key is in the env, the driver logs
+		// in with it (`codex login --with-api-key`) and uses the profile's model id;
+		// otherwise it falls back to the ambient Codex sign-in (e.g. a ChatGPT
+		// login), where an explicit `--model` is rejected, so the profile uses
+		// modelId "default". (Non-OpenAI providers are the `model_providers`
+		// follow-up — see the add-codex-cli-harness design.)
 		const key = process.env[workerProfile.authEnv];
-		if (!key) {
-			throw new Error(
-				`worker model '${workerProfile.name}' needs ${workerProfile.authEnv} in the environment`,
-			);
-		}
-		workerEnv = { OPENAI_API_KEY: key };
+		workerEnv = key ? { OPENAI_API_KEY: key } : undefined;
 		console.log(
-			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via codex`,
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via codex (${key ? "api-key" : "ambient sign-in"})`,
 		);
 	} else if (workerProfile.provider !== "anthropic") {
 		const resolved = resolveClaudeCodeEnv(workerProfile);

@@ -17,23 +17,29 @@ const runCodexExec = createPrintCliSessionRunner({
 		const resume = opts.resumeSessionId
 			? `resume ${JSON.stringify(opts.resumeSessionId)}`
 			: "";
-		// Codex authenticates from $CODEX_HOME/auth.json — NOT from $OPENAI_API_KEY
-		// directly (verified against codex 0.139.0: a bare key env still 401s). So
-		// write the key once with `codex login --with-api-key` before exec. An
-		// isolated, per-slot CODEX_HOME keeps concurrent trials on a shared
-		// filesystem from colliding and ensures no ambient sign-in takes
-		// precedence over the run's key. (OpenAI-provider path; a non-OpenAI
-		// worker model uses a `model_providers` block instead — see design.md.)
+		// Dual auth (Codex supports both modes, per its model-agnostic design):
+		//  - API key present  → write it via `codex login --with-api-key` into an
+		//    isolated, per-slot CODEX_HOME (verified: a bare $OPENAI_API_KEY env
+		//    still 401s; isolation avoids cross-trial collisions and any ambient
+		//    sign-in taking precedence). This is the eval path (fresh sandboxes).
+		//  - no API key       → use the ambient CODEX_HOME (an existing ChatGPT
+		//    sign-in), for host/dev runs.
 		const codexHome = opts.outFile.replace(
 			/he-out-(.+)\.jsonl$/,
 			"he-codex-$1",
 		);
+		// A ChatGPT account rejects an explicit `--model`; omit it for the account
+		// default (model "default"/empty) and pass it otherwise (API-key path).
+		const modelFlag =
+			opts.model && opts.model !== "default"
+				? `--model ${JSON.stringify(opts.model)}`
+				: "";
 		// `--skip-git-repo-check` so a non-repo workspace doesn't block; the trial
 		// sandbox is disposable, mirroring claude's --dangerously-skip-permissions.
 		const exec = [
 			"codex exec",
 			resume,
-			`--model ${JSON.stringify(opts.model)}`,
+			modelFlag,
 			"--json",
 			"--dangerously-bypass-approvals-and-sandbox",
 			"--skip-git-repo-check",
@@ -42,12 +48,10 @@ const runCodexExec = createPrintCliSessionRunner({
 		]
 			.filter(Boolean)
 			.join(" ");
-		// `;`-joined so exec always runs (and captures any auth error in outFile)
-		// even if login is a no-op (e.g. OPENAI_API_KEY unset on an --oss run).
+		// Conditional api-key login; `;`-joined so exec always runs and captures any
+		// auth error in outFile.
 		return [
-			`export CODEX_HOME=${codexHome}`,
-			`mkdir -p ${codexHome}`,
-			"printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true",
+			`if [ -n "$OPENAI_API_KEY" ]; then export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true; fi`,
 			exec,
 		].join("; ");
 	},

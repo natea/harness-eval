@@ -20,6 +20,11 @@
   usage, agent_message→resultText); cost-source per the harness-driver rule
   (codex reports no $ → profile-priced / tokens-only). Verified against REAL codex
   0.139.0 output.
+- [x] 1.5 Transcript replay: `transcript-render` detects the codex `exec --json`
+  format and maps its events (reasoning→thinking, command_execution/file_change→
+  tool_use+result, agent_message→assistant, turn.completed→result) to the shared
+  `Turn[]`, so the studio Conversation tab + `conversation.md` render codex builds
+  (was blank). Verified on the real OAuth-run transcript (36 turns).
 
 ## 2. Image + registry
 - [x] 2.1 Pin `@openai/codex` in `infra/trial-image/Dockerfile` with a version assert.

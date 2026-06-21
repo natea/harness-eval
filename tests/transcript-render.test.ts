@@ -142,6 +142,70 @@ describe("transcript-render: parseTranscript (task 1.1)", () => {
 	});
 });
 
+describe("transcript-render: Codex exec --json format (add-codex-cli-harness)", () => {
+	const codexJsonl = [
+		JSON.stringify({ type: "thread.started", thread_id: "th-1" }),
+		JSON.stringify({ type: "turn.started" }),
+		JSON.stringify({
+			type: "item.completed",
+			item: { id: "i0", type: "reasoning", text: "Plan the service." },
+		}),
+		JSON.stringify({
+			type: "item.completed",
+			item: { id: "i1", type: "command_execution", command: "ls", aggregated_output: "SPEC.md", exit_code: 0 },
+		}),
+		JSON.stringify({
+			type: "item.completed",
+			item: { id: "i2", type: "file_change", changes: [{ path: "server.js", kind: "add" }] },
+		}),
+		JSON.stringify({
+			type: "item.completed",
+			item: { id: "i3", type: "agent_message", text: "Built the notes service." },
+		}),
+		JSON.stringify({
+			type: "turn.completed",
+			usage: { input_tokens: 100, cached_input_tokens: 40, output_tokens: 20 },
+		}),
+	].join("\n");
+
+	test("dispatches to the codex parser and maps items to turns", () => {
+		const turns = parseTranscript(codexJsonl);
+		const kinds = turns.map((t) => t.kind);
+		expect(kinds).toEqual([
+			"thinking",
+			"tool_use",
+			"tool_result",
+			"tool_use",
+			"assistant",
+			"result",
+		]);
+	});
+
+	test("command output, file_change, agent_message, and result are captured", () => {
+		const turns = parseTranscript(codexJsonl);
+		const cmd = turns.find((t) => t.kind === "tool_use" && t.tool === "command");
+		expect(cmd).toBeDefined();
+		const out = turns.find((t) => t.kind === "tool_result");
+		expect(out).toMatchObject({ tool: "command", isError: false });
+		const msg = turns.find((t) => t.kind === "assistant");
+		expect(msg).toMatchObject({ text: "Built the notes service." });
+		const result = turns.find((t) => t.kind === "result");
+		expect(result).toMatchObject({ status: "success", numTurns: 1 });
+		expect((result as { usage: { inputTokens: number } }).usage.inputTokens).toBe(100);
+	});
+
+	test("turn.failed renders an error result + message", () => {
+		const failed = [
+			JSON.stringify({ type: "thread.started", thread_id: "th-2" }),
+			JSON.stringify({ type: "turn.started" }),
+			JSON.stringify({ type: "turn.failed", error: { message: "401 Unauthorized" } }),
+		].join("\n");
+		const turns = parseTranscript(failed);
+		expect(turns.find((t) => t.kind === "result")).toMatchObject({ status: "error" });
+		expect(turns.some((t) => t.kind === "assistant" && t.text.includes("401"))).toBe(true);
+	});
+});
+
 describe("transcript-render: renderMarkdown (task 1.2)", () => {
 	test("labels request/response distinctly and truncates oversized payloads", () => {
 		const big = "x".repeat(MAX_INLINE + 5000);

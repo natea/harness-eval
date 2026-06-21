@@ -1,0 +1,124 @@
+# Frozen test plan for the `pilot-logbook` target (Pilot's Logbook MVP).
+# Adapted from the ViBench `pilot_logbook` test plans, re-authored as
+# HTTP-observable checks (no browser; HTTP-light v1).
+# ViBench semantics: sequential, weighted, fatal gates halt.
+# Evidence = requests issued (curl) + observed status codes / JSON bodies.
+#
+# Clock-independence: analytics use an explicit from/to range and currency /
+# future-date rules are out of scope, so no check depends on "today".
+version: "1.0.0"
+prdSha256: 307ce4c9fa6fed96902c56bacee8e61bb108336e4f68c505c4d55445a13d49a7
+
+steps:
+  - id: S-1
+    covers: ["5.R1"]
+    description: setup.sh installs deps and start.sh boots the service on $PORT
+    check: >
+      Run ./setup.sh in a clean copy (exit 0). Then PORT=3000 ./start.sh & ;
+      poll the service until it answers within 30s. Fatal: if the service never
+      serves, it cannot be evaluated.
+    weight: 4
+    fatal: true
+
+  - id: AC-1
+    covers: ["1", "5.R2"]
+    description: create aircraft with valid + invalid category/class
+    check: >
+      POST /api/aircraft {registration:"N123AB", makeModel:"C172",
+      category:"Airplane", class:"SEL"} → 201 with an id and status "Active".
+      POST with category "Airplane", class "Helicopter" → 400. POST missing
+      makeModel → 400.
+    weight: 4
+
+  - id: AC-2
+    covers: ["1", "5.R3"]
+    description: type rating requires a type designator
+    check: >
+      POST /api/aircraft {registration:"N500ZZ", makeModel:"CE525",
+      category:"Airplane", class:"MEL", typeRatingRequired:true} (no
+      typeDesignator) → 400. The same body with typeDesignator:"C525" → 201.
+    weight: 3
+
+  - id: AC-3
+    covers: ["1", "5.R4"]
+    description: canonical registration uniqueness, original formatting preserved
+    check: >
+      With "N123AB" already created (AC-1), POST /api/aircraft
+      {registration:"n-123 ab", makeModel:"C172", category:"Airplane",
+      class:"SEL"} → 409. GET /api/aircraft shows the first aircraft with its
+      original registration formatting "N123AB".
+    weight: 5
+
+  - id: AC-4
+    covers: ["1", "5.R5"]
+    description: archive / unarchive flips status
+    check: >
+      POST /api/aircraft/<id>/archive → 200 status "Inactive";
+      POST /api/aircraft/<id>/unarchive → 200 status "Active";
+      POST /api/aircraft/does-not-exist/archive → 404.
+    weight: 3
+
+  - id: FL-1
+    covers: ["2", "5.R8"]
+    description: create a valid flight, retrievable by id
+    check: >
+      With an Active aircraft, POST /api/flights {date:"2025-05-01",
+      aircraftId:<id>, departure:"KSFO", arrival:"KLAX", totalTime:2.0,
+      dayTime:2.0, nightTime:0.0, pic:2.0} → 201 with an id. GET
+      /api/flights/<id> → 200; GET /api/flights/nope → 404.
+    weight: 4
+
+  - id: FL-2
+    covers: ["2", "5.R6"]
+    description: time/count validation matrix
+    check: >
+      Each of these → 400: dayTime+nightTime != totalTime (e.g. day 1.0, night
+      0.5, total 2.0); totalTime 0; a time not a 0.1 multiple (e.g. pic 1.05);
+      pic>0 AND sic>0; actualInstrument+simulatedInstrument>totalTime;
+      crossCountry>totalTime; a negative or non-integer count.
+    weight: 6
+
+  - id: FL-3
+    covers: ["2", "5.R7"]
+    description: flights require an existing Active aircraft
+    check: >
+      POST /api/flights referencing an unknown aircraftId → 400. Archive an
+      aircraft, then POST a new flight referencing it → 400.
+    weight: 4
+
+  - id: FL-4
+    covers: ["2", "5.R11"]
+    description: edit re-validates and guards aircraft switching
+    check: >
+      PUT /api/flights/<id> with dayTime+nightTime != totalTime → 400. PUT
+      changing aircraftId to an Inactive aircraft → 400. PUT /api/flights/nope
+      → 404. A valid PUT → 200.
+    weight: 4
+
+  - id: FL-5
+    covers: ["2", "5.R10"]
+    description: delete removes the flight
+    check: >
+      DELETE /api/flights/<id> → 204; GET /api/flights/<id> → 404; DELETE again
+      → 404.
+    weight: 3
+
+  - id: FILT-1
+    covers: ["3", "5.R9"]
+    description: list ordering and AND-combined filters
+    check: >
+      With flights on different dates, GET /api/flights returns most-recent date
+      first. GET /api/flights?from=2025-05-01&to=2025-05-31 returns only in-range
+      flights; adding &aircraftId=<id> and &q=KLAX further narrows with AND
+      logic (case-insensitive route/notes substring).
+    weight: 4
+
+  - id: AN-1
+    covers: ["4", "5.R12"]
+    description: analytics totals over an explicit range, grouped
+    check: >
+      GET /api/analytics?from=2025-05-01&to=2025-05-31&groupBy=overall → 200 with
+      summed totalTime/pic/counts matching the in-range flights. groupBy=
+      categoryClass returns one bucket per category/class present. Missing from
+      or to → 400.
+    weight: 5

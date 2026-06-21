@@ -9,6 +9,7 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 | --- | --- | --- | --- |
 | `cli-tool` | cli | none | A line-oriented tally/aggregation CLI over newline-delimited records. |
 | `notes` | rest-api | none | Password-gated plain-text notes service — HTTP/JSON CRUD with search. |
+| `pilot-logbook` | rest-api-validation-aggregation | none | Pilot logbook API — aircraft management, a strict flight validation matrix, and range analytics. |
 | `rest-api` | rest-api | none | Logistics quote/ROI + lead-capture HTTP/JSON API with an authenticated admin view. |
 | `symphony-daemon` | daemon-service | none | A long-running daemon that orchestrates coding agents to complete project work. |
 | `web-app` | web-api-served-page | served-page | Barber-shop appointment scheduling — HTTP/JSON API behind a served root page. |
@@ -29,6 +30,15 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 - **Adapted from:** vibench-public
 
 A single-space notes API behind a fixed password header: create/list/view/ edit/delete plain-text notes plus case-insensitive substring search. Exercises derived fields (title = first non-empty line, preview = next line), a YYYY-MM-DD hh:mm UTC timestamp format, last-edited-descending sort, and a 401 auth gate. HTTP-light: graded over JSON only (no browser); in-process persistence is acceptable. No rendered UI.
+
+## `pilot-logbook` (v1.0.0)
+
+- **Domain:** aviation
+- **Shape:** rest-api-validation-aggregation
+- **Expected UI:** none
+- **Adapted from:** vibench-public
+
+An HTTP/JSON pilot logbook: aircraft CRUD with canonical-registration uniqueness and active/inactive gating, flight logging under a dense cross-field validation matrix (day+night==total, PIC/SIC exclusivity, 0.1-hour increments, ≤-total bounds), AND-combined logbook filters, and analytics totals summed over an explicit date range. Validation-and-aggregation shape. HTTP-light: graded over JSON only; clock-relative currency, future-date rules, and CSV export are out of scope. No rendered UI.
 
 ## `rest-api` (v1.0.0)
 

@@ -25,10 +25,10 @@
 - [ ] 2.3 Adapt target **quiz** (stateful sessions + scoring) — same deliverables as 2.2
 - [ ] 2.4 Adapt target **kanban** (ordered collections + move ops) — same deliverables
 - [ ] 2.5 Adapt target **marketplace** (multi-actor offers + state) — same deliverables
-- [ ] 2.6 Adapt target **pilot-logbook** (validation + aggregation/totals) — same deliverables
+- [x] 2.6 Adapt target **pilot-logbook** (validation + aggregation/totals) — same deliverables
 - [ ] 2.7 Adapt target **resume-builder** (nested structured document + validation) — same deliverables
   (swap any of 2.2–2.7 that proves a poor HTTP fit during 2.1; keep ≥4 shipped)
-- [ ] 2.8 Verify `targets/NOTICE` covers every adapted target's upstream; each
+- [x] 2.8 Verify `targets/NOTICE` covers every adapted target's upstream; each
   manifest `source` block is complete (upstream, repo, pinned commit, originalDir, license)
 
 ## 3. Generated, drift-checked catalog document

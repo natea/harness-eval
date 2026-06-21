@@ -8,6 +8,7 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 | Target | Shape | Expected UI | Summary |
 | --- | --- | --- | --- |
 | `cli-tool` | cli | none | A line-oriented tally/aggregation CLI over newline-delimited records. |
+| `kanban` | rest-api-ordered-collection | none | Sprint board API — four fixed columns with ordered, movable cards. |
 | `notes` | rest-api | none | Password-gated plain-text notes service — HTTP/JSON CRUD with search. |
 | `pilot-logbook` | rest-api-validation-aggregation | none | Pilot logbook API — aircraft management, a strict flight validation matrix, and range analytics. |
 | `rest-api` | rest-api | none | Logistics quote/ROI + lead-capture HTTP/JSON API with an authenticated admin view. |
@@ -21,6 +22,15 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 - **Expected UI:** none
 
 `tally` — a single-binary command-line tool that counts and summarizes newline-delimited records from stdin or files, with flags for grouping and output formatting (POSIX `wc` semantics where specified). Graded by invoking the built binary through `run.sh` and asserting stdout + exit codes against the frozen Definition of Done. No rendered UI.
+
+## `kanban` (v1.0.0)
+
+- **Domain:** project-management
+- **Shape:** rest-api-ordered-collection
+- **Expected UI:** none
+- **Adapted from:** vibench-public
+
+An HTTP/JSON kanban board: a single board with four fixed ordered columns (Backlog / In Progress / Review / Done) holding cards with a required title, optional description, and a story-points enum. Create, edit, move between columns (status change), delete, and bulk Clear-Done — with within-column ordering as part of the contract. Ordered-collection shape. HTTP-light: the real-time/presence/co-editing features of the upstream PRD are out of scope. No rendered UI.
 
 ## `notes` (v1.0.0)
 

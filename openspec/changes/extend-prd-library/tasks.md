@@ -23,7 +23,7 @@
   weighted testplan.yaml (fatal cold-start gate + one step per REQUIRED item),
   target.yaml (attestation mapping, `source:` provenance, catalog fields), freeze hash
 - [ ] 2.3 Adapt target **quiz** (stateful sessions + scoring) — same deliverables as 2.2
-- [ ] 2.4 Adapt target **kanban** (ordered collections + move ops) — same deliverables
+- [x] 2.4 Adapt target **kanban** (ordered collections + move ops) — same deliverables
 - [ ] 2.5 Adapt target **marketplace** (multi-actor offers + state) — same deliverables
 - [x] 2.6 Adapt target **pilot-logbook** (validation + aggregation/totals) — same deliverables
 - [ ] 2.7 Adapt target **resume-builder** (nested structured document + validation) — same deliverables

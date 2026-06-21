@@ -41,6 +41,19 @@ candidates:
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 10
+      # Codex: platform-agnostic SKILL.md discovered from the workspace
+      # `.agents/skills` (no plugin TUI). The using-superpowers gatekeeper
+      # (AGENTS.md) auto-engages the methodology, so the session is the base prompt.
+      codex:
+        install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com:"
+          - "git clone -q https://github.com/obra/superpowers .agents/_src && git -C .agents/_src checkout -q v5.1.0"
+          - "mkdir -p .agents/skills && cp -R .agents/_src/skills/. .agents/skills/ && cp -f .agents/_src/AGENTS.md ./AGENTS.md && rm -rf .agents/_src"
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 10
 
   - id: compound-engineering
     name: Compound Engineering
@@ -88,6 +101,19 @@ candidates:
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 15
+      # Codex: plain SKILL.md auto-discovered from the workspace `.agents/skills`
+      # (repo scan). The using-agent-skills meta-skill (AGENTS.md) gatekeeps the
+      # spec→build→test lifecycle, so the session is the base prompt.
+      codex:
+        install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com:"
+          - "git clone -q https://github.com/addyosmani/agent-skills .agents/_src && git -C .agents/_src checkout -q 3a6fc6392823"
+          - "mkdir -p .agents/skills && cp -R .agents/_src/skills/. .agents/skills/ && cp -f .agents/_src/AGENTS.md ./AGENTS.md && rm -rf .agents/_src"
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 15
 
   - id: gsd
     name: GSD (Open GSD)
@@ -104,6 +130,20 @@ candidates:
           - prompt: "/gsd-plan-phase"
           - prompt: "/gsd-execute-phase"
           - prompt: "/gsd-verify-work"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 20
+      # Codex: GSD's multi-runtime installer writes Codex-native skills for the
+      # project (`--codex`, project scope). GSD commands become Codex skill
+      # mentions ($gsd-*); the session drives the same protocol.
+      codex:
+        install:
+          - npx --yes @opengsd/gsd-core@1.4.3 --codex --scope=project --profile=standard --non-interactive
+        session:
+          - prompt: "$gsd-new-project --auto {{BASE_PROMPT}}"
+          - prompt: "$gsd-plan-phase"
+          - prompt: "$gsd-execute-phase"
+          - prompt: "$gsd-verify-work"
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 20

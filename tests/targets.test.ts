@@ -18,6 +18,11 @@ import {
 
 const tmp = mkdtempSync(join(tmpdir(), "he-targets-"));
 
+// Minimal catalog metadata (required since extend-prd-library) for inline
+// manifests whose tests target a LATER validation step.
+const CAT =
+	"summary: s\ndescription: d\ntags:\n  domain: x\n  shape: y\n  expectedUI: none\n";
+
 describe("eval targets (add-prd-library)", () => {
 	test("symphony-daemon migration preserves hashes (task 1.2 / spec scenario)", () => {
 		const t = loadTarget("symphony-daemon");
@@ -45,7 +50,7 @@ describe("eval targets (add-prd-library)", () => {
 		);
 		writeFileSync(
 			join(tmp, "noattest", "target.yaml"),
-			`name: noattest\nversion: "1"\nprdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\ncoldStartContract: ["run.sh"]\n`,
+			`name: noattest\nversion: "1"\n${CAT}prdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\ncoldStartContract: ["run.sh"]\n`,
 		);
 		expect(() => loadTarget("noattest", tmp)).toThrow(/attestation/);
 	});
@@ -67,7 +72,7 @@ describe("eval targets (add-prd-library)", () => {
 		// `source` declared with `upstream` but missing commit/originalDir/license.
 		writeFileSync(
 			join(root, "adapted", "target.yaml"),
-			`name: adapted\nversion: "1"\nprdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\nsource:\n  upstream: vibench-public\n  repo: https://github.com/ViBench/vibench-public\n`,
+			`name: adapted\nversion: "1"\n${CAT}prdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\nsource:\n  upstream: vibench-public\n  repo: https://github.com/ViBench/vibench-public\n`,
 		);
 		expect(() => loadTarget("adapted", root)).toThrow(/source/);
 	});
@@ -83,7 +88,7 @@ describe("eval targets (add-prd-library)", () => {
 		);
 		writeFileSync(
 			join(root, "adapted", "target.yaml"),
-			`name: adapted\nversion: "1"\nprdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\nsource:\n  upstream: vibench-public\n  repo: https://github.com/ViBench/vibench-public\n  commit: abc1234\n  originalDir: prds/barber\n  license: Apache-2.0\n`,
+			`name: adapted\nversion: "1"\n${CAT}prdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\nsource:\n  upstream: vibench-public\n  repo: https://github.com/ViBench/vibench-public\n  commit: abc1234\n  originalDir: prds/barber\n  license: Apache-2.0\n`,
 		);
 		expect(() => loadTarget("adapted", root)).toThrow(/NOTICE/);
 	});
@@ -133,5 +138,43 @@ describe("eval targets (add-prd-library)", () => {
 		expect(out).toContain("18.1");
 		expect(out).toContain("setup.sh");
 		expect(out).not.toContain("{{");
+	});
+
+	test("catalog metadata is required on load (extend-prd-library task 1.3)", () => {
+		const root = join(tmp, "no-catalog");
+		mkdirSync(join(root, "t"), { recursive: true });
+		writeFileSync(join(root, "t", "PRD.md"), "# p\n");
+		const sha = new Bun.CryptoHasher("sha256").update("# p\n").digest("hex");
+		writeFileSync(
+			join(root, "t", "tp.yaml"),
+			`version: "1"\nprdSha256: ${sha}\nsteps:\n  - id: A\n    covers: ["1"]\n    description: d\n    check: c\n`,
+		);
+		// Manifest omits summary/description/tags entirely.
+		writeFileSync(
+			join(root, "t", "target.yaml"),
+			`name: t\nversion: "1"\nprdFile: PRD.md\nprdSha256: ${sha}\ntestplanFile: tp.yaml\nconformanceSection: all\ncoverageMode: attested\nattestation: ok\ncoldStartContract: ["run.sh"]\n`,
+		);
+		expect(() => loadTarget("t", root)).toThrow(/summary|description|tags/);
+	});
+
+	test("loaded targets expose catalog metadata for selection (task 1.2)", () => {
+		const t = loadTarget("web-app");
+		expect(t.manifest.summary.length).toBeGreaterThan(0);
+		expect(t.manifest.tags.expectedUI).toBe("served-page");
+		expect(t.manifest.tags.shape.length).toBeGreaterThan(0);
+	});
+
+	test("catalog metadata never leaks into the rendered prompt (fairness, task 1.5)", () => {
+		const t = loadTarget("web-app");
+		// Render with EVERY known slot present so we test the real template surface.
+		const out = renderTargetPrompt(
+			"{{PRD_FILE}} {{CONFORMANCE}} {{DELIVERABLES}} {{NOTES}} {{DESIGN}}",
+			t,
+		);
+		// The distinctive catalog strings must never appear verbatim in the prompt.
+		// (Individual tag tokens like "scheduling" can legitimately occur in PRD
+		// prose, so we assert on the full summary/description, which are unique.)
+		expect(out).not.toContain(t.manifest.summary);
+		expect(out).not.toContain(t.manifest.description.trim());
 	});
 });

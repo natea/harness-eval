@@ -2,17 +2,17 @@
 
 ## 1. Manifest catalog metadata
 
-- [ ] 1.1 Extend `TargetManifest` in `src/targets.ts` with `summary` (string),
+- [x] 1.1 Extend `TargetManifest` in `src/targets.ts` with `summary` (string),
   `description` (string), and `tags` (`{ domain: string, shape: string,
   expectedUI: 'none' | 'served-page' | 'interactive' }`) — added as optional first
-- [ ] 1.2 Backfill the new fields into the 4 existing manifests
+- [x] 1.2 Backfill the new fields into the 4 existing manifests
   (`symphony-daemon`, `web-app`, `cli-tool`, `rest-api`); `web-app.expectedUI`
   = `served-page` (documents the HTTP-light stub reality)
-- [ ] 1.3 Flip the new fields to required in the schema; `loadTarget` fails with a
+- [x] 1.3 Flip the new fields to required in the schema; `loadTarget` fails with a
   field-naming message when any is missing
-- [ ] 1.4 Update the `scaffoldTarget` skeleton to include the catalog fields as
+- [x] 1.4 Update the `scaffoldTarget` skeleton to include the catalog fields as
   TODO placeholders so bring-your-own targets self-describe
-- [ ] 1.5 Confirm catalog metadata is NOT referenced by `renderTargetPrompt`
+- [x] 1.5 Confirm catalog metadata is NOT referenced by `renderTargetPrompt`
   (fairness: descriptive only) — add a test asserting it's absent from rendered output
 
 ## 2. Adapt the ViBench catalog subset (HTTP-light, frozen, attested)

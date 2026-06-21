@@ -1,4 +1,14 @@
 name: rest-api
+summary: Logistics quote/ROI + lead-capture HTTP/JSON API with an authenticated admin view.
+description: >
+  Apex Logistics API: warehouse ROI computation, lead capture (contact + quote),
+  and an authenticated quotes admin endpoint. No browser UI — the API contract
+  is graded over HTTP/JSON (status codes, JSON bodies, auth). In-process
+  persistence is acceptable.
+tags:
+  domain: logistics-marketing
+  shape: rest-api
+  expectedUI: none
 version: "1.0.0"
 prdFile: PRD.md
 prdSha256: 654717002fddf27d876c577a53b5adf75f9d4ae01c4262c9021c9bd05c3d74c1

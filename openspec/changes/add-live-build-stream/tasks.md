@@ -42,10 +42,11 @@
 - [x] 5.3 Safety: tap is read-only (test); the post-exit read/telemetry/archive stay
   byte-identical (existing driver-layer/driver-contract suites still green); stream
   closes on done/idle/cancel with no leaked timer/handle.
-- [ ] 5.4 Live smoke against a real building trial (worktree) — DEFERRED: requires a
-  real build (spend). The pipeline is proven by 5.1/5.2 on real transcript formats;
-  run e.g. `bun run src/cli.ts run --candidates codex-baseline --harness codex
-  --worker-model codex-oauth --provider worktree --target notes` and open the trial's
-  Live panel while it builds.
+- [x] 5.4 Live smoke validated: a studio-launched codex-oauth `notes` build streamed
+  live turns in the Live panel (the agent's reads/commands/file-writes appearing in
+  real time), confirmed by the operator, then handed off to the archived Conversation
+  on completion. Surfaced + fixed two real bugs in the process: the studio's
+  worker-env resolver drift (codex profiles) and an EventSource `onerror`-on-close
+  false "stream unavailable".
 - [x] 5.5 `bun run test` green (only the pre-existing e2e timeouts);
   `openspec validate add-live-build-stream --strict` passes.

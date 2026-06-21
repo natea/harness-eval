@@ -107,3 +107,22 @@ candidates:
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 20
+
+  # Baseline: the Codex CLI used directly, with no plugin framework. Holds the
+  # harness fixed for a framework-vs-bare comparison and exercises the `codex`
+  # harness driver end-to-end. The CLI is preinstalled in the trial image, so
+  # there is no install step; auth + model come from the worker-model profile
+  # (e.g. --worker-model gpt-5-codex). Run with `--harness codex`.
+  - id: codex-baseline
+    name: Codex (no framework)
+    repo: https://github.com/openai/codex
+    pinnedVersion: 0.50.0
+    markerPaths: []
+    harnesses:
+      codex:
+        install: []
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue"]
+          maxContinuations: 10

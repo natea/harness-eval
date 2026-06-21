@@ -8,3 +8,10 @@ harnesses:
     name: Claude Code
     driver: claude-code
     defaultVersion: 2.1.170
+
+  # OpenAI Codex CLI — model-agnostic (configure model/provider per worker
+  # profile). Headless via `codex exec --json`. Re-pin defaultVersion at impl.
+  - id: codex
+    name: Codex CLI
+    driver: codex
+    defaultVersion: 0.50.0

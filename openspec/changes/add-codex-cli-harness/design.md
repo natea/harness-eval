@@ -17,8 +17,17 @@ the OpenAI provider with the registry key for OpenAI models, or a custom
 `model_providers` block (base_url + env_key) for others. **Wire constraint:** since
 Feb 2026 Codex speaks only the OpenAI **Responses API** (`wire_api = "responses"`);
 Chat-Completions was removed. So a non-OpenAI endpoint must expose the Responses API
-or sit behind a translating gateway (LiteLLM/OpenRouter). Verify the exact
-config keys/flags against the pinned version at impl.
+or sit behind a translating gateway (LiteLLM/OpenRouter).
+
+**Auth mechanism (verified against codex 0.139.0).** Codex authenticates from
+`$CODEX_HOME/auth.json`, NOT from `$OPENAI_API_KEY` directly — a bare key env still
+returns `401 Missing bearer`. The driver therefore runs
+`printenv OPENAI_API_KEY | codex login --with-api-key` into an isolated, per-slot
+`CODEX_HOME` before `codex exec`. The fresh trial sandbox has no ambient sign-in, so
+the run's key is used; on a dev host an existing ChatGPT sign-in would otherwise take
+precedence (and rejects API-only models like `gpt-5-codex`). The model id is passed
+through to `codex exec --model`. (OpenAI-provider path; a non-OpenAI worker model is
+the `model_providers` follow-up.)
 
 ## Telemetry
 Map `codex exec --json` (JSONL event stream) to `SessionRecord` (duration, tokens,

@@ -137,10 +137,13 @@ describe("shared print-cli driver", () => {
 		expect(result.sessionId).toBe("s-2");
 	});
 
-	test("driver registry exposes only runnable harnesses", () => {
-		expect(runnableHarnessIds()).toEqual(["claude-code"]);
+	test("driver registry exposes the runnable harnesses", () => {
+		expect(runnableHarnessIds().sort()).toEqual(["claude-code", "codex"]);
 		expect(getHarnessDriver("claude-code").id).toBe("claude-code");
-		expect(() => getHarnessDriver("codex")).toThrow(/unknown harness/);
+		expect(getHarnessDriver("codex").id).toBe("codex");
+		expect(() => getHarnessDriver("nonexistent-harness")).toThrow(
+			/unknown harness/,
+		);
 	});
 
 	test("session execution uses the supplied driver and preserves resume semantics", async () => {

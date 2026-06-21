@@ -166,7 +166,22 @@ async function cmdRun(): Promise<void> {
 	);
 	let workerEnv: Record<string, string> | undefined;
 	let workerModelFlag = workerProfile.modelId;
-	if (workerProfile.provider !== "anthropic") {
+	if (workerProfile.transport === "codex") {
+		// Codex driver authenticates via `codex login --with-api-key` reading
+		// $OPENAI_API_KEY (the OpenAI-provider path; a non-OpenAI worker model
+		// would use a `model_providers` block — see the add-codex-cli-harness
+		// design). The model id is passed straight through to `codex exec --model`.
+		const key = process.env[workerProfile.authEnv];
+		if (!key) {
+			throw new Error(
+				`worker model '${workerProfile.name}' needs ${workerProfile.authEnv} in the environment`,
+			);
+		}
+		workerEnv = { OPENAI_API_KEY: key };
+		console.log(
+			`worker model: ${workerProfile.name} (${workerProfile.provider}) → ${workerProfile.modelId} via codex`,
+		);
+	} else if (workerProfile.provider !== "anthropic") {
 		const resolved = resolveClaudeCodeEnv(workerProfile);
 		workerEnv = resolved.env;
 		workerModelFlag = resolved.modelFlag; // mapped slot (e.g. "opus") for z.ai

@@ -26,6 +26,11 @@ RUN curl -fsSL --retry 5 -o /tmp/bun-install.sh https://bun.sh/install \
 ARG CLAUDE_CODE_VERSION=2.1.170
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
+# Codex CLI — PINNED. Keep in sync with config/harnesses.yaml (codex driver).
+ARG CODEX_VERSION=0.50.0
+RUN npm install -g @openai/codex@${CODEX_VERSION} \
+    && codex --version
+
 # Daytona's toolbox daemon runs as uid 1000 — use the base image's
 # built-in 'ubuntu' user (uid 1000) so exec/upload share the workspace owner.
 RUN mkdir -p /home/ubuntu/workspace && chown -R ubuntu:ubuntu /home/ubuntu

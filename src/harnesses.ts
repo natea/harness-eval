@@ -5,7 +5,7 @@ import { HarnessId, type HarnessId as HarnessIdType } from "./types";
 
 export class HarnessError extends Error {}
 
-export const HarnessDriver = z.enum(["claude-code"]);
+export const HarnessDriver = z.enum(["claude-code", "codex"]);
 export type HarnessDriver = z.infer<typeof HarnessDriver>;
 
 export const HarnessDefinition = z.object({

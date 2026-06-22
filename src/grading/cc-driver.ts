@@ -7,7 +7,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
 	type AdherenceResult,
 	type CriterionScore,
@@ -212,7 +212,13 @@ export async function runEvaluatorCC(
 	plan: TestPlan,
 	opts: CCEvaluatorOptions,
 ): Promise<AdherenceResult> {
-	const verdictFile = join(opts.trialDir, "cc-verdicts.jsonl");
+	// ABSOLUTE path: the grading agent runs with cwd = the workspace copy (which is
+	// OUTSIDE the repo since the package.json-isolation fix), so a relative verdict
+	// path would make its `>> cc-verdicts.jsonl` land in the copy (then deleted) and
+	// runEvaluatorCC would read an empty file at the repo root — exactly the
+	// "every step: not recorded by evaluator session" false-zero. Resolve to the
+	// real trial dir so writer and reader agree regardless of cwd.
+	const verdictFile = resolve(opts.trialDir, "cc-verdicts.jsonl");
 	const already = parseVerdictFile(verdictFile);
 	const done = new Set(already.map((r) => r.stepId));
 	for (const r of already) opts.onRecord?.(r);

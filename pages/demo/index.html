@@ -30,7 +30,7 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 30px; } h2 .badge { ve
 .feat .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 12px 14px; }
 .feat .card b { display: block; margin-bottom: 3px; }
 .feat .card p { margin: 0; color: #8b949e; font-size: 13px; }
-.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
 .shots figure { margin: 0; background: #161b22; border: 1px solid #21262d; border-radius: 8px; overflow: hidden; }
 .shots a { display: block; line-height: 0; background: #010102; border-bottom: 1px solid #21262d; }
 .shots img { width: 100%; display: block; }
@@ -67,16 +67,19 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 30px; } h2 .badge { ve
 	<h2>Beyond this snapshot — the full Eval Studio</h2>
 	<p class="muted">This page is a read-only leaderboard. The local studio (<span class="mono">bun run studio</span>) adds the whole workflow:</p>
 	<div class="feat">
-		<div class="card"><b>Configure &amp; launch</b><p>Pick target, frameworks, harness, worker/grader models, sandbox provider, trials and concurrency — then launch a real run, a zero-spend dry run, or copy the CLI command.</p></div>
+		<div class="card"><b>Cross-harness</b><p>Rank not just frameworks but harnesses — Claude Code, the Codex CLI, and a bare baseline — on one board. Candidates that don't support the chosen harness grey out with the reason.</p></div>
+		<div class="card"><b>Configure &amp; launch</b><p>Pick target, harness, frameworks, worker/grader models, sandbox provider, trials and concurrency — then launch a real run, a zero-spend dry run, or copy the CLI command.</p></div>
 		<div class="card"><b>Live runs</b><p>Watch each run stream provisioning → installing → building → grading, with cost-so-far and a cancel that tears down the in-flight sandbox.</p></div>
 		<div class="card"><b>Run scorecards</b><p>Per-candidate composite + dimensions, a step-by-step adherence comparison, excluded trials with reasons, and frozen provenance hashes.</p></div>
 		<div class="card"><b>Trial drill-down</b><p>Every PRD test-plan step with pass/partial/fail, weighted credit and cited evidence, plus the blind judge's five criteria with samples.</p></div>
-		<div class="card"><b>Conversation replay</b><p>The full build transcript — request/response, thinking, tool calls — with session jumps, an error navigator, and an outline trace to where a step went wrong.</p></div>
-		<div class="card"><b>Pluggable</b><p>Five sandbox providers, swappable worker/judge models, design-system adherence scoring, and bring-your-own PRD targets.</p></div>
+		<div class="card"><b>Boot the artifact</b><p>A read-only audit of what the agent built (file tree, cold-start contract, scrubbed blind copy) plus a one-click <strong>live demo</strong> — boot the built app in a sandbox and get a localhost URL to click through.</p></div>
+		<div class="card"><b>Conversation &amp; live stream</b><p>Replay the full build transcript with session jumps, an error navigator, and an outline trace — or watch it <strong>stream live</strong> (redacted) as the build runs.</p></div>
+		<div class="card"><b>Pluggable</b><p>Five sandbox providers, swappable worker/judge models, multiple harnesses, design-system adherence scoring, and bring-your-own PRD targets.</p></div>
 	</div>
 	<div class="shots">
 		<figure><a href="../assets/gallery-4-run.png" target="_blank" rel="noopener"><img src="../assets/gallery-4-run.png" alt="Run scorecard with dimension bars, trials table, step comparison and excluded trials" loading="lazy" /></a><figcaption><b>Run scorecard</b> — every candidate, side by side, with step-level adherence.</figcaption></figure>
-		<figure><a href="../assets/gallery-6-conversation.png" target="_blank" rel="noopener"><img src="../assets/gallery-6-conversation.png" alt="Conversation viewer with an error navigator stepping through the run's errors" loading="lazy" /></a><figcaption><b>Conversation &amp; trace</b> — replay the build and step through errors.</figcaption></figure>
+		<figure><a href="../assets/gallery-7-artifacts.png" target="_blank" rel="noopener"><img src="../assets/gallery-7-artifacts.png" alt="Artifacts panel: read-only audit of the built files plus a one-click live demo with a sandboxed localhost URL" loading="lazy" /></a><figcaption><b>Boot the artifact</b> — audit the build, then run it via a one-click live demo.</figcaption></figure>
+		<figure><a href="../assets/gallery-6-conversation.png" target="_blank" rel="noopener"><img src="../assets/gallery-6-conversation.png" alt="Conversation viewer with an error navigator stepping through the run's errors" loading="lazy" /></a><figcaption><b>Conversation &amp; trace</b> — replay the build (or watch it live) and step through errors.</figcaption></figure>
 	</div>
 	<a class="cta" href="../#see-it-in-action">See the full walkthrough →</a>
 	<a class="cta ghost" href="https://github.com/natea/harness-eval">Run it yourself</a>

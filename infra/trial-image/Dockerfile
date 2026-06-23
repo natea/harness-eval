@@ -1,8 +1,8 @@
 # Shared trial-environment image for ALL isolation providers.
 # Local (docker / macos-vz):
-#   docker build -t harness-eval-trial:2.1.170-1 infra/trial-image/
+#   docker build -t harness-eval-trial:zerocode infra/trial-image/
 # Daytona snapshot:
-#   daytona snapshot create harness-eval-base:v2 -f infra/trial-image/Dockerfile --cpu 2 --memory 4 --disk 10
+#   daytona snapshot create harness-eval-base:v4 -f infra/trial-image/Dockerfile -c infra/trial-image --cpu 2 --memory 4 --disk 10
 # Pin the resulting tag/snapshot in config/run.defaults.yaml.
 FROM ubuntu:24.04
 

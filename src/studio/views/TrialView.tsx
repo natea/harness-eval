@@ -148,7 +148,7 @@ export function TrialView({
 					<h1 className="font-mono text-lg font-bold">{trialId}</h1>
 					<p className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
 						<Spinner />
-						building{job.stage ? ` · ${job.stage}` : ""} — streaming live
+						building{job.stage ? ` · ${job.stage}` : ""}
 					</p>
 					<LiveStream runId={runId} trialId={trialId} />
 				</>
@@ -789,7 +789,7 @@ function PulseDot() {
 function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 	const [turns, setTurns] = useState<Turn[]>([]);
 	const [state, setState] = useState<
-		"connecting" | "streaming" | "done" | "error"
+		"connecting" | "connected" | "remote" | "streaming" | "done" | "error"
 	>("connecting");
 	const doneRef = useRef(false);
 
@@ -813,9 +813,11 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 				const msg = JSON.parse(e.data) as { type: string; turns?: Turn[] };
 				if (msg.type === "turns" && msg.turns) {
 					setState("streaming");
-					setTurns((prev) => [...prev, ...msg.turns!]);
+					setTurns((prev) => [...prev, ...(msg.turns ?? [])]);
 				} else if (msg.type === "open") {
-					setState((s) => (s === "connecting" ? "streaming" : s));
+					setState((s) => (s === "connecting" ? "connected" : s));
+				} else if (msg.type === "remote") {
+					setState("remote");
 				} else if (msg.type === "done") {
 					doneRef.current = true;
 					setState("done");
@@ -842,15 +844,20 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 	// if any, stands in).
 	if ((state === "done" || state === "error") && turns.length === 0) return null;
 
-	const live = state === "streaming" || state === "connecting";
+	const live =
+		state === "streaming" || state === "connecting" || state === "connected";
 	const label =
 		state === "streaming"
 			? "streaming"
+			: state === "remote"
+				? "remote run"
 			: state === "done"
 				? "✓ finished"
 				: state === "error"
 					? "stream ended"
-					: "connecting…";
+					: state === "connected"
+						? "waiting"
+						: "connecting…";
 
 	return (
 		<>
@@ -864,8 +871,10 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 				<CardContent className="space-y-2 px-3 pb-3 pt-3">
 					{turns.length === 0 ? (
 						<p className="flex items-center gap-2 text-[12px] text-muted-foreground">
-							<Spinner />
-							waiting for the agent to start…
+							{state === "remote" ? null : <Spinner />}
+							{state === "remote"
+								? "This provider runs in a remote sandbox; the transcript will appear after the trial archives."
+								: "waiting for the agent to start…"}
 						</p>
 					) : (
 						<>

@@ -143,7 +143,7 @@ bun run src/cli.ts report runs/<run-dir>    # (re)generate results + scorecard
 bun run src/cli.ts report runs/<run-dir> --weights 0.5,0.35,0.075,0.075
 ```
 
-Build the local trial image once: `docker build -t harness-eval-trial:2.1.170-1 infra/trial-image/`.
+Build the local trial image once: `docker build -t harness-eval-trial:zerocode infra/trial-image/`.
 Provider setup guides: [docs/MACOS-VZ-SETUP.md](docs/MACOS-VZ-SETUP.md),
 `infra/e2b-template/README.md`, `infra/daytona-snapshot` notes in the
 Dockerfile header. Harness/provider onboarding:

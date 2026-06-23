@@ -10,7 +10,7 @@
  *       from a spec document. Fill the TODOs + human review before validate.
  *
  *   bun run src/cli.ts run --candidates gsd,superpowers --trials 1 \
- *       [--harness claude-code] [--provider worktree|daytona] [--snapshot harness-eval-base:v2] \
+ *       [--harness claude-code] [--provider worktree|daytona] [--snapshot harness-eval-base:v4] \
  *       [--target <name>] [--design <name>] [--trial-minutes M] [--grade]
  *       Execute the matrix. Builds happen with real Claude Code sessions —
  *       REAL SPEND. --design places a frozen DESIGN.md in each workspace and
@@ -23,6 +23,12 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
+import {
+	CATALOG_PATH,
+	checkCatalog,
+	generateCatalog,
+	loadCatalog,
+} from "./catalog";
 import { type LoadedDesign, loadDesign } from "./designs";
 import { loadManifest } from "./grading/integration";
 import { loadHarnesses, resolveHarness } from "./harnesses";
@@ -37,16 +43,14 @@ import {
 } from "./models";
 import { gradeTrials } from "./orchestrator/grade";
 import { buildMatrix, runMatrix } from "./orchestrator/scheduler";
-import { createProvider } from "./providers/factory";
+import {
+	createProvider,
+	preflightProbeForHarness,
+	resolveProviderSnapshot,
+} from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
-import {
-	CATALOG_PATH,
-	checkCatalog,
-	generateCatalog,
-	loadCatalog,
-} from "./catalog";
 import { loadTarget, renderTargetPrompt, scaffoldTarget } from "./targets";
 import { RunConfig, type TrialResult, Weights } from "./types";
 
@@ -223,14 +227,24 @@ async function cmdRun(): Promise<void> {
 	const runDir = join("runs", runId);
 	mkdirSync(join(runDir, "trials"), { recursive: true });
 
+	const requestedSnapshot =
+		arg("snapshot") ??
+		(config.harness === "zerocode"
+			? undefined
+			: (defaults.snapshot as string | undefined));
 	const provider = createProvider(config.provider, {
-		snapshot: arg("snapshot") ?? (defaults.snapshot as string | undefined),
+		snapshot: resolveProviderSnapshot(
+			config.provider,
+			config.harness,
+			requestedSnapshot,
+		),
 		worktreeBaseDir: join(runDir, "sandboxes"),
 	});
 	if (provider.preflight) {
 		await provider.preflight({
 			trialWallClockMs: config.budget.trialWallClockMs,
 			concurrency: config.concurrency,
+			requiredProbe: preflightProbeForHarness(config.harness),
 		});
 		console.log(
 			`preflight OK: ${provider.id} (${provider.snapshotId ?? "no image"})`,

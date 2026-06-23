@@ -123,7 +123,8 @@ USD, across harnesses.
 # Build the trial image (pins ZeroClaw v0.8.1; bakes both binaries + the ACP client)
 docker build -t harness-eval-trial:zerocode infra/trial-image/
 # Daytona:
-daytona snapshot create harness-eval-base:v3 -f infra/trial-image/Dockerfile \
+daytona snapshot create harness-eval-base:v4 -f infra/trial-image/Dockerfile \
+  -c infra/trial-image \
   --cpu 2 --memory 4 --disk 10
 ```
 
@@ -220,7 +221,7 @@ with no approval gate), and a writable workspace.
 ## Known follow-ups
 
 - **Studio provider for zerocode.** Run zerocode on `docker` (image
-  `harness-eval-trial:zerocode`) or Daytona snapshot `v3`, **not** `worktree`
+  `harness-eval-trial:zerocode`) or Daytona snapshot `v4`, **not** `worktree`
   (the host has no bundled ACP client). The studio now validates this.
 - **3.3 graded smoke.** `bare/zerocode/opus` vs `bare/claude-code/opus`, graded,
   for the first real cross-harness number.

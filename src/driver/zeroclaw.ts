@@ -140,6 +140,7 @@ const runZeroclawAcp: RunDriverSession = async (sandbox, run) => {
 	registerLiveSource(trialId, {
 		outFile,
 		local: sandbox.id.startsWith("worktree:"),
+		sandboxId: sandbox.id,
 	});
 	try {
 		const res = await sandbox.exec(cmd, {

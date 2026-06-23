@@ -204,6 +204,23 @@ export class CliContainerProvider implements SandboxProvider {
 				`[${this.id}] warning: ${ctx.concurrency} × ${this.limits.memoryGb}GiB trials ≈ ${needGb}GiB vs ${hostGb.toFixed(0)}GiB host RAM`,
 			);
 		}
+		if (ctx.requiredProbe) {
+			const probe = await this.provision(
+				`preflight-${Date.now().toString(36)}`,
+			);
+			try {
+				const res = await probe.exec(ctx.requiredProbe.command, {
+					timeoutMs: 60_000,
+				});
+				if (res.exitCode !== 0) {
+					throw new PreflightError(
+						`image '${this.image}' failed ${ctx.requiredProbe.label} probe: ${(res.stderr || res.stdout).slice(0, 300)}`,
+					);
+				}
+			} finally {
+				await probe.destroy().catch(() => {});
+			}
+		}
 	}
 
 	async provision(trialId: string): Promise<Sandbox> {

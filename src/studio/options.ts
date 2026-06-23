@@ -152,12 +152,9 @@ export function validateRunRequest(
 		}
 	}
 
-	// Harness/provider compatibility: Codex's CLI lives only in the trial image, so
-	// it can't run on the `worktree` provider (which executes on the host). zerocode
-	// ships its client + config into the sandbox at runtime, so it runs on any
-	// provider PROVIDED the `zeroclaw` binary is on the host's PATH for worktree —
-	// not validated here (a clear "zeroclaw: command not found" surfaces if absent).
-	const IMAGE_ONLY_HARNESSES = new Set(["codex"]);
+	// Harness/provider compatibility: these CLIs must come from the pinned trial
+	// image/snapshot, not the host's PATH.
+	const IMAGE_ONLY_HARNESSES = new Set(["codex", "zerocode"]);
 	if (
 		req.harness &&
 		IMAGE_ONLY_HARNESSES.has(req.harness) &&

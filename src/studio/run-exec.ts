@@ -21,7 +21,11 @@ import {
 	runMatrix,
 	type SchedulerDeps,
 } from "../orchestrator/scheduler";
-import { createProvider } from "../providers/factory";
+import {
+	createProvider,
+	preflightProbeForHarness,
+	resolveProviderSnapshot,
+} from "../providers/factory";
 import { WorktreeProvider } from "../providers/worktree";
 import { loadRegistry, resolveCandidates } from "../registry";
 import { writeScorecard } from "../report/markdown";
@@ -78,8 +82,13 @@ export const fakeExecutor = async (sandbox: {
 	};
 };
 
-export function defaultProvider(provider: IsolationProviderId, runDir: string) {
+export function defaultProvider(
+	provider: IsolationProviderId,
+	harness: HarnessId,
+	runDir: string,
+) {
 	return createProvider(provider, {
+		snapshot: resolveProviderSnapshot(provider, harness),
 		worktreeBaseDir: join(runDir, "sandboxes"),
 	});
 }
@@ -103,7 +112,10 @@ export function resolveRunInputs(r: StudioRunRequest) {
 	);
 	const models = loadModels();
 	const workerProfile = resolveProfile(r.workerModel, models);
-	const judgeProfile = resolveProfile(r.judgeModel ?? "claude-sonnet-4-6", models);
+	const judgeProfile = resolveProfile(
+		r.judgeModel ?? "claude-sonnet-4-6",
+		models,
+	);
 	// Single shared resolver (handles codex/oauth/api-key/third-party/native) so
 	// the studio and CLI run paths can't drift.
 	const rw = resolveWorkerEnv(workerProfile);
@@ -176,11 +188,14 @@ export async function executeRun(
 	try {
 		const provider: ReturnType<typeof createProvider> = dryRun
 			? new WorktreeProvider(join(runDir, "sandboxes"))
-			: (opts.makeProvider ?? defaultProvider)(inp.config.provider, runDir);
+			: opts.makeProvider
+				? opts.makeProvider(inp.config.provider, runDir)
+				: defaultProvider(inp.config.provider, inp.config.harness, runDir);
 		if (!dryRun && provider.preflight)
 			await provider.preflight({
 				trialWallClockMs: inp.config.budget.trialWallClockMs,
 				concurrency: inp.config.concurrency,
+				requiredProbe: preflightProbeForHarness(inp.config.harness),
 			});
 
 		const startedAt = new Date().toISOString();

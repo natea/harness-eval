@@ -9,10 +9,14 @@
  * short-lived `tail` (not `tail -f`), so the daemon-stdout footgun is avoided and
  * the post-exit read + archived transcript stay byte-identical.
  */
+import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import type { Sandbox } from "../providers/types";
+import { promisify } from "node:util";
 import { collectSecretValues, redactSecrets } from "../driver/archive";
-import { type Turn, parseTranscript } from "../report/transcript-render";
+import type { Sandbox } from "../providers/types";
+import { parseTranscript, type Turn } from "../report/transcript-render";
+
+const execFileAsync = promisify(execFile);
 
 /** Reads session lines from a 1-indexed start line to EOF (may end mid-line). */
 export interface LineReader {
@@ -29,7 +33,96 @@ export function fileLineReader(path: string): LineReader {
 	return {
 		async read(fromLine: number): Promise<string> {
 			if (!existsSync(path)) return "";
-			return readFileSync(path, "utf8").split("\n").slice(fromLine - 1).join("\n");
+			return readFileSync(path, "utf8")
+				.split("\n")
+				.slice(fromLine - 1)
+				.join("\n");
+		},
+	};
+}
+
+/** Tail a transcript file from a local Docker container without attaching to the
+ * build process. Used by Studio's detached HTTP process for docker-provider runs.
+ */
+export function dockerLineReader(container: string, path: string): LineReader {
+	const quoted = JSON.stringify(path);
+	return {
+		async read(fromLine: number): Promise<string> {
+			try {
+				const { stdout } = await execFileAsync(
+					"docker",
+					[
+						"exec",
+						container,
+						"bash",
+						"-lc",
+						`tail -n +${fromLine} ${quoted} 2>/dev/null || true`,
+					],
+					{ timeout: 15_000, maxBuffer: 2 * 1024 * 1024 },
+				);
+				return stdout;
+			} catch (err) {
+				const e = err as { stdout?: string };
+				return e.stdout ?? "";
+			}
+		},
+	};
+}
+
+/** Tail a transcript file from an Apple Containerization VM/container. */
+export function appleContainerLineReader(
+	container: string,
+	path: string,
+): LineReader {
+	const quoted = JSON.stringify(path);
+	return {
+		async read(fromLine: number): Promise<string> {
+			try {
+				const { stdout } = await execFileAsync(
+					"container",
+					[
+						"exec",
+						container,
+						"bash",
+						"-lc",
+						`tail -n +${fromLine} ${quoted} 2>/dev/null || true`,
+					],
+					{ timeout: 15_000, maxBuffer: 2 * 1024 * 1024 },
+				);
+				return stdout;
+			} catch (err) {
+				const e = err as { stdout?: string };
+				return e.stdout ?? "";
+			}
+		},
+	};
+}
+
+/** Tail a transcript file from a Daytona sandbox via the Daytona CLI. This is a
+ * short-lived read command, not an attachment to the build process.
+ */
+export function daytonaLineReader(sandboxId: string, path: string): LineReader {
+	const quoted = JSON.stringify(path);
+	return {
+		async read(fromLine: number): Promise<string> {
+			try {
+				const { stdout } = await execFileAsync(
+					"daytona",
+					[
+						"exec",
+						sandboxId,
+						"--",
+						"bash",
+						"-lc",
+						`tail -n +${fromLine} ${quoted} 2>/dev/null || true`,
+					],
+					{ timeout: 15_000, maxBuffer: 2 * 1024 * 1024 },
+				);
+				return stdout;
+			} catch (err) {
+				const e = err as { stdout?: string };
+				return e.stdout ?? "";
+			}
 		},
 	};
 }

@@ -29,3 +29,22 @@ export interface HarnessDriver {
 	readonly id: HarnessId;
 	runSession: RunDriverSession;
 }
+
+/**
+ * A driver-level failure that is environmental, not the candidate's fault — a
+ * dead daemon, an unreachable socket, a protocol-handshake mismatch. The
+ * session executor re-throws these so the scheduler classifies the trial as
+ * `infra-failed` (retried), instead of grading a broken workspace as a
+ * candidate result. Carries `isInfra` so the classifier needn't string-match.
+ */
+export class InfraError extends Error {
+	readonly isInfra = true;
+}
+
+/** True for errors that should drive infra-failure classification/retry. */
+export function isInfraError(err: unknown): err is InfraError {
+	return (
+		err instanceof InfraError ||
+		(typeof err === "object" && err !== null && "isInfra" in err)
+	);
+}

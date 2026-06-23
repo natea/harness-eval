@@ -152,6 +152,19 @@ export function validateRunRequest(
 		}
 	}
 
+	// Harness/provider compatibility: these CLIs must come from the pinned trial
+	// image/snapshot, not the host's PATH.
+	const IMAGE_ONLY_HARNESSES = new Set(["codex", "zerocode"]);
+	if (
+		req.harness &&
+		IMAGE_ONLY_HARNESSES.has(req.harness) &&
+		req.provider === "worktree"
+	) {
+		errors.push(
+			`harness '${req.harness}' needs an image-based provider (docker, daytona, e2b, macos-vz) — the worktree provider runs on the host, which has no '${req.harness}' CLI. Build the trial image and select e.g. provider=docker.`,
+		);
+	}
+
 	// Worker + judge models must resolve (implicit claude-* or a declared profile),
 	// and the judge must differ from the worker (self-grading is disallowed — the
 	// same guardrail the CLI enforces). Cross-vendor judging is allowed.
@@ -168,6 +181,15 @@ export function validateRunRequest(
 		try {
 			const judgeProfile = resolveProfile(req.judgeModel, models);
 			if (workerProfile) judgeWorkerRelation(workerProfile, judgeProfile);
+			// Grading runs on the Claude Code subscription (`claude -p --model
+			// <judge>`), which can only drive Anthropic-compatible models. A Codex
+			// (OpenAI) judge like gpt-5-codex fails at grading time with "model may
+			// not exist or you may not have access" — reject it up front.
+			if (judgeProfile.transport === "codex") {
+				errors.push(
+					`judgeModel '${req.judgeModel}': grading uses Claude Code, which can't drive a Codex/OpenAI model. Pick a Claude grader (e.g. claude-sonnet-4-6).`,
+				);
+			}
 		} catch (e) {
 			errors.push(`judgeModel: ${(e as Error).message}`);
 		}

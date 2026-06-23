@@ -1,9 +1,9 @@
-import type { Sandbox } from "../providers/types";
 import {
 	registerLiveSource,
 	trialIdFromSandbox,
 	unregisterLiveSource,
 } from "../live/registry";
+import type { Sandbox } from "../providers/types";
 import type { DriverResult, DriverRunOptions, RunDriverSession } from "./types";
 
 export interface PrintCliCommandContext extends DriverRunOptions {
@@ -48,6 +48,7 @@ export function createPrintCliSessionRunner(
 		registerLiveSource(trialId, {
 			outFile,
 			local: sandbox.id.startsWith("worktree:"),
+			sandboxId: sandbox.id,
 		});
 		try {
 			const res = await sandbox.exec(command, {

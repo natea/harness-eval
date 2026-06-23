@@ -138,7 +138,11 @@ describe("shared print-cli driver", () => {
 	});
 
 	test("driver registry exposes the runnable harnesses", () => {
-		expect(runnableHarnessIds().sort()).toEqual(["claude-code", "codex"]);
+		expect(runnableHarnessIds().sort()).toEqual([
+			"claude-code",
+			"codex",
+			"zerocode",
+		]);
 		expect(getHarnessDriver("claude-code").id).toBe("claude-code");
 		expect(getHarnessDriver("codex").id).toBe("codex");
 		expect(() => getHarnessDriver("nonexistent-harness")).toThrow(

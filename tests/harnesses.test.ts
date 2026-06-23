@@ -27,6 +27,7 @@ function registry(ids: string[]): HarnessRegistry {
 				name: id,
 				driver: "claude-code" as const,
 				defaultVersion: "test",
+				reportsCost: true,
 			},
 		]),
 	);

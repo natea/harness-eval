@@ -1,7 +1,13 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { createDockerProvider } from "../src/providers/docker";
-import { createProvider } from "../src/providers/factory";
+import {
+	createProvider,
+	preflightProbeForHarness,
+	resolveProviderSnapshot,
+	ZEROCLAW_DAYTONA_SNAPSHOT,
+	ZEROCLAW_TRIAL_IMAGE,
+} from "../src/providers/factory";
 import {
 	createMacosVzProvider,
 	MIN_CONTAINER_CLI,
@@ -17,7 +23,7 @@ function dockerAvailable(): boolean {
 	}
 }
 const hasDocker = dockerAvailable();
-const IMAGE = "harness-eval-trial:2.1.170-1";
+const IMAGE = "harness-eval-trial:zerocode";
 
 /**
  * Backstop cleanup for live provider tests: force-remove each trial VM/container
@@ -54,6 +60,35 @@ describe("provider factory", () => {
 	test("unknown id throws", () => {
 		// biome-ignore lint/suspicious/noExplicitAny: deliberate invalid input
 		expect(() => createProvider("podman" as any)).toThrow(/unknown provider/);
+	});
+
+	test("zerocode pins image-backed providers to the zeroclaw-capable image", () => {
+		expect(resolveProviderSnapshot("daytona", "zerocode")).toBe(
+			ZEROCLAW_DAYTONA_SNAPSHOT,
+		);
+		expect(resolveProviderSnapshot("docker", "zerocode")).toBe(
+			ZEROCLAW_TRIAL_IMAGE,
+		);
+		expect(resolveProviderSnapshot("macos-vz", "zerocode")).toBe(
+			ZEROCLAW_TRIAL_IMAGE,
+		);
+		expect(preflightProbeForHarness("zerocode")?.command).toContain("zeroclaw");
+	});
+
+	test("zerocode rejects stale explicit images before trial dispatch", () => {
+		expect(() =>
+			resolveProviderSnapshot("daytona", "zerocode", "harness-eval-base:v2"),
+		).toThrow(/requires snapshot\/image 'harness-eval-base:v4'/);
+		expect(() =>
+			resolveProviderSnapshot(
+				"docker",
+				"zerocode",
+				"harness-eval-trial:2.1.170-1",
+			),
+		).toThrow(/harness-eval-trial:zerocode/);
+		expect(() => resolveProviderSnapshot("worktree", "zerocode")).toThrow(
+			/image-backed provider/,
+		);
 	});
 });
 

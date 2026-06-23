@@ -19,6 +19,7 @@ const TIER_LIFETIME_MS: Record<string, number> = {
 	hobby: 60 * 60 * 1000,
 	pro: 24 * 60 * 60 * 1000,
 };
+const DEFAULT_TIER_LIFETIME_MS = TIER_LIFETIME_MS.hobby ?? 60 * 60 * 1000;
 
 export interface E2BProviderOptions {
 	template: string;
@@ -45,7 +46,7 @@ export class E2BProvider implements SandboxProvider {
 
 	async preflight(ctx: PreflightContext): Promise<void> {
 		const tier = this.opts.tier ?? "hobby";
-		const cap = TIER_LIFETIME_MS[tier] ?? TIER_LIFETIME_MS.hobby!;
+		const cap = TIER_LIFETIME_MS[tier] ?? DEFAULT_TIER_LIFETIME_MS;
 		this.lifetimeMs =
 			ctx.trialWallClockMs + (this.opts.setupMarginMs ?? 15 * 60 * 1000);
 		if (this.lifetimeMs > cap) {
@@ -55,21 +56,34 @@ export class E2BProvider implements SandboxProvider {
 		}
 		// Template existence: create/kill is the only universal check; do a
 		// short-lived probe so a bad template fails here, not mid-matrix.
+		let probe: E2BSandbox | undefined;
 		try {
-			const probe = await E2BSandbox.create(this.opts.template, {
+			probe = await E2BSandbox.create(this.opts.template, {
 				timeoutMs: 60_000,
 			});
-			await probe.kill();
+			if (ctx.requiredProbe) {
+				const res = await probe.commands.run(ctx.requiredProbe.command, {
+					timeoutMs: 60_000,
+				});
+				if (res.exitCode !== 0) {
+					throw new PreflightError(
+						`E2B template '${this.opts.template}' failed ${ctx.requiredProbe.label} probe: ${(res.stderr || res.stdout).slice(0, 300)}`,
+					);
+				}
+			}
 		} catch (err) {
+			if (err instanceof PreflightError) throw err;
 			throw new PreflightError(
 				`E2B template '${this.opts.template}' failed to start: ${String(err).slice(0, 200)} — build it per infra/e2b-template/README.md`,
 			);
+		} finally {
+			await probe?.kill().catch(() => {});
 		}
 	}
 
 	async provision(trialId: string): Promise<Sandbox> {
 		const cap =
-			TIER_LIFETIME_MS[this.opts.tier ?? "hobby"] ?? TIER_LIFETIME_MS.hobby!;
+			TIER_LIFETIME_MS[this.opts.tier ?? "hobby"] ?? DEFAULT_TIER_LIFETIME_MS;
 		const lifetime =
 			this.lifetimeMs > 0 ? this.lifetimeMs : Math.min(2 * 60 * 60 * 1000, cap);
 		const sandbox = await E2BSandbox.create(this.opts.template, {

@@ -206,6 +206,33 @@ describe("transcript-render: Codex exec --json format (add-codex-cli-harness)", 
 	});
 });
 
+describe("transcript-render: ACP JSON-RPC errors", () => {
+	test("renders zerocode ACP error frames instead of an empty session", () => {
+		const turns = parseTranscript(
+			[
+				JSON.stringify({
+					jsonrpc: "2.0",
+					id: 2,
+					error: {
+						code: -32603,
+						message: "Agent turn failed: Anthropic credentials not set",
+					},
+				}),
+			].join("\n"),
+		);
+		expect(turns.find((t) => t.kind === "result")).toMatchObject({
+			status: "error",
+		});
+		expect(
+			turns.some(
+				(t) =>
+					t.kind === "assistant" &&
+					t.text.includes("Anthropic credentials not set"),
+			),
+		).toBe(true);
+	});
+});
+
 describe("transcript-render: renderMarkdown (task 1.2)", () => {
 	test("labels request/response distinctly and truncates oversized payloads", () => {
 		const big = "x".repeat(MAX_INLINE + 5000);

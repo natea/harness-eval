@@ -5,13 +5,14 @@
  * a URL. Web targets get a live URL; non-web targets get a captured cold-start
  * run instead (no URL), with the artifact audit always available.
  */
+import { DEFAULT_TRIAL_IMAGE } from "../providers/docker";
 import {
 	DockerBackend,
+	freePort,
 	HostBackend,
 	type PreviewBackend,
 	type StartedPreview,
 	type TrustPosture,
-	freePort,
 } from "./backend";
 import { type PreviewRouter, type Runner, selectRouter } from "./router";
 
@@ -67,7 +68,7 @@ export async function healthCheck(
 
 function makeBackend(opts: LaunchOptions): PreviewBackend {
 	if (opts.unsafeHost) return new HostBackend();
-	return new DockerBackend(opts.image ?? "harness-eval-trial:2.1.170-1");
+	return new DockerBackend(opts.image ?? DEFAULT_TRIAL_IMAGE);
 }
 
 /**
@@ -97,7 +98,10 @@ export async function launchPreview(
 			url: null,
 			trust: backend.trust,
 			router: router.id,
-			logs: { setup: `[backend start failed] ${String(e).slice(0, 200)}`, start: "" },
+			logs: {
+				setup: `[backend start failed] ${String(e).slice(0, 200)}`,
+				start: "",
+			},
 			stop: async () => {},
 		};
 	}
@@ -124,7 +128,10 @@ export async function launchPreview(
 	}
 
 	const directUrl = `http://${started.backend.host}:${started.backend.port}`;
-	const healthy = await healthCheck(directUrl, opts.budgetMs ?? DEFAULT_BUDGET_MS);
+	const healthy = await healthCheck(
+		directUrl,
+		opts.budgetMs ?? DEFAULT_BUDGET_MS,
+	);
 	if (!healthy) {
 		const logs = { ...started.logs };
 		await teardown();

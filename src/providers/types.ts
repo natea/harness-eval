@@ -36,6 +36,11 @@ export interface PreflightContext {
 	/** Per-trial wall-clock budget the provider must be able to sustain. */
 	trialWallClockMs: number;
 	concurrency: number;
+	/** Optional provider-local probe that must pass before any trial dispatches. */
+	requiredProbe?: {
+		label: string;
+		command: string;
+	};
 }
 
 export class PreflightError extends Error {}

@@ -226,6 +226,26 @@ export function parseClaudeTranscript(jsonl: string): Turn[] {
 		} catch {
 			continue; // non-JSON noise in the stream
 		}
+		const rpcError = o.error as Record<string, unknown> | undefined;
+		if (rpcError && typeof rpcError.message === "string") {
+			turns.push({
+				kind: "result",
+				dir: "info",
+				role: "system",
+				status: "error",
+				durationMs: 0,
+				costUsd: 0,
+				numTurns: 0,
+				usage: { inputTokens: 0, outputTokens: 0 },
+			});
+			turns.push({
+				kind: "assistant",
+				dir: "response",
+				role: "assistant",
+				text: `ACP error: ${rpcError.message}`,
+			});
+			continue;
+		}
 		const type = o.type as string | undefined;
 
 		if (type === "system") {

@@ -24,6 +24,8 @@ export interface LiveSource {
 	outFile: string;
 	/** True when `outFile` is on the host filesystem (worktree provider). */
 	local: boolean;
+	/** Provider sandbox id, e.g. `docker:he-bare-t1`; used for local container tails. */
+	sandboxId?: string;
 }
 
 /** Bare trial id from a sandbox id (e.g. `worktree:gsd-t1` → `gsd-t1`). */

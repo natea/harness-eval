@@ -6,7 +6,13 @@
  */
 import { join } from "node:path";
 import { getLiveSource } from "../live/registry";
-import { LiveTurnStream, fileLineReader } from "../live/tap";
+import {
+	appleContainerLineReader,
+	daytonaLineReader,
+	dockerLineReader,
+	fileLineReader,
+	LiveTurnStream,
+} from "../live/tap";
 import { readRunState } from "./run-state";
 import { trialTranscript } from "./transcript";
 
@@ -23,16 +29,19 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 	const encoder = new TextEncoder();
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let closed = false;
-	let currentFile: string | undefined; // outFile currently being tailed
+	let currentSource: string | undefined; // source currently being tailed
 	let stream: LiveTurnStream | undefined;
 	let idle = 0;
 	let ticks = 0;
+	let remoteNotified = false;
 
 	const body = new ReadableStream<Uint8Array>({
 		start(controller) {
 			const send = (obj: unknown): boolean => {
 				try {
-					controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+					controller.enqueue(
+						encoder.encode(`data: ${JSON.stringify(obj)}\n\n`),
+					);
 					return true;
 				} catch {
 					return false; // client disconnected
@@ -60,15 +69,62 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 			const tick = async () => {
 				if (closed) return;
 				ticks++;
-				if (ticks > MAX_TICKS) return close({ type: "done", reason: "max-duration" });
+				if (ticks > MAX_TICKS)
+					return close({ type: "done", reason: "max-duration" });
 				try {
 					const src = getLiveSource(trialId);
-					// Only host-local files are tailable from this (separate) process;
-					// remote-sandbox streaming is a push follow-up.
-					const tailable = src?.local ? src : undefined;
-					if (tailable && tailable.outFile !== currentFile) {
-						currentFile = tailable.outFile; // new step/file
-						stream = new LiveTurnStream(fileLineReader(tailable.outFile));
+					const dockerContainer = src?.sandboxId?.startsWith("docker:")
+						? src.sandboxId.slice("docker:".length)
+						: undefined;
+					const daytonaSandbox = src?.sandboxId?.startsWith("daytona:")
+						? src.sandboxId.split(":")[1]
+						: undefined;
+					const appleContainer = src?.sandboxId?.startsWith("macos-vz:")
+						? src.sandboxId.slice("macos-vz:".length)
+						: undefined;
+					// Host-local worktree files and local Docker containers are tailable
+					// from this separate Studio process. Daytona and macOS-VZ can be
+					// polled through their CLIs' exec commands. Other remote providers
+					// need a push transport.
+					const tailable =
+						src?.local || dockerContainer || daytonaSandbox || appleContainer
+							? src
+							: undefined;
+					if (src?.local || dockerContainer || daytonaSandbox || appleContainer)
+						remoteNotified = false;
+					if (
+						src &&
+						!src.local &&
+						!dockerContainer &&
+						!daytonaSandbox &&
+						!appleContainer &&
+						!remoteNotified
+					) {
+						remoteNotified = true;
+						if (!send({ type: "remote" })) return close();
+					}
+					if (src && tailable) {
+						const key = src.local
+							? `file:${tailable.outFile}`
+								: dockerContainer
+									? `docker:${dockerContainer}:${tailable.outFile}`
+									: daytonaSandbox
+										? `daytona:${daytonaSandbox}:${tailable.outFile}`
+										: `macos-vz:${appleContainer}:${tailable.outFile}`;
+							if (key !== currentSource) {
+								currentSource = key; // new step/file/source
+								const reader = src.local
+									? fileLineReader(tailable.outFile)
+									: dockerContainer
+										? dockerLineReader(dockerContainer, tailable.outFile)
+										: daytonaSandbox
+											? daytonaLineReader(daytonaSandbox, tailable.outFile)
+											: appleContainerLineReader(
+													appleContainer ?? "",
+													tailable.outFile,
+												);
+								stream = new LiveTurnStream(reader);
+							}
 					}
 					if (tailable && stream) {
 						const fresh = await stream.poll();

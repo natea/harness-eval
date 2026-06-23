@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolveCandidates } from "../src/registry";
-import { loadRegistry } from "../src/registry";
+import { loadRegistry, resolveCandidates } from "../src/registry";
 import {
 	cliCommand,
 	studioOptions,
@@ -103,10 +102,20 @@ describe("eval-studio options + validation (tasks 3.1, 4.1)", () => {
 		expect(r.errors.some((e) => /config|weights/.test(e))).toBe(true);
 	});
 
+	test("rejects zerocode on worktree so it uses the pinned trial image", () => {
+		const r = validateRunRequest({
+			...VALID,
+			candidates: ["bare"],
+			harness: "zerocode",
+			provider: "worktree",
+		});
+		expect(r.errors.some((e) => /image-based provider/.test(e))).toBe(true);
+	});
+
 	test("cliCommand omits the default worker model, includes overrides + grade", () => {
-		expect(cliCommand({ ...VALID, workerModel: "claude-opus-4-6" })).not.toContain(
-			"--worker-model",
-		);
+		expect(
+			cliCommand({ ...VALID, workerModel: "claude-opus-4-6" }),
+		).not.toContain("--worker-model");
 		const glm = cliCommand({ ...VALID, workerModel: "glm-4.7", grade: true });
 		expect(glm).toContain("--worker-model glm-4.7");
 		expect(glm).toContain("--grade");

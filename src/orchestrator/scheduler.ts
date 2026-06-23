@@ -4,6 +4,7 @@ import { getHarnessDriver, type HarnessDriver } from "../driver";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
 import { aggregateTelemetry } from "../driver/telemetry";
+import { isInfraError } from "../driver/types";
 import type { Sandbox, SandboxProvider } from "../providers/types";
 import { renderSessionScript } from "../registry";
 import type {
@@ -100,6 +101,10 @@ export function buildMatrix(
 
 /** Classify a thrown error: infra failures are retried, candidate failures are not. */
 export function isInfraFailure(err: unknown): boolean {
+	// Drivers can mark a failure environmental explicitly (e.g. the ZeroClaw ACP
+	// handshake-version mismatch is infra, not a candidate fault) — honor that
+	// flag before falling back to message heuristics.
+	if (isInfraError(err)) return true;
 	const msg = String(err).toLowerCase();
 	return /provision|sandbox|network|econnre|etimedout|enotfound|rate.?limit|5\d\d|snapshot|memory limit|quota|daytona(validation|connection|timeout)error|request timeout/.test(
 		msg,

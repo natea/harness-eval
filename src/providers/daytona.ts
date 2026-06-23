@@ -5,9 +5,11 @@ import { Daytona, type Sandbox as DaytonaSandbox } from "@daytonaio/sdk";
 import type {
 	ExecOptions,
 	ExecResult,
+	PreflightContext,
 	Sandbox,
 	SandboxProvider,
 } from "./types";
+import { PreflightError } from "./types";
 
 const WORKSPACE = "/home/ubuntu/workspace";
 
@@ -26,6 +28,23 @@ export class DaytonaProvider implements SandboxProvider {
 		if (!apiKey) throw new Error("DAYTONA_API_KEY is not set");
 		this.client = new Daytona({ apiKey });
 		this.snapshotId = snapshotId;
+	}
+
+	async preflight(ctx: PreflightContext): Promise<void> {
+		if (!ctx.requiredProbe) return;
+		const probe = await this.provision(`preflight-${Date.now().toString(36)}`);
+		try {
+			const res = await probe.exec(ctx.requiredProbe.command, {
+				timeoutMs: 60_000,
+			});
+			if (res.exitCode !== 0) {
+				throw new PreflightError(
+					`Daytona snapshot '${this.snapshotId}' failed ${ctx.requiredProbe.label} probe: ${(res.stderr || res.stdout).slice(0, 300)}`,
+				);
+			}
+		} finally {
+			await probe.destroy().catch(() => {});
+		}
 	}
 
 	private async sweepStaleTrialSandboxes(trialId: string): Promise<void> {

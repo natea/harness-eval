@@ -5,8 +5,8 @@ This branch has two pluggability surfaces:
 - **Isolation providers** decide where each trial runs. They implement
   `SandboxProvider` in `src/providers/types.ts`.
 - **Harnesses** decide how a candidate framework is installed and driven. The
-  registry is already scoped by harness, but only `claude-code` has an
-  implemented driver today.
+  registry is scoped by harness; `claude-code`, `codex`, and `zerocode`
+  (ZeroClaw, over ACP — see `docs/ZEROCODE-HARNESS.md`) have implemented drivers.
 
 Keep those surfaces separate. A new provider should not require registry
 changes, and a new harness should not require provider-specific code.

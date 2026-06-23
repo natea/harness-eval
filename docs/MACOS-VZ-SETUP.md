@@ -30,20 +30,20 @@ Build with Docker once (shared definition for all providers), then load into
 `container` — no registry needed:
 
 ```sh
-docker build -t harness-eval-trial:2.1.170-1 infra/trial-image/
-docker save harness-eval-trial:2.1.170-1 -o /tmp/trial-image.tar
+docker build -t harness-eval-trial:zerocode infra/trial-image/
+docker save harness-eval-trial:zerocode -o /tmp/trial-image.tar
 container image load -i /tmp/trial-image.tar
-container image list        # harness-eval-trial  2.1.170-1
+container image list        # harness-eval-trial  zerocode
 ```
 
-(If you don't use Docker at all, `container build -t harness-eval-trial:2.1.170-1 infra/trial-image/`
+(If you don't use Docker at all, `container build -t harness-eval-trial:zerocode infra/trial-image/`
 builds natively.)
 
 ## Run trials
 
 ```sh
 bun run src/cli.ts run --candidates superpowers --trials 1 \
-  --provider macos-vz --snapshot harness-eval-trial:2.1.170-1
+  --provider macos-vz --snapshot harness-eval-trial:zerocode
 ```
 
 Preflight checks (fail-before-spend): Apple Silicon + CLI version ≥ pin +
@@ -66,7 +66,7 @@ for each.
 # List running trial VMs (each gets its own IP via NAT)
 container list
 # ID                 IMAGE                                           OS     ARCH   STATE    ADDR           CPUS  MEMORY
-# he-superpowers-t1  docker.io/library/harness-eval-trial:2.1.170-1  linux  arm64  running  192.168.64.13  2     4096 MB
+# he-superpowers-t1  docker.io/library/harness-eval-trial:zerocode  linux  arm64  running  192.168.64.13  2     4096 MB
 
 container list --all              # include stopped VMs
 container image list              # loaded images

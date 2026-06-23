@@ -1,6 +1,6 @@
 import { CliContainerProvider, type ResourceLimits } from "./cli-container";
 
-export const DEFAULT_TRIAL_IMAGE = "harness-eval-trial:2.1.170-1";
+export const DEFAULT_TRIAL_IMAGE = "harness-eval-trial:zerocode";
 
 /** Local Docker provider (docker change D1/D2): per-trial containers. */
 export function createDockerProvider(

@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Coding Harness Evaluations — which coding framework actually performs best?</title>
 <meta name="description" content="An eval framework that ranks agentic coding frameworks by having each build the same spec, same harness, same model, in isolated sandboxes — graded on an evidence-based rubric." />
+<link rel="canonical" href="https://codingharness.xyz/" />
+<meta name="theme-color" content="#0d1117" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Coding Harness Evaluations" />
+<meta property="og:url" content="https://codingharness.xyz/" />
+<meta property="og:title" content="Coding Harness Evaluations — which coding framework actually performs best?" />
+<meta property="og:description" content="Ranks agentic coding frameworks by having each build the same spec, same harness, same model, in isolated sandboxes — graded on an evidence-based rubric. Stop arguing; measure it." />
+<meta property="og:image" content="https://codingharness.xyz/assets/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Coding Harness Evaluations — a leaderboard ranking agentic coding frameworks." />
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@natea" />
+<meta name="twitter:creator" content="@natea" />
+<meta name="twitter:title" content="Coding Harness Evaluations — which coding framework actually performs best?" />
+<meta name="twitter:description" content="Same spec, same harness, same model, isolated sandboxes — graded on an evidence-based rubric. Stop arguing; measure it." />
+<meta name="twitter:image" content="https://codingharness.xyz/assets/og-image.png" />
 <style>
 :root { color-scheme: dark; }
 body { font: 16px/1.6 ui-sans-serif, system-ui; margin: 0; background: #0d1117; color: #e6edf3; }
@@ -70,25 +91,25 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 
 	<h2>See it in action</h2>
 	<p class="flow">The whole lifecycle, from the ranked result down to the agent's every keystroke:
-		<b>Configure</b> → <b>Run</b> → <b>Review</b> → <b>Inspect a trial</b> → <b>Replay the build</b>.
+		<b>Configure</b> → <b>Run</b> → <b>Review</b> → <b>Inspect a trial</b> → <b>Boot the artifact</b> → <b>Replay the build</b>.
 		Click any screenshot to enlarge.</p>
 	<div class="shots">
 
 		<figure class="shot">
-			<a class="frame" href="./assets/gallery-1-leaderboard.png" target="_blank" rel="noopener"><img src="./assets/gallery-1-leaderboard.png" alt="Eval Studio leaderboard: candidate frameworks ranked by weighted composite with re-weight sliders, and a runs table tagged by app/PRD" loading="lazy" /></a>
+			<a class="frame" href="./assets/gallery-1-leaderboard.png" target="_blank" rel="noopener"><img src="./assets/gallery-1-leaderboard.png" alt="Eval Studio cross-harness leaderboard: candidates ranked by weighted composite with a harness/model column, re-weight sliders, and a runs table tagged by app/PRD" loading="lazy" /></a>
 			<figcaption class="cap">
 				<span class="step">The payoff · Leaderboard</span>
 				<h3>The ranked leaderboard</h3>
-				<p>The home view. Every framework that built the same spec, ranked by a weighted composite of PRD adherence, code quality, speed and token spend — with the dimension weights re-balanceable live (the sliders). Each row shows the harness + model it ran under; the table below lists the individual runs feeding the board, tagged by the app/PRD each one built.</p>
+				<p>The home view. Every candidate that built the same spec, ranked by a weighted composite of PRD adherence, code quality, speed and token spend — weights re-balanceable live (the sliders). The <strong>harness / model</strong> column makes it cross-harness, not just cross-framework: Claude Code frameworks, the Codex CLI, and a <code>bare</code> baseline sit on one board. The table below lists the runs feeding it, tagged by the app/PRD each built.</p>
 			</figcaption>
 		</figure>
 
 		<figure class="shot">
-			<a class="frame" href="./assets/gallery-2-configure.png" target="_blank" rel="noopener"><img src="./assets/gallery-2-configure.png" alt="Configure screen: pick eval target, candidate frameworks, harness, worker and grader models, sandbox provider, trials and concurrency" loading="lazy" /></a>
+			<a class="frame" href="./assets/gallery-2-configure.png" target="_blank" rel="noopener"><img src="./assets/gallery-2-configure.png" alt="Configure screen: pick eval target, the harness (Claude Code, Codex, zerocode), candidate frameworks, worker and grader models, sandbox provider, trials and concurrency" loading="lazy" /></a>
 			<figcaption class="cap">
 				<span class="step">Stage 1 · Set up</span>
 				<h3>Configure an evaluation</h3>
-				<p>Choose the eval target (the spec to build), the candidate frameworks, the harness and worker/grader models, the sandbox provider, trials and concurrency. Every candidate gets the <em>identical</em> rendered prompt — the framework is the only variable. The studio validates the combination against the same rules the CLI enforces, then lets you launch a real run, a zero-spend dry run, or copy the equivalent command.</p>
+				<p>Choose the eval target (the spec to build), the <strong>harness</strong> (Claude Code, Codex CLI, or zerocode), the candidate frameworks, worker + grader models, sandbox provider, trials and concurrency. Candidates that don't support the chosen harness grey out with the reason. Every candidate gets the <em>identical</em> rendered prompt — the only variable is what you're testing. The studio validates against the same rules the CLI enforces, then lets you launch a real run, a zero-spend dry run, or copy the command.</p>
 			</figcaption>
 		</figure>
 
@@ -120,11 +141,20 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		</figure>
 
 		<figure class="shot">
+			<a class="frame" href="./assets/gallery-7-artifacts.png" target="_blank" rel="noopener"><img src="./assets/gallery-7-artifacts.png" alt="Artifacts panel: read-only audit of what the agent built (file tree, sizes, cold-start contract, blind-copy scrubbed) and a one-click live demo with a sandboxed localhost URL" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Stage 5 · Boot the artifact</span>
+				<h3>Audit what was built — and run it</h3>
+				<p>A read-only audit of the deliverable: the full file tree with sizes, the cold-start contract, deps installed, and confirmation the blind judge copy was scrubbed. Then <strong>Start demo</strong> boots the built app from a copy in an isolated sandbox and hands you a live <code>localhost</code> URL — click through the actual thing the agent made, not just its source. (Non-web targets fall back to a captured cold-start run.)</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
 			<a class="frame" href="./assets/gallery-6-conversation.png" target="_blank" rel="noopener"><img src="./assets/gallery-6-conversation.png" alt="Conversation viewer: request/response build replay with session jumps, an error navigator stepping through the trial's errors, and an outline trace" loading="lazy" /></a>
 			<figcaption class="cap">
-				<span class="step">Stage 5 · Trace the build</span>
+				<span class="step">Stage 6 · Trace the build</span>
 				<h3>Replay the agent &amp; navigate errors</h3>
-				<p>The full build replay — every request/response between the harness and the model, with thinking, tool calls and outputs. Jump between sessions, step through the trial's errors one at a time (<code>◀ ⚠ 9 errors ▶</code>), or open the outline to trace exactly where a step went wrong.</p>
+				<p>The full build replay — every request/response between the harness and the model, with thinking, tool calls and outputs. Jump between sessions, step through the trial's errors one at a time (<code>◀ ⚠ 9 errors ▶</code>), or open the outline to trace where a step went wrong. The same viewer <strong>streams live</strong> while a build runs — every keystroke in real time, redacted of secrets — then seamlessly becomes the archived replay when the trial finishes.</p>
 			</figcaption>
 		</figure>
 

@@ -25,9 +25,18 @@ repo at the time of writing; re-verify flags/strings against the pinned Codex in
 
 ## Phase 1 — local worker (Codex OSS mode)
 
+### Codex version (resolved blocker)
+`config/harnesses.yaml` pins Codex `0.50.0`; `--oss`/`--local-provider` were
+verified on `0.142.0`. Task 1.0 bumps the pin + trial image to a version that
+exposes the flags and asserts them at image-build time. Nothing in Phase 1 is
+valid until the pinned Codex actually has `--oss --local-provider`.
+
 ### Type changes (`src/models.ts`)
-- `AuthKind` enum gains `"none"`. Validation: a `none` profile MUST NOT name an
-  `authEnv` credential requirement (or `authEnv` is ignored — pick one and assert it).
+- `AuthKind` enum gains `"none"`. **Firm rule (no implementation choice):**
+  `authEnv` becomes *optional* on `ModelProfile`; a `none` profile MAY omit it, and
+  every non-`none` auth kind MUST still name an `authEnv`. A `none` profile requires
+  no credential and `resolveWorkerEnv` injects no auth env for it. Assert both
+  directions in the zod refinement + tests.
 - `ModelProfile` gains `ossProvider: z.enum(["ollama","lmstudio"]).optional()`.
   Refinement: `ossProvider` is only valid with `transport: codex` and implies
   `authKind: none`.
@@ -78,9 +87,31 @@ vendor label used by `judgeWorkerRelation` for the cross-vendor flag.
   parallel to `resolveClaudeCodeEnv`: returns `{ baseUrl, apiKey? }` for the judge
   client; for `none` no key is read.
 
+### Grading-path reality (gap #2 — must read before coding)
+Grading does NOT go through one place. There are two grading drivers, selected by
+`grade-trial.ts --driver cc|sdk`:
+- **`cc`** (`src/grading/cc-driver.ts`) — Claude Code headless. **The default**, and
+  what Studio uses (`src/studio/run-exec.ts` hardcodes `driver: "cc"`). Anthropic-only.
+- **`sdk`** (`src/grading/judge.ts`) — the Anthropic SDK. Also Anthropic-only today.
+
+Because `cc` drives Claude Code (Anthropic-only), Studio *rejects* a Codex judge up
+front (`src/studio/options.ts`). A local `openai-compat` judge would hit the same
+wall. **Decision: Option A — extend the existing `sdk` driver** (no new driver). The
+`sdk` driver becomes transport-aware; an `openai-compat` judge is routed to `sdk`,
+never `cc`. Studio/CLI must therefore: (1) pick `sdk` when the judge transport is
+`openai-compat`, and (2) relax the blanket reject in `options.ts` from "transport
+=== codex" to "no grading driver can drive this transport".
+
+### Fallback provenance schema (gap #3)
+`CriterionScore.samples` is `z.array(z.number())` today — numbers only, with no slot
+for `usedFallback`. To record the fallback honestly, enrich the per-sample shape,
+e.g. `sampleDetails: { score: number; justification: string; usedFallback: boolean }[]`
+(kept alongside or replacing `samples`), and render `usedFallback` in
+scorecard/dashboard/studio. Migrate existing result readers + their tests.
+
 ### Judge refactor (`src/grading/judge.ts`)
-The judge currently constructs `new Anthropic(...)` and runs an Anthropic tool-use
-loop calling a `record_score` tool. Introduce:
+The `sdk` judge currently constructs `new Anthropic(...)` and runs an Anthropic
+tool-use loop calling a `record_score` tool. Introduce:
 
 ```
 interface JudgeClient {

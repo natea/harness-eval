@@ -33,6 +33,12 @@ tool call nor a parseable score SHALL be recorded as an error, never a silent ze
   same criteria and median-of-three rules, and the grading record notes the
   transport used
 
+#### Scenario: OpenAI-compatible judge is routed, not rejected
+- **WHEN** a run (CLI or Studio) selects an `openai-compat` judge profile
+- **THEN** grading is routed to a driver that can drive that endpoint rather than the
+  Claude-Code grading path, the run is not rejected for an undrivable judge, and only
+  a judge transport that no grading driver supports is rejected up front
+
 #### Scenario: Tool-call fallback flagged
 - **WHEN** a judge sample returns no `record_score` tool call but its text contains
   a parseable 0–10 score and rationale

@@ -52,11 +52,16 @@ rather than failing opaquely mid-trial.
 - **`ModelTransport` gains `openai-compat`** — a profile carrying `baseUrl` +
   `authKind` (`none` local, `api-key` remote) that speaks the OpenAI
   `/v1/chat/completions` API.
-- **The blind judge (`src/grading/judge.ts`)** is refactored behind a small
-  `JudgeClient` interface so the Anthropic tool-use loop and an OpenAI-compatible
-  tool-use loop are separate, testable implementations. The judge selects the
-  client by the judge profile's transport. The `record_score` tool is expressed
-  in each provider's tool schema.
+- **The blind judge** is refactored behind a small `JudgeClient` interface so the
+  Anthropic tool-use loop and an OpenAI-compatible tool-use loop are separate,
+  testable implementations, selected by the judge profile's transport. The
+  `record_score` tool is expressed in each provider's tool schema. This extends the
+  **existing `sdk` grading driver** (`src/grading/judge.ts`) — *not* a new driver.
+- **Grading-path routing.** Grading defaults to the `cc` driver (Claude Code,
+  Anthropic-only; Studio hardcodes it), which is why Codex judges are rejected
+  today. An `openai-compat` judge is routed to the `sdk` driver in both Studio
+  (`src/studio/run-exec.ts`) and the CLI, and the blanket transport rejection in
+  `src/studio/options.ts` is relaxed to reject only judges no driver can drive.
 - **Brittle-tool-calling mitigation:** small local models often fail to emit a
   structured tool call. When no `record_score` call is returned, a text-fallback
   parser extracts `score`/`justification` from freeform output, and the fallback
@@ -100,9 +105,15 @@ server fails loud and early instead of mid-trial.
   `ossProvider`; new `resolveOpenAICompatEnv`. `src/driver/types.ts`
   `PrintCliCommandContext` += optional `ossProvider`. `src/driver/codex.ts`
   emits `--oss --local-provider` and skips login for `none`.
-- `src/grading/judge.ts`: refactor to a `JudgeClient` interface; add the
-  OpenAI-compatible implementation (`openai` SDK) + text fallback. Checkpointing
-  is transport-agnostic and unchanged.
+- `config/harnesses.yaml` + `infra/trial-image`: bump the Codex pin from `0.50.0`
+  to a version that exposes `--oss --local-provider`, asserted at image build.
+- `src/grading/judge.ts` (the `sdk` driver): refactor to a `JudgeClient` interface;
+  add the OpenAI-compatible implementation (`openai` SDK) + text fallback.
+  Checkpointing is transport-agnostic and unchanged. `src/studio/run-exec.ts` +
+  `src/studio/options.ts` + the CLI grading path: route `openai-compat` judges to
+  `sdk` and stop rejecting them.
+- `src/types.ts`: enrich `CriterionScore` with a per-sample shape carrying
+  `usedFallback`; update scorecard/dashboard/studio rendering + result readers.
 - `config/models.yaml`: example local + HF profiles, inline-documented.
   `.env.example` + `src/driver/archive.ts` redaction: `HF_TOKEN`,
   `OLLAMA_BASE_URL`, `LMSTUDIO_BASE_URL` (URLs are not secrets but are documented).
@@ -111,7 +122,10 @@ server fails loud and early instead of mid-trial.
   need host-gateway networking or a shipped-in endpoint).
 - Cost: local profiles have no pricing → `tokens-only` cost source (the existing
   rule); telemetry stays honest. A cross-vendor local-vs-cloud judge is flagged
-  by the existing `judgeWorkerRelation` rule.
+  by the existing `judgeWorkerRelation` rule. **Studio fix:**
+  `src/studio/run-exec.ts` hardcodes a non-dry run's cost source to
+  `harness-reported`; it must use `costSourceForHarness` like the CLI, or a free
+  local Codex worker is mislabeled as Anthropic-billed.
 
 ## Verification gate (per phase)
 

@@ -6,6 +6,10 @@
 > Codex flags against the pinned version in `config/harnesses.yaml` /
 > `infra/trial-image` before relying on them. Context for any agent picking this up
 > cold: see `design.md` (verified facts) and `proposal.md` (why).
+>
+> **Phase 1 implementation plan (step-by-step, no-placeholder code):**
+> `docs/superpowers/plans/2026-06-24-local-model-phase1.md` — execute it with the
+> superpowers:subagent-driven-development or executing-plans skill.
 
 ## 1. Phase 1 — local worker via Codex OSS mode
 - [ ] 1.0 **Codex version (blocker):** the harness registry pins Codex `0.50.0`

@@ -118,19 +118,111 @@ function StepComparison({
 	);
 }
 
+interface LiveJob {
+	runId: string;
+	kind: "dry" | "live";
+	status: string;
+	stage?: string;
+	startedAt: string;
+	candidates: string[];
+	trials: Record<string, string>; // trialId -> status
+	costUsdSoFar: number;
+}
+
+/** A run that's still building/grading (not yet archived): live stage + trial links. */
+function LiveRunView({
+	runId,
+	job,
+	target,
+}: {
+	runId: string;
+	job: LiveJob;
+	target?: RunTarget;
+}) {
+	// Prefer the concrete per-trial ids the worker has registered; before any
+	// exist, derive the t1 ids from the candidate list so the links still resolve.
+	const trialIds = Object.keys(job.trials).length
+		? Object.keys(job.trials)
+		: job.candidates.map((c) => `${c}-t1`);
+	return (
+		<>
+			<p>
+				<a href="/" className="text-primary-hover hover:underline">
+					← leaderboard
+				</a>
+			</p>
+			<h1 className="font-mono text-lg font-bold">{runId}</h1>
+			{target && (
+				<p className="mt-1 text-[13px]">
+					🎯 Building <span className="font-semibold">{target.title}</span>{" "}
+					<span className="font-mono text-muted-foreground">
+						({target.name})
+					</span>
+				</p>
+			)}
+			<p className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
+				<span
+					role="status"
+					aria-label="working"
+					className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent"
+				/>
+				{job.status}
+				{job.stage ? ` · ${job.stage}` : ""} · ${job.costUsdSoFar.toFixed(2)}
+			</p>
+			<Card>
+				<CardContent className="px-2 pb-2 pt-2">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Trial</TableHead>
+								<TableHead>Status</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{trialIds.map((id) => (
+								<TableRow key={id}>
+									<TableCell>
+										<a
+											href={`/runs/${runId}/trials/${id}`}
+											className="font-mono text-primary-hover hover:underline"
+										>
+											{id}
+										</a>
+									</TableCell>
+									<TableCell className="text-muted-foreground">
+										{job.trials[id] ?? "pending"}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
+		</>
+	);
+}
+
 export function RunView({ runId }: { runId: string }) {
 	const entry = useFetch<{ supported: boolean; error?: string; results?: RunResults }>(
 		`/api/runs/${runId}`,
 	);
 	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
+	// This session's live jobs — a run that's still building/grading isn't on disk
+	// yet, so /api/runs 404s. Fall back to the queue so the run page shows live
+	// progress (and links into each trial) instead of "unsupported / not found".
+	const queue = useFetch<LiveJob[]>("/api/queue");
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	if (!entry) return <p className="text-muted-foreground">loading…</p>;
-	if (!entry.supported || !entry.results)
+	if (!entry.supported || !entry.results) {
+		const job = queue?.find((q) => q.runId === runId);
+		if (job && (job.status === "running" || job.status === "queued"))
+			return <LiveRunView runId={runId} job={job} target={target} />;
 		return (
 			<p>
 				<Badge variant="danger">unsupported</Badge> {entry.error}
 			</p>
 		);
+	}
 	const r = entry.results;
 	const rows = reweight(r.scores, weights);
 	const combined = runId.startsWith("combined:");
@@ -186,7 +278,7 @@ export function RunView({ runId }: { runId: string }) {
 						</TableHeader>
 						<TableBody>
 							{rows.map((s, i) => (
-								<TableRow key={s.candidate}>
+								<TableRow key={`${s.candidate}|${s.harness}|${s.model}`}>
 									<TableCell className="text-muted-foreground">{i + 1}</TableCell>
 									<TableCell className="font-semibold">{s.candidate}</TableCell>
 									<TableCell>

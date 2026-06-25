@@ -94,6 +94,11 @@ function resolveRunTarget(runId: string): RunTarget | null {
 const server = Bun.serve({
 	hostname: "127.0.0.1",
 	port,
+	// The live-build SSE stream (/api/runs/:id/trials/:trialId/stream) is long-lived
+	// and quiet between agent turns; Bun's 10s default idleTimeout would kill it
+	// mid-build. The stream also heartbeats every ~4s, but raise the ceiling so a
+	// tick delayed under load can't still trip the timeout. Max is 255s.
+	idleTimeout: 120,
 	routes: {
 		"/": index,
 		"/configure": index,

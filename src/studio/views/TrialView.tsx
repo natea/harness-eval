@@ -792,21 +792,52 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 		"connecting" | "connected" | "remote" | "streaming" | "done" | "error"
 	>("connecting");
 	const doneRef = useRef(false);
+	const aliveRef = useRef(true);
 
 	// On terminal close, replace the (possibly partial) live turns with the full
 	// archived transcript — a seamless handoff so the panel shows the COMPLETE
 	// conversation, not the last frame it happened to stream before close.
+	//
+	// The handoff RACES archival: the stream closes the instant the live source
+	// deregisters, which can be before the transcript has finished flushing (and a
+	// single fetch can also blip under load). So poll until the archived turn count
+	// stops growing for two consecutive reads (flush complete) or we hit the cap —
+	// otherwise the panel freezes on the few turns it streamed until a manual
+	// refresh. Guarded by aliveRef so it stops on unmount.
 	const loadArchived = useCallback(() => {
-		fetch(`/api/runs/${runId}/trials/${trialId}/transcript`)
-			.then((r) => (r.ok ? r.json() : null))
-			.then((d: { sessions?: { turns: Turn[] }[] } | null) => {
-				const all = d?.sessions?.flatMap((s) => s.turns) ?? [];
-				if (all.length) setTurns(all);
-			})
-			.catch(() => {});
+		const MAX_ATTEMPTS = 12; // ~8s of 700ms retries
+		let attempt = 0;
+		let lastLen = 0;
+		let stableHits = 0;
+		const poll = () => {
+			if (!aliveRef.current) return;
+			attempt++;
+			fetch(`/api/runs/${runId}/trials/${trialId}/transcript`)
+				.then((r) => (r.ok ? r.json() : null))
+				.then((d: { sessions?: { turns: Turn[] }[] } | null) => {
+					if (!aliveRef.current) return;
+					const all = d?.sessions?.flatMap((s) => s.turns) ?? [];
+					if (all.length) setTurns(all);
+					if (all.length > lastLen) {
+						lastLen = all.length;
+						stableHits = 0;
+					} else if (all.length > 0) {
+						stableHits++;
+					}
+					const settled = all.length > 0 && stableHits >= 2;
+					if (!settled && attempt < MAX_ATTEMPTS)
+						setTimeout(poll, 700);
+				})
+				.catch(() => {
+					if (aliveRef.current && attempt < MAX_ATTEMPTS)
+						setTimeout(poll, 700);
+				});
+		};
+		poll();
 	}, [runId, trialId]);
 
 	useEffect(() => {
+		aliveRef.current = true;
 		const es = new EventSource(`/api/runs/${runId}/trials/${trialId}/stream`);
 		es.onmessage = (e) => {
 			try {
@@ -837,7 +868,10 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 			setState((s) => (s === "connecting" ? "error" : "done"));
 			loadArchived();
 		};
-		return () => es.close();
+		return () => {
+			aliveRef.current = false;
+			es.close();
+		};
 	}, [runId, trialId, loadArchived]);
 
 	// Terminal with nothing to show → step aside (the page's archived Conversation,

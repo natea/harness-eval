@@ -111,11 +111,29 @@ type Row = {
 	qualB: number | null;
 	qualF: number | null;
 	qualGain: number | null;
+	flags: string[]; // low-n / high-σ → cell is inconclusive, excluded from the robust fit
 };
 // Mean of per-trial quality (criteria mean ×10 → 0-100), or null if none scored.
 const qualOf = (trials: Trial[]): number | null => {
 	const qs = trials.map((t) => t.quality).filter((q): q is number => q != null);
 	return qs.length ? mean(qs) * 10 : null;
+};
+const MIN_N = 2; // a single trial is a point estimate, not a trend
+const HIGH_SD = 15; // adherence stddev above this = unstable cell
+// Least-squares fit of y on x. Returns slope, Pearson r, n. null if <2 points or
+// x has no variance (can't regress).
+const fit = (
+	pts: (readonly [number, number])[],
+): { slope: number; r: number; n: number } | null => {
+	const n = pts.length;
+	if (n < 2) return null;
+	const mx = mean(pts.map((p) => p[0]));
+	const my = mean(pts.map((p) => p[1]));
+	const sxx = pts.reduce((s, [x]) => s + (x - mx) ** 2, 0);
+	const syy = pts.reduce((s, [, y]) => s + (y - my) ** 2, 0);
+	const sxy = pts.reduce((s, [x, y]) => s + (x - mx) * (y - my), 0);
+	if (sxx === 0) return null; // no x-variance
+	return { slope: sxy / sxx, r: syy === 0 ? 0 : sxy / Math.sqrt(sxx * syy), n };
 };
 const rows: Row[] = [];
 const orphanFrameworks: string[] = [];
@@ -155,6 +173,10 @@ for (const g of groups.values()) {
 			qualB,
 			qualF,
 			qualGain: qualB != null && qualF != null ? qualF - qualB : null,
+			flags: [
+				...(fa.length < MIN_N || base.length < MIN_N ? ["low-n"] : []),
+				...(stddev(fa) >= HIGH_SD ? ["high-σ"] : []),
+			],
 		});
 	}
 }
@@ -190,37 +212,57 @@ if (rows.length) {
 		`Two absolute axes, never pooled: adherence (often ceilinged) and code quality (secondary).\n`,
 	);
 	console.log(
-		`| target | harness | model | framework | base adh (n) | fwk adh (n) | **adh gain** | base qual | fwk qual | **qual gain** |`,
+		`| target | harness | model | framework | base adh (n) | fwk adh (n) | **adh gain** | base qual | fwk qual | **qual gain** | flags |`,
 	);
-	console.log(`|---|---|---|---|---|---|---|---|---|---|`);
+	console.log(`|---|---|---|---|---|---|---|---|---|---|---|`);
 	const q = (v: number | null) => (v == null ? "—" : v.toFixed(1));
 	const qg = (v: number | null) => (v == null ? "—" : fmt(v));
 	for (const r of rows.sort((a, b) => a.target.localeCompare(b.target) || b.marginalGain - a.marginalGain)) {
 		console.log(
-			`| ${r.target} | ${r.harness} | ${r.model} | ${r.framework} | ${r.baselineStrength.toFixed(1)}±${r.sdB.toFixed(1)} (${r.nB}) | ${r.adhF.toFixed(1)}±${r.sdF.toFixed(1)} (${r.nF}) | ${fmt(r.marginalGain)} | ${q(r.qualB)} | ${q(r.qualF)} | ${qg(r.qualGain)} |`,
+			`| ${r.target} | ${r.harness} | ${r.model} | ${r.framework} | ${r.baselineStrength.toFixed(1)}±${r.sdB.toFixed(1)} (${r.nB}) | ${r.adhF.toFixed(1)}±${r.sdF.toFixed(1)} (${r.nF}) | ${fmt(r.marginalGain)} | ${q(r.qualB)} | ${q(r.qualF)} | ${qg(r.qualGain)} | ${r.flags.join(" ") || "—"} |`,
 		);
 	}
 	console.log();
 
-	console.log(`## Per-target slope (marginal gain vs. baseline strength)\n`);
-	const byTarget = new Map<string, Row[]>();
-	for (const r of rows) (byTarget.get(r.target) ?? byTarget.set(r.target, []).get(r.target)!).push(r);
-	for (const [target, rs] of byTarget) {
-		const pts = rs.map((r) => [r.baselineStrength, r.marginalGain] as const);
-		const n = pts.length;
-		if (n < 2) {
-			console.log(`- ${target}: ${n} point — slope undefined (need ≥2).`);
-			continue;
-		}
-		const mx = mean(pts.map((p) => p[0]));
-		const my = mean(pts.map((p) => p[1]));
-		const num = pts.reduce((s, [x, y]) => s + (x - mx) * (y - my), 0);
-		const den = pts.reduce((s, [x]) => s + (x - mx) ** 2, 0);
-		const slope = den === 0 ? Number.NaN : num / den;
-		console.log(
-			`- ${target}: ${n} points, slope ${Number.isNaN(slope) ? "n/a (no x-variance)" : slope.toFixed(2) + " gain-pts per +1 baseline-pt"}${slope < 0 ? "  (inverse-scaling shape)" : ""}`,
-		);
+	// Within a target there's one baseline → no x-variance, so the slope must be
+	// fit ACROSS targets/models where baseline strength varies. This is the
+	// inverse-scaling curve: negative slope = gains largest where the model is
+	// weakest. x = the cell's baseline strength, y = marginal gain, one point per
+	// (framework,target,model) cell.
+	console.log(`## Inverse-scaling fit (cross-target)\n`);
+	const confident = rows.filter((r) => r.flags.length === 0);
+	const sign = (f: { slope: number; r: number; n: number } | null) =>
+		!f
+			? "n/a (no x-variance)"
+			: `${f.slope.toFixed(2)} gain-pts per +1 baseline-pt (r=${f.r.toFixed(2)}, n=${f.n})${f.slope < 0 ? "  ← inverse-scaling" : ""}`;
+
+	console.log(`**Adherence axis** (x = baseline adherence, y = adherence gain):`);
+	console.log(`- all cells: ${sign(fit(rows.map((r) => [r.baselineStrength, r.marginalGain])))}`);
+	console.log(
+		`- confident only (excl. ${rows.length - confident.length} low-n/high-σ): ${sign(fit(confident.map((r) => [r.baselineStrength, r.marginalGain])))}`,
+	);
+
+	const qRows = rows.filter((r) => r.qualB != null && r.qualGain != null);
+	const qConf = confident.filter((r) => r.qualB != null && r.qualGain != null);
+	console.log(`\n**Quality axis** (x = baseline quality, y = quality gain):`);
+	console.log(
+		`- all cells: ${sign(fit(qRows.map((r) => [r.qualB as number, r.qualGain as number])))}`,
+	);
+	console.log(
+		`- confident only (excl. ${qRows.length - qConf.length} low-n/high-σ): ${sign(fit(qConf.map((r) => [r.qualB as number, r.qualGain as number])))}`,
+	);
+
+	// Per-framework adherence fit across its targets — the cleanest read, since a
+	// single framework's points aren't mixed with others at the same baseline x.
+	console.log(`\n**Per-framework adherence fit** (each framework across its targets):`);
+	const byFw = new Map<string, Row[]>();
+	for (const r of rows) (byFw.get(r.framework) ?? byFw.set(r.framework, []).get(r.framework)!).push(r);
+	for (const [fw, rs] of [...byFw].sort()) {
+		const f = fit(rs.map((r) => [r.baselineStrength, r.marginalGain]));
+		console.log(`- ${fw}: ${f ? sign(f) : `${rs.length} point(s) — need ≥2 targets with x-variance`}`);
 	}
-	console.log();
-	console.log(`Caveat: gains measured on the eval set, not held-out tasks (HarnessX §7.7).`);
+
+	console.log(
+		`\nCaveats: gains measured on the eval set, not held-out (HarnessX §7.7); cross-target fit pools different PRDs on the x-axis (baseline strength) by design — the curve is the relationship, not a single-task score.`,
+	);
 }

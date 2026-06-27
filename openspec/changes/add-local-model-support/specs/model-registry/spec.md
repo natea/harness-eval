@@ -39,29 +39,33 @@ provider label, the model id, and `authKind none`.
 - **THEN** registry validation fails before any sandbox is provisioned, naming the
   constraint
 
-### Requirement: OpenAI-compatible transport
-The model registry SHALL support a transport `openai-compat` for models exposed via
-an OpenAI-compatible `/v1/chat/completions` API. Such a profile SHALL declare a
-`baseUrl` and an `authKind` of `none` (local) or `api-key` (remote). Resolution
-SHALL produce the base URL and, for `api-key`, the credential, for consumption by
-the grading judge client — with no per-model code change.
+### Requirement: Local OpenAI-compatible judge transport
+The model registry SHALL support a transport `openai-compat` for local models
+exposed via an OpenAI-compatible `/v1/chat/completions` API. Such a profile SHALL
+declare a `baseUrl` and `authKind: none`. Resolution SHALL produce the base URL
+for consumption by the grading judge client with no per-model code change.
 
-#### Scenario: Remote OpenAI-compatible judge profile resolves
+#### Scenario: Local OpenAI-compatible judge profile resolves
 - **WHEN** a judge profile declares `transport: openai-compat`, a `baseUrl`, and
-  `authKind: api-key` with its key present
-- **THEN** resolution yields the base URL and key for the judge client, and
-  provenance records the endpoint host — never the key
+  `authKind: none`
+- **THEN** resolution yields the base URL for the judge client, injects no
+  credential, and provenance records the endpoint host
 
 #### Scenario: openai-compat requires a base URL
 - **WHEN** an `openai-compat` profile omits `baseUrl`
 - **THEN** registry validation fails listing the missing field
 
+#### Scenario: openai-compat rejects credentialed remote profiles
+- **WHEN** an `openai-compat` profile declares `authKind: api-key` or an `authEnv`
+- **THEN** registry validation fails because remote OpenAI-compatible endpoints are
+  outside this local-model change
+
 ### Requirement: Local-endpoint reachability probe
 The CLI profile probe (`model probe <profile>`) SHALL, for local/OpenAI-compatible
 profiles, check that the endpoint is reachable and the named model is present
-before any matrix-scale run — Ollama via `/api/tags`, LM Studio / TGI / vLLM via
-`/v1/models` — so a stopped server or unpulled model fails fast rather than inside
-a trial.
+before any matrix-scale run — Ollama workers via `/api/tags`, LM Studio workers
+and local OpenAI-compatible judges via `/v1/models` — so a stopped server or
+unpulled model fails fast rather than inside a trial.
 
 #### Scenario: Probe catches an unreachable local server
 - **WHEN** `model probe ollama-qwen3-coder` runs while the Ollama server is down

@@ -12,9 +12,9 @@ dead/duplicated code, and documentation adequacy. Each criterion SHALL yield a
 
 The judge SHALL select its client implementation by the judge profile's transport,
 supporting both native Anthropic and `openai-compat` (OpenAI-compatible
-`/v1/chat/completions`) endpoints, so a local or remote OpenAI-compatible model can
-serve as the judge. The criterion list, temperature, scrubbing, and sample-median
-rules SHALL be identical across transports. When a judge model returns no
+`/v1/chat/completions`) endpoints, so a local OpenAI-compatible model can serve as
+the judge. The criterion list, temperature, scrubbing, and sample-median rules
+SHALL be identical across transports. When a judge model returns no
 structured `record_score` tool call for a sample, the judge SHALL fall back to
 parsing the score and justification from the model's text output and SHALL flag the
 sample as having used the fallback in the grading record; a sample with neither a
@@ -27,8 +27,7 @@ tool call nor a parseable score SHALL be recorded as an error, never a silent ze
   scoring from code reading alone
 
 #### Scenario: OpenAI-compatible judge transport
-- **WHEN** a run sets the judge model to an `openai-compat` profile (local or
-  remote)
+- **WHEN** a run sets the judge model to a local `openai-compat` profile
 - **THEN** judging runs against that endpoint's `/v1/chat/completions` API with the
   same criteria and median-of-three rules, and the grading record notes the
   transport used

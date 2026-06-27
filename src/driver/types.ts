@@ -14,6 +14,8 @@ export interface DriverRunOptions {
 	model: string;
 	prompt: string;
 	stepIndex: number;
+	/** Codex OSS local provider; the codex driver adds --oss --local-provider. */
+	ossProvider?: "ollama" | "lmstudio";
 	/** Resume an existing session instead of starting fresh. */
 	resumeSessionId?: string;
 	timeoutMs: number;

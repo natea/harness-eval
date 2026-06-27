@@ -12,6 +12,21 @@ function fmtStats(
 	return `${fmt(s.mean)} (±${fmt(s.stddev)}, ${fmt(s.min)}–${fmt(s.max)})`;
 }
 
+function fallbackCount(r: RunResults): number {
+	return r.trials.reduce(
+		(total, t) =>
+			total +
+			(t.grades?.quality?.criteria ?? []).reduce(
+				(sum, c) =>
+					sum +
+					(c.sampleDetails ?? []).filter((sample) => sample.usedFallback)
+						.length,
+				0,
+			),
+		0,
+	);
+}
+
 /** Markdown scorecard generator (task 7.2, eval-reporting spec). */
 export function renderScorecard(r: RunResults): string {
 	const lines: string[] = [];
@@ -37,6 +52,12 @@ export function renderScorecard(r: RunResults): string {
 			r.costSource === "profile-priced"
 				? "> ⚠️ **Cost basis:** token-spend dollars are estimated from profile pricing (the harness's `total_cost_usd` is Anthropic-priced and not valid off-vendor)."
 				: "> ⚠️ **Cost basis:** tokens-only — no dollar figure (no pricing for this provider; the harness's `total_cost_usd` is Anthropic-priced and not valid off-vendor).",
+		);
+	}
+	const fallbacks = fallbackCount(r);
+	if (fallbacks > 0) {
+		caveats.push(
+			`> ⚠️ **Judge fallback:** ${fallbacks} code-quality sample(s) were parsed from freeform text because the judge did not call \`record_score\`.`,
 		);
 	}
 	if (caveats.length) {

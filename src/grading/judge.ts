@@ -1,7 +1,19 @@
 import { execFile } from "node:child_process";
+import { resolve } from "node:path";
 import { promisify } from "node:util";
 import Anthropic from "@anthropic-ai/sdk";
-import type { CriterionScore, QualityCriterion, QualityResult } from "../types";
+import OpenAI from "openai";
+import {
+	ModelError,
+	type ModelProfile,
+	resolveOpenAICompatEnv,
+} from "../models";
+import type {
+	CriterionSample,
+	CriterionScore,
+	QualityCriterion,
+	QualityResult,
+} from "../types";
 
 const execFileAsync = promisify(execFile);
 
@@ -39,6 +51,10 @@ Score ONE criterion from 0-10. Base your score on evidence: run commands (tests,
 
 When done, call record_score exactly once with {score: 0-10, justification: "<evidence-citing rationale>"}.`;
 
+function resolvedWorkspace(opts: Pick<JudgeOptions, "blindWorkspaceDir">): string {
+	return resolve(opts.blindWorkspaceDir);
+}
+
 export interface JudgeOptions {
 	model: string;
 	blindWorkspaceDir: string;
@@ -50,6 +66,62 @@ export interface JudgeOptions {
 	/** Criteria already scored in a prior interrupted run. */
 	preScored?: CriterionScore[];
 	client?: Anthropic;
+	judgeProfile?: ModelProfile;
+	openAIClient?: OpenAICompatChatClient;
+	judgeClient?: JudgeClient;
+}
+
+export interface JudgeClient {
+	scoreCriterion(
+		opts: JudgeOptions,
+		criterion: (typeof CRITERIA)[number],
+	): Promise<CriterionSample>;
+}
+
+interface OpenAICompatChatClient {
+	chat: {
+		completions: {
+			create: (request: Record<string, unknown>) => Promise<{
+				choices?: {
+					message?: {
+						content?: string | null;
+						reasoning?: string | null;
+						tool_calls?: {
+							id: string;
+							type?: string;
+							function?: { name?: string; arguments?: string };
+						}[];
+					};
+				}[];
+			}>;
+		};
+	};
+}
+
+export function judgeClientForProfile(
+	profile: ModelProfile,
+	lookup: NodeJS.ProcessEnv = process.env,
+	deps: {
+		anthropicClient?: Anthropic;
+		openAIClient?: OpenAICompatChatClient;
+	} = {},
+): JudgeClient {
+	if (profile.transport === "openai-compat") {
+		if (deps.openAIClient)
+			return new OpenAICompatJudgeClient(deps.openAIClient);
+		return OpenAICompatJudgeClient.fromEndpoint(
+			resolveOpenAICompatEnv(profile, lookup),
+		);
+	}
+	if (profile.transport === "codex") {
+		throw new ModelError(
+			`profile '${profile.name}' uses Codex transport, which cannot judge directly`,
+		);
+	}
+	return new AnthropicJudgeClient(
+		deps.anthropicClient ??
+			new Anthropic({ apiKey: lookup[profile.authEnv ?? "ANTHROPIC_API_KEY"] }),
+	);
 }
 
 export function median(values: number[]): number {
@@ -60,15 +132,28 @@ export function median(values: number[]): number {
 		: ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2;
 }
 
-async function judgeOneSample(
+export function parseFallbackScore(text: string): CriterionSample | null {
+	const scoreMatch = text.match(/\bscore\b\s*[:=-]?\s*(10|[0-9])(?:\.\d+)?/i);
+	if (!scoreMatch) return null;
+	const score = Math.max(0, Math.min(10, Number(scoreMatch[1])));
+	const justificationMatch = text.match(
+		/\bjustification\b\s*[:=-]\s*([\s\S]+)/i,
+	);
+	const justification = (justificationMatch?.[1] ?? text).trim();
+	if (!justification) return null;
+	return { score, justification, usedFallback: true };
+}
+
+async function judgeOneAnthropicSample(
 	client: Anthropic,
 	opts: JudgeOptions,
 	criterion: (typeof CRITERIA)[number],
-): Promise<{ score: number; justification: string }> {
+): Promise<CriterionSample> {
+	const workspace = resolvedWorkspace(opts);
 	const messages: Anthropic.MessageParam[] = [
 		{
 			role: "user",
-			content: `Criterion: ${criterion.prompt}\nWorkspace: ${opts.blindWorkspaceDir}`,
+			content: `Criterion: ${criterion.prompt}\nWorkspace: ${workspace}\nShell commands run with this workspace as the current directory.`,
 		},
 	];
 	const tools: Anthropic.Tool[] = [
@@ -106,10 +191,18 @@ async function judgeOneSample(
 			tools,
 		});
 		messages.push({ role: "assistant", content: response.content });
+		const text = response.content
+			.filter((b): b is Anthropic.TextBlock => b.type === "text")
+			.map((b) => b.text)
+			.join("\n");
 		const toolUses = response.content.filter(
 			(b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
 		);
-		if (toolUses.length === 0) break;
+		if (toolUses.length === 0) {
+			const fallback = parseFallbackScore(text);
+			if (fallback) return fallback;
+			break;
+		}
 		const results: Anthropic.ToolResultBlockParam[] = [];
 		for (const use of toolUses) {
 			if (use.name === "record_score") {
@@ -117,6 +210,7 @@ async function judgeOneSample(
 				return {
 					score: Math.max(0, Math.min(10, Number(input.score))),
 					justification: String(input.justification),
+					usedFallback: false,
 				};
 			}
 			const input = use.input as { command: string };
@@ -126,7 +220,7 @@ async function judgeOneSample(
 					"bash",
 					["-c", input.command],
 					{
-						cwd: opts.blindWorkspaceDir,
+						cwd: workspace,
 						timeout: 120_000,
 						maxBuffer: 8 * 1024 * 1024,
 					},
@@ -148,10 +242,147 @@ async function judgeOneSample(
 		}
 		messages.push({ role: "user", content: results });
 	}
-	return {
-		score: 0,
-		justification: "judge did not record a score within iteration budget",
-	};
+	throw new Error("judge did not record a score within iteration budget");
+}
+
+class AnthropicJudgeClient implements JudgeClient {
+	constructor(private readonly client: Anthropic) {}
+
+	scoreCriterion(
+		opts: JudgeOptions,
+		criterion: (typeof CRITERIA)[number],
+	): Promise<CriterionSample> {
+		return judgeOneAnthropicSample(this.client, opts, criterion);
+	}
+}
+
+async function runJudgeBash(
+	command: string,
+	workspaceDir: string,
+): Promise<string> {
+	try {
+		const { stdout, stderr } = await execFileAsync("bash", ["-c", command], {
+			cwd: workspaceDir,
+			timeout: 120_000,
+			maxBuffer: 8 * 1024 * 1024,
+		});
+		return `exit 0\n${stdout.slice(0, 12000)}\n${stderr.slice(0, 3000)}`;
+	} catch (err) {
+		const e = err as {
+			code?: number | string;
+			stdout?: string;
+			stderr?: string;
+		};
+		return `exit ${e.code ?? "error"}\n${(e.stdout ?? "").slice(0, 12000)}\n${(e.stderr ?? String(err)).slice(0, 3000)}`;
+	}
+}
+
+export class OpenAICompatJudgeClient implements JudgeClient {
+	constructor(private readonly client: OpenAICompatChatClient) {}
+
+	static fromEndpoint(opts: {
+		baseUrl: string;
+	}): OpenAICompatJudgeClient {
+		return new OpenAICompatJudgeClient(
+			new OpenAI({
+				baseURL: opts.baseUrl,
+				apiKey: "not-needed",
+			}) as unknown as OpenAICompatChatClient,
+		);
+	}
+
+	async scoreCriterion(
+		opts: JudgeOptions,
+		criterion: (typeof CRITERIA)[number],
+	): Promise<CriterionSample> {
+		const workspace = resolvedWorkspace(opts);
+		const messages: Record<string, unknown>[] = [
+			{ role: "system", content: JUDGE_SYSTEM },
+			{
+				role: "user",
+				content: `Criterion: ${criterion.prompt}\nWorkspace: ${workspace}\nShell commands run with this workspace as the current directory.`,
+			},
+		];
+		const tools = [
+			{
+				type: "function",
+				function: {
+					name: "bash",
+					description:
+						"Run a shell command in the workspace (read-only intent).",
+					parameters: {
+						type: "object",
+						properties: { command: { type: "string" } },
+						required: ["command"],
+					},
+				},
+			},
+			{
+				type: "function",
+				function: {
+					name: "record_score",
+					description:
+						"Record the criterion score. Call exactly once, then stop.",
+					parameters: {
+						type: "object",
+						properties: {
+							score: { type: "number", minimum: 0, maximum: 10 },
+							justification: { type: "string" },
+						},
+						required: ["score", "justification"],
+					},
+				},
+			},
+		];
+
+		const maxIterations = opts.maxIterationsPerSample ?? 25;
+		for (let i = 0; i < maxIterations; i++) {
+			const response = await this.client.chat.completions.create({
+				model: opts.model,
+				temperature: 0,
+				messages,
+				tools,
+			});
+			const message = response.choices?.[0]?.message ?? {};
+			const toolCalls = message.tool_calls ?? [];
+			messages.push({ role: "assistant", ...message });
+			if (toolCalls.length === 0) {
+				const fallback = parseFallbackScore(
+					[String(message.content ?? ""), String(message.reasoning ?? "")]
+						.filter(Boolean)
+						.join("\n"),
+				);
+				if (fallback) return fallback;
+				break;
+			}
+
+			for (const call of toolCalls) {
+				const name = call.function?.name ?? "";
+				const rawArgs = call.function?.arguments ?? "{}";
+				const args = JSON.parse(rawArgs) as Record<string, unknown>;
+				if (name === "record_score") {
+					return {
+						score: Math.max(0, Math.min(10, Number(args.score))),
+						justification: String(args.justification ?? ""),
+						usedFallback: false,
+					};
+				}
+				if (name === "bash") {
+					const output = await runJudgeBash(
+						String(args.command ?? ""),
+						workspace,
+					);
+					messages.push({
+						role: "tool",
+						tool_call_id: call.id,
+						content: output,
+					});
+				}
+			}
+		}
+
+		throw new Error("judge did not record a score within iteration budget");
+	}
 }
 
 /**
@@ -161,16 +392,25 @@ async function judgeOneSample(
  */
 export async function judgeQuality(opts: JudgeOptions): Promise<QualityResult> {
 	const client =
-		opts.client ??
-		new Anthropic({ apiKey: opts.apiKey ?? process.env.ANTHROPIC_API_KEY });
+		opts.judgeClient ??
+		(opts.judgeProfile
+			? judgeClientForProfile(opts.judgeProfile, process.env, {
+					anthropicClient: opts.client,
+					openAIClient: opts.openAIClient,
+				})
+			: undefined) ??
+		new AnthropicJudgeClient(
+			opts.client ??
+				new Anthropic({ apiKey: opts.apiKey ?? process.env.ANTHROPIC_API_KEY }),
+		);
 	const samples = opts.samples ?? 3;
 	const criteria: CriterionScore[] = [...(opts.preScored ?? [])];
 	const done = new Set(criteria.map((c) => c.criterion));
 	for (const criterion of CRITERIA) {
 		if (done.has(criterion.key)) continue;
-		const runs: { score: number; justification: string }[] = [];
+		const runs: CriterionSample[] = [];
 		for (let s = 0; s < samples; s++) {
-			runs.push(await judgeOneSample(client, opts, criterion));
+			runs.push(await client.scoreCriterion(opts, criterion));
 		}
 		const scores = runs.map((r) => r.score);
 		const med = median(scores);
@@ -178,6 +418,7 @@ export async function judgeQuality(opts: JudgeOptions): Promise<QualityResult> {
 		const scored: CriterionScore = {
 			criterion: criterion.key,
 			samples: scores,
+			sampleDetails: runs,
 			score: med,
 			justification: medianRun?.justification ?? "",
 		};

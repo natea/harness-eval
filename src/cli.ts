@@ -273,6 +273,7 @@ async function cmdRun(): Promise<void> {
 			harnessVersion: arg("harness-version") ?? harness.defaultVersion,
 			workerEnv,
 			workerModelFlag,
+			workerOssProvider: rw.ossProvider,
 			workerModelRef,
 		},
 	);
@@ -284,6 +285,7 @@ async function cmdRun(): Promise<void> {
 			design,
 			registry,
 			judgeModel: config.judgeModel,
+			judgeProfile,
 			runDir,
 			driver,
 			log: (m) => console.log(m),
@@ -316,6 +318,14 @@ async function cmdModel(): Promise<void> {
 		);
 	}
 	const profile = resolveProfile(ref, loadModels());
+	if (profile.ossProvider || profile.transport === "openai-compat") {
+		const { probeLocalEndpoint } = await import("./models-probe");
+		const r = await probeLocalEndpoint(profile);
+		console[r.ok ? "log" : "error"](
+			`${r.ok ? "✓" : "✗"} probe ${r.ok ? "OK" : "FAILED"} — ${r.detail}`,
+		);
+		process.exit(r.ok ? 0 : 1);
+	}
 	if (profile.transport !== "claude-code") {
 		throw new Error(
 			`probe supports claude-code transport only (profile '${profile.name}' is ${profile.transport})`,
@@ -446,7 +456,11 @@ async function cmdCleanup(): Promise<void> {
 		{
 			binary: "docker",
 			listArgs: ["ps", "-a", "--format", "{{.Names}}"],
-			parse: (o: string) => o.split("\n").map((s) => s.trim()).filter(Boolean),
+			parse: (o: string) =>
+				o
+					.split("\n")
+					.map((s) => s.trim())
+					.filter(Boolean),
 			reapProcesses: undefined as undefined | ((n: string) => Promise<number>),
 		},
 		{

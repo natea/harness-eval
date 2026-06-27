@@ -192,6 +192,7 @@ describe("shared print-cli driver", () => {
 				wallClockBudgetMs: 60_000,
 				costBudgetUsd: 10,
 				env: { KEY: "value" },
+				ossProvider: "ollama",
 			},
 		);
 
@@ -204,5 +205,6 @@ describe("shared print-cli driver", () => {
 		]);
 		expect(calls.every((c) => c.model === "model-a")).toBe(true);
 		expect(calls.every((c) => c.env?.KEY === "value")).toBe(true);
+		expect(calls.every((c) => c.ossProvider === "ollama")).toBe(true);
 	});
 });

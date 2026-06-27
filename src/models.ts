@@ -14,6 +14,7 @@ export const ModelTransport = z.enum([
 	"claude-code",
 	"anthropic-sdk",
 	"codex",
+	"openai-compat",
 ]);
 export type ModelTransport = z.infer<typeof ModelTransport>;
 
@@ -23,8 +24,9 @@ export type ModelTransport = z.infer<typeof ModelTransport>;
  *  - `auth-token`  → ANTHROPIC_AUTH_TOKEN + ANTHROPIC_BASE_URL (z.ai-style
  *                    Anthropic-compatible coding endpoints driven through Claude Code)
  *  - `api-key`     → ANTHROPIC_API_KEY (+ optional baseURL) for direct SDK calls
+ *  - `none`        → no credential (local Ollama / LM Studio endpoints)
  */
-export const AuthKind = z.enum(["oauth", "auth-token", "api-key"]);
+export const AuthKind = z.enum(["oauth", "auth-token", "api-key", "none"]);
 export type AuthKind = z.infer<typeof AuthKind>;
 
 export const ModelPricing = z.object({
@@ -43,15 +45,37 @@ export const ModelProfile = z
 		transport: ModelTransport,
 		/** ANTHROPIC_BASE_URL for third-party Anthropic-compatible endpoints. */
 		baseUrl: z.string().url().optional(),
-		/** Env var name holding the credential (never the value). */
-		authEnv: z.string().min(1),
+		/** Env var name holding the credential (omit only for authKind 'none'). */
+		authEnv: z.string().min(1).optional(),
 		authKind: AuthKind,
+		/** Codex OSS-mode local provider; implies transport codex + authKind none. */
+		ossProvider: z.enum(["ollama", "lmstudio"]).optional(),
 		/** Optional $/Mtok pricing for token-only providers. */
 		pricing: ModelPricing.optional(),
 	})
 	.refine((p) => !(p.authKind === "auth-token" && !p.baseUrl), {
 		message:
 			"auth-token profiles require a baseUrl (third-party Anthropic-compatible endpoint)",
+	})
+	.refine((p) => !(p.transport === "openai-compat" && !p.baseUrl), {
+		message: "openai-compat profiles require a baseUrl",
+	})
+	.refine(
+		(p) =>
+			p.transport !== "openai-compat" ||
+			(p.authKind === "none" && !p.authEnv),
+		{
+			message: "openai-compat profiles are local-only and require authKind 'none'",
+		},
+	)
+	.refine((p) => p.authKind === "none" || !!p.authEnv, {
+		message: "authEnv is required unless authKind is 'none'",
+	})
+	.refine((p) => !p.ossProvider || p.transport === "codex", {
+		message: "ossProvider requires transport 'codex'",
+	})
+	.refine((p) => !p.ossProvider || p.authKind === "none", {
+		message: "ossProvider implies authKind 'none'",
 	});
 export type ModelProfile = z.infer<typeof ModelProfile>;
 
@@ -73,7 +97,9 @@ export function loadModels(path = "config/models.yaml"): ModelRegistry {
 			const issues = parsed.error.issues
 				.map((x) => `  ${x.path.join(".")}: ${x.message}`)
 				.join("\n");
-			throw new ModelError(`invalid model profile #${i} in ${path}:\n${issues}`);
+			throw new ModelError(
+				`invalid model profile #${i} in ${path}:\n${issues}`,
+			);
 		}
 		if (map.has(parsed.data.name)) {
 			throw new ModelError(`duplicate model profile '${parsed.data.name}'`);
@@ -132,6 +158,11 @@ export function resolveClaudeCodeEnv(
 			`profile '${p.name}' is ${p.transport}, not a Claude Code worker profile`,
 		);
 	}
+	if (!p.authEnv) {
+		throw new ModelError(
+			`profile '${p.name}' has no authEnv and cannot be resolved for Claude Code`,
+		);
+	}
 	const token = lookup[p.authEnv];
 	if (!token) {
 		throw new ModelError(
@@ -167,10 +198,37 @@ export function resolveClaudeCodeEnv(
 		// Drive Claude Code via the opus slot, which we've mapped to the model.
 		return { env, modelFlag: "opus" };
 	}
+	if (p.authKind === "none") {
+		throw new ModelError(
+			`profile '${p.name}' uses authKind none and cannot be resolved for Claude Code`,
+		);
+	}
 	// Direct API key (SDK/native baseURL override).
 	env.ANTHROPIC_API_KEY = token;
 	if (p.baseUrl) env.ANTHROPIC_BASE_URL = p.baseUrl;
 	return { env, modelFlag: p.modelId };
+}
+
+export interface ResolvedOpenAICompatEnv {
+	baseUrl: string;
+}
+
+export function resolveOpenAICompatEnv(
+	p: ModelProfile,
+	lookup: NodeJS.ProcessEnv = process.env,
+): ResolvedOpenAICompatEnv {
+	if (p.transport !== "openai-compat") {
+		throw new ModelError(
+			`profile '${p.name}' is ${p.transport}, not an OpenAI-compatible profile`,
+		);
+	}
+	if (!p.baseUrl) {
+		throw new ModelError(`profile '${p.name}' is missing baseUrl`);
+	}
+	if (p.authKind === "none") return { baseUrl: p.baseUrl };
+	throw new ModelError(
+		`profile '${p.name}' uses unsupported openai-compat auth kind '${p.authKind}'`,
+	);
 }
 
 export interface ResolvedWorker {
@@ -180,6 +238,8 @@ export interface ResolvedWorker {
 	modelFlag: string;
 	/** Human-readable note for logs (auth mode). */
 	note?: string;
+	/** Codex OSS local provider, threaded to the codex driver's --local-provider. */
+	ossProvider?: "ollama" | "lmstudio";
 }
 
 /**
@@ -196,6 +256,26 @@ export function resolveWorkerEnv(
 	lookup: NodeJS.ProcessEnv = process.env,
 ): ResolvedWorker {
 	if (p.transport === "codex") {
+		if (p.ossProvider) {
+			return {
+				env: {},
+				modelFlag: p.modelId,
+				ossProvider: p.ossProvider,
+				note: `local oss: ${p.ossProvider}`,
+			};
+		}
+		if (p.authKind === "none") {
+			return {
+				env: {},
+				modelFlag: p.modelId,
+				note: "credential-free",
+			};
+		}
+		if (!p.authEnv) {
+			throw new ModelError(
+				`profile '${p.name}' has no authEnv and cannot be resolved for Codex`,
+			);
+		}
 		if (p.authKind === "oauth") {
 			const src =
 				lookup[p.authEnv] || (lookup.HOME ? join(lookup.HOME, ".codex") : "");
@@ -217,6 +297,11 @@ export function resolveWorkerEnv(
 			note: key ? "api-key" : "ambient sign-in",
 		};
 	}
+	if (p.transport === "openai-compat") {
+		throw new ModelError(
+			`profile '${p.name}' is an OpenAI-compatible judge profile, not a worker profile`,
+		);
+	}
 	if (p.provider !== "anthropic") {
 		const r = resolveClaudeCodeEnv(p, lookup);
 		return { env: r.env, modelFlag: r.modelFlag };
@@ -227,6 +312,11 @@ export function resolveWorkerEnv(
 	// subscription token (the worker-auth precedence rule, inverted: here the API
 	// key is the intended credential, not the silent-billing hazard).
 	if (p.authKind === "api-key") {
+		if (!p.authEnv) {
+			throw new ModelError(
+				`profile '${p.name}' has no authEnv and cannot be resolved as api-key`,
+			);
+		}
 		const token = lookup[p.authEnv];
 		if (!token) {
 			throw new ModelError(
@@ -279,6 +369,7 @@ export function toModelRef(p: ModelProfile): {
 	name: string;
 	provider: string;
 	modelId: string;
+	transport: string;
 	endpointHost: string | null;
 } {
 	let endpointHost: string | null = null;
@@ -289,7 +380,13 @@ export function toModelRef(p: ModelProfile): {
 			endpointHost = p.baseUrl;
 		}
 	}
-	return { name: p.name, provider: p.provider, modelId: p.modelId, endpointHost };
+	return {
+		name: p.name,
+		provider: p.provider,
+		modelId: p.modelId,
+		transport: p.transport,
+		endpointHost,
+	};
 }
 
 /**

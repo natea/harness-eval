@@ -1,4 +1,4 @@
-# Proposal: Add local-model support (Ollama, LM Studio, HuggingFace)
+# Proposal: Add local-model support (Ollama, LM Studio)
 
 > Builds on the **`model-registry`** capability (`config/models.yaml`, the
 > `ModelProfile`/`ModelTransport`/`AuthKind` types in `src/models.ts`) and the
@@ -8,20 +8,22 @@
 ## Why
 
 Every model the eval can run today is a hosted, billed endpoint (Anthropic,
-z.ai, OpenAI, etc.). Operators want to benchmark and **freely mix** local,
-self-hosted models against cloud models — local worker + cloud judge, cloud
-worker + local judge, or fully local — for zero-marginal-cost experimentation
-and to compare open-weight models head-to-head with the same harness and target.
+z.ai, OpenAI, etc.). Operators want to benchmark local models with zero marginal
+cost, starting with the local runtimes Codex supports directly: Ollama and
+LM Studio. The supported mixes for this change are local worker + existing cloud
+judge, cloud worker + local Ollama-compatible judge, or fully local worker +
+local judge where the runtime exposes the needed endpoint.
 
 The model system was deliberately built for this: profiles are config, and the
 worker/judge model is selected by profile name on the CLI (`--worker-model`,
 `--judge-model`) and in Eval Studio. The gap is that (a) no transport reaches a
-local OpenAI-compatible server, (b) every `AuthKind` assumes a credential, and
-(c) the blind judge hard-codes the Anthropic SDK. This change closes all three.
+local Ollama/LM Studio worker, (b) every `AuthKind` assumes a credential, and
+(c) the blind judge hard-codes the Anthropic SDK. This change closes those gaps
+without adding a cloud endpoint surface.
 
 ## What changes
 
-Delivered in three independently shippable phases under one change.
+Delivered in two independently shippable phases plus local-provider close-out.
 
 ### Phase 1 — Local models as **workers** via Codex's built-in OSS mode
 
@@ -47,11 +49,12 @@ minimum Ollama version ("Codex requires Ollama …"). Phase 1 pins a documented
 minimum Ollama version and surfaces Codex's version/connection error in preflight,
 rather than failing opaquely mid-trial.
 
-### Phase 2 — Local/remote models as **judges** via an `openai-compat` transport
+### Phase 2 — Local models as **judges** via an `openai-compat` transport
 
 - **`ModelTransport` gains `openai-compat`** — a profile carrying `baseUrl` +
-  `authKind` (`none` local, `api-key` remote) that speaks the OpenAI
-  `/v1/chat/completions` API.
+  `authKind: none` for local endpoints that speak the OpenAI
+  `/v1/chat/completions` API. This is required for Ollama's `/v1` judge path and
+  may also be used by a local LM Studio judge profile later.
 - **The blind judge** is refactored behind a small `JudgeClient` interface so the
   Anthropic tool-use loop and an OpenAI-compatible tool-use loop are separate,
   testable implementations, selected by the judge profile's transport. The
@@ -67,36 +70,40 @@ rather than failing opaquely mid-trial.
   parser extracts `score`/`justification` from freeform output, and the fallback
   is flagged in the grading record so a flaky judge is visible, never silent.
 
-### Phase 3 — HuggingFace, reusing the Phase 2 transport
+### Phase 3 — Local-provider close-out
 
-- **HF Inference Endpoints (dedicated)** and **local TGI/vLLM** both expose an
-  OpenAI-compatible `/v1` route → they are `openai-compat` profiles with a
-  `baseUrl` and `authKind` (`api-key` with `HF_TOKEN`, or `none` for local TGI).
-  **No new code** — example profiles + one end-to-end validation.
-- **HF Serverless Inference API is explicitly excluded** (documented, not
-  half-supported): cold-starts and rate limits would poison speed/latency
-  telemetry and make a fair, budgeted eval impossible.
+- **Keep the runtime scope local:** Ollama and LM Studio are the only providers
+  advertised by this change. HuggingFace Inference Endpoints, TGI, vLLM, and other
+  remote OpenAI-compatible services are deliberately out of scope.
+- **Remove unused cloud surface:** no `HF_TOKEN`, no HuggingFace endpoint template,
+  no local TGI/vLLM profile, and no validation task that requires an external
+  endpoint.
+- **Validation focus:** Ollama is live-validated as both worker and judge.
+  LM Studio is kept as a local Codex OSS worker profile and must pass
+  `model probe lmstudio-default` before operators use it for a run.
 
 ## Model selection (no new UX)
 
 Local models are selected exactly like every other model — by profile name:
 `--worker-model ollama-qwen3-coder --judge-model claude-opus-4-8` mixes a local
-worker with a cloud judge. Eval Studio's worker/judge dropdowns read the live
+worker with an existing cloud judge, while `--judge-model ollama-gemma4-judge`
+uses a local Ollama judge. Eval Studio's worker/judge dropdowns read the live
 registry, so local profiles appear automatically. The only added feedback is
 endpoint **reachability**: `model probe <profile>` and the Studio ping the local
-server (`/api/tags` for Ollama, `/v1/models` for LM Studio/TGI) so a stopped
-server fails loud and early instead of mid-trial.
+server (`/api/tags` for Ollama, `/v1/models` for LM Studio and local
+OpenAI-compatible judges) so a stopped server fails loud and early instead of
+mid-trial.
 
 ## Capabilities
 
 ### Modified Capabilities
 
 - `model-registry`: adds the `none` auth kind, the `ossProvider` worker marker
-  (Codex OSS mode), the `openai-compat` transport, and local-endpoint
-  reachability in the profile probe.
+  (Codex OSS mode), the local-only `openai-compat` judge transport, and
+  local-endpoint reachability in the profile probe.
 - `grading-rubric`: the code-quality judge gains an `openai-compat` client path
-  (with a flagged text-fallback) so local/remote OpenAI-compatible models can
-  judge; judge-independence and cross-vendor-flag rules are unchanged.
+  (with a flagged text-fallback) so local OpenAI-compatible models can judge;
+  judge-independence and cross-vendor-flag rules are unchanged.
 
 ## Impact
 
@@ -114,9 +121,10 @@ server fails loud and early instead of mid-trial.
   `sdk` and stop rejecting them.
 - `src/types.ts`: enrich `CriterionScore` with a per-sample shape carrying
   `usedFallback`; update scorecard/dashboard/studio rendering + result readers.
-- `config/models.yaml`: example local + HF profiles, inline-documented.
-  `.env.example` + `src/driver/archive.ts` redaction: `HF_TOKEN`,
-  `OLLAMA_BASE_URL`, `LMSTUDIO_BASE_URL` (URLs are not secrets but are documented).
+- `config/models.yaml`: Ollama and LM Studio local profiles, inline-documented.
+  `.env.example`: `OLLAMA_BASE_URL`, `LMSTUDIO_BASE_URL` (URLs are not secrets but
+  are documented). No HuggingFace/TGI/vLLM profiles or tokens are part of this
+  change.
 - Trial-image note: a local worker/judge requires the model server reachable from
   the sandbox; documented per provider (worktree/host trivially; container/cloud
   need host-gateway networking or a shipped-in endpoint).
@@ -130,6 +138,6 @@ server fails loud and early instead of mid-trial.
 ## Verification gate (per phase)
 
 Each phase is done only when: `bun run test` is green; `bun run src/cli.ts validate`
-passes; `model probe` succeeds against the live endpoint; and one real smoke
-trial/grade records provenance with the correct transport, auth kind, and
-cost-source. `openspec validate add-local-model-support` passes.
+passes; `model probe` succeeds against the relevant live local endpoint; and one
+real Ollama smoke trial/grade records provenance with the correct transport, auth
+kind, and cost-source. `openspec validate add-local-model-support` passes.

@@ -46,6 +46,8 @@ export interface SchedulerDeps {
 	workerEnv?: Record<string, string>;
 	/** Resolved worker `--model` flag; defaults to config.model. */
 	workerModelFlag?: string;
+	/** Resolved Codex OSS provider for local workers. */
+	workerOssProvider?: "ollama" | "lmstudio";
 	/** Resolved worker profile identity for provenance (never the key). */
 	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */
@@ -294,6 +296,7 @@ export async function runTrial(
 				wallClockBudgetMs: config.budget.trialWallClockMs,
 				costBudgetUsd: config.budget.trialCostUsd,
 				env: workerAuth,
+				ossProvider: deps.workerOssProvider,
 			});
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);

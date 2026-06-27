@@ -43,8 +43,56 @@ interface Validation {
 	};
 }
 
+interface ModelProbeStatus {
+	name: string;
+	probeable: boolean;
+	ok: boolean;
+	detail: string;
+}
+
 const selectCls =
 	"rounded-md border border-input bg-card px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+
+function useModelProbe(name: string): ModelProbeStatus | undefined {
+	const [status, setStatus] = useState<ModelProbeStatus>();
+	useEffect(() => {
+		if (!name) {
+			setStatus(undefined);
+			return;
+		}
+		let live = true;
+		setStatus(undefined);
+		fetch(`/api/model-probe/${encodeURIComponent(name)}`)
+			.then((r) => r.json())
+			.then((d) => live && setStatus(d as ModelProbeStatus))
+			.catch((e) =>
+				live &&
+				setStatus({
+					name,
+					probeable: true,
+					ok: false,
+					detail: String(e),
+				}),
+			);
+		return () => {
+			live = false;
+		};
+	}, [name]);
+	return status?.probeable ? status : undefined;
+}
+
+function ModelProbeBadge({ status }: { status?: ModelProbeStatus }) {
+	if (!status) return null;
+	return (
+		<Badge
+			variant={status.ok ? "ok" : "danger"}
+			title={status.detail}
+			className="shrink-0"
+		>
+			{status.ok ? "reachable" : "unreachable"}
+		</Badge>
+	);
+}
 
 export function Configure() {
 	const opts = useFetch<Options>("/api/options");
@@ -56,6 +104,7 @@ export function Configure() {
 	const [provider, setProvider] = useState("worktree");
 	const [trials, setTrials] = useState(1);
 	const [concurrency, setConcurrency] = useState(2);
+	const [trialMinutes, setTrialMinutes] = useState(120);
 	const [grade, setGrade] = useState(false);
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [vr, setVr] = useState<Validation>();
@@ -63,6 +112,8 @@ export function Configure() {
 	const [confirm, setConfirm] = useState<Validation["budget"]>();
 	const [launchErr, setLaunchErr] = useState<string>();
 	const [busy, setBusy] = useState(false);
+	const workerProbe = useModelProbe(workerModel);
+	const judgeProbe = useModelProbe(judgeModel);
 
 	const launch = (dryRun: boolean, confirmed: boolean) => {
 		setBusy(true);
@@ -74,13 +125,14 @@ export function Configure() {
 				target,
 				candidates,
 				harness,
-				workerModel,
-				judgeModel,
-				provider: dryRun ? "worktree" : provider,
-				trials,
-				concurrency,
-				weights,
-				grade,
+					workerModel,
+					judgeModel,
+					provider: dryRun ? "worktree" : provider,
+					trials,
+					concurrency,
+					trialMinutes,
+					weights,
+					grade,
 				dryRun,
 				confirmed,
 			}),
@@ -128,10 +180,11 @@ export function Configure() {
 			workerModel,
 			judgeModel,
 			provider,
-			trials,
-			concurrency,
-			weights,
-			grade,
+				trials,
+				concurrency,
+				trialMinutes,
+				weights,
+				grade,
 		};
 		fetch("/api/validate", {
 			method: "POST",
@@ -148,10 +201,11 @@ export function Configure() {
 		workerModel,
 		judgeModel,
 		provider,
-		trials,
-		concurrency,
-		weights,
-		grade,
+			trials,
+			concurrency,
+			trialMinutes,
+			weights,
+			grade,
 	]);
 
 	if (!opts) return <p className="text-muted-foreground">loading…</p>;
@@ -223,21 +277,24 @@ export function Configure() {
 							))}
 						</select>
 
-						<label htmlFor="model" className="text-[13px]">
-							Worker model
-						</label>
-						<select
-							id="model"
-							className={selectCls}
-							value={workerModel}
-							onChange={(e) => setWorkerModel(e.target.value)}
-						>
-							{opts.models.map((m) => (
-								<option key={m.name} value={m.name}>
-									{m.name} ({m.provider})
-								</option>
-							))}
-						</select>
+							<label htmlFor="model" className="text-[13px]">
+								Worker model
+							</label>
+							<span className="flex flex-wrap items-center gap-2">
+								<select
+									id="model"
+									className={selectCls}
+									value={workerModel}
+									onChange={(e) => setWorkerModel(e.target.value)}
+								>
+									{opts.models.map((m) => (
+										<option key={m.name} value={m.name}>
+											{m.name} ({m.provider})
+										</option>
+									))}
+								</select>
+								<ModelProbeBadge status={workerProbe} />
+							</span>
 
 						<label htmlFor="judge" className="text-[13px]">
 							Grader model
@@ -253,10 +310,11 @@ export function Configure() {
 									<option key={m.name} value={m.name}>
 										{m.name} ({m.provider})
 									</option>
-								))}
-							</select>
-							{judgeModel === workerModel && (
-								<span className="text-[12px] text-warn">
+									))}
+								</select>
+								<ModelProbeBadge status={judgeProbe} />
+								{judgeModel === workerModel && (
+									<span className="text-[12px] text-warn">
 									judge must differ from worker (no self-grading)
 								</span>
 							)}
@@ -295,9 +353,9 @@ export function Configure() {
 							onChange={(e) => setTrials(Number(e.target.value))}
 						/>
 
-						<label htmlFor="concurrency" className="text-[13px]">
-							Concurrency
-						</label>
+							<label htmlFor="concurrency" className="text-[13px]">
+								Concurrency
+							</label>
 						<span className="flex items-center gap-2">
 							<input
 								id="concurrency"
@@ -313,10 +371,24 @@ export function Configure() {
 								<span className="text-[12px] text-warn">
 									daytona free tier is ~1 — higher may be reclaimed
 								</span>
-							)}
-						</span>
+								)}
+							</span>
 
-						<span className="text-[13px]">Grade</span>
+							<label htmlFor="trialMinutes" className="text-[13px]">
+								Trial minutes
+							</label>
+							<input
+								id="trialMinutes"
+								type="number"
+								min={1}
+								className={`${selectCls} w-24`}
+								value={trialMinutes}
+								onChange={(e) =>
+									setTrialMinutes(Math.max(1, Number(e.target.value)))
+								}
+							/>
+
+							<span className="text-[13px]">Grade</span>
 						<label className="flex items-center gap-2 text-[13px] text-muted-foreground">
 							<input
 								type="checkbox"

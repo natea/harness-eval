@@ -219,6 +219,79 @@ describe("add-studio-live-runs: live job lifecycle (2.x, 5.2)", () => {
 		expect(results.trials[0].provenance.status).toBe("completed");
 	}, 40_000);
 
+	test("graded local judge run records sdk quality when adherence evaluator fails", async () => {
+		const out = await launchRun(
+			{
+				...REQ,
+				candidates: ["bare"],
+				harness: "codex",
+				workerModel: "ollama-qwen3.6-35b",
+				judgeModel: "ollama-gemma4-judge",
+				grade: true,
+				confirmed: true,
+			},
+			{
+				dryRun: false,
+				executeScript: fakeExecutor as never,
+				gradeDeps: {
+					startFixtures: () => [],
+					stopFixtures: () => undefined,
+					runEvaluatorCC: async () => {
+						throw new Error("missing CLAUDE_CODE_OAUTH_TOKEN");
+					},
+					judgeQuality: async () => ({
+						judgeModel: "gemma4:latest",
+						criteria: [
+							{
+								criterion: "tests",
+								samples: [8],
+								sampleDetails: [
+									{
+										score: 8,
+										justification: "studio local judge path",
+										usedFallback: false,
+									},
+								],
+								score: 8,
+								justification: "studio local judge path",
+							},
+						],
+						score: 80,
+					}),
+				},
+				policy: {
+					async canLaunch() {
+						return { ok: true };
+					},
+				},
+			},
+		);
+		expect("runId" in out).toBe(true);
+		const id = (out as { runId: string }).runId;
+		createdRuns.push(id);
+
+		let entry = getQueue().find((e) => e.runId === id);
+		for (let i = 0; i < 60 && entry?.status === "running"; i++) {
+			await sleep(500);
+			entry = getQueue().find((e) => e.runId === id);
+		}
+		expect(entry?.status).toBe("completed");
+
+		const results = JSON.parse(
+			readFileSync(join("runs", id, "results.json"), "utf8"),
+		);
+		const grades = results.trials[0].grades;
+		expect(grades.adherence).toBeNull();
+		expect(grades.quality.score).toBe(80);
+		expect(grades.grading).toMatchObject({
+			evaluatorDriver: "cc",
+			qualityDriver: "sdk",
+			judgeTransport: "openai-compat",
+		});
+		expect(results.judgeModel.transport).toBe("openai-compat");
+		expect(results.config.judgeModel).toBe("ollama-gemma4-judge");
+	}, 40_000);
+
 	test("cancel before completion ends in the cancelled state", async () => {
 		// A slow executor so we can cancel mid-flight.
 		const slow = async (sandbox: {

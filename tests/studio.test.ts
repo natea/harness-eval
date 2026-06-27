@@ -30,6 +30,9 @@ describe("eval-studio options + validation (tasks 3.1, 4.1)", () => {
 		expect(o.models.map((m) => m.name)).toContain("claude-opus-4-6");
 		// GLM/Kimi/etc. are in the registry too.
 		expect(o.models.map((m) => m.name)).toContain("glm-4.7");
+		expect(o.models.map((m) => m.name)).toContain("ollama-qwen3.6-35b");
+		expect(o.models.map((m) => m.name)).toContain("lmstudio-default");
+		expect(o.models.map((m) => m.name)).toContain("ollama-gemma4-judge");
 	});
 
 	test("a valid request produces the CLI command + budget, no errors", () => {
@@ -110,6 +113,43 @@ describe("eval-studio options + validation (tasks 3.1, 4.1)", () => {
 			provider: "worktree",
 		});
 		expect(r.errors.some((e) => /image-based provider/.test(e))).toBe(true);
+	});
+
+	test("allows local Codex OSS worker on worktree for host-local model validation", () => {
+		const r = validateRunRequest({
+			...VALID,
+			target: "cli-tool",
+			candidates: ["bare"],
+			harness: "codex",
+			workerModel: "ollama-qwen3.6-35b",
+			provider: "worktree",
+		});
+		expect(r.errors).toEqual([]);
+		expect(r.command).toContain("--harness codex");
+		expect(r.command).toContain("--worker-model ollama-qwen3.6-35b");
+	});
+
+	test("rejects non-local Codex workers on worktree so pinned-image runs stay reproducible", () => {
+		const r = validateRunRequest({
+			...VALID,
+			target: "cli-tool",
+			candidates: ["bare"],
+			harness: "codex",
+			workerModel: "gpt-5-codex",
+			provider: "worktree",
+		});
+		expect(r.errors.some((e) => /image-based provider/.test(e))).toBe(true);
+	});
+
+	test("trialMinutes overrides the Studio budget envelope", () => {
+		const r = validateRunRequest({
+			...VALID,
+			concurrency: 1,
+			trialMinutes: 6,
+		});
+		expect(r.errors).toEqual([]);
+		expect(r.budget?.wallClockHours).toBeCloseTo(0.1, 5);
+		expect(r.command).toContain("--trial-minutes 6");
 	});
 
 	test("cliCommand omits the default worker model, includes overrides + grade", () => {

@@ -599,6 +599,15 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 	const a = t.grades?.adherence;
 	const q = t.grades?.quality;
 	const integ = t.grades?.integration;
+	const samplesLabel = (c: {
+		samples: number[];
+		sampleDetails?: { usedFallback?: boolean }[];
+	}) =>
+		c.samples
+			.map((score, i) =>
+				c.sampleDetails?.[i]?.usedFallback ? `${score}*` : String(score),
+			)
+			.join(", ");
 	return (
 		<>
 			<p>
@@ -687,7 +696,7 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 							{q.criteria.map((c) => (
 								<tr key={c.criterion}>
 									<td>{c.criterion}</td>
-									<td className="mono">{c.samples.join(", ")}</td>
+									<td className="mono">{samplesLabel(c)}</td>
 									<td className="mono">{c.score}</td>
 									<td>
 										<details>

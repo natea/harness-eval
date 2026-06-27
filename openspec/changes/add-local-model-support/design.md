@@ -79,13 +79,14 @@ appear first inside a trial transcript.
 No `pricing` → cost source is `tokens-only` (existing rule). `provider` is the
 vendor label used by `judgeWorkerRelation` for the cross-vendor flag.
 
-## Phase 2 — local/remote judge (`openai-compat` transport)
+## Phase 2 — local judge (`openai-compat` transport)
 
 ### Type changes
 - `ModelTransport` gains `"openai-compat"`. Such a profile carries `baseUrl`
-  (required) and `authKind` (`none` or `api-key`). Add `resolveOpenAICompatEnv`
-  parallel to `resolveClaudeCodeEnv`: returns `{ baseUrl, apiKey? }` for the judge
-  client; for `none` no key is read.
+  (required) and `authKind: none`. Add `resolveOpenAICompatEnv` parallel to
+  `resolveClaudeCodeEnv`: returns `{ baseUrl }` for the judge client. Remote
+  OpenAI-compatible endpoints and bearer-token auth are deliberately out of scope
+  for this change.
 
 ### Grading-path reality (gap #2 — must read before coding)
 Grading does NOT go through one place. There are two grading drivers, selected by
@@ -101,6 +102,32 @@ wall. **Decision: Option A — extend the existing `sdk` driver** (no new driver
 never `cc`. Studio/CLI must therefore: (1) pick `sdk` when the judge transport is
 `openai-compat`, and (2) relax the blanket reject in `options.ts` from "transport
 === codex" to "no grading driver can drive this transport".
+
+Design decision (2026-06-25): the PRD-adherence evaluator and the blind
+code-quality judge are allowed to complete independently. `openai-compat` local
+judges drive code-quality through the transport-aware `sdk` path; the adaptive
+PRD evaluator remains Claude-Code-backed. If the evaluator is unavailable (for
+example no `CLAUDE_CODE_OAUTH_TOKEN`), grading records `adherence: null` but still
+scrubs the workspace, runs the local quality judge, and writes driver/transport
+provenance in `grades.json`.
+
+Design decision (2026-06-25): judge clients resolve the blind workspace to an
+absolute path before prompting or running shell tools. Tool calls still execute
+with the blind workspace as `cwd`, but the absolute path avoids local models
+constructing invalid nested paths when they copy the workspace path from the
+prompt.
+
+Design decision (2026-06-25): shared Studio/CLI grading writes
+`judge-checkpoint.json` after each quality criterion, matching the post-hoc
+`grade-trial.ts` recovery behavior. Local judge runs can be materially slower than
+hosted judges, so criterion-level checkpointing is part of the reliability
+contract rather than a debugging convenience.
+
+Design decision (2026-06-26): run recovery must preserve the selected judge
+profile. `regrade-run.ts` accepts `--judge-model` and otherwise infers the prior
+results' judge profile; `finalize-run.ts` preserves or resolves the same profile
+so `results.config.judgeModel` and the top-level `judgeModel` provenance cannot
+contradict each other.
 
 ### Fallback provenance schema (gap #3)
 `CriterionScore.samples` is `z.array(z.number())` today — numbers only, with no slot
@@ -137,18 +164,19 @@ Judge ≠ worker is enforced by `judgeWorkerRelation` (by profile name). A local
 judge against a cloud worker (or vice-versa) is cross-vendor → the existing
 flag/caveat fires. Scrub-before-judge and median-of-three are unchanged.
 
-## Phase 3 — HuggingFace (reuses Phase 2)
+## Phase 3 — local-provider close-out
 
-- **HF Inference Endpoints (dedicated):** `transport: openai-compat`, `baseUrl:
-  https://<id>.endpoints.huggingface.cloud/v1`, `authEnv: HF_TOKEN`,
-  `authKind: api-key`.
-- **Local TGI / vLLM:** identical but `baseUrl: http://localhost:8080/v1`,
-  `authKind: none`. Same as Ollama/LM Studio from the judge's view.
-- **Serverless Inference API: excluded**, documented in `docs/`. Reason: cold-start
-  + rate limits make latency/speed telemetry meaningless under a time budget. This
-  is a deliberate YAGNI cut, recorded so it reads as a decision, not an omission.
-- Work is: two example profiles, extend `model probe` to validate a bearer-auth
-  `/v1/models`, one live end-to-end judge run, and the docs note.
+- **Keep Ollama and LM Studio.** These are Codex's built-in local OSS providers and
+  are the only local worker runtimes advertised by this change.
+- **Keep local `openai-compat` only for judging.** Ollama's `/v1` endpoint uses the
+  same Chat Completions shape as the OpenAI SDK expects, so the local judge path
+  stays behind the `openai-compat` transport. The supported auth kind is `none`.
+- **Remove HF/TGI/vLLM.** HuggingFace Inference Endpoints, local TGI, vLLM, bearer
+  auth, and `HF_TOKEN` are out of scope. They add cloud/self-hosted deployment
+  surface that is not needed to prove the local-model goal.
+- **Validation expectation.** Ollama has live worker and judge evidence. LM Studio
+  support is kept as a first-class local worker profile and must pass
+  `model probe lmstudio-default` before an operator relies on it for a run.
 
 ## Selection surfaces (no new mechanics)
 - **CLI:** `--worker-model` / `--judge-model` already take any profile name.
@@ -161,11 +189,11 @@ flag/caveat fires. Scrub-before-judge and median-of-three are unchanged.
 - No custom `[model_providers.*]` TOML writer for Phase 1 — `--oss
   --local-provider` covers Ollama + LM Studio without it. (A custom TOML provider
   is a later option only if a non-OSS local endpoint must be driven *through Codex*;
-  the `openai-compat` judge path already covers OpenAI-compatible servers for
-  judging.)
-- No HF Serverless support (see Phase 3).
-- No new auth storage — local `none` needs none; `HF_TOKEN`/keys stay env-only and
-  redacted.
+  the local `openai-compat` judge path already covers Ollama-compatible judging.)
+- No HuggingFace Inference Endpoints, HF Serverless, TGI, or vLLM support in this
+  change. Those can be introduced by a later OpenSpec change if there is a real
+  operator need.
+- No new auth storage — local `none` needs no credential.
 
 ## Open questions (resolve at implementation)
 - Exact minimum Ollama version Codex 0.142.0 requires (read it from the error

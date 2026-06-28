@@ -34,6 +34,10 @@ export interface InvScaleCell {
 	qualF: number | null;
 	qualGain: number | null;
 	flags: string[];
+	// Provenance (task 2.1): the run dirs whose trials assembled this cell. >1
+	// means the framework and its baseline were joined ACROSS runs (sharing the
+	// frozen PRD) rather than coming from one run — auditable, not silent.
+	runIds: string[];
 }
 export interface InvScaleFit {
 	slope: number;
@@ -56,7 +60,7 @@ export interface InverseScaling {
 	};
 }
 
-type Trial = { adherence: number; quality: number | null };
+type Trial = { adherence: number; quality: number | null; runId: string };
 
 // Append v to the array at key k, creating it if absent.
 const pushTo = <K, V>(m: Map<K, V[]>, k: K, v: V): void => {
@@ -131,7 +135,7 @@ export async function buildInverseScaling(
 					) / qCrit.length
 				: null;
 			const key = [target, p.harness, p.model, p.candidate].join(SEP);
-			pushTo(cells, key, { adherence: adh, quality });
+			pushTo(cells, key, { adherence: adh, quality, runId: d });
 		}
 	}
 
@@ -204,6 +208,9 @@ export async function buildInverseScaling(
 					...(fa.length < MIN_N || base.length < MIN_N ? ["low-n"] : []),
 					...(stddev(fa) >= HIGH_SD ? ["high-σ"] : []),
 				],
+				runIds: [
+					...new Set([...baseTrials, ...fTrials].map((t) => t.runId)),
+				].sort(),
 			});
 		}
 	}

@@ -27,6 +27,7 @@ interface Cell {
 	qualF: number | null;
 	qualGain: number | null;
 	flags: string[];
+	runIds: string[];
 }
 interface Fit {
 	slope: number;
@@ -188,8 +189,16 @@ export function InverseScaling() {
 									<TableCell>
 										<Move base={r.qualB} fwk={r.qualF} delta={r.qualGain} />
 									</TableCell>
-									<TableCell className="font-mono text-[12px] text-muted-foreground">
+									<TableCell
+										className="font-mono text-[12px] text-muted-foreground"
+										title={`assembled from ${r.runIds.length} run(s):\n${r.runIds.join("\n")}`}
+									>
 										{r.nF} / {r.nB}
+										{r.runIds.length > 1 && (
+											<span className="ml-1 opacity-60" aria-hidden>
+												⊕
+											</span>
+										)}
 									</TableCell>
 									<TableCell>
 										{r.flags.length ? (
@@ -207,10 +216,11 @@ export function InverseScaling() {
 
 			<p className="mt-2 text-[12px] text-muted-foreground">
 				{rows.length} complete cell(s) across {data.runsScanned} runs · n shown
-				as framework/baseline trials · <span className="text-warn">warn</span>{" "}
-				flags mark thin (low-n) or unstable (high-σ) cells — read those deltas
-				as directional, not precise. Gains are measured on the eval set, not
-				held-out tasks (HarnessX §7.7).
+				as framework/baseline trials · ⊕ = assembled across multiple runs (hover
+				for which) · <span className="text-warn">warn</span> flags mark thin
+				(low-n) or unstable (high-σ) cells — read those deltas as directional,
+				not precise. Gains are measured on the eval set, not held-out tasks
+				(HarnessX §7.7).
 			</p>
 		</>
 	);

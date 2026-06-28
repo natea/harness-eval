@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Configure } from "./views/Configure";
+import { InverseScaling } from "./views/InverseScaling";
 import { Leaderboard } from "./views/Leaderboard";
 import { Runs } from "./views/Runs";
 import { RunView } from "./views/RunView";
@@ -12,6 +13,7 @@ import "./index.css";
 function Routed() {
 	const path = window.location.pathname;
 	if (path === "/configure") return <Configure />;
+	if (path === "/inverse-scaling") return <InverseScaling />;
 	if (path === "/runs") return <Runs />;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
@@ -36,6 +38,7 @@ function Nav() {
 			<span className="mr-2 font-semibold">Eval Studio</span>
 			{tab("/", "Review", path === "/")}
 			{tab("/configure", "Configure", path === "/configure")}
+			{tab("/inverse-scaling", "Inverse-scaling", path === "/inverse-scaling")}
 			{tab("/runs", "Runs", path === "/runs")}
 		</nav>
 	);

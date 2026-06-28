@@ -130,8 +130,9 @@ function FitBadge({ fit, axis }: { fit: Fit | null; axis: string }) {
 export function InverseScaling() {
 	const data = useFetch<InverseScaling>("/api/inverse-scaling");
 	if (!data) return <p className="text-muted-foreground">loading…</p>;
-
-	const rows = [...data.rows].sort(
+	// Be resilient to a stale/older endpoint payload (e.g. a studio server started
+	// before a field was added): default every optional shape rather than crash.
+	const rows = [...(data.rows ?? [])].sort(
 		(a, b) =>
 			a.target.localeCompare(b.target) ||
 			a.framework.localeCompare(b.framework),
@@ -153,8 +154,8 @@ export function InverseScaling() {
 			</p>
 
 			<div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-				<FitBadge fit={data.fits.adherenceAll} axis="Adherence axis" />
-				<FitBadge fit={data.fits.qualityAll} axis="Quality axis" />
+				<FitBadge fit={data.fits?.adherenceAll ?? null} axis="Adherence axis" />
+				<FitBadge fit={data.fits?.qualityAll ?? null} axis="Quality axis" />
 			</div>
 
 			<Card className="mt-3">
@@ -191,17 +192,21 @@ export function InverseScaling() {
 									</TableCell>
 									<TableCell
 										className="font-mono text-[12px] text-muted-foreground"
-										title={`assembled from ${r.runIds.length} run(s):\n${r.runIds.join("\n")}`}
+										title={
+											r.runIds?.length
+												? `assembled from ${r.runIds.length} run(s):\n${r.runIds.join("\n")}`
+												: undefined
+										}
 									>
 										{r.nF} / {r.nB}
-										{r.runIds.length > 1 && (
+										{(r.runIds?.length ?? 0) > 1 && (
 											<span className="ml-1 opacity-60" aria-hidden>
 												⊕
 											</span>
 										)}
 									</TableCell>
 									<TableCell>
-										{r.flags.length ? (
+										{r.flags?.length ? (
 											<Badge variant="warn">{r.flags.join(" ")}</Badge>
 										) : (
 											<span className="text-muted-foreground">—</span>
@@ -215,12 +220,12 @@ export function InverseScaling() {
 			</Card>
 
 			<p className="mt-2 text-[12px] text-muted-foreground">
-				{rows.length} complete cell(s) across {data.runsScanned} runs · n shown
-				as framework/baseline trials · ⊕ = assembled across multiple runs (hover
-				for which) · <span className="text-warn">warn</span> flags mark thin
-				(low-n) or unstable (high-σ) cells — read those deltas as directional,
-				not precise. Gains are measured on the eval set, not held-out tasks
-				(HarnessX §7.7).
+				{rows.length} complete cell(s) across {data.runsScanned ?? 0} runs · n
+				shown as framework/baseline trials · ⊕ = assembled across multiple runs
+				(hover for which) · <span className="text-warn">warn</span> flags mark
+				thin (low-n) or unstable (high-σ) cells — read those deltas as
+				directional, not precise. Gains are measured on the eval set, not
+				held-out tasks (HarnessX §7.7).
 			</p>
 		</>
 	);

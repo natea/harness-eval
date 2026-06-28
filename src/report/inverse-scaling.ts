@@ -111,31 +111,64 @@ export async function buildInverseScaling(
 	// key: target | harness | model | candidate
 	const SEP = "|";
 	const cells = new Map<string, Trial[]>();
+
+	// Add one graded trial to its cell. Grades come embedded (finalized results.json)
+	// or are reattached from trials/<id>/grades.json (post-hoc grading). Target is
+	// resolved per-trial from provenance so it works without a run-level results.json.
+	const addTrial = async (
+		runId: string,
+		// biome-ignore lint/suspicious/noExplicitAny: provenance/grades are loose JSON
+		p: any,
+		// biome-ignore lint/suspicious/noExplicitAny: embedded grades or null
+		embedded: any,
+	): Promise<void> => {
+		let g = embedded;
+		if (!(typeof g?.adherence?.gradedScore === "number")) {
+			const gp = join(
+				runsDir,
+				runId,
+				"trials",
+				p?.trialId ?? "",
+				"grades.json",
+			);
+			if (p?.trialId && existsSync(gp)) g = await Bun.file(gp).json();
+		}
+		const adh = g?.adherence?.gradedScore;
+		if (typeof adh !== "number") return;
+		const qCrit = g?.quality?.criteria ?? [];
+		const quality = qCrit.length
+			? qCrit.reduce(
+					(s: number, c: { score?: number }) => s + (c.score ?? 0),
+					0,
+				) / qCrit.length
+			: null;
+		const target = targetName(p.prdSha256);
+		const key = [target, p.harness, p.model, p.candidate].join(SEP);
+		pushTo(cells, key, { adherence: adh, quality, runId });
+	};
+
 	let runsScanned = 0;
 	for (const d of readdirSync(runsDir)) {
 		const rp = join(runsDir, d, "results.json");
-		if (!existsSync(rp)) continue;
-		const j = await Bun.file(rp).json();
-		runsScanned++;
-		const target = targetName(j.prdSha256);
-		for (const t of j.trials ?? []) {
-			const p = t.provenance;
-			let g = t.grades;
-			if (!(typeof g?.adherence?.gradedScore === "number")) {
-				const gp = join(runsDir, d, "trials", p?.trialId ?? "", "grades.json");
-				if (p?.trialId && existsSync(gp)) g = await Bun.file(gp).json();
+		if (existsSync(rp)) {
+			const j = await Bun.file(rp).json();
+			runsScanned++;
+			for (const t of j.trials ?? []) await addTrial(d, t.provenance, t.grades);
+		} else {
+			// Killed-but-graded run: no finalized results.json, but trials may carry
+			// provenance + grades.json (post-hoc salvage). Scan trial dirs directly so
+			// those grades still count.
+			const trialsDir = join(runsDir, d, "trials");
+			if (!existsSync(trialsDir)) continue;
+			let counted = false;
+			for (const tid of readdirSync(trialsDir)) {
+				const provPath = join(trialsDir, tid, "provenance.json");
+				if (!existsSync(provPath)) continue;
+				if (!existsSync(join(trialsDir, tid, "grades.json"))) continue;
+				await addTrial(d, await Bun.file(provPath).json(), null);
+				counted = true;
 			}
-			const adh = g?.adherence?.gradedScore;
-			if (typeof adh !== "number") continue;
-			const qCrit = g?.quality?.criteria ?? [];
-			const quality = qCrit.length
-				? qCrit.reduce(
-						(s: number, c: { score?: number }) => s + (c.score ?? 0),
-						0,
-					) / qCrit.length
-				: null;
-			const key = [target, p.harness, p.model, p.candidate].join(SEP);
-			pushTo(cells, key, { adherence: adh, quality, runId: d });
+			if (counted) runsScanned++;
 		}
 	}
 

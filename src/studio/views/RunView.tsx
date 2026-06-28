@@ -202,6 +202,59 @@ function LiveRunView({
 	);
 }
 
+interface RunPrd {
+	name: string | null;
+	title: string | null;
+	prd: string | null;
+	testPlan: string | null;
+	sha: string;
+	currentMatch: boolean;
+}
+
+/** The input spec a run was graded against (input-spec-viewer): the PRD + test
+ *  plan, collapsed by default, rendered as raw text next to the scorecard. */
+function SpecPanel({ runId }: { runId: string }) {
+	const data = useFetch<RunPrd>(`/api/runs/${runId}/prd`);
+	if (!data) return null;
+	return (
+		<details className="mt-2 rounded-md border border-border">
+			<summary className="cursor-pointer select-none px-3 py-2 text-[13px] font-semibold">
+				📄 Spec — what the agents were asked to build
+			</summary>
+			<div className="border-t border-border px-3 py-2">
+				{!data.currentMatch || !data.prd ? (
+					<p className="text-[13px]">
+						<Badge variant="warn">frozen PRD not available</Badge> this run's
+						PRD hash (
+						<span className="font-mono">{data.sha.slice(0, 12)}…</span>) matches
+						no current target — it was re-frozen since the run, and only the hash
+						is archived per run.
+					</p>
+				) : (
+					<>
+						<div className="text-[12px] text-muted-foreground">
+							PRD.md · {data.name}
+						</div>
+						<pre className="mt-1 max-h-[480px] overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[12px]">
+							{data.prd}
+						</pre>
+						{data.testPlan && (
+							<>
+								<div className="mt-3 text-[12px] text-muted-foreground">
+									testplan.yaml
+								</div>
+								<pre className="mt-1 max-h-[360px] overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[11px]">
+									{data.testPlan}
+								</pre>
+							</>
+						)}
+					</>
+				)}
+			</div>
+		</details>
+	);
+}
+
 export function RunView({ runId }: { runId: string }) {
 	const entry = useFetch<{ supported: boolean; error?: string; results?: RunResults }>(
 		`/api/runs/${runId}`,
@@ -259,6 +312,7 @@ export function RunView({ runId }: { runId: string }) {
 					</Badge>
 				</p>
 			)}
+			<SpecPanel runId={runId} />
 			<WeightControls weights={weights} onChange={setWeights} />
 
 			<Card>

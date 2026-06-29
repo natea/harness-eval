@@ -34,23 +34,30 @@
 ## 4. Validate the finding
 
 - [x] 4.1 Compute the slope on current data; state whether codingharness reproduces
-  HarnessX's negative-slope (inverse-scaling) shape, with coverage honesty
-  (cross-target fit: adherence r −0.43, quality r −0.64 — reproduced; per-framework
-  divergence: gsd r −0.94 strong, superpowers inverts)
-- [x] 4.2 Baseline-coupling: graded the notes/codex cluster (zero-spend unlock) and
-  ran `bare @ claude-code/opus-4-6` on rest-api + symphony-daemon. **Open:** all
-  cells are n=1 so the confident fit is `n/a` — the n≥2 hardening is carried to 5.2.
+  HarnessX's negative-slope shape. **Result, post-hardening:** the all-cells fit is
+  weakly negative (adherence r −0.19, quality r −0.30) and the confident-only fit is
+  essentially flat (adherence slope −0.03; quality +1.51, r 0.57). The dramatic
+  inverse-scaling seen at n=1 did NOT survive replication — see 4.2.
+- [x] 4.2 Baseline-coupling DONE: graded the notes/codex cluster (zero-spend) and
+  hardened the symphony-daemon bare baseline from n=1 → n=3 (graded the salvaged
+  built trials of an interrupted run via the killed-run fallback). This **corrected
+  a single-trial artifact**: the lone n=1 symphony baseline scored adherence 70.9 (a
+  low outlier); the real baseline is ~80.7, which collapsed the framework adherence
+  "gains" (gsd +10.3 → +0.5; compound +8.2 → −1.6; superpowers −6.2 → −16.1).
+  Frameworks still lift code QUALITY on symphony (gsd +12.2), just not adherence.
+  rest-api framework cells remain n=1 (would need framework re-runs — minor).
 
 ## 5. Decision
 
-- [x] 5.1 Go/no-go — **GO.** The report is sound (absolute dims only, like-for-like
-  baselines, no PRD pooling, low-n/high-σ flagged, held-out caveat) and the curve is
-  legible on real data: inverse-scaling reproduces on both axes, and the
-  per-framework split (gsd embodies it, superpowers inverts) is a sharper claim than
-  the aggregate. The view makes the increase/decrease the headline.
-- [ ] 5.2 Follow-on (separate, real-spend): **(a)** re-run the baselines at n≥2 so
-  `low-n` clears and the confident fit computes — the one gap before the curve is
-  publishable; **(b)** a cost-adjusted "gain per dollar" recommender (harness-vs-
-  model-upgrade decision), which needs absolute token cost re-derived from
-  transcripts. OpenSpec bookkeeping: this exploration concluded GO and the
-  implementation shipped (PR #60) — promote to/Archive once 5.2(a) lands.
+- [x] 5.1 Go/no-go — **GO** (method sound; the report did its job). The headline
+  finding flipped under rigor and that IS the value: absolute-dims-only, like-for-
+  like baselines, low-n/high-σ flagging, and n≥2 hardening caught a single-trial
+  artifact that had manufactured a dramatic effect. Honest conclusion on current
+  data: inverse-scaling is weak/noisy and framework-dependent; frameworks move code
+  quality more than adherence; the bare claude-code agent is already strong on spec
+  adherence.
+- [ ] 5.2 Follow-on (separate, real-spend): **(a)** raise the remaining single-trial
+  cells (rest-api frameworks) to n≥2 for full confidence; **(b)** a cost-adjusted
+  "gain per dollar" recommender (harness-vs-model-upgrade), needing absolute token
+  cost re-derived from transcripts. Bookkeeping: GO; implementation shipped (PR #60).
+  Archive this explore change once 5.2(a) lands; (b) is its own change.

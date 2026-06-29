@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Logo } from "./components/Logo";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Configure } from "./views/Configure";
 import { InverseScaling } from "./views/InverseScaling";
@@ -83,7 +84,7 @@ function Nav() {
 	);
 	return (
 		<nav className="mb-4 flex items-center gap-1 border-b border-border pb-2">
-			<span className="mr-2 font-semibold">Eval Studio</span>
+			<Logo />
 			{tab("/", "Review", path === "/")}
 			{tab("/configure", "Configure", path === "/configure")}
 			{tab("/inverse-scaling", "Inverse-scaling", path === "/inverse-scaling")}

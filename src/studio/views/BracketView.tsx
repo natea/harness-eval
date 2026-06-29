@@ -9,12 +9,22 @@ import { useState } from "react";
 import { Badge } from "../components/ui/badge";
 import { useFetch } from "../lib/api";
 
+type Metric = "goals" | "quality";
+interface Breakdown {
+	passes: number;
+	fails: number;
+	partials: number;
+	partialCredit: number;
+	total: number;
+}
 interface Entrant {
 	candidate: string;
 	seed: number;
+	score: number; // the metric's value (goals or quality)
 	adherence: number;
 	quality: number;
 	goals: number;
+	breakdown: Breakdown;
 }
 interface BMatch {
 	round: number;
@@ -28,9 +38,22 @@ interface Bracket {
 	target: string;
 	harness: string;
 	model: string;
+	metric: Metric;
 	entrants: Entrant[];
 	rounds: BMatch[][];
 	champion: string | null;
+}
+
+/** Hover explanation of a score. */
+function scoreTitle(metric: Metric, e: Entrant): string {
+	if (metric === "quality")
+		return `Code quality ${e.quality.toFixed(1)} — blind judge median across criteria (×10); adherence ${e.adherence.toFixed(0)}`;
+	const b = e.breakdown;
+	const partial =
+		b.partials > 0
+			? `, ${b.partials} partial (+${b.partialCredit.toFixed(1)})`
+			: "";
+	return `Goals ${b.total.toFixed(1)} = ${b.passes} pass (+${b.passes}), ${b.fails} fail (−${b.fails})${partial} · bonus steps excluded · adherence ${e.adherence.toFixed(0)}`;
 }
 
 const BOX_W = 252;
@@ -41,21 +64,48 @@ const V_GAP = 20;
 const SLOT = BOX_H + V_GAP;
 const colX = (r: number) => r * (BOX_W + H_GAP);
 
-/** A soccer-ball goal glyph as inline SVG (cheap, vector). */
+/** A soccer ball: white sphere + the iconic black centre pentagon and the five
+ *  seams radiating to the rim. Reads clearly at this size; black/white so it's a
+ *  ball in either theme. */
 function GoalBall({ x, y }: { x: number; y: number }) {
+	const pent = "0,-2.7 2.6,-0.8 1.6,2.2 -1.6,2.2 -2.6,-0.8";
+	const seams = [
+		"M0,-2.7 L0,-6.6",
+		"M2.6,-0.8 L6.3,-2.0",
+		"M1.6,2.2 L3.9,5.4",
+		"M-1.6,2.2 L-3.9,5.4",
+		"M-2.6,-0.8 L-6.3,-2.0",
+	];
 	return (
-		<g transform={`translate(${x} ${y})`}>
-			<circle r="6" fill="var(--foreground)" opacity="0.12" />
+		<g transform={`translate(${x} ${y})`} aria-hidden>
 			<circle
-				r="6"
-				fill="none"
+				r="7"
+				fill="#ffffff"
 				stroke="var(--muted-foreground)"
-				strokeWidth="0.8"
+				strokeWidth="0.9"
 			/>
-			<path
-				d="M0 -3.2 2.8 -1 1.8 2.6 -1.8 2.6 -2.8 -1 Z"
-				fill="var(--muted-foreground)"
-			/>
+			{seams.map((d) => (
+				<path key={d} d={d} stroke="#1f2328" strokeWidth="0.8" fill="none" />
+			))}
+			<polygon points={pent} fill="#1f2328" />
+		</g>
+	);
+}
+
+/** A code-quality mark: a small brace-pair glyph for the quality metric. */
+function QualityMark({ x, y }: { x: number; y: number }) {
+	return (
+		<g
+			transform={`translate(${x} ${y})`}
+			stroke="var(--primary)"
+			strokeWidth="1.3"
+			fill="none"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden
+		>
+			<path d="M-1.5 -5 Q-4 -5 -4 -2 Q-4 0 -6 0 Q-4 0 -4 2 Q-4 5 -1.5 5" />
+			<path d="M1.5 -5 Q4 -5 4 -2 Q4 0 6 0 Q4 0 4 2 Q4 5 1.5 5" />
 		</g>
 	);
 }
@@ -66,12 +116,14 @@ function Row({
 	name,
 	ent,
 	isWinner,
+	metric,
 }: {
 	x: number;
 	y: number;
 	name: string | null;
 	ent?: Entrant;
 	isWinner: boolean;
+	metric: Metric;
 }) {
 	if (!name)
 		return (
@@ -105,14 +157,19 @@ function Row({
 			</text>
 			{ent && (
 				<>
-					<GoalBall x={x + BOX_W - 88} y={y + ROW_H / 2} />
+					{metric === "goals" ? (
+						<GoalBall x={x + BOX_W - 88} y={y + ROW_H / 2} />
+					) : (
+						<QualityMark x={x + BOX_W - 88} y={y + ROW_H / 2} />
+					)}
 					<text
 						x={x + BOX_W - 48}
 						y={y + ROW_H / 2 + 4}
 						textAnchor="end"
-						className="fill-foreground font-mono text-[12px] font-semibold"
+						className="cursor-help fill-foreground font-mono text-[12px] font-semibold"
 					>
-						{ent.goals.toFixed(1)}
+						{ent.score.toFixed(1)}
+						<title>{scoreTitle(metric, ent)}</title>
 					</text>
 					<text
 						x={x + BOX_W - 9}
@@ -209,6 +266,7 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 								name={m.a}
 								ent={m.a ? ent.get(m.a) : undefined}
 								isWinner={m.winner === m.a && !!m.a}
+								metric={bracket.metric}
 							/>
 							<Row
 								x={x}
@@ -216,6 +274,7 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 								name={m.b}
 								ent={m.b ? ent.get(m.b) : undefined}
 								isWinner={m.winner === m.b && !!m.b}
+								metric={bracket.metric}
 							/>
 						</g>
 					);
@@ -250,9 +309,12 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 	);
 }
 
+const groupKey = (b: Bracket) => `${b.target}|${b.harness}|${b.model}`;
+
 export function BracketView() {
 	const data = useFetch<Bracket[]>("/api/bracket");
-	const [sel, setSel] = useState(0);
+	const [group, setGroup] = useState<string | null>(null);
+	const [metric, setMetric] = useState<Metric>("goals");
 	if (!data) return <p className="text-muted-foreground">loading…</p>;
 	if (!data.length)
 		return (
@@ -264,44 +326,73 @@ export function BracketView() {
 				</p>
 			</>
 		);
-	const b = data[Math.min(sel, data.length - 1)] ?? data[0];
+	// unique groups in input order
+	const groups = [...new Map(data.map((b) => [groupKey(b), b])).values()];
+	const activeGroup = group ?? groupKey(groups[0] as Bracket);
+	const b =
+		data.find((x) => groupKey(x) === activeGroup && x.metric === metric) ??
+		data.find((x) => groupKey(x) === activeGroup) ??
+		data[0];
 	if (!b) return null;
+	const sat =
+		metric === "goals" &&
+		b.entrants.every((e) => e.adherence === b.entrants[0]?.adherence);
 
 	return (
 		<>
 			<h1 className="text-xl font-bold tracking-tight">🏆 Bracket bakeoff</h1>
 			<p className="mt-1 max-w-3xl text-[13px] text-muted-foreground">
-				Single-elimination tournament. Each PRD step that passes is a goal (+1),
-				a fail −1, a partial its credit; higher score advances, ties broken by
-				code quality → efficiency → seed. The{" "}
-				<span className="font-mono">N.Na</span> after each scoreline is the
-				absolute adherence — the rubric score, not the goals.{" "}
-				<span className="text-warn">Retrospective</span>: matches are played
-				from existing graded trials (live head-to-head runs are the follow-on).
+				Single-elimination tournament. Score by <strong>goals</strong> (each
+				passed PRD step +1, fail −1, partial its credit) or by{" "}
+				<strong>code quality</strong> (blind-judge points) — higher advances,
+				ties broken by the other metric → efficiency → seed. Hover a scoreline
+				for the breakdown; the <span className="font-mono">N.Na</span> is the
+				absolute adherence. <span className="text-warn">Retrospective</span>:
+				matches are played from existing graded trials.
 			</p>
 
-			<div className="mt-3 flex flex-wrap items-center gap-2">
-				{data.map((bb, i) => (
-					<button
-						type="button"
-						key={`${bb.target}|${bb.harness}|${bb.model}`}
-						onClick={() => setSel(i)}
-						className={`rounded-md px-2.5 py-1 text-[13px] ${i === sel ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-					>
-						{bb.target}{" "}
-						<span className="font-mono text-[11px] opacity-70">
-							{bb.entrants.length}
-						</span>
-					</button>
-				))}
+			<div className="mt-3 flex flex-wrap items-center gap-3">
+				<div className="flex flex-wrap items-center gap-2">
+					{groups.map((bb) => {
+						const k = groupKey(bb);
+						return (
+							<button
+								type="button"
+								key={k}
+								onClick={() => setGroup(k)}
+								className={`rounded-md px-2.5 py-1 text-[13px] ${k === activeGroup ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+							>
+								{bb.target}{" "}
+								<span className="font-mono text-[11px] opacity-70">
+									{bb.entrants.length}
+								</span>
+							</button>
+						);
+					})}
+				</div>
+				<div className="ml-auto flex items-center overflow-hidden rounded-md border border-border">
+					{(["goals", "quality"] as Metric[]).map((m) => (
+						<button
+							type="button"
+							key={m}
+							onClick={() => setMetric(m)}
+							className={`px-2.5 py-1 text-[13px] ${m === metric ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+						>
+							{m === "goals" ? "Goals" : "Code quality"}
+						</button>
+					))}
+				</div>
 			</div>
 
 			<p className="mt-2 text-[12px] text-muted-foreground">
-				{b.harness} / {b.model} · {b.entrants.length} entrants · seeded by
-				adherence · champion <span className="font-semibold">{b.champion}</span>
-				{b.entrants.every((e) => e.adherence === b.entrants[0]?.adherence) && (
+				{b.harness} / {b.model} · {b.entrants.length} entrants · scored by{" "}
+				<span className="font-semibold">
+					{metric === "goals" ? "PRD-pass goals" : "code quality"}
+				</span>{" "}
+				· champion <span className="font-semibold">{b.champion}</span>
+				{sat && (
 					<Badge variant="warn" className="ml-2">
-						adherence tied — decided on quality/efficiency
+						goals/adherence saturated — try Code quality
 					</Badge>
 				)}
 			</p>

@@ -11,14 +11,26 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadTarget } from "../targets";
-import { decideMatch, matchGoals, type Side, type StepResult } from "./scoring";
+import {
+	decideMatch,
+	type GoalBreakdown,
+	goalBreakdown,
+	type Side,
+	type StepResult,
+	type TiebreakReason,
+} from "./scoring";
+
+/** What the scoreline measures: PRD-pass goals, or code-quality points. */
+export type Metric = "goals" | "quality";
 
 export interface Entrant {
 	candidate: string;
-	seed: number;
-	adherence: number; // absolute prdAdherence (also the seed key)
+	seed: number; // seed within this metric
+	score: number; // the metric's value — what the bracket is played on
+	adherence: number; // absolute prdAdherence
 	quality: number; // absolute codeQuality
-	goals: number;
+	goals: number; // PRD-pass goal score
+	breakdown: GoalBreakdown; // how the goal score was built (hover explanation)
 	costUsd: number | null;
 	runId: string;
 }
@@ -36,6 +48,7 @@ export interface Bracket {
 	target: string;
 	harness: string;
 	model: string;
+	metric: Metric;
 	entrants: Entrant[];
 	rounds: BracketMatch[][]; // round 0 = first round … last = final
 	champion: string | null;
@@ -161,36 +174,63 @@ export async function buildBrackets(
 		if (cands.size < MIN_ENTRANTS) continue;
 		const [target = "", harness = "", model = ""] = gk.split("|");
 		const bonusIds = bonusByTarget.get(target) ?? new Set<string>();
-		// seed by adherence desc (stable by name for ties)
-		const ordered = [...cands.entries()].sort(
-			(a, b) => b[1].adherence - a[1].adherence || a[0].localeCompare(b[0]),
-		);
-		const entrants: Entrant[] = ordered.map(([candidate, r], i) => ({
-			candidate,
-			seed: i + 1,
-			adherence: r.adherence,
-			quality: r.quality,
-			goals: matchGoals(r.steps, bonusIds),
-			costUsd: r.costUsd,
-			runId: r.runId,
-		}));
-		brackets.push(playBracket(target, harness, model, entrants));
+		const bases = [...cands.entries()].map(([candidate, r]) => {
+			const breakdown = goalBreakdown(r.steps, bonusIds);
+			return {
+				candidate,
+				adherence: r.adherence,
+				quality: r.quality,
+				goals: breakdown.total,
+				breakdown,
+				costUsd: r.costUsd,
+				runId: r.runId,
+			};
+		});
+		// One bracket per metric — the view lets you toggle (e.g. quality when
+		// adherence/goals are saturated and the goals bracket is a wash).
+		brackets.push(playFor("goals", target, harness, model, bases));
+		brackets.push(playFor("quality", target, harness, model, bases));
 	}
-	// biggest, most-decided brackets first
-	brackets.sort((a, b) => b.entrants.length - a.entrants.length);
+	// biggest first; goals before quality within a group
+	brackets.sort(
+		(a, b) =>
+			b.entrants.length - a.entrants.length ||
+			a.target.localeCompare(b.target) ||
+			(a.metric === b.metric ? 0 : a.metric === "goals" ? -1 : 1),
+	);
 	return brackets;
 }
 
-function playBracket(
+type Base = Omit<Entrant, "seed" | "score">;
+
+/** Relabel decideMatch's generic primary/secondary reason for the metric. */
+function reasonLabel(metric: Metric, raw: TiebreakReason): string {
+	if (raw === "efficiency" || raw === "seed") return raw;
+	if (metric === "goals") return raw; // "goals" → goals, "quality" → quality
+	return raw === "goals" ? "quality" : "goals"; // primary/secondary swap
+}
+
+function playFor(
+	metric: Metric,
 	target: string,
 	harness: string,
 	model: string,
-	entrants: Entrant[],
+	bases: Base[],
 ): Bracket {
+	const scoreOf = (b: Base) => (metric === "goals" ? b.goals : b.quality);
+	// seed by the metric desc (stable by name)
+	const entrants: Entrant[] = [...bases]
+		.sort(
+			(a, b) =>
+				scoreOf(b) - scoreOf(a) || a.candidate.localeCompare(b.candidate),
+		)
+		.map((b, i) => ({ ...b, seed: i + 1, score: scoreOf(b) }));
+
 	const byName = new Map(entrants.map((e) => [e.candidate, e]));
+	// decideMatch compares primary then secondary; feed the metric as primary.
 	const sideOf = (e: Entrant): Side => ({
-		goals: e.goals,
-		quality: e.quality,
+		goals: e.score,
+		quality: metric === "goals" ? e.quality : e.goals,
 		tokens: e.costUsd ?? Number.POSITIVE_INFINITY,
 		seed: e.seed,
 	});
@@ -223,14 +263,14 @@ function playBracket(
 			} else if (ea && eb) {
 				const d = decideMatch(sideOf(ea), sideOf(eb));
 				winner = d.winner === "A" ? a : b;
-				reason = d.reason;
+				reason = reasonLabel(metric, d.reason);
 			}
 			matches.push({
 				round,
 				a,
 				b,
-				goalsA: ea?.goals ?? null,
-				goalsB: eb?.goals ?? null,
+				goalsA: ea?.score ?? null,
+				goalsB: eb?.score ?? null,
 				winner,
 				reason,
 				bye,
@@ -245,6 +285,7 @@ function playBracket(
 		target,
 		harness,
 		model,
+		metric,
 		entrants,
 		rounds,
 		champion: current[0] ?? null,

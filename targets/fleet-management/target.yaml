@@ -1,0 +1,48 @@
+name: fleet-management
+summary: Distance-based vehicle maintenance tracker exposed as an HTTP/JSON API.
+description: >
+  FleetCare API: create vehicles with a monotonic odometer, attach recurring
+  distance-interval maintenance tasks, complete them, and read back per-task and
+  aggregated vehicle status (Overdue / Due Soon / OK) derived from the odometer.
+  No browser UI — the contract is graded over HTTP/JSON (status codes, JSON
+  bodies, the status arithmetic). In-process persistence is acceptable.
+tags:
+  domain: fleet-maintenance
+  shape: rest-api
+  expectedUI: none
+version: "1.0.0"
+prdFile: PRD.md
+prdSha256: 8c8b980154e93f8e591921e6afd510b9d00940e76f1844d56dc1b49930000dde
+testplanFile: testplan.yaml
+conformanceSection: 'section 6 "REQUIRED for Conformance"'
+coverageMode: attested
+attestation: >
+  Coverage reviewed 2026-06-29: every REQUIRED item R1-R10 maps to >=1 test-plan
+  step (R1:S-1; R2:VEH-1,VEH-2; R3:VEH-3; R4:AGG-1; R5:STAT-2,ODO-1; R6:DEL-1;
+  R7:TASK-1,DEL-2; R8:TASK-1,STAT-1; R9:STAT-1,STAT-2,STAT-3; R10:AGG-1,AGG-2).
+  All checks are HTTP-observable (status codes + JSON bodies). The status
+  arithmetic (distance_elapsed / distance_until_due, the never-completed rule,
+  and the 1000-km Due-Soon boundary) was worked by hand from PRD §4.1/§5 and
+  recomputed to verify the expected statuses (Overdue/Due Soon/OK) at each step.
+coldStartContract:
+  - "`setup.sh` — installs all dependencies for your implementation."
+  - "`start.sh` — launches the JSON API on the port given by `$PORT` (default 3000)."
+deliverableNotes: >
+  Section 6 is the Definition of Done; Section 7 lists non-goals (no browser UI,
+  no accounts, no client/offline persistence, no rename/edit, no DB requirement —
+  in-process persistence is fine). Odometer/interval values are JSON integers;
+  status values are the exact strings "Overdue", "Due Soon", "OK". Validation
+  errors use `{ "error": "..." }`.
+fixtures: []
+source:
+  upstream: vibench-public
+  repo: https://github.com/ViBench/vibench-public
+  commit: 5baa6892bad7dcf6ec0bee4f44e4e46445271f19
+  originalDir: prds/fleet_management
+  license: Apache-2.0
+  note: >
+    Adapted from the ViBench `fleet_management` (FleetCare) browser PRD into an
+    API-only service: vehicles/tasks CRUD and the distance-based status engine
+    reframed as JSON endpoints. UI/DOM, offline/localStorage persistence, and the
+    delete-confirmation handshake were dropped; the status, ordering, and
+    aggregation rules are preserved verbatim.

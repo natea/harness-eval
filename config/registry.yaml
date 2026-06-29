@@ -198,6 +198,35 @@ candidates:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 15
 
+  # Ruflo: an agent meta-harness. Unlike the prompt/skill candidates, ruflo-core
+  # installs an MCP server (memory/agentdb/embeddings/browser/neural/swarm) — its
+  # framework kit IS the MCP toolset (it ships no spec-build slash commands), so the
+  # session is the base prompt. Fairness rests on the sandbox: single-model (no
+  # other-provider creds present → cannot route off-model), fresh per trial (no
+  # cross-trial memory), no external store. The fairness smoke verifies telemetry
+  # stays on the worker model with no external reach. Pin is assert-only (Claude
+  # Code installs marketplace HEAD).
+  - id: ruflo
+    name: Ruflo
+    repo: https://github.com/ruvnet/ruflo
+    pinnedVersion: 3.14.0
+    markerPaths:
+      - .claude-flow/
+      - .claude/
+      - CLAUDE.md
+    harnesses:
+      claude-code:
+        install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
+          - claude plugin marketplace add ruvnet/ruflo
+          - claude plugin install ruflo-core@ruflo
+          - "claude plugin list | grep -q 'ruflo-core@'"
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 10
+
   # Harness-agnostic baseline: NO framework install, the shared base prompt as
   # the only session step, valid on every harness (candidate-registry spec D5).
   # `bare` on claude-code vs `bare` on zerocode is the controlled harness-vs-

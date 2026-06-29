@@ -188,19 +188,46 @@ function Row({
 function BracketSvg({ bracket }: { bracket: Bracket }) {
 	const { rounds, entrants } = bracket;
 	const ent = new Map(entrants.map((e) => [e.candidate, e]));
-	// y-centre of each match
+	// y-centre of each match. Round 0 is evenly spaced; every later match sits at
+	// the mean of the matches that feed it (the matches whose winner is one of its
+	// participants). This holds for arbitrary fan-in — the round-1-vs-baseline
+	// gauntlet feeds an uneven number of advancers into the winners bracket — not
+	// just a clean binary tree.
 	const ys: number[][] = [];
 	rounds.forEach((matches, r) => {
-		ys[r] = matches.map((_, i) =>
-			r === 0
-				? i * SLOT + BOX_H / 2
-				: ((ys[r - 1]?.[2 * i] ?? 0) + (ys[r - 1]?.[2 * i + 1] ?? 0)) / 2,
-		);
+		if (r === 0) {
+			ys[r] = matches.map((_, i) => i * SLOT + BOX_H / 2);
+			return;
+		}
+		const prev = rounds[r - 1] ?? [];
+		const prevYs = ys[r - 1] ?? [];
+		ys[r] = matches.map((m, i) => {
+			const feeders: number[] = [];
+			for (const name of [m.a, m.b]) {
+				if (!name) continue;
+				const idx = prev.findIndex((pm) => pm.winner === name);
+				const y = idx >= 0 ? prevYs[idx] : undefined;
+				if (y != null) feeders.push(y);
+			}
+			return feeders.length
+				? feeders.reduce((a, b) => a + b, 0) / feeders.length
+				: i * SLOT + BOX_H / 2;
+		});
 	});
+	// The champion flows from whatever match it actually won in the last round —
+	// the final when the winners' bracket ran, or its winning gauntlet match when
+	// only one framework survived the baseline. Anchor the champion box (and its
+	// connector) to that match so it is never left floating.
+	const lastIdx = rounds.length - 1;
+	const lastRound = rounds[lastIdx] ?? [];
+	const champIdx = bracket.champion
+		? lastRound.findIndex((m) => m.winner === bracket.champion)
+		: -1;
+	const champSrc = champIdx >= 0 ? champIdx : 0;
 	const champCol = rounds.length;
 	const totalW = colX(champCol) + BOX_W + 20;
 	const totalH = Math.max(rounds[0]?.length ?? 1, 1) * SLOT;
-	const champY = ys[rounds.length - 1]?.[0] ?? BOX_H / 2;
+	const champY = ys[lastIdx]?.[champSrc] ?? BOX_H / 2;
 
 	return (
 		<svg
@@ -209,13 +236,21 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 			role="img"
 			aria-label={`${bracket.target} bracket`}
 		>
-			{/* connectors: each match → its parent in the next round */}
+			{/* connectors: each match → the next-round match its winner plays in. A
+			    match whose winner does not appear next round (a framework knocked out
+			    by the baseline) has no forward line — the upset visibly dead-ends. */}
 			{rounds.slice(0, -1).map((matches, r) =>
 				matches.map((m, i) => {
+					if (!m.winner) return null;
+					const next = rounds[r + 1] ?? [];
+					const j = next.findIndex(
+						(nm) => nm.a === m.winner || nm.b === m.winner,
+					);
+					if (j < 0) return null;
 					const x1 = colX(r) + BOX_W;
 					const y1 = ys[r]?.[i] ?? 0;
 					const x2 = colX(r + 1);
-					const y2 = ys[r + 1]?.[Math.floor(i / 2)] ?? 0;
+					const y2 = ys[r + 1]?.[j] ?? 0;
 					const midX = (x1 + x2) / 2;
 					return (
 						<path
@@ -228,13 +263,15 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 					);
 				}),
 			)}
-			{/* connector from final → champion */}
-			<path
-				d={`M${colX(rounds.length - 1) + BOX_W} ${champY} H${colX(champCol)}`}
-				fill="none"
-				stroke="var(--border)"
-				strokeWidth="1.5"
-			/>
+			{/* connector from the champion's winning match → the champion box */}
+			{bracket.champion && (
+				<path
+					d={`M${colX(lastIdx) + BOX_W} ${champY} H${colX(champCol)}`}
+					fill="none"
+					stroke="var(--border)"
+					strokeWidth="1.5"
+				/>
+			)}
 			{/* match boxes */}
 			{rounds.map((matches, r) =>
 				matches.map((m, i) => {
@@ -314,7 +351,7 @@ const groupKey = (b: Bracket) => `${b.target}|${b.harness}|${b.model}`;
 export function BracketView() {
 	const data = useFetch<Bracket[]>("/api/bracket");
 	const [group, setGroup] = useState<string | null>(null);
-	const [metric, setMetric] = useState<Metric>("goals");
+	const [metric, setMetric] = useState<Metric>("quality");
 	if (!data) return <p className="text-muted-foreground">loading…</p>;
 	if (!data.length)
 		return (
@@ -342,7 +379,12 @@ export function BracketView() {
 		<>
 			<h1 className="text-xl font-bold tracking-tight">🏆 Bracket bakeoff</h1>
 			<p className="mt-1 max-w-3xl text-[13px] text-muted-foreground">
-				Single-elimination tournament. Score by <strong>goals</strong> (each
+				Single-elimination gauntlet. <strong>Round 1</strong>: every framework
+				faces the <strong>no-framework baseline</strong> (bare) — beat it to
+				advance; losing to bare is an{" "}
+				<span className="text-warn">upset</span> that knocks the framework out.
+				The survivors play each other to a champion. Score by{" "}
+				<strong>goals</strong> (each
 				passed PRD step +1, fail −1, partial its credit) or by{" "}
 				<strong>code quality</strong> (blind-judge points) — higher advances,
 				ties broken by the other metric → efficiency → seed. Hover a scoreline

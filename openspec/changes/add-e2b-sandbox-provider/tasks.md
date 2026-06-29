@@ -15,7 +15,7 @@
 
 ## 3. Validation
 
-- [ ] 3.1 Unit tests: enum/CLI plumbing, preflight failure paths (mocked SDK)
+- [x] 3.1 Unit tests: enum/CLI plumbing, preflight failure paths (mocked SDK)
 - [x] 3.2 Live smoke: provision → exec env propagation → writeFile/copyOut roundtrip → destroy, plus contamination check between two concurrent E2B trials
 - [x] 3.3 One real candidate trial (cheapest protocol: superpowers) end-to-end on E2B; verify provenance records provider/template and scorecard generation
-- [ ] 3.4 Document cost-per-trial observation and tier requirements in `docs/`
+- [x] 3.4 Document cost-per-trial observation and tier requirements in `docs/`

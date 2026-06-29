@@ -12,3 +12,7 @@ The studio SHALL provide a Bracket view that renders a bakeoff as a single-elimi
 #### Scenario: Empty or not-yet-started bracket
 - **WHEN** a bracket has been seeded but no match has finished
 - **THEN** the view shows the seeded matchups and projected match/build counts without implying any result
+
+#### Scenario: Gauntlet first round and upsets render
+- **WHEN** a bracket's field includes the no-framework baseline and is rendered
+- **THEN** the first column shows every framework's match against the baseline, a framework's loss to the baseline is shown as an upset whose line dead-ends (does not advance), and the survivors' matches connect forward to a champion — the layout placing each later match between the matches that feed it, not assuming a strict binary tree

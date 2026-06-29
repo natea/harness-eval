@@ -33,7 +33,7 @@ interface Bracket {
 	champion: string | null;
 }
 
-const BOX_W = 210;
+const BOX_W = 252;
 const ROW_H = 26;
 const BOX_H = ROW_H * 2;
 const H_GAP = 72;
@@ -105,16 +105,17 @@ function Row({
 			</text>
 			{ent && (
 				<>
-					<GoalBall x={x + BOX_W - 58} y={y + ROW_H / 2} />
+					<GoalBall x={x + BOX_W - 88} y={y + ROW_H / 2} />
 					<text
 						x={x + BOX_W - 48}
 						y={y + ROW_H / 2 + 4}
+						textAnchor="end"
 						className="fill-foreground font-mono text-[12px] font-semibold"
 					>
 						{ent.goals.toFixed(1)}
 					</text>
 					<text
-						x={x + BOX_W - 10}
+						x={x + BOX_W - 9}
 						y={y + ROW_H / 2 + 4}
 						textAnchor="end"
 						className="fill-muted-foreground font-mono text-[10px]"

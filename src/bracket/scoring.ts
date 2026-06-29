@@ -12,18 +12,48 @@ export interface StepResult {
 	credit: number; // [0,1]; pass=1, fail=0, partial in between
 }
 
+export interface GoalBreakdown {
+	passes: number; // +1 each
+	fails: number; // −1 each
+	partials: number; // count of partial steps
+	partialCredit: number; // Σ credit over partials
+	total: number; // the goal score
+}
+
+/** Per-outcome breakdown of the goal score over non-bonus steps — how the number
+ *  was built (the hover explanation in the bracket view). */
+export function goalBreakdown(
+	stepResults: StepResult[],
+	bonusIds: ReadonlySet<string> = new Set(),
+): GoalBreakdown {
+	let passes = 0;
+	let fails = 0;
+	let partials = 0;
+	let partialCredit = 0;
+	for (const s of stepResults) {
+		if (bonusIds.has(s.stepId)) continue;
+		if (s.outcome === "pass") passes++;
+		else if (s.outcome === "fail") fails++;
+		else {
+			partials++;
+			partialCredit += s.credit ?? 0;
+		}
+	}
+	return {
+		passes,
+		fails,
+		partials,
+		partialCredit,
+		total: passes - fails + partialCredit,
+	};
+}
+
 /** Goals = Σ over non-bonus steps of +1 (pass) / −1 (fail) / +credit (partial). */
 export function matchGoals(
 	stepResults: StepResult[],
 	bonusIds: ReadonlySet<string> = new Set(),
 ): number {
-	let goals = 0;
-	for (const s of stepResults) {
-		if (bonusIds.has(s.stepId)) continue;
-		goals +=
-			s.outcome === "pass" ? 1 : s.outcome === "fail" ? -1 : (s.credit ?? 0);
-	}
-	return goals;
+	return goalBreakdown(stepResults, bonusIds).total;
 }
 
 export interface Side {

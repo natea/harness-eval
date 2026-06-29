@@ -8,6 +8,7 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 | Target | Shape | Expected UI | Summary |
 | --- | --- | --- | --- |
 | `cli-tool` | cli | none | A line-oriented tally/aggregation CLI over newline-delimited records. |
+| `fleet-management` | rest-api | none | Distance-based vehicle maintenance tracker exposed as an HTTP/JSON API. |
 | `kanban` | rest-api-ordered-collection | none | Sprint board API — four fixed columns with ordered, movable cards. |
 | `marketplace` | rest-api-state-machine | none | Marketplace API with a capability-link order lifecycle (available → pending → sold). |
 | `notes` | rest-api | none | Password-gated plain-text notes service — HTTP/JSON CRUD with search. |
@@ -23,6 +24,15 @@ What each shipped eval target builds, and how much rendered UI a *conformant* bu
 - **Expected UI:** none
 
 `tally` — a single-binary command-line tool that counts and summarizes newline-delimited records from stdin or files, with flags for grouping and output formatting (POSIX `wc` semantics where specified). Graded by invoking the built binary through `run.sh` and asserting stdout + exit codes against the frozen Definition of Done. No rendered UI.
+
+## `fleet-management` (v1.0.0)
+
+- **Domain:** fleet-maintenance
+- **Shape:** rest-api
+- **Expected UI:** none
+- **Adapted from:** vibench-public
+
+FleetCare API: create vehicles with a monotonic odometer, attach recurring distance-interval maintenance tasks, complete them, and read back per-task and aggregated vehicle status (Overdue / Due Soon / OK) derived from the odometer. No browser UI — the contract is graded over HTTP/JSON (status codes, JSON bodies, the status arithmetic). In-process persistence is acceptable.
 
 ## `kanban` (v1.0.0)
 

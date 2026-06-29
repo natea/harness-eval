@@ -1,0 +1,148 @@
+# Frozen test plan for the `fleet-management` target (FleetCare Maintenance API).
+# Adapted from the ViBench `fleet_management` PRD/tests, re-authored as
+# HTTP-observable checks (no browser, no localStorage). ViBench semantics:
+# sequential, weighted, fatal gates halt. Evidence = requests issued (curl) +
+# observed status codes / JSON bodies.
+#
+# Worked status arithmetic used below (all by hand from PRD §4.1, §5):
+#   Vehicle V odometer 10000, Task A interval 5000.
+#     new task, never completed                       -> Overdue
+#     complete A @10000: elapsed 0,   until_due 5000  -> OK        (>1000)
+#     odometer 14000:    elapsed 4000, until_due 1000 -> Due Soon  (1..1000)
+#     odometer 13999 would give until_due 1001        -> OK        (boundary)
+#     odometer 15000:    elapsed 5000 >= interval 5000 -> Overdue
+version: "1.0.0"
+prdSha256: 8c8b980154e93f8e591921e6afd510b9d00940e76f1844d56dc1b49930000dde
+
+steps:
+  - id: S-1
+    covers: ["6.R1"]
+    description: setup.sh installs deps and start.sh boots the service on $PORT
+    check: >
+      Run ./setup.sh in a clean copy (exit 0). Then PORT=3000 ./start.sh & ;
+      poll http://localhost:3000/ or any documented path until the server
+      answers within 30s. Fatal: if the service never serves, the API cannot be
+      evaluated.
+    weight: 4
+    fatal: true
+
+  - id: VEH-1
+    covers: ["6.R2"]
+    description: vehicle creation returns a new OK vehicle with no tasks
+    check: >
+      POST /api/vehicles {"name":"Truck 1","odometer":10000}. Assert 201 and the
+      body has a non-empty id, name "Truck 1", odometer 10000, status "OK", and
+      tasks == []. Keep this id as V for later steps.
+    weight: 3
+
+  - id: VEH-2
+    covers: ["6.R2"]
+    description: vehicle creation validation
+    check: >
+      POST /api/vehicles with name "" -> 400; with name omitted -> 400; with
+      odometer -1 -> 400; with odometer 1.5 -> 400; with odometer omitted -> 400.
+      Each error body has an `error` field. None of these create a vehicle.
+    weight: 3
+
+  - id: VEH-3
+    covers: ["6.R3"]
+    description: list returns vehicles in creation order with aggregated status
+    check: >
+      Create a second vehicle {"name":"Van 2","odometer":0}. GET /api/vehicles ->
+      200 with an array whose first element is V ("Truck 1") and second is
+      "Van 2" (creation order, oldest first). Each element carries id, name,
+      odometer, and a status string; both are "OK" (no tasks yet).
+    weight: 3
+
+  - id: TASK-1
+    covers: ["6.R7", "6.R8"]
+    description: task creation, validation, and the new-task-is-Overdue rule
+    check: >
+      POST /api/vehicles/<V>/tasks {"name":"Oil change","interval":5000} -> 201
+      with vehicleId V, name "Oil change", interval 5000, lastCompletedOdometer
+      null, status "Overdue" (never completed). Keep this id as A. Then assert
+      validation: interval 0 -> 400; interval -5 -> 400; interval 2.5 -> 400;
+      name "" -> 400. And POST a task to a non-existent vehicle id -> 404.
+    weight: 5
+
+  - id: STAT-1
+    covers: ["6.R8", "6.R9"]
+    description: completing a task records the current odometer and recomputes OK
+    check: >
+      POST /api/tasks/<A>/complete -> 200 with lastCompletedOdometer 10000
+      (V's current odometer) and status "OK" (elapsed 0, until_due 5000 > 1000).
+      Then POST /api/tasks/<A>/complete again with the odometer unchanged -> 200
+      (completion allowed even when the odometer has not changed), still "OK".
+    weight: 5
+
+  - id: STAT-2
+    covers: ["6.R5", "6.R9"]
+    description: Due Soon boundary at distance_until_due == 1000
+    check: >
+      PATCH /api/vehicles/<V>/odometer {"odometer":14000} -> 200. GET
+      /api/vehicles/<V> and assert task A status is "Due Soon" (elapsed 4000,
+      until_due exactly 1000, within 1..1000) and the vehicle aggregate is also
+      "Due Soon".
+    weight: 5
+
+  - id: STAT-3
+    covers: ["6.R9"]
+    description: Overdue when distance_elapsed reaches the interval
+    check: >
+      PATCH /api/vehicles/<V>/odometer {"odometer":15000} -> 200. GET
+      /api/vehicles/<V> and assert task A status is "Overdue" (elapsed 5000 >=
+      interval 5000) and the vehicle aggregate is "Overdue".
+    weight: 4
+
+  - id: ODO-1
+    covers: ["6.R5"]
+    description: odometer is monotonic and integer-validated
+    check: >
+      PATCH /api/vehicles/<V>/odometer {"odometer":14999} (below current 15000)
+      -> 400 with an `error` field; GET /api/vehicles/<V> still shows odometer
+      15000 (state unchanged). PATCH {"odometer":15.5} -> 400. PATCH a
+      non-existent vehicle id -> 404. PATCH {"odometer":15000} (equal) -> 200.
+    weight: 4
+
+  - id: AGG-1
+    covers: ["6.R4", "6.R10"]
+    description: aggregation is most-urgent; detail tasks are grouped then ordered
+    check: >
+      On V (odometer 15000; task A is Overdue), create three more tasks in this
+      order and complete each at the current odometer 15000:
+      B {"name":"Tires","interval":100000} -> until_due 100000 -> OK;
+      C {"name":"Wash","interval":800}     -> until_due 800    -> Due Soon;
+      D {"name":"Filter","interval":50000} -> until_due 50000  -> OK.
+      GET /api/vehicles/<V>: assert aggregate status "Overdue" (A drives it), and
+      that `tasks` is grouped Overdue [A] first, then Due Soon [C], then OK
+      [B, D] — and within the OK group B precedes D (creation order, oldest
+      first).
+    weight: 5
+
+  - id: AGG-2
+    covers: ["6.R10"]
+    description: a vehicle with no tasks aggregates to OK
+    check: >
+      GET /api/vehicles and assert "Van 2" (created with no tasks) has aggregated
+      status "OK".
+    weight: 2
+
+  - id: DEL-1
+    covers: ["6.R6"]
+    description: deleting a vehicle removes it and its tasks
+    check: >
+      DELETE /api/vehicles/<V> -> 204. GET /api/vehicles/<V> -> 404. DELETE
+      /api/tasks/<A> -> 404 (the task was removed with its vehicle). DELETE a
+      non-existent vehicle id -> 404.
+    weight: 3
+
+  - id: DEL-2
+    covers: ["6.R7"]
+    description: deleting a single task leaves its vehicle intact
+    check: >
+      Create a fresh vehicle {"name":"Bus 9","odometer":500} and a task
+      {"name":"Wash","interval":3000} on it. DELETE /api/tasks/<that task> ->
+      204; GET the vehicle -> 200 with tasks == []; DELETE the same task id again
+      -> 404.
+    weight: 2
+    bonus: true

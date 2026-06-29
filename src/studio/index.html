@@ -3,7 +3,9 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Eval Studio</title>
+		<!-- Default tab title before React mounts; frontend.tsx then refines it to
+		     "CodingHarness — <page>" per route. -->
+		<title>CodingHarness</title>
 		<link rel="stylesheet" href="./index.css" />
 		<!-- studio-theming: resolve + apply the theme before first paint so the
 		     page never flashes the wrong palette. Mirrors frontend.tsx's logic. -->

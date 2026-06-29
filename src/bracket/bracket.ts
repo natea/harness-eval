@@ -56,6 +56,10 @@ export interface Bracket {
 
 const MIN_ENTRANTS = 4;
 
+/** No-framework baselines — the round-1 gatekeeper every framework must beat to
+ *  advance. Mirrors BASELINES in src/report/inverse-scaling.ts. */
+const BASELINES = new Set(["bare", "codex-baseline"]);
+
 const qualityOf = (g: {
 	quality?: { criteria?: { score?: number }[] };
 }): number => {
@@ -210,39 +214,26 @@ function reasonLabel(metric: Metric, raw: TiebreakReason): string {
 	return raw === "goals" ? "quality" : "goals"; // primary/secondary swap
 }
 
-function playFor(
+/** Build the seeded single-elimination rounds for a pool of entrants, numbering
+ *  rounds from `startRound`. Returns the rounds plus the champion (the pool's
+ *  winner). A pool of 0 → no rounds, null champion; a pool of 1 → no rounds, that
+ *  entrant is champion (it has nobody left to play). */
+function seededRounds(
 	metric: Metric,
-	target: string,
-	harness: string,
-	model: string,
-	bases: Base[],
-): Bracket {
-	const scoreOf = (b: Base) => (metric === "goals" ? b.goals : b.quality);
-	// seed by the metric desc (stable by name)
-	const entrants: Entrant[] = [...bases]
-		.sort(
-			(a, b) =>
-				scoreOf(b) - scoreOf(a) || a.candidate.localeCompare(b.candidate),
-		)
-		.map((b, i) => ({ ...b, seed: i + 1, score: scoreOf(b) }));
-
-	const byName = new Map(entrants.map((e) => [e.candidate, e]));
-	// decideMatch compares primary then secondary; feed the metric as primary.
-	const sideOf = (e: Entrant): Side => ({
-		goals: e.score,
-		quality: metric === "goals" ? e.quality : e.goals,
-		tokens: e.costUsd ?? Number.POSITIVE_INFINITY,
-		seed: e.seed,
-	});
-
-	const size = nextPow2(entrants.length);
+	pool: Entrant[],
+	byName: Map<string, Entrant>,
+	sideOf: (e: Entrant) => Side,
+	startRound: number,
+): { rounds: BracketMatch[][]; champion: string | null } {
+	if (pool.length <= 1)
+		return { rounds: [], champion: pool[0]?.candidate ?? null };
+	const size = nextPow2(pool.length);
 	const slots = seedSlots(size).map((seed) =>
-		seed <= entrants.length ? (entrants[seed - 1]?.candidate ?? null) : null,
+		seed <= pool.length ? (pool[seed - 1]?.candidate ?? null) : null,
 	);
-
 	const rounds: BracketMatch[][] = [];
 	let current = slots; // candidate names (or null = bye) entering this round
-	let round = 0;
+	let round = startRound;
 	while (current.length > 1) {
 		const matches: BracketMatch[] = [];
 		const winners: (string | null)[] = [];
@@ -281,13 +272,84 @@ function playFor(
 		current = winners;
 		round++;
 	}
+	return { rounds, champion: current[0] ?? null };
+}
+
+function playFor(
+	metric: Metric,
+	target: string,
+	harness: string,
+	model: string,
+	bases: Base[],
+): Bracket {
+	const scoreOf = (b: Base) => (metric === "goals" ? b.goals : b.quality);
+	// seed by the metric desc (stable by name)
+	const entrants: Entrant[] = [...bases]
+		.sort(
+			(a, b) =>
+				scoreOf(b) - scoreOf(a) || a.candidate.localeCompare(b.candidate),
+		)
+		.map((b, i) => ({ ...b, seed: i + 1, score: scoreOf(b) }));
+
+	const byName = new Map(entrants.map((e) => [e.candidate, e]));
+	// decideMatch compares primary then secondary; feed the metric as primary.
+	const sideOf = (e: Entrant): Side => ({
+		goals: e.score,
+		quality: metric === "goals" ? e.quality : e.goals,
+		tokens: e.costUsd ?? Number.POSITIVE_INFINITY,
+		seed: e.seed,
+	});
+
+	// The baseline (bare / codex-baseline) is the round-1 gatekeeper, not a normal
+	// seed: every framework must beat it to advance. Losing to bare is an UPSET and
+	// knocks the framework out. With no baseline (or no frameworks), fall back to a
+	// plain seeded single-elim over everyone.
+	const baseline = entrants.find((e) => BASELINES.has(e.candidate));
+	const frameworks = entrants.filter((e) => !BASELINES.has(e.candidate));
+
+	if (!baseline || frameworks.length === 0) {
+		const { rounds, champion } = seededRounds(
+			metric,
+			entrants,
+			byName,
+			sideOf,
+			0,
+		);
+		return { target, harness, model, metric, entrants, rounds, champion };
+	}
+
+	// Round 0 — the gauntlet: each framework vs the baseline. Winners (frameworks
+	// that beat bare) advance; an upset (bare wins) eliminates that framework.
+	const baseSide = sideOf(baseline);
+	const playIn: BracketMatch[] = [];
+	const advancers: Entrant[] = [];
+	for (const f of frameworks) {
+		const d = decideMatch(sideOf(f), baseSide);
+		const frameworkWon = d.winner === "A";
+		playIn.push({
+			round: 0,
+			a: f.candidate,
+			b: baseline.candidate,
+			goalsA: f.score,
+			goalsB: baseline.score,
+			winner: frameworkWon ? f.candidate : baseline.candidate,
+			reason: reasonLabel(metric, d.reason),
+			bye: false,
+		});
+		if (frameworkWon) advancers.push(f);
+	}
+
+	// Rounds 1+ — the frameworks that beat bare play each other to a champion.
+	const winners = seededRounds(metric, advancers, byName, sideOf, 1);
+	const champion =
+		advancers.length === 0 ? baseline.candidate : winners.champion;
 	return {
 		target,
 		harness,
 		model,
 		metric,
 		entrants,
-		rounds,
-		champion: current[0] ?? null,
+		rounds: [playIn, ...winners.rounds],
+		champion,
 	};
 }

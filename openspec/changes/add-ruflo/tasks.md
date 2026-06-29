@@ -13,19 +13,35 @@
 
 ## 2. Confirm exact commands (docs / v3.14.0)
 
-- [ ] 2.1 Confirm the marketplace name + plugin slug for `ruflo-core@ruflo` and the
-  exact `claude plugin list` version string at v3.14.0
-- [ ] 2.2 Confirm the Lite plugin's slash-command set and the recommended
-  spec-build sequence; record it in the registry entry
+- [x] 2.1 Confirmed at v3.14.0: repo `ruvnet/ruflo` exists; tag `v3.14.0` is real
+  (latest v3.14.4). Marketplace name `ruflo`; plugin `ruflo-core` →
+  `claude plugin install ruflo-core@ruflo`. NOTE: `marketplace add ruvnet/ruflo`
+  pulls HEAD, not the tag (assert-only pin gotcha); ruflo-core's plugin.json
+  version is `0.2.2`, so the version assert must target that, not the repo tag.
+- [x] 2.2 Confirmed ruflo-core's command set: only `/ruflo-status` and `/witness`
+  (observability) — there is NO spec-build orchestration command in ruflo-core.
+  The build commands live in OTHER plugins (ruflo-swarm, ruflo-autopilot). So a
+  Lite session is just the base prompt; ruflo's value is its MCP toolset, not slash
+  commands.
 
-## 3. Fairness + isolation guards (gating)
+## 3. Fairness + isolation guards (gating) — **BLOCKED, see finding**
 
-- [ ] 3.1 Single-model: ensure Ruflo uses only the pinned worker model — no routing
-  to other providers. Constrain or assert; mark single-model-only if needed
-- [ ] 3.2 Isolation: confirm the Lite path runs entirely in the trial sandbox with
-  no MCP server, no background daemons, and no federation reaching outside it
-- [ ] 3.3 No cross-trial state: confirm no persistent memory / self-learning is
-  carried between trials (fresh sandbox + no external store)
+> **Finding (blocker).** ruflo-core v3.14.0 is NOT the "slash-commands-only, no-MCP
+> Lite path" this change assumed. Its plugin.json: *"registers the ruflo MCP server
+> (300+ tools across memory/agentdb/embeddings/hooks/aidefence/neural/autopilot/
+> browser/agent/swarm), 3 generalist agents, 3 skills"* — it ships `.mcp.json` and
+> `hooks/`. So:
+
+- [ ] 3.1 Single-model — UNVERIFIED. ruflo advertises `neural`/multi-provider; the
+  sandbox lacks other-provider creds (so it likely can't route off-model), but this
+  needs telemetry confirmation in a real trial (4.2).
+- [ ] 3.2 Isolation — **FAILS as specified.** ruflo-core registers an MCP server
+  (memory/browser/swarm/neural) + hooks. The spec's "no MCP server" cannot hold for
+  ruflo-core at v3.14.0. Either (a) accept MCP-in-sandbox as ruflo's framework kit
+  (re-scope this gate), or (b) install with the MCP server disabled (a tool-stripped
+  ruflo that may be hollow — its value IS the MCP tools).
+- [ ] 3.3 No cross-trial state — likely OK via fresh-sandbox-per-trial (memory store
+  is sandbox-local, empty each trial) PROVIDED no external store; confirm in 4.2.
 
 ## 4. Validation
 

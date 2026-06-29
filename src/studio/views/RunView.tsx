@@ -16,6 +16,7 @@ import {
 	TooltipTrigger,
 } from "../components/ui/tooltip";
 import { DEFAULT_WEIGHTS, DIM_LABELS, reweight, useFetch } from "../lib/api";
+import { Markdown, YamlBlock } from "../lib/markdown";
 import { Bar, ColHead, DIM_KEYS, WeightControls } from "./shared";
 
 interface RunResults {
@@ -58,7 +59,11 @@ function StepComparison({
 		const s = t.grades?.adherence?.stepResults.find((x) => x.stepId === id);
 		if (!s) return <span className="text-muted-foreground">·</span>;
 		const icon =
-			s.outcome === "pass" ? "✅" : s.outcome === "partial" ? `🟡${s.credit}` : "❌";
+			s.outcome === "pass"
+				? "✅"
+				: s.outcome === "partial"
+					? `🟡${s.credit}`
+					: "❌";
 		return (
 			<Tooltip>
 				<TooltipTrigger asChild>
@@ -211,8 +216,9 @@ interface RunPrd {
 	currentMatch: boolean;
 }
 
-/** The input spec a run was graded against (input-spec-viewer): the PRD + test
- *  plan, collapsed by default, rendered as raw text next to the scorecard. */
+/** The input spec a run was graded against (input-spec-viewer): the PRD rendered
+ *  as Markdown and the test plan as syntax-coloured YAML, collapsed by default
+ *  next to the scorecard. */
 function SpecPanel({ runId }: { runId: string }) {
 	const data = useFetch<RunPrd>(`/api/runs/${runId}/prd`);
 	if (!data) return null;
@@ -227,25 +233,26 @@ function SpecPanel({ runId }: { runId: string }) {
 						<Badge variant="warn">frozen PRD not available</Badge> this run's
 						PRD hash (
 						<span className="font-mono">{data.sha.slice(0, 12)}…</span>) matches
-						no current target — it was re-frozen since the run, and only the hash
-						is archived per run.
+						no current target — it was re-frozen since the run, and only the
+						hash is archived per run.
 					</p>
 				) : (
 					<>
 						<div className="text-[12px] text-muted-foreground">
 							PRD.md · {data.name}
 						</div>
-						<pre className="mt-1 max-h-[480px] overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[12px]">
-							{data.prd}
-						</pre>
+						<div className="mt-1 max-h-[480px] overflow-auto rounded bg-muted p-3">
+							<Markdown source={data.prd} />
+						</div>
 						{data.testPlan && (
 							<>
 								<div className="mt-3 text-[12px] text-muted-foreground">
 									testplan.yaml
 								</div>
-								<pre className="mt-1 max-h-[360px] overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[11px]">
-									{data.testPlan}
-								</pre>
+								<YamlBlock
+									source={data.testPlan}
+									className="mt-1 max-h-[360px]"
+								/>
 							</>
 						)}
 					</>
@@ -256,9 +263,11 @@ function SpecPanel({ runId }: { runId: string }) {
 }
 
 export function RunView({ runId }: { runId: string }) {
-	const entry = useFetch<{ supported: boolean; error?: string; results?: RunResults }>(
-		`/api/runs/${runId}`,
-	);
+	const entry = useFetch<{
+		supported: boolean;
+		error?: string;
+		results?: RunResults;
+	}>(`/api/runs/${runId}`);
 	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
 	// This session's live jobs — a run that's still building/grading isn't on disk
 	// yet, so /api/runs 404s. Fall back to the queue so the run page shows live
@@ -333,7 +342,9 @@ export function RunView({ runId }: { runId: string }) {
 						<TableBody>
 							{rows.map((s, i) => (
 								<TableRow key={`${s.candidate}|${s.harness}|${s.model}`}>
-									<TableCell className="text-muted-foreground">{i + 1}</TableCell>
+									<TableCell className="text-muted-foreground">
+										{i + 1}
+									</TableCell>
 									<TableCell className="font-semibold">{s.candidate}</TableCell>
 									<TableCell>
 										<Bar v={s.rw} />
@@ -397,7 +408,9 @@ export function RunView({ runId }: { runId: string }) {
 											: "—"}
 									</TableCell>
 									<TableCell className="font-mono text-[12px]">
-										{t.grades?.quality ? t.grades.quality.score.toFixed(0) : "—"}
+										{t.grades?.quality
+											? t.grades.quality.score.toFixed(0)
+											: "—"}
 									</TableCell>
 									<TableCell className="font-mono text-[12px]">
 										{t.telemetry

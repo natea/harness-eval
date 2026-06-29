@@ -12,6 +12,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
+import { buildInverseScaling } from "../report/inverse-scaling";
 import { loadTarget } from "../targets";
 import index from "./index.html";
 import { cancelRun, getQueue, launchRun, regradeRun } from "./launcher";
@@ -97,6 +98,7 @@ const server = Bun.serve({
 	routes: {
 		"/": index,
 		"/configure": index,
+		"/inverse-scaling": index,
 		"/runs": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
@@ -146,6 +148,15 @@ const server = Bun.serve({
 
 		// Live status of studio-launched runs.
 		"/api/queue": { GET: () => Response.json(getQueue()) },
+
+		// Inverse-scaling view (explore-inverse-scaling-report): marginal harness
+		// gain over the no-framework baseline vs. baseline strength, on the two
+		// absolute axes. Derived read-only from runs/ — never the run-normalized
+		// composite.
+		"/api/inverse-scaling": {
+			GET: async () =>
+				Response.json(await buildInverseScaling("runs", "targets")),
+		},
 
 		// Resume grading for a run with built-but-ungraded trials (no rebuild).
 		"/api/regrade": {

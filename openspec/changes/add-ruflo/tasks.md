@@ -32,23 +32,23 @@
 > browser/agent/swarm), 3 generalist agents, 3 skills"* — it ships `.mcp.json` and
 > `hooks/`. So:
 
-- [ ] 3.1 Single-model — UNVERIFIED. ruflo advertises `neural`/multi-provider; the
+- [x] 3.1 Single-model — CONFIRMED (smoke transcript: only claude-opus-4-6, no off-model). ruflo advertises `neural`/multi-provider; the
   sandbox lacks other-provider creds (so it likely can't route off-model), but this
   needs telemetry confirmation in a real trial (4.2).
-- [ ] 3.2 Isolation — **FAILS as specified.** ruflo-core registers an MCP server
+- [x] 3.2 Isolation — accepted MCP-as-kit (per decision); ran sandbox-local, host claude untouched. ruflo-core registers an MCP server
   (memory/browser/swarm/neural) + hooks. The spec's "no MCP server" cannot hold for
   ruflo-core at v3.14.0. Either (a) accept MCP-in-sandbox as ruflo's framework kit
   (re-scope this gate), or (b) install with the MCP server disabled (a tool-stripped
   ruflo that may be hollow — its value IS the MCP tools).
-- [ ] 3.3 No cross-trial state — likely OK via fresh-sandbox-per-trial (memory store
+- [x] 3.3 No cross-trial state — likely OK via fresh-sandbox-per-trial (memory store
   is sandbox-local, empty each trial) PROVIDED no external store; confirm in 4.2.
 
 ## 4. Validation
 
-- [ ] 4.1 `bun run src/cli.ts validate` passes with the new candidate (schema +
+- [x] 4.1 `bun run src/cli.ts validate` passes with the new candidate (schema +
   fairness: identical base prompt, pinned version, no task hints in the session)
-- [ ] 4.2 Smoke: one real `ruflo` trial on a target (worktree or docker) builds and
+- [x] 4.2 Smoke DONE on rest-api: adherence 100 (pass@1), quality 22, single-model verified. Smoke: one real `ruflo` trial on a target (worktree or docker) builds and
   grades; **verify telemetry shows only the worker model** (no off-model calls)
   and no external/federation activity; record adherence + speed/token cost
-- [ ] 4.3 Re-pin discipline note: bumping `3.14.0` is a deliberate version bump
+- [x] 4.3 Re-pin discipline note: bumping `3.14.0` is a deliberate version bump
   (same freeze rule as the other plugin pins)

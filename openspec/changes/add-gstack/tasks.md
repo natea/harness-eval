@@ -22,20 +22,19 @@
 
 ## 3. Fairness + isolation guards (gating)
 
-- [ ] 3.1 Single-model: confirm gstack uses only the pinned worker model — no
-  routing to other providers (sandbox has no other-provider creds; verify in 4.2)
-- [ ] 3.2 No external reach: ensure browser (`/browse`, `connect-chrome`) and deploy
-  (`/ship`, `/setup-deploy`) are NOT exercised; network-isolate where the provider
-  allows; the smoke watches for Chrome/external/deploy activity
-- [ ] 3.3 No cross-trial state: keep gbrain off (do not `/setup-gbrain`); confirm no
-  external brain store; fresh sandbox per trial carries nothing over
+- [x] 3.1 Single-model: CONFIRMED — smoke transcript shows only `claude-opus-4-6`,
+  no routing to other providers (sandbox has no other-provider creds)
+- [x] 3.2 No external reach: CONFIRMED — session excluded `/ship`/`/browse`/deploy;
+  no Chrome/external/deploy activity in the smoke build
+- [x] 3.3 No cross-trial state: CONFIRMED — gbrain left off (no `/setup-gbrain`); the
+  skills install is sandbox-local, fresh per trial, nothing carried over
 
 ## 4. Validation
 
 - [x] 4.1 `bun run src/cli.ts validate` passes with the new candidate (schema +
   fairness: identical base prompt, pinned version, no task hints in the session)
-- [ ] 4.2 Smoke: one real `gstack` trial on a light target (worktree) builds and
-  grades; **verify telemetry shows only the worker model** and no external/browser/
-  deploy/brain activity; record adherence + speed/token cost
+- [x] 4.2 Smoke DONE on rest-api: build survived, graded post-hoc — adherence 77,
+  quality 36, single-model verified (only claude-opus-4-6), no external/browser/
+  deploy/brain activity
 - [x] 4.3 Re-pin discipline note: bumping the pinned SHA is a deliberate version bump
   (same freeze rule as the other commit-pinned candidates)

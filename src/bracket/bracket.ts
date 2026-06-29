@@ -69,21 +69,6 @@ const qualityOf = (g: {
 		: 0;
 };
 
-/** Standard single-elim slot order for a power-of-two size (seed per slot). */
-function seedSlots(size: number): number[] {
-	let slots = [1, 2];
-	while (slots.length < size) {
-		const total = slots.length * 2 + 1;
-		const next: number[] = [];
-		for (const s of slots) {
-			next.push(s);
-			next.push(total - s);
-		}
-		slots = next;
-	}
-	return slots;
-}
-
 const nextPow2 = (n: number) => {
 	let p = 1;
 	while (p < n) p *= 2;
@@ -227,10 +212,18 @@ function seededRounds(
 ): { rounds: BracketMatch[][]; champion: string | null } {
 	if (pool.length <= 1)
 		return { rounds: [], champion: pool[0]?.candidate ?? null };
+	// Sequential seeding with first-round byes for the top seeds: the field stacks
+	// in seed order and ADJACENT winners meet, so a 4-field plays (1v2),(3v4) — not
+	// the (1v4),(2v3) of full tournament seeding. Adjacent pairing keeps every
+	// later match between the two matches that feed it (the renderer lays matches
+	// out by feeder-mean), so sibling matches never collapse onto the same row.
 	const size = nextPow2(pool.length);
-	const slots = seedSlots(size).map((seed) =>
-		seed <= pool.length ? (pool[seed - 1]?.candidate ?? null) : null,
-	);
+	const byes = size - pool.length;
+	const slots: (string | null)[] = [];
+	for (let i = 0; i < pool.length; i++) {
+		slots.push(pool[i]?.candidate ?? null);
+		if (i < byes) slots.push(null); // top `byes` seeds advance without a match
+	}
 	const rounds: BracketMatch[][] = [];
 	let current = slots; // candidate names (or null = bye) entering this round
 	let round = startRound;

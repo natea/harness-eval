@@ -214,12 +214,20 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 				: i * SLOT + BOX_H / 2;
 		});
 	});
-	const lastRound = rounds[rounds.length - 1] ?? [];
-	const hasFinal = lastRound.length === 1;
+	// The champion flows from whatever match it actually won in the last round —
+	// the final when the winners' bracket ran, or its winning gauntlet match when
+	// only one framework survived the baseline. Anchor the champion box (and its
+	// connector) to that match so it is never left floating.
+	const lastIdx = rounds.length - 1;
+	const lastRound = rounds[lastIdx] ?? [];
+	const champIdx = bracket.champion
+		? lastRound.findIndex((m) => m.winner === bracket.champion)
+		: -1;
+	const champSrc = champIdx >= 0 ? champIdx : 0;
 	const champCol = rounds.length;
 	const totalW = colX(champCol) + BOX_W + 20;
 	const totalH = Math.max(rounds[0]?.length ?? 1, 1) * SLOT;
-	const champY = (hasFinal ? ys[rounds.length - 1]?.[0] : ys[0]?.[0]) ?? BOX_H / 2;
+	const champY = ys[lastIdx]?.[champSrc] ?? BOX_H / 2;
 
 	return (
 		<svg
@@ -255,10 +263,10 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 					);
 				}),
 			)}
-			{/* connector from final → champion (only when there is a single final) */}
-			{hasFinal && (
+			{/* connector from the champion's winning match → the champion box */}
+			{bracket.champion && (
 				<path
-					d={`M${colX(rounds.length - 1) + BOX_W} ${champY} H${colX(champCol)}`}
+					d={`M${colX(lastIdx) + BOX_W} ${champY} H${colX(champCol)}`}
 					fill="none"
 					stroke="var(--border)"
 					strokeWidth="1.5"

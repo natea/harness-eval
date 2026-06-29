@@ -66,6 +66,23 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 			}
 			if (!send({ type: "open" })) return close();
 
+			// SSE keepalive: the stream only emits `turns` frames when the agent has
+			// written something new, but quiet gaps (thinking, a long install/build)
+			// can exceed Bun.serve's idleTimeout and the connection gets killed
+			// mid-build. A comment line every few seconds keeps bytes flowing so the
+			// socket never idles out. Comments (lines starting `:`) are ignored by
+			// EventSource, so they don't disturb the client.
+			let lastPing = ticks;
+			const PING_EVERY = Math.ceil(4000 / POLL_MS); // ~4s
+			const ping = (): boolean => {
+				try {
+					controller.enqueue(encoder.encode(`: keepalive\n\n`));
+					return true;
+				} catch {
+					return false; // client disconnected
+				}
+			};
+
 			const tick = async () => {
 				if (closed) return;
 				ticks++;
@@ -150,6 +167,11 @@ export function liveStreamResponse(runId: string, trialId: string): Response {
 					}
 				} catch {
 					// transient read error — keep polling
+				}
+				// Heartbeat on quiet ticks so the connection never idles out.
+				if (!closed && ticks - lastPing >= PING_EVERY) {
+					lastPing = ticks;
+					if (!ping()) return close();
 				}
 				if (!closed) timer = setTimeout(tick, POLL_MS);
 			};

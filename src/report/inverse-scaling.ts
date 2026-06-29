@@ -38,6 +38,18 @@ export interface InvScaleCell {
 	// means the framework and its baseline were joined ACROSS runs (sharing the
 	// frozen PRD) rather than coming from one run — auditable, not silent.
 	runIds: string[];
+	// Drill-through: the individual graded trials behind each side of the cell,
+	// so the studio can link straight to the trial scorecards. quality is scaled
+	// 0-100 (criteria mean ×10) to match the headline qualF/qualB numbers.
+	frameworkTrials: InvScaleTrialRef[];
+	baselineTrials: InvScaleTrialRef[];
+}
+export interface InvScaleTrialRef {
+	runId: string;
+	trialId: string;
+	candidate: string;
+	adherence: number;
+	quality: number | null;
 }
 export interface InvScaleFit {
 	slope: number;
@@ -60,7 +72,13 @@ export interface InverseScaling {
 	};
 }
 
-type Trial = { adherence: number; quality: number | null; runId: string };
+type Trial = {
+	adherence: number;
+	quality: number | null;
+	runId: string;
+	trialId: string;
+	candidate: string;
+};
 
 // Append v to the array at key k, creating it if absent.
 const pushTo = <K, V>(m: Map<K, V[]>, k: K, v: V): void => {
@@ -144,7 +162,13 @@ export async function buildInverseScaling(
 			: null;
 		const target = targetName(p.prdSha256);
 		const key = [target, p.harness, p.model, p.candidate].join(SEP);
-		pushTo(cells, key, { adherence: adh, quality, runId });
+		pushTo(cells, key, {
+			adherence: adh,
+			quality,
+			runId,
+			trialId: p?.trialId ?? "",
+			candidate: p?.candidate ?? "",
+		});
 	};
 
 	let runsScanned = 0;
@@ -165,7 +189,10 @@ export async function buildInverseScaling(
 				const provPath = join(trialsDir, tid, "provenance.json");
 				if (!existsSync(provPath)) continue;
 				if (!existsSync(join(trialsDir, tid, "grades.json"))) continue;
-				await addTrial(d, await Bun.file(provPath).json(), null);
+				const prov = await Bun.file(provPath).json();
+				// trial-dir name is the authoritative trialId if provenance omits it
+				if (!prov.trialId) prov.trialId = tid;
+				await addTrial(d, prov, null);
 				counted = true;
 			}
 			if (counted) runsScanned++;
@@ -196,6 +223,16 @@ export async function buildInverseScaling(
 			.filter((q): q is number => q != null);
 		return qs.length ? mean(qs) * 10 : null; // criteria 0-10 → 0-100 like adherence
 	};
+
+	// Quality on a trial is the criteria mean (0-10); scale ×10 to 0-100 so the
+	// drill-through rows are directly comparable to the headline qualF/qualB.
+	const refOf = (t: Trial): InvScaleTrialRef => ({
+		runId: t.runId,
+		trialId: t.trialId,
+		candidate: t.candidate,
+		adherence: t.adherence,
+		quality: t.quality == null ? null : t.quality * 10,
+	});
 
 	const rows: InvScaleCell[] = [];
 	const orphanFrameworks: string[] = [];
@@ -244,6 +281,8 @@ export async function buildInverseScaling(
 				runIds: [
 					...new Set([...baseTrials, ...fTrials].map((t) => t.runId)),
 				].sort(),
+				frameworkTrials: fTrials.map(refOf),
+				baselineTrials: baseTrials.map(refOf),
 			});
 		}
 	}

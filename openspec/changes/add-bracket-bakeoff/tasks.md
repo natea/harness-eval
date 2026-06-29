@@ -29,6 +29,12 @@
   live-build stream
 - [x] 3.3 Show goals AND weighted adherence per match so the scoreline isn't
   mistaken for the rubric score (design risk)
+- [x] 3.4 Baseline-gauntlet first round: round 1 pits every framework against the
+  no-framework baseline (bare); beating bare advances, losing is an upset that
+  eliminates the framework; survivors play a seeded single-elim. Builder
+  (`playFor` in src/bracket/bracket.ts) + renderer generalized so the layout/
+  connectors handle the uneven gauntlet→winners fan-in (no binary-tree assumption)
+  and upset lines dead-end. Falls back to plain seeded single-elim with no baseline.
 
 ## 4. Emit the goal-event stream (for the Phase-2 animation)
 

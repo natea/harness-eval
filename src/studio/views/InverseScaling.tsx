@@ -1,3 +1,4 @@
+import { Fragment, useState } from "react";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -28,6 +29,15 @@ interface Cell {
 	qualGain: number | null;
 	flags: string[];
 	runIds: string[];
+	frameworkTrials: TrialRef[];
+	baselineTrials: TrialRef[];
+}
+interface TrialRef {
+	runId: string;
+	trialId: string;
+	candidate: string;
+	adherence: number;
+	quality: number | null;
 }
 interface Fit {
 	slope: number;
@@ -127,8 +137,70 @@ function FitBadge({ fit, axis }: { fit: Fit | null; axis: string }) {
 	);
 }
 
+/** One side of the drill-through: the individual graded trials behind a cell,
+ *  each linking to its trial scorecard. */
+function TrialList({
+	heading,
+	trials,
+}: {
+	heading: string;
+	trials: TrialRef[];
+}) {
+	return (
+		<div className="min-w-[16rem]">
+			<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+				{heading}
+			</div>
+			{trials.length === 0 ? (
+				<div className="text-[12px] text-muted-foreground">no trials</div>
+			) : (
+				<ul className="space-y-0.5">
+					{trials.map((t) => {
+						const label = `${t.runId} / ${t.trialId || "?"}`;
+						const scores = (
+							<span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+								adh {f1(t.adherence)}
+								<span className="mx-1 opacity-50">·</span>
+								qual {t.quality == null ? "—" : f1(t.quality)}
+							</span>
+						);
+						return (
+							<li
+								key={`${t.runId}|${t.trialId}`}
+								className="flex items-center gap-2"
+							>
+								{t.trialId ? (
+									<a
+										href={`/runs/${t.runId}/trials/${t.trialId}`}
+										className="font-mono text-[12px] text-primary hover:underline"
+									>
+										{label}
+									</a>
+								) : (
+									<span className="font-mono text-[12px] text-muted-foreground">
+										{label}
+									</span>
+								)}
+								{scores}
+							</li>
+						);
+					})}
+				</ul>
+			)}
+		</div>
+	);
+}
+
 export function InverseScaling() {
 	const data = useFetch<InverseScaling>("/api/inverse-scaling");
+	const [expanded, setExpanded] = useState<Set<string>>(new Set());
+	const toggle = (key: string) =>
+		setExpanded((prev) => {
+			const next = new Set(prev);
+			if (next.has(key)) next.delete(key);
+			else next.add(key);
+			return next;
+		});
 	if (!data) return <p className="text-muted-foreground">loading…</p>;
 	// Be resilient to a stale/older endpoint payload (e.g. a studio server started
 	// before a field was added): default every optional shape rather than crash.
@@ -173,11 +245,21 @@ export function InverseScaling() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{rows.map((r) => (
+							{rows.map((r) => {
+								const key = `${r.target}|${r.harness}|${r.model}|${r.framework}`;
+								const isOpen = expanded.has(key);
+								return (
+								<Fragment key={key}>
 								<TableRow
-									key={`${r.target}|${r.harness}|${r.model}|${r.framework}`}
+									onClick={() => toggle(key)}
+									className="cursor-pointer"
+									aria-expanded={isOpen}
+									title="Click to see the trials behind this cell"
 								>
 									<TableCell className="font-mono text-[12px]">
+										<span className="mr-1 inline-block w-3 text-muted-foreground">
+											{isOpen ? "▾" : "▸"}
+										</span>
 										{r.target}
 									</TableCell>
 									<TableCell className="font-semibold">{r.framework}</TableCell>
@@ -213,7 +295,25 @@ export function InverseScaling() {
 										)}
 									</TableCell>
 								</TableRow>
-							))}
+								{isOpen && (
+									<TableRow className="hover:bg-transparent">
+										<TableCell colSpan={7} className="bg-secondary/40">
+											<div className="flex flex-wrap gap-8 px-2 py-2">
+												<TrialList
+													heading={`Framework — ${r.framework}`}
+													trials={r.frameworkTrials ?? []}
+												/>
+												<TrialList
+													heading={`Baseline — ${r.baselineCandidate}`}
+													trials={r.baselineTrials ?? []}
+												/>
+											</div>
+										</TableCell>
+									</TableRow>
+								)}
+								</Fragment>
+								);
+							})}
 						</TableBody>
 					</Table>
 				</CardContent>

@@ -383,7 +383,7 @@ const server = Bun.serve({
 	development: { hmr: true, console: true },
 });
 
-console.log(`Eval Studio: http://127.0.0.1:${server.port}`);
+console.log(`CodingHarness: http://127.0.0.1:${server.port}`);
 
 // Tear down any running previews on shutdown so a container/port never leaks
 // past the studio process (artifact-preview lifecycle).

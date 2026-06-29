@@ -9,7 +9,7 @@
  *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
 import { buildInverseScaling } from "../report/inverse-scaling";
@@ -89,6 +89,49 @@ function resolveRunTarget(runId: string): RunTarget | null {
 		return { name: hit.name, title: hit.title, steps };
 	} catch {
 		return null;
+	}
+}
+
+/** The input spec a run was graded against (input-spec-viewer): resolve the run's
+ *  frozen PRD hash → target and serve its PRD + test-plan text read-only. When the
+ *  hash matches no current target (PRD re-frozen since), report that rather than
+ *  serving a substitute document — only the hash, not the text, is archived per run. */
+function resolveRunPrd(runId: string): {
+	name: string | null;
+	title: string | null;
+	prd: string | null;
+	testPlan: string | null;
+	sha: string;
+	currentMatch: boolean;
+} | null {
+	const sha = getRun(runId)?.results?.prdSha256;
+	if (!sha) return null; // run doesn't exist / isn't indexed
+	const hit = targetBySha().get(sha);
+	if (!hit)
+		return {
+			name: null,
+			title: null,
+			prd: null,
+			testPlan: null,
+			sha,
+			currentMatch: false,
+		};
+	try {
+		const t = loadTarget(hit.name);
+		const planPath = join("targets", hit.name, "testplan.yaml");
+		const testPlan = existsSync(planPath)
+			? readFileSync(planPath, "utf8")
+			: null;
+		return {
+			name: hit.name,
+			title: hit.title,
+			prd: t.prdContent,
+			testPlan,
+			sha,
+			currentMatch: true,
+		};
+	} catch {
+		return { name: hit.name, title: hit.title, prd: null, testPlan: null, sha, currentMatch: false };
 	}
 }
 
@@ -265,6 +308,17 @@ const server = Bun.serve({
 
 		// Which app a run built (PRD title + name) and the concrete check behind
 		// each step — resolved from the run's actual target, not a hardcoded one.
+		// The input spec a run was graded against (input-spec-viewer): PRD + test
+		// plan, read-only, resolved by the run's frozen PRD hash.
+		"/api/runs/:id/prd": {
+			GET: (req) => {
+				const p = resolveRunPrd(req.params.id);
+				return p
+					? Response.json(p)
+					: Response.json({ error: "not found" }, { status: 404 });
+			},
+		},
+
 		"/api/runs/:id/target": {
 			GET: (req) => {
 				const t = resolveRunTarget(req.params.id);

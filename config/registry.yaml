@@ -167,6 +167,37 @@ candidates:
           allowlist: ["proceed", "continue"]
           maxContinuations: 10
 
+  # gstack: Garry Tan's Claude Code setup — 23 role slash commands. Installed as a
+  # skills-dir clone + `./setup` (no plugin marketplace), pinned by commit (no tags;
+  # VERSION 1.58.5.0). Session is gstack's plan/build/review flow — deliberately NOT
+  # /ship, /land-and-deploy, /browse, or /connect-chrome (external/deploy, out of
+  # scope for a graded isolated build). gbrain stays off. Fairness (single-model,
+  # no external reach, no cross-trial state) rests on the fresh sandbox and is
+  # confirmed by the smoke. Pin is assert-only on the cloned checkout.
+  - id: gstack
+    name: gstack
+    repo: https://github.com/garrytan/gstack
+    pinnedVersion: 11de390be1be
+    markerPaths:
+      - .claude/skills/gstack/
+      - CLAUDE.md
+      - AGENTS.md
+    harnesses:
+      claude-code:
+        install:
+          - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
+          - "git clone --single-branch https://github.com/garrytan/gstack.git \"$HOME/.claude/skills/gstack\""
+          - "git -C \"$HOME/.claude/skills/gstack\" checkout -q 11de390be1be"
+          - "cd \"$HOME/.claude/skills/gstack\" && ./setup"
+          - "test -d \"$HOME/.claude/skills/gstack\" && git -C \"$HOME/.claude/skills/gstack\" rev-parse --short HEAD | grep -q '11de390'"
+        session:
+          - prompt: "/autoplan {{BASE_PROMPT}}"
+          - prompt: "proceed — implement the plan in full"
+          - prompt: "/review"
+        continuation:
+          allowlist: ["proceed", "continue with the plan"]
+          maxContinuations: 15
+
   # Ruflo: an agent meta-harness. Unlike the prompt/skill candidates, ruflo-core
   # installs an MCP server (memory/agentdb/embeddings/browser/neural/swarm) — its
   # framework kit IS the MCP toolset (it ships no spec-build slash commands), so the

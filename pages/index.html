@@ -91,7 +91,8 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 
 	<h2>See it in action</h2>
 	<p class="flow">The whole lifecycle, from the ranked result down to the agent's every keystroke:
-		<b>Configure</b> → <b>Run</b> → <b>Review</b> → <b>Inspect a trial</b> → <b>Boot the artifact</b> → <b>Replay the build</b>.
+		<b>Configure</b> → <b>Run</b> → <b>Review</b> → <b>Inspect a trial</b> → <b>Boot the artifact</b> → <b>Replay the build</b>,
+		then <b>compare across runs</b> — does the framework actually beat bare?
 		Click any screenshot to enlarge.</p>
 	<div class="shots">
 
@@ -155,6 +156,24 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 				<span class="step">Stage 6 · Trace the build</span>
 				<h3>Replay the agent &amp; navigate errors</h3>
 				<p>The full build replay — every request/response between the harness and the model, with thinking, tool calls and outputs. Jump between sessions, step through the trial's errors one at a time (<code>◀ ⚠ 9 errors ▶</code>), or open the outline to trace where a step went wrong. The same viewer <strong>streams live</strong> while a build runs — every keystroke in real time, redacted of secrets — then seamlessly becomes the archived replay when the trial finishes.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-8-inverse-scaling.png" target="_blank" rel="noopener"><img src="./assets/gallery-8-inverse-scaling.png" alt="Inverse-scaling view: each framework's marginal gain over the no-framework bare baseline on PRD adherence and code quality, per target and model, with slope cards fitting gain against baseline strength and low-n / high-sigma flags" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Cross-run · Inverse-scaling</span>
+				<h3>Does the framework actually help?</h3>
+				<p>The marginal-gain view. For every target × model, each framework is compared head-to-head against the no-framework <code>bare</code> baseline on the same harness — the bold delta is what the framework <em>adds or removes</em> on PRD adherence and code quality. The slope cards fit gain against baseline strength: a negative slope is <strong>inverse scaling</strong> — frameworks help most where the base model is weakest and can even hurt where it is already strong (note <code>gstack −22.9</code> adherence, <code>compound-engineering −100</code> on web-app). Composite/speed/spend are excluded as not comparable across runs; thin (low-n) and unstable (high-σ) cells are flagged, and every row expands to the individual graded trials behind it.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-9-bracket.png" target="_blank" rel="noopener"><img src="./assets/gallery-9-bracket.png" alt="Bracket bakeoff: a single-elimination gauntlet where every framework first plays the bare baseline, losing to bare counts as an upset, and survivors play to a champion scored by code quality or PRD goals" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Cross-run · Bracket</span>
+				<h3>Frameworks vs. bare, single-elimination</h3>
+				<p>A retrospective knockout played from existing grades. Round 1 is a gauntlet: every framework faces the <code>bare</code> baseline, and <strong>losing to bare is an upset</strong> that knocks it out — here <code>ruflo</code> falls to bare on code quality. The survivors play each other to a champion, scored by <strong>code quality</strong> (blind-judge points) or <strong>goals</strong> (PRD-pass), with ties broken by the other metric → efficiency → seed. Hover a match for the goal breakdown; the deciding criterion is recorded so every advance is auditable.</p>
 			</figcaption>
 		</figure>
 

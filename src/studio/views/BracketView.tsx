@@ -351,7 +351,7 @@ const groupKey = (b: Bracket) => `${b.target}|${b.harness}|${b.model}`;
 export function BracketView() {
 	const data = useFetch<Bracket[]>("/api/bracket");
 	const [group, setGroup] = useState<string | null>(null);
-	const [metric, setMetric] = useState<Metric>("goals");
+	const [metric, setMetric] = useState<Metric>("quality");
 	if (!data) return <p className="text-muted-foreground">loading…</p>;
 	if (!data.length)
 		return (

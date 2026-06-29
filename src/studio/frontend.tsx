@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Logo } from "./components/Logo";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { BracketView } from "./views/BracketView";
 import { Configure } from "./views/Configure";
 import { InverseScaling } from "./views/InverseScaling";
 import { Leaderboard } from "./views/Leaderboard";
@@ -16,6 +17,7 @@ function Routed() {
 	const path = window.location.pathname;
 	if (path === "/configure") return <Configure />;
 	if (path === "/inverse-scaling") return <InverseScaling />;
+	if (path === "/bracket") return <BracketView />;
 	if (path === "/runs") return <Runs />;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
@@ -88,6 +90,7 @@ function Nav() {
 			{tab("/", "Review", path === "/")}
 			{tab("/configure", "Configure", path === "/configure")}
 			{tab("/inverse-scaling", "Inverse-scaling", path === "/inverse-scaling")}
+			{tab("/bracket", "Bracket", path === "/bracket")}
 			{tab("/runs", "Runs", path === "/runs")}
 			<ThemeToggle />
 		</nav>

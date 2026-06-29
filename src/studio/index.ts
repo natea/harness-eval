@@ -12,6 +12,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
+import { buildBrackets } from "../bracket/bracket";
 import { buildInverseScaling } from "../report/inverse-scaling";
 import { loadTarget } from "../targets";
 import index from "./index.html";
@@ -147,6 +148,7 @@ const server = Bun.serve({
 		"/": index,
 		"/configure": index,
 		"/inverse-scaling": index,
+		"/bracket": index,
 		"/runs": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
@@ -204,6 +206,12 @@ const server = Bun.serve({
 		"/api/inverse-scaling": {
 			GET: async () =>
 				Response.json(await buildInverseScaling("runs", "targets")),
+		},
+
+		// Bracket bakeoff (bracket-bakeoff): retrospective single-elim tournaments
+		// built from existing graded entrants. Read-only over runs/.
+		"/api/bracket": {
+			GET: async () => Response.json(await buildBrackets("runs", "targets")),
 		},
 
 		// Resume grading for a run with built-but-ungraded trials (no rebuild).

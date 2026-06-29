@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Configure } from "./views/Configure";
@@ -23,6 +24,53 @@ function Routed() {
 	return <Leaderboard />;
 }
 
+// studio-theming: light/dark/system, persisted to localStorage. The class is
+// applied pre-paint by the inline script in index.html; this keeps it in sync as
+// the user toggles and tracks the OS when in system mode.
+type Theme = "light" | "dark" | "system";
+
+function resolveDark(t: Theme): boolean {
+	return (
+		t === "dark" ||
+		(t === "system" &&
+			window.matchMedia("(prefers-color-scheme: dark)").matches)
+	);
+}
+function applyTheme(t: Theme): void {
+	document.documentElement.classList.toggle("dark", resolveDark(t));
+}
+function storedTheme(): Theme {
+	const v = localStorage.getItem("studio-theme");
+	return v === "light" || v === "dark" || v === "system" ? v : "system";
+}
+
+function ThemeToggle() {
+	const [theme, setTheme] = useState<Theme>(storedTheme);
+	useEffect(() => {
+		applyTheme(theme);
+		localStorage.setItem("studio-theme", theme);
+		if (theme !== "system") return;
+		const mq = window.matchMedia("(prefers-color-scheme: dark)");
+		const onChange = () => applyTheme("system");
+		mq.addEventListener("change", onChange);
+		return () => mq.removeEventListener("change", onChange);
+	}, [theme]);
+	const next: Theme =
+		theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
+	const icon = theme === "light" ? "☀️" : theme === "dark" ? "🌙" : "🖥️";
+	return (
+		<button
+			type="button"
+			onClick={() => setTheme(next)}
+			title={`Theme: ${theme} — click for ${next}`}
+			aria-label={`Theme: ${theme}, switch to ${next}`}
+			className="ml-auto rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+		>
+			{icon} <span className="text-[12px]">{theme}</span>
+		</button>
+	);
+}
+
 function Nav() {
 	const path = window.location.pathname;
 	const tab = (href: string, label: string, active: boolean) => (
@@ -40,6 +88,7 @@ function Nav() {
 			{tab("/configure", "Configure", path === "/configure")}
 			{tab("/inverse-scaling", "Inverse-scaling", path === "/inverse-scaling")}
 			{tab("/runs", "Runs", path === "/runs")}
+			<ThemeToggle />
 		</nav>
 	);
 }

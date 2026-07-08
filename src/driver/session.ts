@@ -23,6 +23,8 @@ export interface SessionScriptOptions {
 	wallClockBudgetMs: number;
 	costBudgetUsd: number;
 	env?: Record<string, string>;
+	/** Codex OSS local provider, forwarded to the driver on every step. */
+	ossProvider?: "ollama";
 	/** Harness implementation; defaults to Claude Code for compatibility. */
 	driver?: HarnessDriver;
 	/** Injected for focused tests; overrides `driver`. */
@@ -81,6 +83,7 @@ export async function executeSessionScript(
 				resumeSessionId: step.newSession ? undefined : sessionId,
 				timeoutMs: remainingMs(),
 				env: opts.env,
+				ossProvider: opts.ossProvider,
 			});
 		} catch (err) {
 			// Environmental failures (dead daemon, unreachable socket, ACP
@@ -120,6 +123,7 @@ export async function executeSessionScript(
 				resumeSessionId: sessionId,
 				timeoutMs: remainingMs(),
 				env: opts.env,
+				ossProvider: opts.ossProvider,
 			});
 			records.push(cont.record);
 			transcripts.push(cont.transcript);

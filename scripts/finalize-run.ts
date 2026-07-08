@@ -12,13 +12,14 @@
  * then calls the same buildResults/writeResults/writeScorecard the run path uses.
  *
  * Usage:
- *   bun scripts/finalize-run.ts <run-dir> [--weights a,q,s,t]
+ *   bun scripts/finalize-run.ts <run-dir> [--weights a,q,s,t] [--judge-model <profile>]
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
 import { parseStreamJson } from "../src/driver/claude";
 import { aggregateTelemetry } from "../src/driver/telemetry";
+import { loadModels, resolveProfile, toModelRef } from "../src/models";
 import { writeScorecard } from "../src/report/markdown";
 import { buildResults, writeResults } from "../src/report/results";
 import {
@@ -74,6 +75,16 @@ const defaults = parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<
 	string,
 	unknown
 >;
+const existingResultsPath = join(runDir, "results.json");
+const existingResults = existsSync(existingResultsPath)
+	? (JSON.parse(readFileSync(existingResultsPath, "utf8")) as {
+			config?: Record<string, unknown>;
+			workerModel?: unknown;
+			judgeModel?: unknown;
+			crossVendorJudge?: boolean;
+			costSource?: string;
+		})
+	: null;
 
 const trialIds = readdirSync(trialsDir).filter((d) =>
 	existsSync(join(trialsDir, d, "provenance.json")),
@@ -127,13 +138,27 @@ if (!first) {
 const candidates = [...candidateCounts.keys()];
 const config = RunConfig.parse({
 	...defaults,
+	...(existingResults?.config ?? {}),
 	candidates,
 	// Per-candidate trial count actually present on disk (not the default 3).
 	trialsPerCandidate: Math.max(...candidateCounts.values()),
 	harness: first.harness,
-	model: first.model,
+	model:
+		(first.workerModel as { name?: string } | undefined)?.name ?? first.model,
 	provider: first.provider,
 });
+
+const judgeIdx = process.argv.indexOf("--judge-model");
+const judgeRef =
+	judgeIdx >= 0
+		? process.argv[judgeIdx + 1]
+		: (process.env.HARNESS_EVAL_JUDGE_MODEL as string | undefined);
+const resolvedJudge = judgeRef
+	? toModelRef(resolveProfile(judgeRef, loadModels()))
+	: existingResults?.judgeModel;
+if (resolvedJudge && typeof resolvedJudge === "object" && "name" in resolvedJudge) {
+	config.judgeModel = String((resolvedJudge as { name: string }).name);
+}
 
 const startedAt = trials
 	.map((t) => t.provenance.startedAt)
@@ -154,17 +179,19 @@ const results = buildResults({
 	startedAt,
 	endedAt,
 	trials,
-	workerModel: first.workerModel,
-	// Judge defaults to the pinned non-worker model; cross-vendor only when the
-	// worker is non-Anthropic (judge is Anthropic sonnet).
-	judgeModel: {
-		name: String(config.judgeModel),
-		provider: "anthropic",
-		modelId: String(config.judgeModel),
-		endpointHost: null,
-	},
-	crossVendorJudge: first.workerModel?.provider !== "anthropic",
-	costSource: "harness-reported",
+	workerModel: (existingResults?.workerModel as never) ?? first.workerModel,
+	judgeModel:
+		(resolvedJudge as never) ?? {
+			name: String(config.judgeModel),
+			provider: "anthropic",
+			modelId: String(config.judgeModel),
+			transport: "claude-code",
+			endpointHost: null,
+		},
+	crossVendorJudge:
+		existingResults?.crossVendorJudge ??
+		first.workerModel?.provider !== "anthropic",
+	costSource: (existingResults?.costSource as never) ?? "harness-reported",
 });
 
 console.log(`results:   ${writeResults(runDir, results)}`);

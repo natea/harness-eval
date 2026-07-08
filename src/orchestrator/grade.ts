@@ -1,6 +1,7 @@
 import {
 	cpSync,
 	existsSync,
+	readFileSync,
 	mkdtempSync,
 	rmSync,
 	writeFileSync,
@@ -13,9 +14,42 @@ import { scoreDesignAdherence } from "../grading/design-adherence";
 import { runEvaluator } from "../grading/evaluator";
 import { judgeQuality } from "../grading/judge";
 import { scrubWorkspace } from "../grading/scrub";
+import type { ModelProfile } from "../models";
 import type { LoadedTarget } from "../targets";
 import { startFixtures, stopFixtures } from "../targets";
 import type { Registry, TrialGrades, TrialResult } from "../types";
+
+export type GradingDriver = "cc" | "sdk";
+
+export interface GradeDeps {
+	startFixtures: typeof startFixtures;
+	stopFixtures: typeof stopFixtures;
+	runEvaluatorCC: typeof runEvaluatorCC;
+	runEvaluator: typeof runEvaluator;
+	judgeQualityCC: typeof judgeQualityCC;
+	judgeQuality: typeof judgeQuality;
+	scrubWorkspace: typeof scrubWorkspace;
+}
+
+const defaultGradeDeps: GradeDeps = {
+	startFixtures,
+	stopFixtures,
+	runEvaluatorCC,
+	runEvaluator,
+	judgeQualityCC,
+	judgeQuality,
+	scrubWorkspace,
+};
+
+export function gradeDriversForJudge(
+	requested: GradingDriver,
+	judgeProfile?: ModelProfile,
+): { evaluator: GradingDriver; quality: GradingDriver } {
+	if (judgeProfile?.transport === "openai-compat") {
+		return { evaluator: "cc", quality: "sdk" };
+	}
+	return { evaluator: requested, quality: requested };
+}
 
 export interface GradeOptions {
 	target: LoadedTarget;
@@ -24,6 +58,10 @@ export interface GradeOptions {
 	registry: Registry;
 	/** Judge model id (≠ worker model). */
 	judgeModel: string;
+	/** Optional PRD evaluator model; defaults to judgeModel except local quality judges. */
+	evaluatorModel?: string;
+	/** Resolved judge profile when available; used for transport-aware judging. */
+	judgeProfile?: ModelProfile;
 	runDir: string;
 	/** First fixture port; each trial increments it. */
 	basePort?: number;
@@ -37,15 +75,21 @@ export interface GradeOptions {
 	 *  subscription (CLAUDE_CODE_OAUTH_TOKEN); `sdk` calls the Anthropic API
 	 *  directly (billed to the API account). Default cc so a $0 API balance never
 	 *  blocks grading a run the subscription already built. */
-	driver?: "cc" | "sdk";
+	driver?: GradingDriver;
 	/** Per-trial grading budget. A trial that exceeds it is left ungraded (with a
 	 *  note) and grading continues — one slow trial never fails the whole run.
 	 *  Default 60 min/trial. */
 	trialTimeoutMs?: number;
+	/** Test seam for deterministic partial-grading coverage. */
+	deps?: Partial<GradeDeps>;
 }
 
 /** Reject if `p` does not settle within `ms`. */
-function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+function withTimeout<T>(
+	p: Promise<T>,
+	ms: number,
+	message: string,
+): Promise<T> {
 	let timer: ReturnType<typeof setTimeout>;
 	const timeout = new Promise<never>((_, reject) => {
 		timer = setTimeout(() => reject(new Error(message)), ms);
@@ -67,6 +111,7 @@ export async function gradeTrials(
 	opts: GradeOptions,
 ): Promise<void> {
 	const { target, design, registry, judgeModel, runDir } = opts;
+	const deps = { ...defaultGradeDeps, ...opts.deps };
 	const log = opts.log ?? (() => {});
 	let mockPort = opts.basePort ?? 4280;
 
@@ -83,7 +128,7 @@ export async function gradeTrials(
 		log(`grading ${trialId}…`);
 		opts.onStage?.(`evaluating ${trialId} (${idx + 1}/${total})`);
 		mockPort++;
-		const fixtures = startFixtures(target, mockPort);
+		const fixtures = deps.startFixtures(target, mockPort);
 		await new Promise((r) => setTimeout(r, 500));
 		writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
 		// Run the app-under-test from a copy OUTSIDE the repo tree. The evaluator
@@ -101,66 +146,96 @@ export async function gradeTrials(
 		const cleanupIsolated = () =>
 			rmSync(isolatedRoot, { recursive: true, force: true });
 		const driver = opts.driver ?? "cc";
+		const drivers = gradeDriversForJudge(driver, opts.judgeProfile);
+		const qualityModelFlag = opts.judgeProfile?.modelId ?? judgeModel;
+		const evaluatorModelFlag =
+			opts.evaluatorModel ??
+			(opts.judgeProfile?.transport === "openai-compat"
+				? "claude-sonnet-4-6"
+				: qualityModelFlag);
 		const mockLinearUrl =
 			fixtures.find((f) => f.name === "mock-linear")?.value ??
 			`http://localhost:${mockPort}`;
 		const stubAppServerPath =
 			fixtures.find((f) => f.name === "stub-app-server")?.value ?? "";
 		const trialBudgetMs = opts.trialTimeoutMs ?? 60 * 60_000;
-		let graded: {
-			adherence: Awaited<ReturnType<typeof runEvaluator>>;
-			quality: Awaited<ReturnType<typeof judgeQuality>>;
-		};
+		let adherence: Awaited<ReturnType<typeof runEvaluator>> | null = null;
+		let quality: Awaited<ReturnType<typeof judgeQuality>> | null = null;
+
 		try {
-			graded = await withTimeout(
-				(async () => {
-					const adherence =
-						driver === "sdk"
-							? await runEvaluator(target.plan, {
-									model: judgeModel,
-									workspaceDir: evalWorkspace,
-									mockLinearUrl,
-									stubAppServerPath,
-								})
-							: await runEvaluatorCC(target.plan, {
-									model: judgeModel,
-									workspaceDir: evalWorkspace,
-									trialDir,
-									mockLinearUrl,
-									stubAppServerPath,
-								});
-					const blindDir = join(trialDir, "workspace-blind");
-					scrubWorkspace(workspace, blindDir, registry.candidates);
-					opts.onStage?.(`scoring ${trialId} (${idx + 1}/${total})`);
-					const quality =
-						driver === "sdk"
-							? await judgeQuality({
-									model: judgeModel,
-									blindWorkspaceDir: blindDir,
-								})
-							: await judgeQualityCC({
-									model: judgeModel,
-									blindWorkspaceDir: blindDir,
-								});
-					return { adherence, quality };
-				})(),
-				trialBudgetMs,
-				`grading ${trialId} exceeded ${Math.round(trialBudgetMs / 60_000)}m`,
-			);
-		} catch (e) {
-			// One trial's grading timing out or failing must NOT fail the whole run:
-			// leave it ungraded (a later scripts/grade-trial.ts re-grade fills it in)
-			// and continue, so the run still finalizes with the grades that completed.
-			stopFixtures(fixtures);
+			try {
+				adherence = await withTimeout(
+					drivers.evaluator === "sdk"
+						? deps.runEvaluator(target.plan, {
+								model: evaluatorModelFlag,
+								workspaceDir: evalWorkspace,
+								mockLinearUrl,
+								stubAppServerPath,
+							})
+						: deps.runEvaluatorCC(target.plan, {
+								model: evaluatorModelFlag,
+								workspaceDir: evalWorkspace,
+								trialDir,
+								mockLinearUrl,
+								stubAppServerPath,
+							}),
+					trialBudgetMs,
+					`adherence grading ${trialId} exceeded ${Math.round(trialBudgetMs / 60_000)}m`,
+				);
+			} catch (e) {
+				const note = `adherence grading incomplete: ${String(e).slice(0, 140)}`;
+				log(`  ${trialId}: ${note}`);
+				trial.provenance.notes.push(note);
+			}
+
+			const blindDir = join(trialDir, "workspace-blind");
+			deps.scrubWorkspace(workspace, blindDir, registry.candidates);
+			opts.onStage?.(`scoring ${trialId} (${idx + 1}/${total})`);
+			const judgeCheckpointPath = join(trialDir, "judge-checkpoint.json");
+			const judgeCheckpoint: Awaited<ReturnType<typeof judgeQuality>>["criteria"] =
+				existsSync(judgeCheckpointPath)
+					? JSON.parse(readFileSync(judgeCheckpointPath, "utf8"))
+					: [];
+			const onCriterion = (
+				c: Awaited<ReturnType<typeof judgeQuality>>["criteria"][number],
+			) => {
+				judgeCheckpoint.push(c);
+				writeFileSync(
+					judgeCheckpointPath,
+					JSON.stringify(judgeCheckpoint, null, 2),
+				);
+				log(
+					`  ${trialId}: criterion ${c.criterion}: ${c.score} (samples ${c.samples.join(",")})`,
+				);
+			};
+			try {
+				quality = await withTimeout(
+					drivers.quality === "sdk"
+						? deps.judgeQuality({
+								model: qualityModelFlag,
+								blindWorkspaceDir: blindDir,
+								judgeProfile: opts.judgeProfile,
+								preScored: judgeCheckpoint,
+								onCriterion,
+							})
+						: deps.judgeQualityCC({
+								model: qualityModelFlag,
+								blindWorkspaceDir: blindDir,
+								preScored: judgeCheckpoint,
+								onCriterion,
+							}),
+					trialBudgetMs,
+					`quality grading ${trialId} exceeded ${Math.round(trialBudgetMs / 60_000)}m`,
+				);
+			} catch (e) {
+				const note = `quality grading incomplete: ${String(e).slice(0, 140)}`;
+				log(`  ${trialId}: ${note}`);
+				trial.provenance.notes.push(note);
+			}
+		} finally {
+			deps.stopFixtures(fixtures);
 			cleanupIsolated();
-			const note = `grading incomplete: ${String(e).slice(0, 140)}`;
-			log(`  ${trialId}: ${note}`);
-			trial.provenance.notes.push(note);
-			continue;
 		}
-		stopFixtures(fixtures);
-		cleanupIsolated();
-		const { adherence, quality } = graded;
 
 		// Design adherence (static, no browser) when a UI design was selected.
 		let designAdherence: TrialGrades["designAdherence"] = null;
@@ -194,11 +269,20 @@ export async function gradeTrials(
 			);
 		}
 
+		if (!adherence && !quality && !designAdherence) continue;
+
 		trial.grades = {
 			trialId: trial.provenance.trialId,
 			adherence,
 			quality,
 			integration: null,
+			grading: {
+				evaluatorDriver: drivers.evaluator,
+				qualityDriver: drivers.quality,
+				judgeTransport: opts.judgeProfile?.transport,
+				evaluatorModel: evaluatorModelFlag,
+				qualityModel: qualityModelFlag,
+			},
 			designAdherence,
 		};
 		writeFileSync(

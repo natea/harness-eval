@@ -4,7 +4,7 @@
 
 ### Requirement: Credential-free auth kind for local models
 The model registry SHALL support an auth kind `none` for model profiles whose
-endpoint requires no credential (e.g. a local Ollama or LM Studio server). A
+endpoint requires no credential (e.g. a local Ollama server). A
 `none` profile SHALL resolve with no auth environment variable injected and SHALL
 NOT cause a missing-credential failure. Worker and judge resolution SHALL treat a
 `none` profile as fully configured.
@@ -22,7 +22,7 @@ NOT cause a missing-credential failure. Worker and judge resolution SHALL treat 
 ### Requirement: Local OSS worker via Codex open-source mode
 The model registry SHALL support driving a local open-source model as the worker
 through the Codex harness's built-in OSS mode. A worker profile MAY declare an
-`ossProvider` of `ollama` or `lmstudio`; such a profile SHALL use
+`ossProvider` of `ollama`; such a profile SHALL use
 `transport: codex` and `authKind: none`. When a run uses such a profile, the Codex
 driver SHALL invoke `codex exec --oss --local-provider <ossProvider> --model
 <modelId>` and SHALL NOT perform an API-key login. Provenance SHALL record the
@@ -63,9 +63,9 @@ for consumption by the grading judge client with no per-model code change.
 ### Requirement: Local-endpoint reachability probe
 The CLI profile probe (`model probe <profile>`) SHALL, for local/OpenAI-compatible
 profiles, check that the endpoint is reachable and the named model is present
-before any matrix-scale run — Ollama workers via `/api/tags`, LM Studio workers
-and local OpenAI-compatible judges via `/v1/models` — so a stopped server or
-unpulled model fails fast rather than inside a trial.
+before any matrix-scale run — Ollama workers via `/api/tags` and local
+OpenAI-compatible judges via `/v1/models` — so a stopped server or unpulled
+model fails fast rather than inside a trial.
 
 #### Scenario: Probe catches an unreachable local server
 - **WHEN** `model probe ollama-qwen3-coder` runs while the Ollama server is down

@@ -47,7 +47,7 @@ export interface SchedulerDeps {
 	/** Resolved worker `--model` flag; defaults to config.model. */
 	workerModelFlag?: string;
 	/** Resolved Codex OSS provider for local workers. */
-	workerOssProvider?: "ollama" | "lmstudio";
+	workerOssProvider?: "ollama";
 	/** Resolved worker profile identity for provenance (never the key). */
 	workerModelRef?: import("../types").ModelRef;
 	/** Injectable for tests. */

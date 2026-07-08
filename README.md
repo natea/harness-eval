@@ -33,7 +33,7 @@ before implementation:
   **GLM via z.ai validated end-to-end**, a `model probe` connectivity check,
   and cross-vendor-judge + cost-basis caveats in results/scorecards.
   ([`add-pluggable-models`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-pluggable-models))
-- **Local model support** — Codex OSS workers for Ollama/LM Studio plus
+- **Local model support** — Codex OSS workers for Ollama plus
   OpenAI-compatible local/self-hosted judges. See
   [docs/LOCAL-MODELS.md](docs/LOCAL-MODELS.md) for profiles and validation
   commands. (`add-local-model-support`, in review)
@@ -222,7 +222,7 @@ once it reaches launch parity.)
 - **Pluggable LLM models**: a model-profile registry drives the worker (and
   judge) model from config; **GLM via z.ai** is implemented and validated
   end-to-end through Claude Code's Anthropic-compatible endpoint, with
-  cross-vendor-judge and cost-basis caveats recorded. Local Ollama/LM Studio
+  cross-vendor-judge and cost-basis caveats recorded. Local Ollama
   workers use Codex OSS mode, and local Ollama OpenAI-compatible endpoints can
   drive the blind code-quality judge; see
   [docs/LOCAL-MODELS.md](docs/LOCAL-MODELS.md). Kimi/MiniMax/Qwen are

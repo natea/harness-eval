@@ -24,7 +24,7 @@ export type ModelTransport = z.infer<typeof ModelTransport>;
  *  - `auth-token`  → ANTHROPIC_AUTH_TOKEN + ANTHROPIC_BASE_URL (z.ai-style
  *                    Anthropic-compatible coding endpoints driven through Claude Code)
  *  - `api-key`     → ANTHROPIC_API_KEY (+ optional baseURL) for direct SDK calls
- *  - `none`        → no credential (local Ollama / LM Studio endpoints)
+ *  - `none`        → no credential (local Ollama endpoints)
  */
 export const AuthKind = z.enum(["oauth", "auth-token", "api-key", "none"]);
 export type AuthKind = z.infer<typeof AuthKind>;
@@ -49,7 +49,7 @@ export const ModelProfile = z
 		authEnv: z.string().min(1).optional(),
 		authKind: AuthKind,
 		/** Codex OSS-mode local provider; implies transport codex + authKind none. */
-		ossProvider: z.enum(["ollama", "lmstudio"]).optional(),
+		ossProvider: z.literal("ollama").optional(),
 		/** Optional $/Mtok pricing for token-only providers. */
 		pricing: ModelPricing.optional(),
 	})
@@ -239,7 +239,7 @@ export interface ResolvedWorker {
 	/** Human-readable note for logs (auth mode). */
 	note?: string;
 	/** Codex OSS local provider, threaded to the codex driver's --local-provider. */
-	ossProvider?: "ollama" | "lmstudio";
+	ossProvider?: "ollama";
 }
 
 /**

@@ -6,8 +6,8 @@ import type { DriverResult, HarnessDriver } from "./types";
 
 /**
  * OpenAI Codex CLI driver. Codex is model-agnostic: the model + provider are
- * configured from the run's worker profile (built-in `openai`/`ollama`/`lmstudio`
- * or a custom `[model_providers.<id>]` block); `codex exec` runs one
+ * configured from the run's worker profile (built-in `openai`/`ollama` or a
+ * custom `[model_providers.<id>]` block); `codex exec` runs one
  * non-interactive turn. Output is the `--json` JSONL event stream, redirected to
  * a file (a started service must not hold the exec stream open) and read back.
  */

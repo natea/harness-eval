@@ -9,13 +9,12 @@ repo at the time of writing; re-verify flags/strings against the pinned Codex in
 
 ## Verified Codex facts (the load-bearing ones)
 
-- `codex exec --oss --local-provider <lmstudio|ollama> --model <MODEL>` is built in
+- `codex exec --oss --local-provider ollama --model <MODEL>` is built in
   (from `codex exec --help`): `--oss` = "Use open-source provider";
   `--local-provider <OSS_PROVIDER>` = "Specify which local provider to use
-  (lmstudio or ollama)". **No `[model_providers.*]` TOML is required for these two.**
+  (lmstudio or ollama)". **No `[model_providers.*]` TOML is required for Ollama.**
 - Codex's Ollama provider is labelled (binary string) **"Local Ollama server
-  (Responses API, default port 11434)"** and LM Studio **"Local LM Studio server
-  (default port 1234)"**. So Codex talks the **Responses API** to Ollama — it
+  (Responses API, default port 11434)"**. Codex talks the **Responses API** to Ollama — it
   version-gates Ollama ("… is too old. Codex requires Ollama …", "Failed to connect
   to Ollama server: …", "Failed to query local models from Ollama: …"). Phase 1
   must pin a documented minimum Ollama version and surface these errors in preflight.
@@ -37,11 +36,11 @@ valid until the pinned Codex actually has `--oss --local-provider`.
   every non-`none` auth kind MUST still name an `authEnv`. A `none` profile requires
   no credential and `resolveWorkerEnv` injects no auth env for it. Assert both
   directions in the zod refinement + tests.
-- `ModelProfile` gains `ossProvider: z.enum(["ollama","lmstudio"]).optional()`.
+- `ModelProfile` gains `ossProvider: z.literal("ollama").optional()`.
   Refinement: `ossProvider` is only valid with `transport: codex` and implies
   `authKind: none`.
 - `resolveWorkerEnv` (the codex branch) returns the new field on `ResolvedWorker`:
-  `ossProvider?: "ollama" | "lmstudio"`. For `authKind: none` it returns no auth
+  `ossProvider?: "ollama"`. For `authKind: none` it returns no auth
   env and a `note` like `"local oss: ollama"`.
 
 ### Plumbing gap to close (called out by review)
@@ -53,7 +52,7 @@ so the value never reaches `codex.ts buildCommand`. The path to wire:
 reads it. This is a real task, not a config tweak.
 
 ### Codex driver (`src/driver/codex.ts`)
-- When `ctx.ossProvider` is set: add `--oss --local-provider <ctx.ossProvider>` to
+- When `ctx.ossProvider` is set: add `--oss --local-provider ollama` to
   the `codex exec` argv, keep `--model <id>`, and **skip the auth block entirely**
   (no `codex login`). Everything else (file-redirected output, `--json`,
   `--dangerously-bypass-approvals-and-sandbox`, `--skip-git-repo-check`, resume)
@@ -61,10 +60,9 @@ reads it. This is a real task, not a config tweak.
 
 ### Preflight / probe
 Before any local-worker trial: ping the server and confirm the named model is
-present. Ollama: `GET {OLLAMA_BASE_URL}/api/tags`. LM Studio: `GET
-{LMSTUDIO_BASE_URL}/v1/models`. Fail fast with the endpoint + model named, and a
-hint to start the server / `ollama pull <model>`. Do not let Codex's version error
-appear first inside a trial transcript.
+present. Ollama: `GET {OLLAMA_BASE_URL}/api/tags`. Fail fast with the endpoint +
+model named, and a hint to start the server / `ollama pull <model>`. Do not let
+Codex's version error appear first inside a trial transcript.
 
 ### Example profiles (`config/models.yaml`)
 ```yaml
@@ -74,7 +72,6 @@ appear first inside a trial transcript.
   transport: codex
   ossProvider: ollama
   authKind: none
-# lmstudio-default likewise with ossProvider: lmstudio, provider: lmstudio
 ```
 No `pricing` → cost source is `tokens-only` (existing rule). `provider` is the
 vendor label used by `judgeWorkerRelation` for the cross-vendor flag.
@@ -166,17 +163,16 @@ flag/caveat fires. Scrub-before-judge and median-of-three are unchanged.
 
 ## Phase 3 — local-provider close-out
 
-- **Keep Ollama and LM Studio.** These are Codex's built-in local OSS providers and
-  are the only local worker runtimes advertised by this change.
+- **Keep Ollama only.** Ollama is the only local worker runtime advertised by this
+  change.
 - **Keep local `openai-compat` only for judging.** Ollama's `/v1` endpoint uses the
   same Chat Completions shape as the OpenAI SDK expects, so the local judge path
   stays behind the `openai-compat` transport. The supported auth kind is `none`.
-- **Remove HF/TGI/vLLM.** HuggingFace Inference Endpoints, local TGI, vLLM, bearer
-  auth, and `HF_TOKEN` are out of scope. They add cloud/self-hosted deployment
-  surface that is not needed to prove the local-model goal.
-- **Validation expectation.** Ollama has live worker and judge evidence. LM Studio
-  support is kept as a first-class local worker profile and must pass
-  `model probe lmstudio-default` before an operator relies on it for a run.
+- **Remove LM Studio and HF/TGI/vLLM.** LM Studio, HuggingFace Inference
+  Endpoints, local TGI, vLLM, bearer auth, and `HF_TOKEN` are out of scope. LM
+  Studio was probed successfully but deferred because Codex worker execution
+  failed against LM Studio's OpenAI-compatible tool schema.
+- **Validation expectation.** Ollama has live worker and judge evidence.
 
 ## Selection surfaces (no new mechanics)
 - **CLI:** `--worker-model` / `--judge-model` already take any profile name.
@@ -187,7 +183,7 @@ flag/caveat fires. Scrub-before-judge and median-of-three are unchanged.
 
 ## Things deliberately NOT done (YAGNI)
 - No custom `[model_providers.*]` TOML writer for Phase 1 — `--oss
-  --local-provider` covers Ollama + LM Studio without it. (A custom TOML provider
+  --local-provider` covers Ollama without it. (A custom TOML provider
   is a later option only if a non-OSS local endpoint must be driven *through Codex*;
   the local `openai-compat` judge path already covers Ollama-compatible judging.)
 - No HuggingFace Inference Endpoints, HF Serverless, TGI, or vLLM support in this

@@ -14,14 +14,9 @@ function localEndpoint(p: ModelProfile, env: NodeJS.ProcessEnv): string {
 	if (p.transport === "openai-compat" && p.baseUrl) {
 		return `${p.baseUrl.replace(/\/+$/, "")}/models`;
 	}
-	const base =
-		p.ossProvider === "ollama"
-			? (env.OLLAMA_BASE_URL ?? "http://localhost:11434")
-			: (env.LMSTUDIO_BASE_URL ?? "http://localhost:1234");
+	const base = env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 	const trimmed = base.replace(/\/+$/, "");
-	return p.ossProvider === "ollama"
-		? `${trimmed}/api/tags`
-		: `${trimmed}/v1/models`;
+	return `${trimmed}/api/tags`;
 }
 
 function modelMatches(found: string, requested: string): boolean {

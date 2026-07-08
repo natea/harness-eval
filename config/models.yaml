@@ -163,11 +163,11 @@ profiles:
     authKind: oauth
 
   # --- Local open-source models via Codex OSS mode (zero credential) ---
-  # Driven by `codex exec --oss --local-provider <ollama|lmstudio>`.
+  # Driven by `codex exec --oss --local-provider ollama`.
   # No pricing → cost source is tokens-only. Start the server first (`ollama
-  # serve`, or LM Studio's local server) and run `model probe <name>` to confirm
-  # reachability. Codex OSS workers use Codex's built-in default local ports;
-  # OLLAMA_BASE_URL / LMSTUDIO_BASE_URL are used by the probe and judges.
+  # serve`) and run `model probe <name>` to confirm reachability. Codex OSS
+  # workers use Codex's built-in default local port; OLLAMA_BASE_URL is used by
+  # the probe and judges.
   - name: ollama-qwen3-coder
     provider: ollama
     modelId: qwen3-coder
@@ -194,13 +194,6 @@ profiles:
     modelId: llama3.1
     transport: codex
     ossProvider: ollama
-    authKind: none
-
-  - name: lmstudio-default
-    provider: lmstudio
-    modelId: default
-    transport: codex
-    ossProvider: lmstudio
     authKind: none
 
   # --- Local OpenAI-compatible judge endpoints ---

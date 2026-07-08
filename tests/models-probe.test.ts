@@ -39,23 +39,6 @@ test("probe fails when the server is unreachable", async () => {
 	expect(r.detail).toMatch(/unreachable|ECONNREFUSED/);
 });
 
-test("modelId default checks reachability only, not model presence", async () => {
-	const lmstudio = ModelProfile.parse({
-		name: "lmstudio-default",
-		provider: "lmstudio",
-		modelId: "default",
-		transport: "codex",
-		authKind: "none",
-		ossProvider: "lmstudio",
-	});
-	const fetchFn = async () =>
-		new Response(JSON.stringify({ data: [{ id: "some-loaded-model" }] }), {
-			status: 200,
-		});
-	const r = await probeLocalEndpoint(lmstudio, fetchFn, {});
-	expect(r.ok).toBe(true);
-});
-
 test("openai-compat probe checks local /v1/models without auth", async () => {
 	const profile = ModelProfile.parse({
 		name: "ollama-judge",

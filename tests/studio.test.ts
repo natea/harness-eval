@@ -31,7 +31,7 @@ describe("eval-studio options + validation (tasks 3.1, 4.1)", () => {
 		// GLM/Kimi/etc. are in the registry too.
 		expect(o.models.map((m) => m.name)).toContain("glm-4.7");
 		expect(o.models.map((m) => m.name)).toContain("ollama-qwen3.6-35b");
-		expect(o.models.map((m) => m.name)).toContain("lmstudio-default");
+		expect(o.models.map((m) => m.name)).not.toContain("lmstudio-qwen3.6-35b");
 		expect(o.models.map((m) => m.name)).toContain("ollama-gemma4-judge");
 	});
 

@@ -1,7 +1,7 @@
 # Local Models
 
-This project can run local worker models through the Codex harness using Codex
-OSS mode:
+This project can run local Ollama worker models through the Codex harness using
+Codex OSS mode:
 
 ```sh
 bun run src/cli.ts model probe ollama-qwen3.6-35b
@@ -17,24 +17,22 @@ Local worker profiles live in `config/models.yaml`:
 - `ollama-llama3.1`
 - `ollama-qwen3.6-35b`
 - `ollama-gemma4`
-- `lmstudio-default`
 - `ollama-qwen3.6-judge` (judge profile, Ollama OpenAI-compatible `/v1`)
 - `ollama-gemma4-judge` (judge profile, Ollama OpenAI-compatible `/v1`)
 
 Worker profiles use `transport: codex`, `authKind: none`, and `ossProvider` set
-to either `ollama` or `lmstudio`. Local judge profiles use
-`transport: openai-compat`, `baseUrl: http://localhost:11434/v1`, and
-`authKind: none`. They intentionally omit pricing, so reports record
-`tokens-only` instead of fabricated dollar cost.
+to `ollama`. Local judge profiles use `transport: openai-compat`,
+`baseUrl: http://localhost:11434/v1`, and `authKind: none`. They intentionally
+omit pricing, so reports record `tokens-only` instead of fabricated dollar cost.
 
 ## Decisions
 
 - Codex is pinned to `0.142.0` because that version exposes
-  `codex exec --oss --local-provider <lmstudio|ollama>`. The trial image asserts
-  those flags during build.
+  `codex exec --oss --local-provider ollama`. The trial image asserts those
+  flags during build.
 - `authKind: none` means no credential is required. `authEnv` is optional only
   for this auth kind; all credentialed profiles must still name an env var.
-- This change intentionally supports Ollama and LM Studio only. HuggingFace
+- This change intentionally supports Ollama only. LM Studio, HuggingFace
   Inference Endpoints, TGI, vLLM, and other remote OpenAI-compatible services are
   out of scope until a later OpenSpec change justifies them.
 - Validation should use a model that is actually present on the operator's local
@@ -42,11 +40,11 @@ to either `ollama` or `lmstudio`. Local judge profiles use
   was installed; `ollama-qwen3-coder` stays in the registry as an example and
   should be probed only after `ollama pull qwen3-coder`.
 - Codex OSS workers use Codex's built-in local-provider defaults. The probe honors
-  `OLLAMA_BASE_URL` and `LMSTUDIO_BASE_URL`, but those variables are not threaded
-  into Codex worker execution unless Codex later documents a supported override.
-- `lmstudio-default` treats `modelId: default` as "the model currently loaded in
-  LM Studio". The probe checks that the server is reachable and at least one model
-  is loaded.
+  `OLLAMA_BASE_URL`, but that variable is not threaded into Codex worker
+  execution unless Codex later documents a supported override.
+- LM Studio is deferred. LM Studio 0.4.10+1 with `qwen/qwen3.6-35b-a3b` was
+  reachable via `/v1/models`, but Codex worker execution failed because LM Studio
+  rejected Codex's tool schema (`tools.5.type`, `invalid_string`).
 - `openai-compat` judge profiles drive the blind code-quality judge. The
   PRD-adherence evaluator remains on the Claude Code path by default because it is
   a separate adaptive evaluator loop and was not part of this transport port.

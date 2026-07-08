@@ -24,7 +24,7 @@ const SECRET_ENV_VARS = [
 ];
 
 /** Env var names intentionally documented but not redacted because they are URLs. */
-const NON_SECRET_ENV_VARS = ["OLLAMA_BASE_URL", "LMSTUDIO_BASE_URL"];
+const NON_SECRET_ENV_VARS = ["OLLAMA_BASE_URL"];
 void NON_SECRET_ENV_VARS;
 
 /** Patterns matching well-known credential shapes, independent of env. */

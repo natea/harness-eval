@@ -163,7 +163,7 @@ describe("model registry (add-pluggable-models)", () => {
 		expect(missingKey.success).toBe(false);
 	});
 
-	test("ossProvider requires codex transport and authKind none", () => {
+	test("ossProvider is Ollama-only and requires codex transport plus authKind none", () => {
 		const ok = ModelProfile.safeParse({
 			name: "ollama-x",
 			provider: "ollama",
@@ -173,6 +173,16 @@ describe("model registry (add-pluggable-models)", () => {
 			ossProvider: "ollama",
 		});
 		expect(ok.success).toBe(true);
+
+		const lmstudio = ModelProfile.safeParse({
+			name: "lmstudio-x",
+			provider: "lmstudio",
+			modelId: "qwen/qwen3.6-35b-a3b",
+			transport: "codex",
+			authKind: "none",
+			ossProvider: "lmstudio",
+		});
+		expect(lmstudio.success).toBe(false);
 
 		const badTransport = ModelProfile.safeParse({
 			name: "bad1",

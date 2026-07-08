@@ -24,7 +24,7 @@ export interface SessionScriptOptions {
 	costBudgetUsd: number;
 	env?: Record<string, string>;
 	/** Codex OSS local provider, forwarded to the driver on every step. */
-	ossProvider?: "ollama" | "lmstudio";
+	ossProvider?: "ollama";
 	/** Harness implementation; defaults to Claude Code for compatibility. */
 	driver?: HarnessDriver;
 	/** Injected for focused tests; overrides `driver`. */

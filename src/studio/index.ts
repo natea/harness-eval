@@ -9,9 +9,11 @@
  *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getRun, loadRunIndex } from "../dashboard/data";
+import { buildBrackets } from "../bracket/bracket";
+import { buildInverseScaling } from "../report/inverse-scaling";
 import { loadTarget } from "../targets";
 import index from "./index.html";
 import { cancelRun, getQueue, launchRun, regradeRun } from "./launcher";
@@ -92,12 +94,62 @@ function resolveRunTarget(runId: string): RunTarget | null {
 	}
 }
 
+/** The input spec a run was graded against (input-spec-viewer): resolve the run's
+ *  frozen PRD hash → target and serve its PRD + test-plan text read-only. When the
+ *  hash matches no current target (PRD re-frozen since), report that rather than
+ *  serving a substitute document — only the hash, not the text, is archived per run. */
+function resolveRunPrd(runId: string): {
+	name: string | null;
+	title: string | null;
+	prd: string | null;
+	testPlan: string | null;
+	sha: string;
+	currentMatch: boolean;
+} | null {
+	const sha = getRun(runId)?.results?.prdSha256;
+	if (!sha) return null; // run doesn't exist / isn't indexed
+	const hit = targetBySha().get(sha);
+	if (!hit)
+		return {
+			name: null,
+			title: null,
+			prd: null,
+			testPlan: null,
+			sha,
+			currentMatch: false,
+		};
+	try {
+		const t = loadTarget(hit.name);
+		const planPath = join("targets", hit.name, "testplan.yaml");
+		const testPlan = existsSync(planPath)
+			? readFileSync(planPath, "utf8")
+			: null;
+		return {
+			name: hit.name,
+			title: hit.title,
+			prd: t.prdContent,
+			testPlan,
+			sha,
+			currentMatch: true,
+		};
+	} catch {
+		return { name: hit.name, title: hit.title, prd: null, testPlan: null, sha, currentMatch: false };
+	}
+}
+
 const server = Bun.serve({
 	hostname: "127.0.0.1",
 	port,
+	// The live-build SSE stream (/api/runs/:id/trials/:trialId/stream) is long-lived
+	// and quiet between agent turns; Bun's 10s default idleTimeout would kill it
+	// mid-build. The stream also heartbeats every ~4s, but raise the ceiling so a
+	// tick delayed under load can't still trip the timeout. Max is 255s.
+	idleTimeout: 120,
 	routes: {
 		"/": index,
 		"/configure": index,
+		"/inverse-scaling": index,
+		"/bracket": index,
 		"/runs": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
@@ -168,6 +220,21 @@ const server = Bun.serve({
 
 		// Live status of studio-launched runs.
 		"/api/queue": { GET: () => Response.json(getQueue()) },
+
+		// Inverse-scaling view (explore-inverse-scaling-report): marginal harness
+		// gain over the no-framework baseline vs. baseline strength, on the two
+		// absolute axes. Derived read-only from runs/ — never the run-normalized
+		// composite.
+		"/api/inverse-scaling": {
+			GET: async () =>
+				Response.json(await buildInverseScaling("runs", "targets")),
+		},
+
+		// Bracket bakeoff (bracket-bakeoff): retrospective single-elim tournaments
+		// built from existing graded entrants. Read-only over runs/.
+		"/api/bracket": {
+			GET: async () => Response.json(await buildBrackets("runs", "targets")),
+		},
 
 		// Resume grading for a run with built-but-ungraded trials (no rebuild).
 		"/api/regrade": {
@@ -271,6 +338,17 @@ const server = Bun.serve({
 
 		// Which app a run built (PRD title + name) and the concrete check behind
 		// each step — resolved from the run's actual target, not a hardcoded one.
+		// The input spec a run was graded against (input-spec-viewer): PRD + test
+		// plan, read-only, resolved by the run's frozen PRD hash.
+		"/api/runs/:id/prd": {
+			GET: (req) => {
+				const p = resolveRunPrd(req.params.id);
+				return p
+					? Response.json(p)
+					: Response.json({ error: "not found" }, { status: 404 });
+			},
+		},
+
 		"/api/runs/:id/target": {
 			GET: (req) => {
 				const t = resolveRunTarget(req.params.id);
@@ -327,7 +405,7 @@ const server = Bun.serve({
 	development: { hmr: true, console: true },
 });
 
-console.log(`Eval Studio: http://127.0.0.1:${server.port}`);
+console.log(`CodingHarness: http://127.0.0.1:${server.port}`);
 
 // Tear down any running previews on shutdown so a container/port never leaks
 // past the studio process (artifact-preview lifecycle).

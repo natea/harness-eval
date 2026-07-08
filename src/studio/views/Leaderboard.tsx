@@ -127,7 +127,7 @@ export function Leaderboard() {
 						</TableHeader>
 						<TableBody>
 							{rows.map((r, i) => (
-								<TableRow key={r.candidate}>
+								<TableRow key={`${r.candidate}|${r.harness}|${r.model}`}>
 									<TableCell className="text-muted-foreground">
 										{i + 1}
 									</TableCell>

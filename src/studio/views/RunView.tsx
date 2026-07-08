@@ -16,6 +16,7 @@ import {
 	TooltipTrigger,
 } from "../components/ui/tooltip";
 import { DEFAULT_WEIGHTS, DIM_LABELS, reweight, useFetch } from "../lib/api";
+import { Markdown, YamlBlock } from "../lib/markdown";
 import { Bar, ColHead, DIM_KEYS, WeightControls } from "./shared";
 
 interface RunResults {
@@ -58,7 +59,11 @@ function StepComparison({
 		const s = t.grades?.adherence?.stepResults.find((x) => x.stepId === id);
 		if (!s) return <span className="text-muted-foreground">·</span>;
 		const icon =
-			s.outcome === "pass" ? "✅" : s.outcome === "partial" ? `🟡${s.credit}` : "❌";
+			s.outcome === "pass"
+				? "✅"
+				: s.outcome === "partial"
+					? `🟡${s.credit}`
+					: "❌";
 		return (
 			<Tooltip>
 				<TooltipTrigger asChild>
@@ -118,19 +123,168 @@ function StepComparison({
 	);
 }
 
-export function RunView({ runId }: { runId: string }) {
-	const entry = useFetch<{ supported: boolean; error?: string; results?: RunResults }>(
-		`/api/runs/${runId}`,
+interface LiveJob {
+	runId: string;
+	kind: "dry" | "live";
+	status: string;
+	stage?: string;
+	startedAt: string;
+	candidates: string[];
+	trials: Record<string, string>; // trialId -> status
+	costUsdSoFar: number;
+}
+
+/** A run that's still building/grading (not yet archived): live stage + trial links. */
+function LiveRunView({
+	runId,
+	job,
+	target,
+}: {
+	runId: string;
+	job: LiveJob;
+	target?: RunTarget;
+}) {
+	// Prefer the concrete per-trial ids the worker has registered; before any
+	// exist, derive the t1 ids from the candidate list so the links still resolve.
+	const trialIds = Object.keys(job.trials).length
+		? Object.keys(job.trials)
+		: job.candidates.map((c) => `${c}-t1`);
+	return (
+		<>
+			<p>
+				<a href="/" className="text-primary-hover hover:underline">
+					← leaderboard
+				</a>
+			</p>
+			<h1 className="font-mono text-lg font-bold">{runId}</h1>
+			{target && (
+				<p className="mt-1 text-[13px]">
+					🎯 Building <span className="font-semibold">{target.title}</span>{" "}
+					<span className="font-mono text-muted-foreground">
+						({target.name})
+					</span>
+				</p>
+			)}
+			<p className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
+				<span
+					role="status"
+					aria-label="working"
+					className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent"
+				/>
+				{job.status}
+				{job.stage ? ` · ${job.stage}` : ""} · ${job.costUsdSoFar.toFixed(2)}
+			</p>
+			<Card>
+				<CardContent className="px-2 pb-2 pt-2">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Trial</TableHead>
+								<TableHead>Status</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{trialIds.map((id) => (
+								<TableRow key={id}>
+									<TableCell>
+										<a
+											href={`/runs/${runId}/trials/${id}`}
+											className="font-mono text-primary-hover hover:underline"
+										>
+											{id}
+										</a>
+									</TableCell>
+									<TableCell className="text-muted-foreground">
+										{job.trials[id] ?? "pending"}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
+		</>
 	);
+}
+
+interface RunPrd {
+	name: string | null;
+	title: string | null;
+	prd: string | null;
+	testPlan: string | null;
+	sha: string;
+	currentMatch: boolean;
+}
+
+/** The input spec a run was graded against (input-spec-viewer): the PRD rendered
+ *  as Markdown and the test plan as syntax-coloured YAML, collapsed by default
+ *  next to the scorecard. */
+function SpecPanel({ runId }: { runId: string }) {
+	const data = useFetch<RunPrd>(`/api/runs/${runId}/prd`);
+	if (!data) return null;
+	return (
+		<details className="mt-2 rounded-md border border-border">
+			<summary className="cursor-pointer select-none px-3 py-2 text-[13px] font-semibold">
+				📄 Spec — what the agents were asked to build
+			</summary>
+			<div className="border-t border-border px-3 py-2">
+				{!data.currentMatch || !data.prd ? (
+					<p className="text-[13px]">
+						<Badge variant="warn">frozen PRD not available</Badge> this run's
+						PRD hash (
+						<span className="font-mono">{data.sha.slice(0, 12)}…</span>) matches
+						no current target — it was re-frozen since the run, and only the
+						hash is archived per run.
+					</p>
+				) : (
+					<>
+						<div className="text-[12px] text-muted-foreground">
+							PRD.md · {data.name}
+						</div>
+						<div className="mt-1 max-h-[480px] overflow-auto rounded bg-muted p-3">
+							<Markdown source={data.prd} />
+						</div>
+						{data.testPlan && (
+							<>
+								<div className="mt-3 text-[12px] text-muted-foreground">
+									testplan.yaml
+								</div>
+								<YamlBlock
+									source={data.testPlan}
+									className="mt-1 max-h-[360px]"
+								/>
+							</>
+						)}
+					</>
+				)}
+			</div>
+		</details>
+	);
+}
+
+export function RunView({ runId }: { runId: string }) {
+	const entry = useFetch<{
+		supported: boolean;
+		error?: string;
+		results?: RunResults;
+	}>(`/api/runs/${runId}`);
 	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
+	// This session's live jobs — a run that's still building/grading isn't on disk
+	// yet, so /api/runs 404s. Fall back to the queue so the run page shows live
+	// progress (and links into each trial) instead of "unsupported / not found".
+	const queue = useFetch<LiveJob[]>("/api/queue");
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	if (!entry) return <p className="text-muted-foreground">loading…</p>;
-	if (!entry.supported || !entry.results)
+	if (!entry.supported || !entry.results) {
+		const job = queue?.find((q) => q.runId === runId);
+		if (job && (job.status === "running" || job.status === "queued"))
+			return <LiveRunView runId={runId} job={job} target={target} />;
 		return (
 			<p>
 				<Badge variant="danger">unsupported</Badge> {entry.error}
 			</p>
 		);
+	}
 	const r = entry.results;
 	const rows = reweight(r.scores, weights);
 	const combined = runId.startsWith("combined:");
@@ -167,6 +321,7 @@ export function RunView({ runId }: { runId: string }) {
 					</Badge>
 				</p>
 			)}
+			<SpecPanel runId={runId} />
 			<WeightControls weights={weights} onChange={setWeights} />
 
 			<Card>
@@ -186,8 +341,10 @@ export function RunView({ runId }: { runId: string }) {
 						</TableHeader>
 						<TableBody>
 							{rows.map((s, i) => (
-								<TableRow key={s.candidate}>
-									<TableCell className="text-muted-foreground">{i + 1}</TableCell>
+								<TableRow key={`${s.candidate}|${s.harness}|${s.model}`}>
+									<TableCell className="text-muted-foreground">
+										{i + 1}
+									</TableCell>
 									<TableCell className="font-semibold">{s.candidate}</TableCell>
 									<TableCell>
 										<Bar v={s.rw} />
@@ -251,7 +408,9 @@ export function RunView({ runId }: { runId: string }) {
 											: "—"}
 									</TableCell>
 									<TableCell className="font-mono text-[12px]">
-										{t.grades?.quality ? t.grades.quality.score.toFixed(0) : "—"}
+										{t.grades?.quality
+											? t.grades.quality.score.toFixed(0)
+											: "—"}
 									</TableCell>
 									<TableCell className="font-mono text-[12px]">
 										{t.telemetry

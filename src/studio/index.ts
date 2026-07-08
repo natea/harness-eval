@@ -30,6 +30,7 @@ import {
 } from "../preview/studio";
 import { liveStreamResponse } from "./live-stream";
 import { reconcileRunStates, runNeedsGrading } from "./run-state";
+import { probeStudioModel } from "./model-probe";
 import { trialTranscript } from "./transcript";
 
 const portIdx = process.argv.indexOf("--port");
@@ -153,10 +154,31 @@ const server = Bun.serve({
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
 
-		// Registry-driven option sources for the Configure view.
-		"/api/options": { GET: () => Response.json(studioOptions()) },
+			// Registry-driven option sources for the Configure view.
+			"/api/options": { GET: () => Response.json(studioOptions()) },
 
-		// Validate a run request with the same rules the CLI enforces; returns
+			// Local/OpenAI-compatible model reachability for Configure badges.
+			"/api/model-probe/:name": {
+				GET: async (req) => {
+					try {
+						return Response.json(
+							await probeStudioModel(decodeURIComponent(req.params.name)),
+						);
+					} catch (e) {
+						return Response.json(
+							{
+								name: req.params.name,
+								probeable: false,
+								ok: false,
+								detail: (e as Error).message,
+							},
+							{ status: 400 },
+						);
+					}
+				},
+			},
+
+			// Validate a run request with the same rules the CLI enforces; returns
 		// inline errors, or the equivalent CLI command + budget envelope. Pure
 		// validation — never launches anything.
 		"/api/validate": {

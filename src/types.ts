@@ -186,6 +186,7 @@ export const ModelRef = z.object({
 	name: z.string(),
 	provider: z.string(),
 	modelId: z.string(),
+	transport: z.string().optional(),
 	endpointHost: z.string().nullable().default(null),
 });
 export type ModelRef = z.infer<typeof ModelRef>;
@@ -283,10 +284,19 @@ export const QualityCriterion = z.enum([
 ]);
 export type QualityCriterion = z.infer<typeof QualityCriterion>;
 
+export const CriterionSample = z.object({
+	score: z.number().min(0).max(10),
+	justification: z.string(),
+	usedFallback: z.boolean().default(false),
+});
+export type CriterionSample = z.infer<typeof CriterionSample>;
+
 export const CriterionScore = z.object({
 	criterion: QualityCriterion,
 	/** All judge samples (median taken); each 0-10. */
 	samples: z.array(z.number().min(0).max(10)).min(1),
+	/** Per-sample details, including whether score parsing fell back to text. */
+	sampleDetails: z.array(CriterionSample).optional(),
 	score: z.number().min(0).max(10),
 	justification: z.string(),
 });
@@ -347,11 +357,21 @@ export const DesignAdherenceGrade = z.object({
 });
 export type DesignAdherenceGrade = z.infer<typeof DesignAdherenceGrade>;
 
+export const TrialGradingProvenance = z.object({
+	evaluatorDriver: z.enum(["cc", "sdk"]),
+	qualityDriver: z.enum(["cc", "sdk"]),
+	judgeTransport: z.string().optional(),
+	evaluatorModel: z.string(),
+	qualityModel: z.string(),
+});
+export type TrialGradingProvenance = z.infer<typeof TrialGradingProvenance>;
+
 export const TrialGrades = z.object({
 	trialId: z.string(),
 	adherence: AdherenceResult.nullable(),
 	quality: QualityResult.nullable(),
 	integration: IntegrationResult.nullable(),
+	grading: TrialGradingProvenance.optional(),
 	/** Present only when the run selected a design (design-adherence). */
 	designAdherence: DesignAdherenceGrade.nullable().default(null),
 });

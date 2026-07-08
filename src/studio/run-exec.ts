@@ -5,17 +5,22 @@
  * the studio server resolves auth/budget, then either runs this inline (tests)
  * or spawns a worker that calls it, while both emit the same state updates.
  */
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { parse } from "yaml";
 import { loadDesign } from "../designs";
 import type { SessionScriptResult } from "../driver/session";
 import { loadHarnesses } from "../harnesses";
 import {
+	type CostSource,
+	costSourceForHarness,
 	loadModels,
+	type ModelProfile,
 	resolveProfile,
 	resolveWorkerEnv,
 	toModelRef,
 } from "../models";
-import { gradeTrials } from "../orchestrator/grade";
+import { gradeTrials, type GradeDeps } from "../orchestrator/grade";
 import {
 	buildMatrix,
 	runMatrix,
@@ -31,9 +36,16 @@ import { loadRegistry, resolveCandidates } from "../registry";
 import { writeScorecard } from "../report/markdown";
 import { buildResults, writeResults } from "../report/results";
 import { loadTarget, renderTargetPrompt } from "../targets";
-import { type HarnessId, type IsolationProviderId, RunConfig } from "../types";
+import {
+	type CandidateEntry,
+	type HarnessId,
+	type IsolationProviderId,
+	RunConfig,
+} from "../types";
 import { defaultConcurrency, type StudioRunRequest } from "./options";
 import type { RunStateStatus } from "./run-state";
+
+const DEFAULTS_PATH = "config/run.defaults.yaml";
 
 /** Reject if `p` does not settle within `ms` — bounds in-process grading so a
  *  hung session can't wedge the run at "grading" forever. */
@@ -93,10 +105,41 @@ export function defaultProvider(
 	});
 }
 
+export function studioCostSource(
+	dryRun: boolean,
+	profile: ModelProfile,
+	reportsCost: boolean,
+): CostSource {
+	return dryRun ? "tokens-only" : costSourceForHarness(profile, reportsCost);
+}
+
+export function stripInstallStepsForDryRun(
+	candidates: CandidateEntry[],
+	harness: HarnessId,
+): CandidateEntry[] {
+	return candidates.map((candidate) => {
+		const setup = candidate.harnesses[harness];
+		if (!setup) return candidate;
+		return {
+			...candidate,
+			harnesses: {
+				...candidate.harnesses,
+				[harness]: {
+					...setup,
+					install: [],
+				},
+			},
+		};
+	});
+}
+
 /** Everything a run needs, derived from the request (in either process). */
 export function resolveRunInputs(r: StudioRunRequest) {
 	const harnesses = loadHarnesses();
 	const registry = loadRegistry("config/registry.yaml", harnesses);
+	const defaults = existsSync(DEFAULTS_PATH)
+		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
+		: {};
 	const target = loadTarget(r.target);
 	const design = r.design ? loadDesign(r.design) : null;
 	registry.basePrompt = renderTargetPrompt(
@@ -121,15 +164,25 @@ export function resolveRunInputs(r: StudioRunRequest) {
 	const rw = resolveWorkerEnv(workerProfile);
 	const workerEnv = rw.env;
 	const workerModelFlag = rw.modelFlag;
+	const workerOssProvider = rw.ossProvider;
+	const baseBudget =
+		(defaults.budget as Record<string, unknown> | undefined) ?? {};
+	const budget =
+		r.trialMinutes !== undefined
+			? { ...baseBudget, trialWallClockMs: Number(r.trialMinutes) * 60_000 }
+			: baseBudget;
 	const config = RunConfig.parse({
+		...(Object.keys(budget).length ? { budget } : {}),
 		candidates: r.candidates,
 		harness: r.harness,
 		model: workerProfile.name,
+		judgeModel: judgeProfile.name,
 		trialsPerCandidate: r.trials,
 		provider: r.provider as IsolationProviderId,
 		concurrency: r.concurrency ?? defaultConcurrency(r.provider),
 		weights: r.weights,
 	});
+	const harnessReportsCost = harnesses.get(config.harness)?.reportsCost ?? true;
 	return {
 		registry,
 		target,
@@ -139,6 +192,8 @@ export function resolveRunInputs(r: StudioRunRequest) {
 		judgeProfile,
 		workerEnv,
 		workerModelFlag,
+		workerOssProvider,
+		harnessReportsCost,
 		config,
 	};
 }
@@ -163,6 +218,8 @@ export interface ExecuteRunOpts {
 		provider: IsolationProviderId,
 		runDir: string,
 	) => ReturnType<typeof createProvider>;
+	/** Injected for tests so Studio grading can be exercised without model spend. */
+	gradeDeps?: Partial<GradeDeps>;
 }
 
 export interface ExecuteRunResult {
@@ -198,12 +255,20 @@ export async function executeRun(
 				requiredProbe: preflightProbeForHarness(inp.config.harness),
 			});
 
-		const startedAt = new Date().toISOString();
-		onUpdate({ stage: "building" });
-		const trials = await runMatrix(
-			inp.config,
-			buildMatrix(inp.candidates, inp.config.trialsPerCandidate),
-			{
+			const startedAt = new Date().toISOString();
+			onUpdate({ stage: "building" });
+			// Synthetic Studio runs (dry runs and injected-executor tests) exercise the
+			// orchestration/reporting lifecycle, not framework installation. Running the
+			// real candidate install here would make zero-spend checks depend on networked
+			// plugin installers before the fake executor ever gets control.
+			const skipCandidateInstalls = dryRun || opts.executeScript !== undefined;
+			const candidates = skipCandidateInstalls
+				? stripInstallStepsForDryRun(inp.candidates, inp.config.harness)
+				: inp.candidates;
+			const trials = await runMatrix(
+				inp.config,
+				buildMatrix(candidates, inp.config.trialsPerCandidate),
+				{
 				provider,
 				registry: inp.registry,
 				runDir,
@@ -216,6 +281,7 @@ export async function executeRun(
 				workerModelFlag: dryRun
 					? inp.workerProfile.modelId
 					: inp.workerModelFlag,
+				workerOssProvider: dryRun ? undefined : inp.workerOssProvider,
 				workerModelRef: toModelRef(inp.workerProfile),
 				executeScript: dryRun ? (fakeExecutor as never) : opts.executeScript,
 				abortSignal,
@@ -241,11 +307,13 @@ export async function executeRun(
 				design: inp.design,
 				registry: inp.registry,
 				judgeModel: inp.judgeProfile.name,
+				judgeProfile: inp.judgeProfile,
 				runDir,
 				signal: abortSignal,
 				onStage: (stage) => onUpdate({ stage }),
 				// Grade on the Claude Code subscription, not the Anthropic API account.
 				driver: "cc",
+				deps: opts.gradeDeps,
 			});
 		}
 
@@ -262,7 +330,11 @@ export async function executeRun(
 			judgeModel: toModelRef(inp.judgeProfile),
 			crossVendorJudge:
 				inp.workerProfile.provider !== inp.judgeProfile.provider,
-			costSource: dryRun ? "tokens-only" : "harness-reported",
+			costSource: studioCostSource(
+				dryRun,
+				inp.workerProfile,
+				inp.harnessReportsCost,
+			),
 		});
 		writeResults(runDir, results);
 		writeScorecard(runDir, results);

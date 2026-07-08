@@ -6,11 +6,12 @@
  * throughout so the studio shows live progress and the "Resume grading" button
  * clears when it's done.
  *
- *   bun scripts/regrade-run.ts runs/<runId>
+ *   bun scripts/regrade-run.ts runs/<runId> [--judge-model <profile>]
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { loadModels, resolveProfile } from "../src/models";
 import { gradeTrials } from "../src/orchestrator/grade";
 import { loadRegistry } from "../src/registry";
 import { type RunState, readRunState, writeRunState } from "../src/studio/run-state";
@@ -59,6 +60,21 @@ if (!target) {
 	process.exit(1);
 }
 const registry = loadRegistry("config/registry.yaml");
+const judgeIdx = process.argv.indexOf("--judge-model");
+const priorResultsPath = join(runDir, "results.json");
+const priorResults = existsSync(priorResultsPath)
+	? (JSON.parse(readFileSync(priorResultsPath, "utf8")) as {
+			judgeModel?: { name?: string };
+			config?: { judgeModel?: string };
+		})
+	: null;
+const judgeRef =
+	judgeIdx >= 0
+		? (process.argv[judgeIdx + 1] as string)
+		: (priorResults?.judgeModel?.name ??
+			priorResults?.config?.judgeModel ??
+			"claude-sonnet-4-6");
+const judgeProfile = resolveProfile(judgeRef, loadModels());
 
 // Built (completed) trials that have no grades.json yet.
 const toGrade: TrialResult[] = trialIds
@@ -102,7 +118,8 @@ if (toGrade.length > 0) {
 		target,
 		design: null,
 		registry,
-		judgeModel: "claude-sonnet-4-6",
+		judgeModel: judgeProfile.name,
+		judgeProfile,
 		runDir,
 		driver: "cc",
 		log: (m) => console.log(m),
@@ -112,6 +129,7 @@ if (toGrade.length > 0) {
 
 setState({ status: "running", stage: "finalizing" });
 const fin = spawnSync("bun", ["scripts/finalize-run.ts", runDir], {
+	env: { ...process.env, HARNESS_EVAL_JUDGE_MODEL: judgeProfile.name },
 	stdio: "inherit",
 });
 setState({

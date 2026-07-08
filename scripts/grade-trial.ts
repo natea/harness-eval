@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Grade an archived trial post-hoc:
- *   bun scripts/grade-trial.ts <run-dir> <trial-id> [--driver cc|sdk] [--fresh]
+ *   bun scripts/grade-trial.ts <run-dir> <trial-id> [--driver cc|sdk] [--judge-model <profile>] [--fresh]
  *
  * Drivers:
  *   cc  (default) — graders hosted on headless Claude Code, billed to the
@@ -29,6 +29,11 @@ import { judgeQualityCC, runEvaluatorCC } from "../src/grading/cc-driver";
 import { runEvaluator } from "../src/grading/evaluator";
 import { judgeQuality } from "../src/grading/judge";
 import { scrubWorkspace } from "../src/grading/scrub";
+import { loadModels, resolveProfile } from "../src/models";
+import {
+	type GradingDriver,
+	gradeDriversForJudge,
+} from "../src/orchestrator/grade";
 import { loadRegistry } from "../src/registry";
 import { loadTarget, startFixtures, stopFixtures } from "../src/targets";
 
@@ -36,10 +41,12 @@ const positional = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const [runDir, trialId] = positional;
 if (!runDir || !trialId)
 	throw new Error(
-		"usage: grade-trial.ts <run-dir> <trial-id> [--driver cc|sdk] [--fresh]",
+		"usage: grade-trial.ts <run-dir> <trial-id> [--driver cc|sdk] [--judge-model <profile>] [--fresh]",
 	);
 const driverIdx = process.argv.indexOf("--driver");
-const driver = driverIdx >= 0 ? process.argv[driverIdx + 1] : "cc";
+const driver = (
+	driverIdx >= 0 ? process.argv[driverIdx + 1] : "cc"
+) as GradingDriver;
 if (driver !== "cc" && driver !== "sdk")
 	throw new Error(`unknown driver ${driver}`);
 const fresh = process.argv.includes("--fresh");
@@ -78,7 +85,16 @@ if (!targetName)
 const target = loadTarget(targetName);
 console.log(`[grade] target: ${targetName}`);
 const { plan } = target;
-const judgeModel = "claude-sonnet-4-6";
+const judgeIdx = process.argv.indexOf("--judge-model");
+const judgeRef =
+	judgeIdx >= 0 ? (process.argv[judgeIdx + 1] as string) : "claude-sonnet-4-6";
+const judgeProfile = resolveProfile(judgeRef, loadModels());
+const drivers = gradeDriversForJudge(driver, judgeProfile);
+const qualityModel = judgeProfile.modelId;
+const evaluatorModel =
+	judgeProfile.transport === "openai-compat"
+		? "claude-sonnet-4-6"
+		: qualityModel;
 
 const checkpointFiles = [
 	"evaluator-checkpoint.json",
@@ -106,7 +122,7 @@ try {
 	writeFileSync(join(workspace, "SPEC-REFERENCE.md"), target.prdContent);
 	cpSync(workspace, evalWorkspace, { recursive: true });
 	console.log(
-		`[grade] evaluator starting (driver ${driver}, model ${judgeModel}, mock :${mockPort})`,
+		`[grade] evaluator starting (driver ${drivers.evaluator}, model ${evaluatorModel}, mock :${mockPort})`,
 	);
 	const stubPath =
 		fixtures.find((f) => f.name === "stub-app-server")?.value ?? "";
@@ -123,31 +139,38 @@ try {
 		writeFileSync(checkpointPath, JSON.stringify(checkpoint, null, 2));
 		console.log(`[grade] step ${r.stepId}: ${r.outcome} (credit ${r.credit})`);
 	};
-	const adherence =
-		driver === "cc"
-			? await runEvaluatorCC(plan, {
-					model: judgeModel,
-					workspaceDir: evalWorkspace,
-					trialDir,
-					mockLinearUrl:
-						fixtures.find((f) => f.name === "mock-linear")?.value ??
-						`http://localhost:${mockPort}`,
-					stubAppServerPath: stubPath,
-					onRecord,
-				})
-			: await runEvaluator(plan, {
-					model: judgeModel,
-					workspaceDir: evalWorkspace,
-					mockLinearUrl:
-						fixtures.find((f) => f.name === "mock-linear")?.value ??
-						`http://localhost:${mockPort}`,
-					stubAppServerPath: stubPath,
-					preRecorded: checkpoint as never,
-					onRecord,
-				});
-	console.log(
-		`[grade] adherence: graded=${adherence.gradedScore} pass@1=${adherence.passAt1} completeFailure=${adherence.completeFailure}`,
-	);
+	let adherence: Awaited<ReturnType<typeof runEvaluator>> | null = null;
+	try {
+		adherence =
+			drivers.evaluator === "cc"
+				? await runEvaluatorCC(plan, {
+						model: evaluatorModel,
+						workspaceDir: evalWorkspace,
+						trialDir,
+						mockLinearUrl:
+							fixtures.find((f) => f.name === "mock-linear")?.value ??
+							`http://localhost:${mockPort}`,
+						stubAppServerPath: stubPath,
+						onRecord,
+					})
+				: await runEvaluator(plan, {
+						model: evaluatorModel,
+						workspaceDir: evalWorkspace,
+						mockLinearUrl:
+							fixtures.find((f) => f.name === "mock-linear")?.value ??
+							`http://localhost:${mockPort}`,
+						stubAppServerPath: stubPath,
+						preRecorded: checkpoint as never,
+						onRecord,
+					});
+		console.log(
+			`[grade] adherence: graded=${adherence.gradedScore} pass@1=${adherence.passAt1} completeFailure=${adherence.completeFailure}`,
+		);
+	} catch (err) {
+		console.log(
+			`[grade] evaluator failed (${String(err).slice(0, 160)}); continuing to code-quality judge`,
+		);
+	}
 
 	const blindDir = join(trialDir, "workspace-blind");
 	const removed = scrubWorkspace(workspace, blindDir, registry.candidates);
@@ -174,16 +197,17 @@ try {
 	let quality = null;
 	try {
 		quality =
-			driver === "cc"
+			drivers.quality === "cc"
 				? await judgeQualityCC({
-						model: judgeModel,
+						model: qualityModel,
 						blindWorkspaceDir: blindDir,
 						preScored: judgeCkpt as never,
 						onCriterion,
 					})
 				: await judgeQuality({
-						model: judgeModel,
+						model: qualityModel,
 						blindWorkspaceDir: blindDir,
+						judgeProfile,
 						preScored: judgeCkpt as never,
 						onCriterion,
 					});
@@ -197,7 +221,26 @@ try {
 	writeFileSync(
 		join(trialDir, "grades.json"),
 		JSON.stringify(
-			{ trialId, adherence, quality, integration: null, gradingDriver: driver },
+			{
+				trialId,
+				adherence,
+				quality,
+				integration: null,
+				gradingDriver: driver,
+				grading: {
+					evaluatorDriver: drivers.evaluator,
+					qualityDriver: drivers.quality,
+					judgeTransport: judgeProfile.transport,
+					evaluatorModel,
+					qualityModel,
+				},
+				judgeModel: {
+					name: judgeProfile.name,
+					provider: judgeProfile.provider,
+					transport: judgeProfile.transport,
+					modelId: judgeProfile.modelId,
+				},
+			},
 			null,
 			2,
 		),

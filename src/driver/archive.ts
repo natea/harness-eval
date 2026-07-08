@@ -23,6 +23,10 @@ const SECRET_ENV_VARS = [
 	"OPENAI_API_KEY",
 ];
 
+/** Env var names intentionally documented but not redacted because they are URLs. */
+const NON_SECRET_ENV_VARS = ["OLLAMA_BASE_URL"];
+void NON_SECRET_ENV_VARS;
+
 /** Patterns matching well-known credential shapes, independent of env. */
 const SECRET_PATTERNS: RegExp[] = [
 	/lin_api_[A-Za-z0-9]{20,}/g,

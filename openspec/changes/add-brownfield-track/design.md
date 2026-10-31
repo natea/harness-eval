@@ -33,7 +33,8 @@ brownfield/<owner>__<repo>/tasks/<task-id>/      # task-id = pr<PR>-issue<N>
   task.yaml          repo, PR, issue(s), base SHA, T*, env digest, test cmd,
                      FAIL_TO_PASS[], PASS_TO_PASS[], env_broken[], sha256 of every file below,
                      leak levels, dates (issue/PR) for contamination flags,
-                     human baseline (D16), appEgress (default none; D7)
+                     human baseline (D16), appEgress allowlist (default empty; D7),
+                     testPaths (all test dirs, e.g. tests/ and packages/*/tests)
   issue/body.md  issue/body+human.md  issue/body+all.md   # what the worker sees
   snapshot.json      structured reconstruction (comments, authors, isBot, edit sources)
   reference.patch    SEALED: non-test hunks of the PR
@@ -100,15 +101,23 @@ paper-qa's VCR config matches on method/host/path/query, **not body**, so a fix
 that changes a prompt still replays.
 
 **Application network during trials.** Repos like paper-qa are themselves LLM
-applications. By default (`appEgress: none`) the application's own outbound
+applications. By default (empty `appEgress`) the application's own outbound
 traffic gets the same treatment as validation: recorded fixtures only, like CI;
 the worker may run the visible suite in playback mode but cannot run the app
-live. A task may opt in (`appEgress: gateway`): the app's provider calls are
-routed through the model gateway (D11) with a separate, budget-capped
-credential, the same provider-side tool stripping, and full request logging.
-Risk: a correct fix that makes HTTP calls the cassettes don't cover fails with a
-cassette miss; the grader records `cassette-miss` and surfaces the trial for
-review instead of silently scoring it as wrong.
+live. A task may opt in with an `appEgress` **allowlist** of provider endpoints
+and model names (paper-qa: OpenAI `gpt-4o`, `text-embedding-3-*`). App traffic
+is not the worker model, so the gateway (D11) checks it against this list
+instead of the run's model, using a separate budget-capped credential, the same
+provider-side tool rejection, and full request logging.
+
+**Cassette misses.** A correct fix can make HTTP calls the recordings don't
+cover. Detection catches both forms: vcrpy's replay-only
+`CannotOverwriteExistingCassetteException`, and, in our offline setup, the
+`APIConnectionError`/`ProxyError` from the dead proxy, which is what the
+validator saw on paper-qa #1174. Scoring is deterministic: any `cassette-miss`
+makes the trial **unresolved**, flagged for review. Excluding those trials
+instead would let a broken fix that happens to miss a recording avoid failing.
+Reports show resolution both as scored and with those trials excluded.
 
 ### D8. Validation
 Run the test command at base+tests.patch (before) and base+tests+reference twice
@@ -142,27 +151,49 @@ actually differ (~15/37 in spike).
   requests, issues, or releases beyond what is provided"); it never names the PR.
 - Trial network egress blocked except a run-owned **model gateway** outside the
   sandbox; dependencies are prebaked. The sandbox holds only a placeholder
-  credential; the gateway injects the real one (API key or OAuth token),
-  forwards only to the run's provider and model, rejects (does not silently
-  strip) any request that enables provider-side tools, and logs every request.
-  Without it, a worker able to reach the model API could call it directly with
-  web search enabled, bypassing harness config.
-- The gateway also holds the model fixed across harnesses: any harness with an
-  endpoint override (Claude Code `ANTHROPIC_BASE_URL`, Codex custom
-  `model_providers`) is pointed at it, with protocol translation where needed.
-  Non-native pairings are reported as such (a harness tuned for another model
-  family may underperform; that is a finding, not noise).
+  credential; the gateway injects the real one, forwards only to the run's
+  provider and model, rejects (does not silently strip) any request that
+  enables provider-side tools, and logs every request. Without it, a worker
+  able to reach the model API could call it directly with web search enabled,
+  bypassing harness config.
+- **Credential: an API key by default.** Workers elsewhere authenticate with
+  `CLAUDE_CODE_OAUTH_TOKEN`, but nobody has verified that Claude Code works
+  against an `ANTHROPIC_BASE_URL` proxy that swaps in an OAuth token. The
+  required headers are unknown, and so is whether the subscription terms allow
+  it. A spike (task 4.3) checks this before the gateway is built. Until it
+  passes, brownfield runs bill an API key, which costs real money (see Risks).
+- **Model slots.** Claude Code sends some background requests to its haiku
+  slot, which a strict model check would reject. Every Claude Code candidate
+  therefore has all slots pinned to the run's model, as `resolveClaudeCodeEnv`
+  (`src/models.ts`) already does for z.ai GLM. Pinning is used rather than
+  rewriting slot names in the gateway, so the gateway logs show what the
+  harness actually requested.
+- **Same protocol only.** Harnesses reach the gateway through their native
+  endpoint override (Claude Code `ANTHROPIC_BASE_URL` against an
+  Anthropic-protocol gateway; Codex `model_providers` against an OpenAI-protocol
+  one). The gateway does no protocol translation. A candidate whose protocol
+  doesn't match the run's gateway is refused for that run. Translating across
+  protocols is out of scope (see proposal) and overlaps the pluggable-models
+  work.
+- **Preflight probe.** Before any trial is dispatched, each candidate sends one
+  minimal request through the gateway with its real harness configuration,
+  extending `model probe`, which today supports the claude-code transport only.
+  A harness whose kill-switch doesn't fully stop it declaring server-side
+  tools fails here, before spend, instead of failing every trial in the matrix.
 - Server-side web tools (Claude Code WebSearch/WebFetch, equivalents in other
   harnesses) disabled for **every** candidate via harness config — sandbox
   firewalls can't see them; the gateway rejection is the enforcement backstop.
 - Clean per-trial environment: fresh `HOME` and harness config dirs generated
-  for the trial; no user MCP servers, plugins/skills, memory files, global
-  instructions, or state from earlier trials (matters most on `worktree`).
+  for the trial; no operator MCP servers, plugins/skills, memory files, or
+  global instructions. This is not brownfield-specific, so it lands as a
+  MODIFIED `Trial isolation` that applies to every trial (that requirement
+  already gives each trial its own `CLAUDE_CONFIG_DIR`).
 - Transcript audit (D13) is the backstop; any reach disqualifies the trial.
 
 ### D12. Grading
 After the trial, test infrastructure is restored to base before `tests.patch` is
-applied: test directories, every `conftest.py`, and pytest configuration
+applied: the bundle's recorded `testPaths` (not inferred — paper-qa has
+`packages/*/tests` as well as `tests/`), every `conftest.py`, and pytest configuration
 (`pytest.ini`, `setup.cfg`/`tox.ini` pytest sections, pyproject
 `[tool.pytest*]`). This blocks passing by editing fixtures, skip markers, or
 collection config outside the hidden patch's paths. Any candidate edit to these
@@ -202,7 +233,8 @@ Computed at mining time from data the miner already fetches (PR commits,
 reviews, timeline) and stored in `task.yaml`:
 - `codingWindow`: T* → last PR commit before the first submitted review (→ last
   commit before merge if never reviewed). An upper bound on human work time;
-  people multitask.
+  people multitask. Commit dates are set by the committer's machine (the same
+  caveat as D3), so reports label the coding window as approximate.
 - `reviewTime`: PR createdAt → mergedAt; `reviewRounds` (submitted reviews) and
   `commitsAfterFirstReview`.
 - `issueLifetime`: issue createdAt → mergedAt (context only).
@@ -223,6 +255,10 @@ time to dollars (any rate would be a guess).
 - **Classifier error:** LLM labels need human calibration before analysis relies
   on them (D15).
 - **Env drift for old commits:** mitigated by lockfiles; 2023–24 tasks are riskier.
+- **API-key billing:** until the OAuth-through-gateway spike passes, brownfield
+  workers bill an API key instead of the subscription. Mitigation: per-run
+  USD caps (already enforced), a smoke run with n=1 before any matrix, and a
+  measured cost per trial before scaling up.
 - **Selection bias:** rejecting doc-only, test-only, and dependency-change PRs
   (D5) narrows the pool to test-verifiable code fixes; results don't speak to
   other PR kinds. Report rejection counts by reason.

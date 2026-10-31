@@ -1,0 +1,24 @@
+harness-eval — brownfield tasks
+===============================
+
+Brownfield tasks are derived from public GitHub repositories: each task pairs
+an issue with the merged pull request that fixed it. Every task records its
+upstream repository, issue, pull request, and base commit in its manifest.
+
+Issue text and comments reproduced here are authored by their respective
+GitHub users and remain theirs; they are included unmodified (reconstructed as
+of a point in time) solely for evaluation and research. Patches are excerpts of
+the upstream repositories, distributed under each repository's license.
+Requests to remove content can be filed as issues on this repository.
+
+
+paper-qa
+--------
+Copyright FutureHouse
+
+Tasks under `paper-qa/` are derived from Future-House/paper-qa
+(https://github.com/Future-House/paper-qa), licensed under the Apache License,
+Version 2.0.
+
+A copy of the Apache License, Version 2.0 is available at:
+    http://www.apache.org/licenses/LICENSE-2.0

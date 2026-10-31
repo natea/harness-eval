@@ -1,0 +1,60 @@
+{
+  "pr": 551,
+  "issue": 546,
+  "tStar": "2024-10-09T16:59:43Z",
+  "title": "JSON decode error when adding docs",
+  "issueAuthor": "Snikch63200",
+  "body": "Hello,\r\n\r\nI've got this error when I try to add document with 'add' method from Doc() object : \r\n\r\n```\r\nFailed to parse all of title, DOI, and authors from the ParsingSettings.structured_citation_prompt's response  {\r\n\"title\": \"La politique culturelle de la Communauté française de Belgique : origines, évolutions et enjeux\",\r\n\"authors\": [\"Auby, Bénédicte\"],\r\n\"doi\": null\r\n}\r\n\r\nExplication :\r\n\r\nLe titre de l'ouvrage est \"La politique culturelle de la Communauté française de Belgique : origines, évolutions et enjeux\".\r\n\r\nLes auteurs de l'ouvrage sont Bénédicte Auby. Comme il y a un seul auteur, je l'ai renvoyé sous la forme d'une liste à une entrée.\r\n\r\nLe DOI (Digital Object Identifier) n'était pas spécifié dans la citation MLA, donc je l'ai renvoyé comme null.</s>, consider using a manifest file or specifying a different citation prompt.\r\nTraceback (most recent call last):\r\n  File \"C:\\ProgramData\\anaconda3\\envs\\PaperQA_env\\Lib\\site-packages\\paperqa\\docs.py\", line 321, in aadd\r\n    citation_json = json.loads(clean_text)\r\n                    ^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\ProgramData\\anaconda3\\envs\\PaperQA_env\\Lib\\json\\__init__.py\", line 346, in loads\r\n    return _default_decoder.decode(s)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\ProgramData\\anaconda3\\envs\\PaperQA_env\\Lib\\json\\decoder.py\", line 340, in decode\r\n    raise JSONDecodeError(\"Extra data\", s, end)\r\njson.decoder.JSONDecodeError: Extra data: line 7 column 1 (char 158)\r\n```\r\n\r\nIs the JSON error is a consequence of lack of DOI in text ?",
+  "comments": [
+    {
+      "at": "2024-10-09T06:49:07Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nThe `JSONDecodeError` you're encountering is not due to the lack of a DOI. The error message \"Extra data\" suggests that there might be additional, unexpected content in the JSON string after the valid JSON object. This could be caused by extra characters or formatting issues in the input string.\n\nTo resolve this, ensure that the JSON string is correctly formatted and does not contain any extraneous data or characters outside the JSON object. Double-check the input to make sure it ends properly and doesn't have any trailing characters or syntax errors.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-10-09T07:01:22Z",
+      "author": "Snikch63200",
+      "isBot": false,
+      "text": "How can I check JSON string ?\r\n\r\n@dosu.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-10-09T07:01:42Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nYou can check the JSON string by printing it out before the `json.loads()` call to see its exact content. Look for any unexpected characters or formatting issues. You can also use an online JSON validator or a tool like `jsonlint` to verify its correctness. If you find any extra data or syntax errors, correct them before attempting to parse the JSON again.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-10-09T08:20:23Z",
+      "author": "Snikch63200",
+      "isBot": false,
+      "text": "Here is the `clean_text` variable content printed before` json.loads` call.\r\n\r\n```\r\n{\r\n\"title\": \"La politique culturelle de la Communauté française de Belgique : origines, évolutions et enjeux\",\r\n\"authors\": [\"Auby, Valérie\"],\r\n\"doi\": null\r\n}\r\n\r\nExplication :\r\n\r\nJ'ai analysé le fichier PDF avec le texte suivant :\r\n\r\nAuteur : Auby, Valérie\r\nTitre : La politique culturelle de la Communauté française de Belgique : origines, évolutions et enjeux\r\nSource : File 59 - Auby - Pôle culturel.pdf\r\nDOI : inconnu\r\n\r\nComme il n'y a pas de DOI fourni dans la citation, je renvoie la valeur DOI comme null.</s>\r\n```\r\n\r\nWhat is the problem ?? @dosu",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2024-10-09T08:21:57Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nThe issue with your `clean_text` variable is that it contains additional text after the JSON object, which causes the `JSONDecodeError`. The JSON parser expects only the JSON object, but your string includes explanatory text after the closing brace.\n\nTo fix this, ensure that `clean_text` contains only the JSON object. You can extract the JSON part by trimming everything after the closing brace `}`. Here's a quick way to do it:\n\n```python\nimport json\n\n# Assuming clean_text is your variable\njson_part = clean_text.split('}\\n')[0] + '}'\ncitation_json = json.loads(json_part)\n```\n\nThis will isolate the JSON content and allow `json.loads()` to parse it correctly.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language",
+        "code block"
+      ]
+    }
+  ]
+}

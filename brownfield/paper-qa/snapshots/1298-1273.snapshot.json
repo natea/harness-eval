@@ -1,0 +1,130 @@
+{
+  "pr": 1298,
+  "issue": 1273,
+  "tStar": "2026-02-20T22:30:50Z",
+  "title": "enrichment image format not accepted",
+  "issueAuthor": "satra",
+  "body": "for several, but not all pdfs that i am indexing, i get the following error\n\n> Skipping enrichment for media index 0 on page 1 with metadata {'type': 'picture', 'width': 517, 'height': 108, 'info_hashable': '{\"height\": 108, \"type\": \"picture\", \"width\": 517}', 'page_num': 1} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp'].. Received Model Group=gpt-4o-2024-11-20\n\nis there a way to address this issue?",
+  "comments": [
+    {
+      "at": "2026-01-22T22:18:30Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Huh I haven't seen this. Are you able to share a PDF DOI or title, or the PDF itself that leads to this error?\n\nAny chance you can share a minimal reproducer?",
+      "source": "edit@2026-01-22T22:47:08Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2026-01-22T22:21:28Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nThis error happens because PaperQA extracts images from PDFs using PyMuPDF and stores them as raw pixmap bytes, but does not convert them to a format accepted by the LLM provider (which only allows png, jpeg, gif, or webp) before enrichment. Some PDFs contain images in formats that GPT-4o rejects, which is why you see this error for only some files and not others. Images extracted via PyPDF are always converted to PNG, so they don't trigger this issue—it's specific to the PyMuPDF path [source](https://github.com/Future-House/paper-qa/pull/1158).\n\nTo fix this, you can add a conversion step using Pillow (PIL) right after extracting images with PyMuPDF, before sending them for enrichment. Here’s a minimal example of how you could do this:\n\n```python\nfrom PIL import Image\nimport io\n\ndef pixmap_to_png_bytes(pix):\n    img = Image.frombytes(\"RGB\", [pix.width, pix.height], pix.samples)\n    buf = io.BytesIO()\n    img.save(buf, format=\"PNG\")\n    return buf.getvalue()\n```\n\nYou would call this function instead of `pix.tobytes()` when creating your `ParsedMedia` objects in the PDF parsing logic (likely in `paperqa/readers.py` or wherever PyMuPDF image extraction happens).\n\nIf you want a quick workaround without code changes, you can disable multimodal enrichment by setting `parsing.multimodal` to `False` in your config, which will skip image extraction and revert to text-only processing. You can also enable `answer.evidence_text_only_fallback: true` to automatically retry context creation without media if enrichment fails [source](https://app.dosu.dev/documents/cc2e2476-a1b9-410a-8fe6-07750c74db63).\n\nIf you want to debug which images are problematic, you can log or inspect the image metadata (type, width, height, etc.) from the error message to see which formats are being rejected.\n\nLet me know if you want a more detailed code snippet or guidance on where to insert this in your codebase.\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*\n\n---\n<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/4260329d-29ab-4c43-9b01-e85f324a0ba9?feedback_type=other)</sup>\n\n[![Chat with Dosu](https://dosu.dev/dosu-chat-badge.svg)](https://app.dosu.dev/0e493df4-ff8c-42a6-a866-71a34b293513/ask?utm_source=github)&nbsp;[![Open in Cursor](https://dosu.dev/dosu-in-cursor.svg)](https://cursor.com/link/prompt?text=This%20error%20happens%20because%20PaperQA%20extracts%20images%20from%20PDFs%20using%20PyMuPDF%20and%20stores%20them%20as%20raw%20pixmap%20bytes%2C%20but%20does%20not%20convert%20them%20to%20a%20format%20accepted%20by%20the%20LLM%20provider%20%28which%20only%20allows%20png%2C%20jpeg%2C%20gif%2C%20or%20webp%29%20before%20enrichment.%20Some%20PDFs%20contain%20images%20in%20formats%20that%20GPT-4o%20rejects%2C%20which%20is%20why%20you%20see%20this%20error%20for%20only%20some%20files%20and%20not%20others.%20Images%20extracted%20via%20PyPDF%20are%20always%20converted%20to%20PNG%2C%20so%20they%20don%27t%20trigger%20this%20issue%E2%80%94it%27s%20specific%20to%20the%20PyMuPDF%20path%20%5Bsource%5D%28https%3A//github.com/Future-House/paper-qa/pull/1158%29.%0A%0ATo%20fix%20this%2C%20you%20can%20add%20a%20conversion%20step%20using%20Pillow%20%28PIL%29%20right%20after%20extracting%20images%20with%20PyMuPDF%2C%20before%20sending%20them%20for%20enrichment.%20Here%E2%80%99s%20a%20minimal%20example%20of%20how%20you%20could%20do%20this%3A%0A%0A%60%60%60python%0Afrom%20PIL%20import%20Image%0Aimport%20io%0A%0Adef%20pixmap_to_png_bytes%28pix%29%3A%0A%20%20%20%20img%20%3D%20Image.frombytes%28%22RGB%22%2C%20%5Bpix.width%2C%20pix.height%5D%2C%20pix.samples%29%0A%20%20%20%20buf%20%3D%20io.BytesIO%28%29%0A%20%20%20%20img.save%28buf%2C%20format%3D%22PNG%22%29%0A%20%20%20%20return%20buf.getvalue%28%29%0A%60%60%60%0A%0AYou%20would%20call%20this%20function%20instead%20of%20%60pix.tobytes%28%29%60%20when%20creating%20your%20%60ParsedMedia%60%20objects%20in%20the%20PDF%20parsing%20logic%20%28likely%20in%20%60paperqa/readers.py%60%20or%20wherever%20PyMuPDF%20image%20extraction%20happens%29.%0A%0AIf%20you%20want%20a%20quick%20workaround%20without%20code%20changes%2C%20you%20can%20disable%20multimodal%20enrichment%20by%20setting%20%60parsing.multimodal%60%20to%20%60False%60%20in%20your%20config%2C%20which%20will%20skip%20image%20extraction%20and%20revert%20to%20text-only%20processing.%20You%20can%20also%20enable%20%60answer.evidence_text_only_fallback%3A%20true%60%20to%20automatically%20retry%20context%20creation%20without%20media%20if%20enrichment%20fails%20%5Bsource%5D%28https%3A//app.dosu.dev/documents/cc2e2476-a1b9-410a-8fe6-07750c74db63%29.%0A%0AIf%20you%20want%20to%20debug%20which%20images%20are%20problematic%2C%20you%20can%20log%20or%20inspect%20the%20image%20metadata%20%28type%2C%20width%2C%20height%2C%20etc.%29%20from%20the%20error%20message%20to%20see%20which%20formats%20are%20being%20rejected.%0A%0ALet%20me%20know%20if%20you%20want%20a%20more%20detailed%20code%20snippet%20or%20guidance%20on%20where%20to%20insert%20this%20in%20your%20codebase.)&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/1273)",
+      "source": "edit@2026-01-22T22:21:28Z",
+      "editedAfter": 1,
+      "flags": [
+        "sha-like",
+        "mentions PR",
+        "fix language",
+        "code block"
+      ]
+    },
+    {
+      "at": "2026-01-23T14:17:31Z",
+      "author": "satra",
+      "isBot": false,
+      "text": "@jamesbraza - this is an example pdf with that warning: https://doi.org/10.1093/sleep/zsae048 (the pdf should be downloadable at the link). i'm also getting litellm timeouts when processing this, but that may be an unrelated issue. \n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2026-01-23T15:00:14Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @satra, with `paper-qa[pypdf]==2026.01.05`, the below code works for me, including enrichment:\n\n```python\nfrom paperqa import Docs, Settings\n\ndocs = Docs()\nsettings = Settings(\n    parsing={\"parse_pdf\": \"paperqa_pypdf.parse_pdf_to_pages\", \"multimodal\": True}\n)\ndocname = await docs.aadd(\n    \"zsae048.pdf\",\n    title=(\n        \"Data-driven, generalizable prediction of adolescent sleep disturbances\"\n        \" in the multisite Adolescent Brain Cognitive Development Study\"\n    ),\n    doi=\"10.1093/sleep/zsae048\",\n    settings=settings,\n)\n(details,) = (d for d in docs.docs.values() if d.docname == docname)\ntexts = [t for t in docs.texts if t.doc == details]\nmedia = [m for t in texts for m in t.media]\n```\n\nCan you give me a Python script that repros your issue?",
+      "source": "edit@2026-01-24T19:34:02Z",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2026-01-23T15:43:43Z",
+      "author": "satra",
+      "isBot": false,
+      "text": "@jamesbraza - here is the code: https://github.com/sensein/paperqa-test/blob/main/index_pdfs.py\n\ni'm doing it on a locally downloaded pdf (i have both openai and semantic scholar keys set).\n\n<details> <summary> script output </summary>\n\n```\n❯ python ../../paperqa-test/index_pdfs.py --paper-dir pubs\n2026-01-23 10:32:10,210 - INFO - Found 1 PDF files in /Users/satra/software/repronim/abcd-repronim/work/temp/pubs\n/Users/satra/software/mambaforge/envs/paperqa/lib/python3.13/site-packages/pydantic/main.py:250: UserWarning: When dealing with OpenAI gpt-5 models, the temperature must be set to 1, so the specified temperature 0.0 has been overridden to 1.\n  validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)\n2026-01-23 10:32:10,252 - INFO - Building index 'abcd_pubs_index'...\n2026-01-23 10:32:10,252 - INFO - Using LLM model: gpt-5-mini\n2026-01-23 10:32:10,252 - INFO - Rate limit: 10000 per minute\n2026-01-23 10:32:10,252 - INFO - Concurrency: 5 files\n2026-01-23 10:32:10,252 - INFO - Index will be stored in: pqa_index\n2026-01-23 10:32:10,252 - INFO - Error log: pqa_index/processing_errors.txt\n2026-01-23 10:32:10,252 - INFO - Progress file: pqa_index/indexing_progress.json\n2026-01-23 10:32:10,252 - INFO - Processing [1/1]: McCurry-2024-10.1093_sleep_zsae048.pdf\n2026-01-23 10:32:10,326 - INFO - Using in-memory rate limiter.\n2026-01-23 10:32:39,467 - WARNING - CROSSREF_MAILTO environment variable not set. Crossref API rate limits may apply.\n2026-01-23 10:32:39,468 - WARNING - CROSSREF_API_KEY environment variable not set. Crossref API rate limits may apply.\n2026-01-23 10:34:47,424 - WARNING - Skipping enrichment for media index 0 on page 1 with metadata {'type': 'picture', 'width': 1477, 'height': 563, 'info_hashable': '{\"height\": 563, \"type\": \"picture\", \"width\": 1477}', 'page_num': 1} because it was rejected by the LLM provider for 'gpt-5-mini'. Full error message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp'].. Received Model Group=gpt-5-mini\nAvailable Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3\n2026-01-23 10:37:11,233 - ERROR -   ERROR [McCurry-2024-10.1093_sleep_zsae048.pdf]: litellm.Timeout: APITimeoutError - Request timed out. Error_str: Request timed out. - timeout value=60.0, time taken=60.79 seconds\n\nDeployment Info: request_timeout: None\ntimeout: None. Received Model Group=gpt-5-mini\nAvailable Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3\n2026-01-23 10:37:11,234 - INFO - Error log written to: pqa_index/processing_errors.txt\n2026-01-23 10:37:11,234 - INFO - Processing complete: 0 indexed, 1 failed\n2026-01-23 10:37:11,234 - WARNING - No documents were successfully processed.\n2026-01-23 10:37:11,236 - INFO - ==================================================\n2026-01-23 10:37:11,236 - INFO - Final Summary:\n2026-01-23 10:37:11,236 - INFO -   Successfully indexed: 0\n2026-01-23 10:37:11,236 - INFO -   Failed: 1\n2026-01-23 10:37:11,236 - INFO -   See error log at: pqa_index/processing_errors.txt\n2026-01-23 10:37:11,236 - INFO - Progress saved to: pqa_index/indexing_progress.json\n2026-01-23 10:37:11,236 - INFO - To reindex all files, use --no-resume flag.\n2026-01-23 10:37:11,236 - INFO - To retry failed files, use --reprocess-failed flag.\n```\n</details>\n\nthe relevant settings are here: https://github.com/sensein/paperqa-test/blob/41d65d6c76df3339b43b53f34d6481a70c003001/index_pdfs.py#L48\n\noverall i'm trying to iterate separately through pdfs accumulating failed ones into an index, and then query it separately. (i have a separate issue that the index appears to only contain 8 papers when i processed 1200 through this iterative process - i'll continue to debug that).",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like",
+        "code block"
+      ]
+    },
+    {
+      "at": "2026-01-24T16:00:48Z",
+      "author": "satra",
+      "isBot": false,
+      "text": "instead of my script i tried this:\n\n❯ pqa --agent.index.name abcd_pubs --agent.index.index_directory abcd-index --parsing.parse_pdf \"paperqa_pypdf.parse_pdf_to_pages\" index pubs\n\nwhen i run the above, i see the same original warning.\n\n<details> <summary> indexing output </summary>\n\n```\n[10:53:51] New file to index: McCurry-2024-10.1093_sleep_zsae048.pdf...                                  \n[10:53:54] CROSSREF_MAILTO environment variable not set. Crossref API rate limits may apply.             \n           CROSSREF_API_KEY environment variable not set. Crossref API rate limits may apply.            \n[10:54:34] Skipping enrichment for media index 0 on page 1 with metadata {'type': 'picture', 'width':    \n           1477, 'height': 563, 'info_hashable': '{\"height\": 563, \"type\": \"picture\", \"width\": 1477}',    \n           'page_num': 1} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error\n           message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please \n           make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']..       \n           Received Model Group=gpt-4o-2024-11-20                                                        \n           Available Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3         \n[10:55:38] Skipping enrichment for media index 0 on page 2 with metadata {'type': 'picture', 'width':    \n           3152, 'height': 1827, 'info_hashable': '{\"height\": 1827, \"type\": \"picture\", \"width\": 3152}',  \n           'page_num': 2} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error\n           message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please \n           make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']..       \n           Received Model Group=gpt-4o-2024-11-20                                                        \n           Available Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3         \n[10:56:11] Skipping enrichment for media index 0 on page 5 with metadata {'type': 'picture', 'width':    \n           3964, 'height': 1969, 'info_hashable': '{\"height\": 1969, \"type\": \"picture\", \"width\": 3964}',  \n           'page_num': 5} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error\n           message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please \n           make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']..       \n           Received Model Group=gpt-4o-2024-11-20                                                        \n           Available Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3         \n[10:57:21] Skipping enrichment for media index 0 on page 6 with metadata {'type': 'picture', 'width':    \n           4005, 'height': 3009, 'info_hashable': '{\"height\": 3009, \"type\": \"picture\", \"width\": 4005}',  \n           'page_num': 6} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error\n           message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please \n           make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']..       \n           Received Model Group=gpt-4o-2024-11-20                                                        \n           Available Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3         \n[10:57:31] Skipping enrichment for media index 0 on page 7 with metadata {'type': 'picture', 'width':    \n           4005, 'height': 3009, 'info_hashable': '{\"height\": 3009, \"type\": \"picture\", \"width\": 4005}',  \n           'page_num': 7} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error\n           message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please \n           make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']..       \n           Received Model Group=gpt-4o-2024-11-20                                                        \n           Available Model Group Fallbacks=None LiteLLM Retried: 3 times, LiteLLM Max Retries: 3         \n[10:57:34] Complete (Data-driven, generalizable prediction of adolescent sleep disturbances in the       \n           multisite Adolescent Brain Cognitive Development Study). \n```\n\n</details>\n\n\nalso, sometimes it will timeout, and skip index, and running again does not reprocess it. i have to delete the index and start again. this is why i started writing my own script (there seemed no obvious way to recover from timeout or other errors).",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2026-01-24T22:50:36Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @satra okay I figured it out. Can you run `pip list | grep -e pypdf -e pdfplumber -e pymupdf` for me?\n\nI think the issue is that:\n\n1. You're using PyPDF reader (`paper-qa-pypdf`)\n2. You don't have `pdfplumber` installed, which means `MediaMode.INDIVIDUAL` is being used\n3. Apparently in this individual media mode, the image read is not PNG it's something else (possibly JPEG 2000)\n4. We are telling OpenAI the image is PNG, but it's some other type, and the model times out\n\nI will fix this. To work around this in the meantime, either:\n\n- Install `pymupdf` via `pip install paper-qa[pymupdf]`. This will circumvent this error by using our PyMuPDF reader.\n- Install `pdfplumber` via `pip install paper-qa[pypdf-enhanced]`. This will circumvent this error by using a more featureful PyPDF reader",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language",
+        "diff block"
+      ]
+    },
+    {
+      "at": "2026-01-24T23:27:09Z",
+      "author": "satra",
+      "isBot": false,
+      "text": "thanks @jamesbraza.\n\nindeed no pdfplumber.\n\n```\npip list | grep -e pypdf -e pdfplumber -e pymupdf\npaper-qa-pypdf            2026.1.5\npypdf                     6.6.0\n```\n\nafter those install steps, no warnings at all. \n\n```\n❯ pqa --agent.index.name abcd_pubs --agent.index.index_directory abcd-index --parsing.parse_pdf \"paperqa_pypdf.parse_pdf_to_pages\" index pubs\n[18:19:37] New file to index: McCurry-2024-10.1093_sleep_zsae048.pdf...                                  \n[18:19:42] CROSSREF_MAILTO environment variable not set. Crossref API rate limits may apply.             \n           CROSSREF_API_KEY environment variable not set. Crossref API rate limits may apply.            \n[18:19:53] Complete (Data-driven, generalizable prediction of adolescent sleep disturbances in the       \n           multisite Adolescent Brain Cognitive Development Study).                                      \n\n❯ pqa --agent.index.name abcd_pubs --agent.index.index_directory abcd-index --parsing.parse_pdf \"paperqa_pypdf.parse_pdf_to_pages\" search test\n[18:25:07] No results found. Searched 0 docs. \n```\n\na little surprised that search says 0 docs. i'll close this and will open others as needed if i can't figure out how to use the index.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2026-01-24T23:36:25Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Thanks for sharing. Let's keep this open until I fix this bug with `pdfplumber`",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2026-01-24T23:37:25Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "You may want to try deleting the index `abcd_pubs` in `~/.pqa/indexes` and running again, per the 0 docs. I am not sure without more info",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2026-01-25T00:53:48Z",
+      "author": "satra",
+      "isBot": false,
+      "text": "re index and 0 docs, followed up in #1274 ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions #N"
+      ]
+    }
+  ]
+}

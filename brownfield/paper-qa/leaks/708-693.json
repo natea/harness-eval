@@ -1,0 +1,21 @@
+{
+  "pr": 708,
+  "issue": 693,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0234986,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The response then breaks our single-letter-extraction regex, which returns `T`.",
+      "rationale": "Describes observed behavior and examples of the eval LM ignoring the answer and the regex returning T. It identifies no specific code change; the fix (total_options check, prompt labels) is not stated.",
+      "author": "sidnarayanan",
+      "role": "issue author"
+    }
+  ]
+}

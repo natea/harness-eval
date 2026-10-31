@@ -1,0 +1,30 @@
+{
+  "pr": 974,
+  "issue": 958,
+  "tStar": "2025-06-14T18:54:33Z",
+  "title": "What parameter determines top k sources?",
+  "issueAuthor": "jacknguyen0810",
+  "body": "Hi, \n\nIn the Language Agents Achieve Superhuman Synthesis of Scientific Knowledge paper, the top-k sources can be varied, although set to 30 in the paper. \n\nI want to vary this parameter. However, it is unclear which parameter this is. \n\nI believe the \n\n```python\nAnswerSettings(evidence_k=30)\n```\n\nis the appropriate parameter. \n\nHowever, in the README is says the way to vary this parameter is \n```python\nsettings = Settings()\nsettings.answer.k = 30\n```\n\nAnd the paper says that the parameter is:\n```python\nconsider_sources = 30\n```\n\nPlease could someone confirm which is the correct way to vary the top-k parameter?",
+  "comments": [
+    {
+      "at": "2025-06-10T10:09:58Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nThe correct parameter to control the top-k sources is evidence_k in AnswerSettings. You can set it either when creating the settings object, like AnswerSettings(evidence_k=30), or by using settings.answer.evidence_k = 30 after instantiating Settings. The README sometimes refers to settings.answer.k as a shortcut, but the actual field in the code is evidence_k. There is no parameter called consider_sources in the codebase—this does not exist in the implementation or documentation. For reference, see the [AnswerSettings definition](https://github.com/Future-House/paper-qa/blob/0e493ba75553a43d2066335a46c49f1442772601/paperqa/settings.py) and the [settings tutorial](https://github.com/Future-House/paper-qa/blob/0e493ba75553a43d2066335a46c49f1442772601/docs/tutorials/settings_tutorial.md).\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*\n\n---\n<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/1aa2e3b7-78cb-4954-8f03-bb2fdb967e1a?feedback_type=other)</sup>&nbsp;&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/958)",
+      "source": "edit@2025-06-10T10:09:58Z",
+      "editedAfter": 1,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2025-06-10T10:10:18Z",
+      "author": "jacknguyen0810",
+      "isBot": false,
+      "text": "Thank you.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

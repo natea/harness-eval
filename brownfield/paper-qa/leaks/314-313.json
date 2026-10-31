@@ -1,0 +1,21 @@
+{
+  "pr": 314,
+  "issue": 313,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.015522600000000001,
+  "prAuthor": "geemi725",
+  "bodyLevel": "noise",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "The issue body text is empty. Only the title, 'Add retraction status to queries', is available, and it states the feature request without any diagnosis, location or fix details.",
+      "author": "geemi725",
+      "role": "issue author"
+    }
+  ]
+}

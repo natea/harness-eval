@@ -1,0 +1,23 @@
+{
+  "pr": 834,
+  "issue": 832,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0054146,
+  "prAuthor": "maykcaldas",
+  "bodyLevel": "fix_code",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "missing hyphen. \nshould be: `pip install paper-qa[zotero]`",
+      "rationale": "The issue gives the exact line and replacement text, which is the reference fix (README.md pip install command changed to paper-qa[zotero]).",
+      "author": "rbpasker",
+      "role": "issue author"
+    }
+  ]
+}

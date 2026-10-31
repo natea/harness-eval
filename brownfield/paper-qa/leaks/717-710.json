@@ -1,0 +1,34 @@
+{
+  "pr": 717,
+  "issue": 710,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0099926,
+  "prAuthor": "loesinghaus",
+  "bodyLevel": "fix_code",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/utils.py",
+        "paperqa/docs.py"
+      ],
+      "evidence": "s_wo_spaces = s.replace(\" \", \"\")\n    for c in string.printable:\n        p = s_wo_spaces.count(c) / len(s_wo_spaces)",
+      "rationale": "Provides the exact code change to maybe_is_text that the reference makes (strip spaces before entropy), and also hints at using multiple chunks.",
+      "author": "loesinghaus",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I like what you're thinking, feel free to make a PR and expand the `test_maybe_is_text`",
+      "rationale": "Only approval and a request to add tests; no technical content on the fix.",
+      "author": "jamesbraza",
+      "role": "maintainer"
+    }
+  ]
+}

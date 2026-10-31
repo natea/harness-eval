@@ -1,0 +1,25 @@
+{
+  "pr": 512,
+  "issue": 488,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0178106,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/agents/main.py",
+        "paperqa/agents/tools.py",
+        "paperqa/agents/search.py"
+      ],
+      "evidence": "1. Index at the start of the agent\n2. Not re-index during each `paper_search`",
+      "rationale": "Describes the change: build the index once at agent start and stop paper_search from re-indexing. This matches the reference (run_agent builds the index once, PaperSearch uses build=False). It doesn't name files or code.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ]
+}

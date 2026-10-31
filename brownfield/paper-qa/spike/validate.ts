@@ -29,8 +29,11 @@ const testEnv = {
 	HTTP_PROXY: "http://127.0.0.1:9", HTTPS_PROXY: "http://127.0.0.1:9", ALL_PROXY: "http://127.0.0.1:9", NO_PROXY: "",
 };
 
-function parseJunit(xml: string): Record<string, "pass" | "fail" | "skip"> {
-	const res: Record<string, "pass" | "fail" | "skip"> = {};
+type Outcome = "pass" | "fail" | "fail-live" | "skip";
+// A failure caused by a blocked/unauthenticated network call: the test needs a live API.
+const LIVE_RE = /APIConnectionError|ProxyError|ConnectError|ClientConnectorError|AuthenticationError|api[_ ]key/i;
+function parseJunit(xml: string): Record<string, Outcome> {
+	const res: Record<string, Outcome> = {};
 	const re = /<testcase\b([^>]*?)(\/>|>([\s\S]*?)<\/testcase>)/g;
 	for (const m of xml.matchAll(re)) {
 		const attrs = m[1];
@@ -38,7 +41,7 @@ function parseJunit(xml: string): Record<string, "pass" | "fail" | "skip"> {
 		const name = /\bname="([^"]*)"/.exec(attrs)?.[1] ?? "";
 		const body = m[3] ?? "";
 		const id = `${cls}::${name}`;
-		res[id] = /<(failure|error)\b/.test(body) ? "fail" : /<skipped\b/.test(body) ? "skip" : "pass";
+		res[id] = /<(failure|error)\b/.test(body) ? (LIVE_RE.test(body) ? "fail-live" : "fail") : /<skipped\b/.test(body) ? "skip" : "pass";
 	}
 	return res;
 }
@@ -92,7 +95,11 @@ async function validate(c: (typeof cands)[number]) {
 	await $`cd ${wt} && uv pip install -q pytest-timeout`.nothrow().quiet();
 
 	if ((await $`git -C ${wt} apply --binary ${tp}`.nothrow().quiet()).exitCode !== 0) return { ...r, verdict: "fail:test-patch-apply" };
-	const run = testPy.filter((f) => existsSync(`${wt}/${f}`));
+	// Only the tests the PR touched (whole files were too slow: blocked live-API tests retry).
+	const sel = await $`python3 ${import.meta.dir}/touched.py ${wt} ${tp}`.nothrow().quiet();
+	const run: string[] = sel.exitCode === 0 ? JSON.parse(sel.stdout.toString()) : testPy.filter((f) => existsSync(`${wt}/${f}`));
+	Object.assign(r, { selected: run });
+	if (run.length === 0) return { ...r, verdict: "fail:no-touched-tests" };
 	const before = await runTests(wt, run, "before", c.n);
 	if ((await $`git -C ${wt} apply --binary ${sp}`.nothrow().quiet()).exitCode !== 0) return { ...r, verdict: "fail:src-patch-apply" };
 	const gold1 = await runTests(wt, run, "gold1", c.n);
@@ -100,17 +107,23 @@ async function validate(c: (typeof cands)[number]) {
 	if (!before || !gold1 || !gold2) return { ...r, verdict: "fail:pytest-crashed-or-timeout" };
 
 	const ids = new Set([...Object.keys(before), ...Object.keys(gold1), ...Object.keys(gold2)]);
+	const liveBroken = new Set<string>();
 	const f2p: string[] = [], p2p: string[] = [], flaky: string[] = [], broken: string[] = [], regress: string[] = [];
 	for (const id of ids) {
-		const b = before[id] ?? "fail", g1 = gold1[id], g2 = gold2[id];
+		const norm = (o?: Outcome) => (o === "fail-live" ? "fail" : o);
+		if (gold1[id] === "fail-live" || gold2[id] === "fail-live") liveBroken.add(id);
+		const b = norm(before[id]) ?? "fail", g1 = norm(gold1[id]), g2 = norm(gold2[id]);
 		if (g1 !== g2) flaky.push(id);
 		else if (g1 === "pass" && b === "fail") f2p.push(id);
 		else if (g1 === "pass" && b === "pass") p2p.push(id);
 		else if (g1 === "fail" && b === "pass") regress.push(id);
 		else if (g1 === "fail") broken.push(id);
 	}
-	Object.assign(r, { counts: { f2p: f2p.length, p2p: p2p.length, flaky: flaky.length, envBroken: broken.length, goldRegress: regress.length }, f2p, flaky, broken });
-	return { ...r, verdict: f2p.length > 0 ? "VALID" : "fail:no-fail-to-pass" };
+	Object.assign(r, { counts: { f2p: f2p.length, p2p: p2p.length, flaky: flaky.length, envBroken: broken.length, liveApi: broken.filter((id) => liveBroken.has(id)).length, goldRegress: regress.length }, f2p, flaky, broken });
+	const verdict = f2p.length > 0 ? "VALID"
+		: broken.some((id) => liveBroken.has(id)) ? "fail:needs-live-api"
+		: "fail:no-fail-to-pass";
+	return { ...r, verdict };
 }
 
 const queue = cands.filter((c) => only.length === 0 || only.includes(c.n));

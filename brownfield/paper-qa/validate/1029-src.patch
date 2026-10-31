@@ -1,0 +1,327 @@
+diff --git a/src/paperqa/clients/__init__.py b/src/paperqa/clients/__init__.py
+index f8d27f7..496f7d4 100644
+--- a/src/paperqa/clients/__init__.py
++++ b/src/paperqa/clients/__init__.py
+@@ -221,16 +221,16 @@ class DocMetadataClient:
+         )
+ 
+     async def upgrade_doc_to_doc_details(self, doc: Doc, **kwargs) -> DocDetails:
+-
+-        # note we have some extra fields which may have come from reading the doc text,
+-        # but aren't in the doc object, we add them here too.
+-        extra_fields = {
++        # Collect fields (e.g. title, DOI, or authors) that have been externally
++        # specified (e.g. by a caller, or inferred from the document's contents)
++        # but are not on the input `doc` object
++        provided_fields = {
+             k: v for k, v in kwargs.items() if k in set(DocDetails.model_fields)
+         }
+-        # abuse our doc_details object to be an int if it's empty
+-        # our __add__ operation supports int by doing nothing
+-        extra_doc: int | DocDetails = (
+-            0 if not extra_fields else DocDetails(**extra_fields)
++        # DocDetails.__add__ supports `int` as a no-op route, so if we have no
++        # provided fields, let's use that no-op route
++        provided_doc_details: int | DocDetails = (
++            0 if not provided_fields else DocDetails(**provided_fields)
+         )
+ 
+         if doc_details := await self.query(**kwargs):
+@@ -246,9 +246,10 @@ class DocMetadataClient:
+                 doc_details.key = doc.docname
+             if "citation" in doc.fields_to_overwrite_from_metadata:
+                 doc_details.citation = doc.citation
+-            return extra_doc + doc_details
++            if "content_hash" in doc.fields_to_overwrite_from_metadata:
++                doc_details.content_hash = doc.content_hash
++            return provided_doc_details + doc_details
+ 
+         # if we can't get metadata, just return the doc, but don't overwrite any fields
+-        prior_doc = doc.model_dump()
+-        prior_doc["fields_to_overwrite_from_metadata"] = set()
+-        return DocDetails(**(prior_doc | extra_fields))
++        orig_fields = doc.model_dump() | {"fields_to_overwrite_from_metadata": set()}
++        return DocDetails(**(orig_fields | provided_fields))
+diff --git a/src/paperqa/docs.py b/src/paperqa/docs.py
+index 4c54b67..4ff6779 100644
+--- a/src/paperqa/docs.py
++++ b/src/paperqa/docs.py
+@@ -266,10 +266,10 @@ class Docs(BaseModel):  # noqa: PLW1641  # TODO: add __hash__
+         """Add a document to the collection."""
+         all_settings = get_settings(settings)
+         parse_config = all_settings.parsing
++        content_hash = md5sum(path)
+         dockey_is_content_hash = False
+         if dockey is None:
+-            # md5 sum of file contents (not path!)
+-            dockey = md5sum(path)
++            dockey = content_hash
+             dockey_is_content_hash = True
+         if llm_model is None:
+             llm_model = all_settings.get_llm()
+@@ -277,7 +277,9 @@ class Docs(BaseModel):  # noqa: PLW1641  # TODO: add __hash__
+             # Peek first chunk
+             texts = await read_doc(
+                 path,
+-                Doc(docname="", citation="", dockey=dockey),  # Fake doc
++                Doc(  # Fake doc
++                    docname="", citation="", dockey=dockey, content_hash=content_hash
++                ),
+                 page_size_limit=parse_config.page_size_limit,
+                 parse_media=False,  # Peeking is text only
+                 # We only use the first chunk, so let's peek just enough pages for that.
+@@ -312,6 +314,7 @@ class Docs(BaseModel):  # noqa: PLW1641  # TODO: add __hash__
+             ),
+             citation=citation,
+             dockey=dockey,
++            content_hash=content_hash,
+         )
+ 
+         # try to extract DOI / title from the citation
+@@ -365,6 +368,7 @@ class Docs(BaseModel):  # noqa: PLW1641  # TODO: add __hash__
+                     metadata_clients=kwargs.pop("clients", DEFAULT_CLIENTS),
+                 )
+ 
++            # Query here means a query to a metadata provider
+             query_kwargs: dict[str, Any] = {}
+ 
+             if doi:
+diff --git a/src/paperqa/llms.py b/src/paperqa/llms.py
+index 0d547a5..5676a17 100644
+--- a/src/paperqa/llms.py
++++ b/src/paperqa/llms.py
+@@ -30,7 +30,7 @@ from pydantic import (
+ )
+ from typing_extensions import override
+ 
+-from paperqa.types import Doc, Text
++from paperqa.types import AUTOPOPULATE_VALUE, Doc, Text
+ 
+ if TYPE_CHECKING:
+     from qdrant_client.http.models import Record
+@@ -495,6 +495,7 @@ class QdrantVectorStore(VectorStore):  # noqa: PLW1641  # TODO: add __hash__
+                         docname=doc_data.get("docname", ""),
+                         citation=doc_data.get("citation", ""),
+                         dockey=doc_data["dockey"],
++                        content_hash=doc_data.get("content_hash", AUTOPOPULATE_VALUE),
+                     )
+                     docs.docnames.add(doc_data.get("docname", ""))
+ 
+diff --git a/src/paperqa/types.py b/src/paperqa/types.py
+index 072a925..4a69f25 100644
+--- a/src/paperqa/types.py
++++ b/src/paperqa/types.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import ast
++import contextlib
+ import csv
+ import hashlib
+ import json
+@@ -38,12 +39,14 @@ from pydantic import (
+ )
+ 
+ from paperqa.utils import (
++    compute_unique_doc_id,
+     create_bibtex_key,
+     encode_id,
+     format_bibtex,
+     get_citation_ids,
+     get_parenthetical_substrings,
+     maybe_get_date,
++    md5sum,
+ )
+ from paperqa.version import __version__ as pqa_version
+ 
+@@ -64,7 +67,10 @@ DEFAULT_FIELDS_TO_OVERWRITE_FROM_METADATA: Collection[str] = {
+     "docname",
+     "dockey",
+     "citation",
++    "content_hash",  # Metadata providers won't give this
+ }
++# Sentinel to autopopulate a field within model_validator
++AUTOPOPULATE_VALUE = ""  # NOTE: this is falsy by design
+ 
+ 
+ class Doc(Embeddable):
+@@ -73,6 +79,13 @@ class Doc(Embeddable):
+     docname: str
+     dockey: DocKey
+     citation: str
++    content_hash: str | None = Field(
++        default=AUTOPOPULATE_VALUE,
++        description=(
++            "Optional hash of the document's contents (to reiterate, not a file path to"
++            " the document, but the document's contents itself)."
++        ),
++    )
+     # Sort the serialization to minimize the diff of serialized objects
+     fields_to_overwrite_from_metadata: Annotated[set[str], PlainSerializer(sorted)] = (
+         Field(
+@@ -223,10 +236,6 @@ class Text(Embeddable):
+         return "\n\n".join((self.text, *enriched_media))
+ 
+ 
+-# Sentinel to autopopulate a field within model_validator
+-AUTOPOPULATE_VALUE = ""  # NOTE: this is falsy by design
+-
+-
+ class Context(BaseModel):
+     """A class to hold the context of a question."""
+ 
+@@ -788,12 +797,16 @@ class DocDetails(Doc):
+     doc_id: str | None = Field(
+         default=None,
+         description=(
+-            "Unique ID for this document. Simple ways to acquire one include"
+-            " hashing the DOI or a stringifying a UUID."
++            "Unique ID for this document. A simple and robust way to acquire one is"
++            " hashing the paper content's hash concatenate with the lowercased DOI."
+         ),
+     )
+     file_location: str | os.PathLike | None = Field(
+-        default=None, description="Path or location ID of the source document file."
++        default=None,
++        description=(
++            "Optional path to the stored paper (local file path"
++            " or mountable cloud path), or a database ID for the storage location."
++        ),
+     )
+     license: str | None = Field(
+         default=None,
+@@ -854,10 +867,10 @@ class DocDetails(Doc):
+                 if doi.startswith(url_prefix_to_remove):
+                     doi = doi.replace(url_prefix_to_remove, "")
+             data["doi"] = doi.lower()
+-            if "doc_id" not in data or not data["doc_id"]:  # keep user defined doc_ids
+-                data["doc_id"] = encode_id(doi.lower())
+-        elif "doc_id" not in data or not data["doc_id"]:  # keep user defined doc_ids
+-            data["doc_id"] = encode_id(uuid4())
++            if not data.get("doc_id"):  # keep user defined doc_ids
++                data["doc_id"] = compute_unique_doc_id(doi, data.get("content_hash"))
++        elif not data.get("doc_id"):  # keep user defined doc_ids
++            data["doc_id"] = compute_unique_doc_id(doi, data.get("content_hash"))
+ 
+         if "dockey" in data.get(
+             "fields_to_overwrite_from_metadata",
+@@ -1068,6 +1081,17 @@ class DocDetails(Doc):
+             data["citation"] = data.get("title") or CITATION_FALLBACK_DATA["title"]
+         return data
+ 
++    @classmethod
++    def populate_content_hash(cls, data: dict[str, Any]) -> dict[str, Any]:
++        if (  # Check for missing or autopopulate value, but preserve `None`
++            data.get("content_hash", AUTOPOPULATE_VALUE) == AUTOPOPULATE_VALUE
++        ):
++            data["content_hash"] = None  # Assume we don't have it
++            if data.get("file_location"):  # Try to update it
++                with contextlib.suppress(FileNotFoundError):
++                    data["content_hash"] = md5sum(data["file_location"])
++        return data
++
+     @model_validator(mode="before")
+     @classmethod
+     def validate_all_fields(cls, data: Mapping[str, Any]) -> dict[str, Any]:
+@@ -1093,6 +1117,7 @@ class DocDetails(Doc):
+                 data[possibly_str_field], str
+             ):
+                 data[possibly_str_field] = ast.literal_eval(data[possibly_str_field])
++        data = cls.populate_content_hash(data)
+         data = cls.lowercase_doi_and_populate_doc_id(data)
+         data = cls.remove_invalid_authors(data)
+         data = cls.misc_string_cleaning(data)
+@@ -1193,7 +1218,7 @@ class DocDetails(Doc):
+         if self.publication_date and other.publication_date:
+             PREFER_OTHER = self.publication_date <= other.publication_date
+ 
+-        merged_data = {}
++        merged_data: dict[str, Any] = {}
+         # pylint: disable-next=not-an-iterable  # pylint bug: https://github.com/pylint-dev/pylint/issues/10144
+         for field in type(self).model_fields:
+             self_value = getattr(self, field)
+@@ -1233,11 +1258,11 @@ class DocDetails(Doc):
+                     )
+                     else other.authors
+                 )
+-                merged_data[field] = best_authors or None  # type: ignore[assignment]
++                merged_data[field] = best_authors or None
+ 
+             elif field == "key" and self_value is not None and other_value is not None:
+                 # if we have multiple keys, we wipe them and allow regeneration
+-                merged_data[field] = None  # type: ignore[assignment]
++                merged_data[field] = None
+ 
+             elif field in {"citation_count", "year", "publication_date"}:
+                 # get the latest data
+@@ -1253,6 +1278,15 @@ class DocDetails(Doc):
+                     )
+                 else:
+                     merged_data[field] = max(self_value, other_value)
++            elif field == "content_hash" and (
++                # Hashes are both present but differ
++                self_value
++                and other_value
++                and self_value != other_value
++            ):
++                # If hashes are both present but differ,
++                # we don't know which to pick, so just discard the value
++                merged_data[field] = None
+ 
+             else:
+                 # Prefer non-null values, default preference for 'other' object.
+@@ -1267,10 +1301,13 @@ class DocDetails(Doc):
+                     else self_value
+                 )
+ 
+-        # Recalculate doc_id if doi has changed
+-        if merged_data["doi"] != self.doi:
+-            merged_data["doc_id"] = (
+-                encode_id(merged_data["doi"].lower()) if merged_data["doi"] else None  # type: ignore[attr-defined,assignment]
++        if (
++            merged_data["doi"] != self.doi
++            or merged_data["content_hash"] != self.content_hash
++        ):
++            # Recalculate doc_id if doi or content hash has changed
++            merged_data["doc_id"] = compute_unique_doc_id(
++                merged_data["doi"], merged_data.get("content_hash")
+             )
+ 
+         # Create and return new DocDetails instance
+diff --git a/src/paperqa/utils.py b/src/paperqa/utils.py
+index 44de21f..28f042c 100644
+--- a/src/paperqa/utils.py
++++ b/src/paperqa/utils.py
+@@ -14,7 +14,7 @@ from functools import reduce
+ from http import HTTPStatus
+ from pathlib import Path
+ from typing import Any, BinaryIO, ClassVar, TypeVar
+-from uuid import UUID
++from uuid import UUID, uuid4
+ 
+ import httpx
+ from lmi import configure_llm_logs
+@@ -100,7 +100,7 @@ def strings_similarity(s1: str, s2: str, case_insensitive: bool = True) -> float
+ 
+ def hexdigest(data: str | bytes) -> str:
+     if isinstance(data, str):
+-        return hashlib.md5(data.encode("utf-8")).hexdigest()  # noqa: S324
++        data = data.encode("utf-8")
+     return hashlib.md5(data).hexdigest()  # noqa: S324
+ 
+ 
+@@ -234,6 +234,14 @@ def encode_id(value: str | bytes | UUID, maxsize: int | None = 16) -> str:
+     return hashlib.md5(value).hexdigest()[:maxsize]  # noqa: S324
+ 
+ 
++def compute_unique_doc_id(doi: str | None, content_hash: str | None) -> str:
++    if doi:
++        value_to_encode: str = doi.lower() + (content_hash or "")
++    else:
++        value_to_encode = content_hash or str(uuid4())
++    return encode_id(value_to_encode)
++
++
+ def get_year(ts: datetime | None = None) -> str:
+     """Get the year from the input datetime, otherwise using the current datetime."""
+     if ts is None:

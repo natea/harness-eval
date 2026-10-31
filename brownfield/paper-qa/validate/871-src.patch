@@ -1,0 +1,150 @@
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index 2433c88..2390cd0 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -53,5 +53,6 @@ jobs:
+         env:
+           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
++          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+           SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+           CROSSREF_API_KEY: ${{ secrets.CROSSREF_API_KEY }}
+diff --git a/README.md b/README.md
+index a0dd685..1e9c703 100644
+--- a/README.md
++++ b/README.md
+@@ -405,7 +405,13 @@ asyncio.run(main())
+ 
+ ### Choosing Model
+ 
+-By default, it uses OpenAI models with `gpt-4o-2024-08-06` for both the re-ranking and summary step, the `summary_llm` setting, and for the answering step, the `llm` setting. You can adjust this easily:
++By default, PaperQA2 uses OpenAI's `gpt-4o-2024-08-06` model for:
++
++- `summary_llm`: Re-ranking and summarizing evidence passages
++- `llm`: Generating the final answer
++- `agent_llm`: Making tool selection decisions
++
++You can adjust this easily to use any model supported by `litellm`:
+ 
+ ```python
+ from paperqa import Settings, ask
+@@ -418,7 +424,22 @@ answer_response = ask(
+ )
+ ```
+ 
+-You can use Anthropic or any other model supported by `litellm`:
++To use Claude, make sure you set the `ANTHROPIC_API_KEY`
++
++```python
++from paperqa import Settings, ask
++
++answer_response = ask(
++    "What manufacturing challenges are unique to bispecific antibodies?",
++    settings=Settings(
++        llm="claude-3-5-sonnet-20240620",
++        summary_llm="claude-3-5-sonnet-20240620",
++        agent=AgentSettings(agent_llm="claude-3-5-sonnet-20240620"),
++    ),
++)
++```
++
++Or Gemini, by setting the `GEMINI_API_KEY` from Google AI Studio
+ 
+ ```python
+ from paperqa import Settings, ask
+@@ -426,7 +447,9 @@ from paperqa import Settings, ask
+ answer_response = ask(
+     "What manufacturing challenges are unique to bispecific antibodies?",
+     settings=Settings(
+-        llm="claude-3-5-sonnet-20240620", summary_llm="claude-3-5-sonnet-20240620"
++        llm="gemini-1.5-pro",
++        summary_llm="gemini-1.5-pro",
++        agent=AgentSettings(agent_llm="gemini-1.5-pro"),
+     ),
+ )
+ ```
+diff --git a/paperqa/agents/main.py b/paperqa/agents/main.py
+index bf51e78..fc00343 100644
+--- a/paperqa/agents/main.py
++++ b/paperqa/agents/main.py
+@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
+ from aviary.core import (
+     MalformedMessageError,
+     Message,
++    Tool,
+     ToolCall,
+     ToolRequestMessage,
+     ToolSelector,
+@@ -199,6 +200,8 @@ async def run_fake_agent(
+         )
+     env = env_class(query, settings, docs, **env_kwargs)
+     obs, tools = await env.reset()
++    settings.adjust_tools_for_agent_llm(tools)
++
+     if on_env_reset_callback:
+         await on_env_reset_callback(env.state)
+ 
+@@ -274,6 +277,8 @@ async def run_aviary_agent(
+ 
+     async def rollout() -> AgentStatus:
+         obs, tools = await env.reset()
++        settings.adjust_tools_for_agent_llm(tools)
++
+         if on_env_reset_callback:
+             await on_env_reset_callback(env.state)
+ 
+@@ -352,6 +357,16 @@ class LDPRolloutCallback(Callback):
+             await self.on_env_step_callback(*args)
+ 
+ 
++class LDPAdjustToolsForAgentCallback(Callback):
++    def __init__(self, settings: Settings):
++        self._settings = settings
++
++    async def after_env_reset(
++        self, traj_id: str, obs: list[Message], tools: list[Tool]  # noqa: ARG002
++    ) -> None:
++        self._settings.adjust_tools_for_agent_llm(tools)
++
++
+ async def run_ldp_agent(
+     query: str | MultipleChoiceQuestion,
+     settings: Settings,
+@@ -379,7 +394,8 @@ async def run_ldp_agent(
+                     on_env_reset_callback,
+                     on_agent_action_callback,
+                     on_env_step_callback,
+-                )
++                ),
++                LDPAdjustToolsForAgentCallback(settings),
+             ],
+         )
+         trajs = await rollout_manager.sample_trajectories(
+diff --git a/paperqa/settings.py b/paperqa/settings.py
+index 0bdeaa9..3a29659 100644
+--- a/paperqa/settings.py
++++ b/paperqa/settings.py
+@@ -9,7 +9,7 @@ from pydoc import locate
+ from typing import Any, ClassVar, Self, TypeAlias, assert_never, cast
+ 
+ import anyio
+-from aviary.core import ToolSelector
++from aviary.core import Tool, ToolSelector
+ from llmclient import (
+     CommonLLMNames,
+     EmbeddingModel,
+@@ -932,6 +932,14 @@ class Settings(BaseSettings):
+             )
+         raise NotImplementedError(f"Didn't yet handle agent type {agent_type}.")
+ 
++    def adjust_tools_for_agent_llm(self, tools: list[Tool]) -> None:
++        # Google gemini/gemini-1.5-flash fails to support empty dict properties
++        # SEE: https://github.com/BerriAI/litellm/issues/7634
++        if "gemini" in self.agent.agent_llm.lower():
++            for t in tools:
++                if not t.info.get_properties():
++                    t.info.parameters = None
++
+ 
+ # Settings: already Settings
+ # dict[str, Any]: serialized Settings

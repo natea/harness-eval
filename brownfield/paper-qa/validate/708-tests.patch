@@ -1,0 +1,1183 @@
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question.yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question.yaml
+deleted file mode 100644
+index eda68e4..0000000
+--- a/tests/cassettes/TestLitQAEvaluation.test_from_question.yaml
++++ /dev/null
+@@ -1,308 +0,0 @@
+-interactions:
+-  - request:
+-      body:
+-        '{"messages": [{"role": "user", "content": "Extract the single letter answer
+-        from the following question and answer\n\nQ: What is my office''s zip code?\n\nOptions:\nA)
+-        94107\nB) 94106\nC) cheesecake\nD) Insufficient information to answer this question\nE)
+-        -8\n\nthe answer is 94107\n\nSingle Letter Answer:"}], "model": "gpt-4-turbo-2024-04-09",
+-        "stream": false, "temperature": 0.0}'
+-      headers:
+-        accept:
+-          - application/json
+-        accept-encoding:
+-          - gzip, deflate
+-        connection:
+-          - keep-alive
+-        content-length:
+-          - "381"
+-        content-type:
+-          - application/json
+-        host:
+-          - api.openai.com
+-        user-agent:
+-          - AsyncOpenAI/Python 1.54.3
+-        x-stainless-arch:
+-          - arm64
+-        x-stainless-async:
+-          - async:asyncio
+-        x-stainless-lang:
+-          - python
+-        x-stainless-os:
+-          - MacOS
+-        x-stainless-package-version:
+-          - 1.54.3
+-        x-stainless-raw-response:
+-          - "true"
+-        x-stainless-retry-count:
+-          - "0"
+-        x-stainless-runtime:
+-          - CPython
+-        x-stainless-runtime-version:
+-          - 3.12.7
+-      method: POST
+-      uri: https://api.openai.com/v1/chat/completions
+-    response:
+-      body:
+-        string: !!binary |
+-          H4sIAAAAAAAAA4ySzW6DMBCE7zyF5XOoSCBJyy3qJZeqlaKeqgoZeyFOjW3Zi/oT5d0rAw1ETaVe
+-          OMy3M8wuHCNCqBQ0J5TvGfLGqnjznJb+oX2c78Qu2b6vDttN+4VPTGf3NdJZcJjyABx/XDfcNFYB
+-          SqN7zB0whJA6X6fz9WKd3CYdaIwAFWy1xTiLsXWliRfJIouTLE7uBvfeSA6e5uQlIoSQY/cMPbWA
+-          D5qTLqtTGvCe1UDz8xAh1BkVFMq8lx6Z7jsPkBuNoLvqm6nuoGo9C910q9Sgn84vUqa2zpR+4Ge9
+-          klr6feGAeaNDqEdjaUdPESGv3ULtRUdqnWksFmjeQIfAddbH0fGMI5wPDA0yNfEsZ1fCCgHIpPKT
+-          e1DO+B7E6ByPx1ohzQREk5V/d7mW3a8tdf2f+BFwDhZBFNaBkPxy33HMQfjH/ho7n7grTP2nR2iK
+-          SuoanHWy/8KVLZaiTJN0lVYVjU7RNwAAAP//AwB6cqDm7wIAAA==
+-      headers:
+-        CF-Cache-Status:
+-          - DYNAMIC
+-        CF-RAY:
+-          - 8e3454ce1d0cf9ed-SJC
+-        Connection:
+-          - keep-alive
+-        Content-Encoding:
+-          - gzip
+-        Content-Type:
+-          - application/json
+-        Date:
+-          - Sat, 16 Nov 2024 03:18:00 GMT
+-        Server:
+-          - cloudflare
+-        Set-Cookie:
+-          - __cf_bm=CxagMF3adSImnjurrSLCktMe5rNnZcHIEqsdSZSLDs0-1731727080-1.0.1.1-ymOPVqd8Ak0SpnKXDE8qlUe5mLVyf1O3zKQMu7D8YXYiDiim6f2WDXjvdO4QcJ0ZQlEy8DokE30DJy_Qb9brNg;
+-            path=/; expires=Sat, 16-Nov-24 03:48:00 GMT; domain=.api.openai.com; HttpOnly;
+-            Secure; SameSite=None
+-          - _cfuvid=s7lDRYJWEVdEktE96XnB5Opmejh.TH4i8F_7V.AuEeM-1731727080955-0.0.1.1-604800000;
+-            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
+-        Transfer-Encoding:
+-          - chunked
+-        X-Content-Type-Options:
+-          - nosniff
+-        access-control-expose-headers:
+-          - X-Request-ID
+-        alt-svc:
+-          - h3=":443"; ma=86400
+-        openai-organization:
+-          - future-house-xr4tdh
+-        openai-processing-ms:
+-          - "180"
+-        openai-version:
+-          - "2020-10-01"
+-        strict-transport-security:
+-          - max-age=31536000; includeSubDomains; preload
+-        x-ratelimit-limit-requests:
+-          - "3000"
+-        x-ratelimit-limit-tokens:
+-          - "250000"
+-        x-ratelimit-remaining-requests:
+-          - "2999"
+-        x-ratelimit-remaining-tokens:
+-          - "249920"
+-        x-ratelimit-reset-requests:
+-          - 20ms
+-        x-ratelimit-reset-tokens:
+-          - 19ms
+-        x-request-id:
+-          - req_2927535f010df8805a554f3886d33a8c
+-      status:
+-        code: 200
+-        message: OK
+-  - request:
+-      body:
+-        '{"messages": [{"role": "user", "content": "Extract the single letter answer
+-        from the following question and answer\n\nQ: What is my office''s zip code?\n\nOptions:\nA)
+-        94107\nB) 94106\nC) cheesecake\nD) Insufficient information to answer this question\nE)
+-        -8\n\nthe answer is 94106\n\nSingle Letter Answer:"}], "model": "gpt-4-turbo-2024-04-09",
+-        "stream": false, "temperature": 0.0}'
+-      headers:
+-        accept:
+-          - application/json
+-        accept-encoding:
+-          - gzip, deflate
+-        connection:
+-          - keep-alive
+-        content-length:
+-          - "381"
+-        content-type:
+-          - application/json
+-        host:
+-          - api.openai.com
+-        user-agent:
+-          - AsyncOpenAI/Python 1.54.3
+-        x-stainless-arch:
+-          - arm64
+-        x-stainless-async:
+-          - async:asyncio
+-        x-stainless-lang:
+-          - python
+-        x-stainless-os:
+-          - MacOS
+-        x-stainless-package-version:
+-          - 1.54.3
+-        x-stainless-raw-response:
+-          - "true"
+-        x-stainless-retry-count:
+-          - "0"
+-        x-stainless-runtime:
+-          - CPython
+-        x-stainless-runtime-version:
+-          - 3.12.7
+-      method: POST
+-      uri: https://api.openai.com/v1/chat/completions
+-    response:
+-      body:
+-        string: !!binary |
+-          H4sIAAAAAAAAA4ySUUvDMBSF3/srQp5X6dbNzb05URCF4YMgipQ0ue2iaZIltzIZ+++Srls7nOBL
+-          H853z+m5t91GhFAp6JxQvmLIK6vi6+c0x6db+LKw3jwuXpLX9QMs7+zsJr1f0kFwmPwDOB5cF9xU
+-          VgFKo/eYO2AIIXU4TYfT0TSZDRtQGQEq2EqL8TjG2uUmHiWjcZyM4+Sqda+M5ODpnLxFhBCybZ6h
+-          pxawoXOSDA5KBd6zEuj8OEQIdUYFhTLvpUemkQ46yI1G0E31RV93UNSehW66VqrVd8cXKVNaZ3Lf
+-          8qNeSC39KnPAvNEh1KOxtKG7iJD3ZqH6pCO1zlQWMzSfoEPgdLyPo90ZOzhsGRpkqueZDM6EZQKQ
+-          SeV796Cc8RWIztkdj9VCmh6Ieiv/7nIue7+21OV/4jvAOVgEkVkHQvLTfbsxB+Ef+2vseOKmMPXf
+-          HqHKCqlLcNbJ/RcubDYReZqkl2lR0GgX/QAAAP//AwDGCnMs7wIAAA==
+-      headers:
+-        CF-Cache-Status:
+-          - DYNAMIC
+-        CF-RAY:
+-          - 8e3454d0c819f9ed-SJC
+-        Connection:
+-          - keep-alive
+-        Content-Encoding:
+-          - gzip
+-        Content-Type:
+-          - application/json
+-        Date:
+-          - Sat, 16 Nov 2024 03:18:01 GMT
+-        Server:
+-          - cloudflare
+-        Transfer-Encoding:
+-          - chunked
+-        X-Content-Type-Options:
+-          - nosniff
+-        access-control-expose-headers:
+-          - X-Request-ID
+-        alt-svc:
+-          - h3=":443"; ma=86400
+-        openai-organization:
+-          - future-house-xr4tdh
+-        openai-processing-ms:
+-          - "250"
+-        openai-version:
+-          - "2020-10-01"
+-        strict-transport-security:
+-          - max-age=31536000; includeSubDomains; preload
+-        x-ratelimit-limit-requests:
+-          - "3000"
+-        x-ratelimit-limit-tokens:
+-          - "250000"
+-        x-ratelimit-remaining-requests:
+-          - "2999"
+-        x-ratelimit-remaining-tokens:
+-          - "249920"
+-        x-ratelimit-reset-requests:
+-          - 20ms
+-        x-ratelimit-reset-tokens:
+-          - 19ms
+-        x-request-id:
+-          - req_e6161561c3d7837f54ffd24aa5959bcc
+-      status:
+-        code: 200
+-        message: OK
+-  - request:
+-      body:
+-        '{"messages": [{"role": "user", "content": "Extract the single letter answer
+-        from the following question and answer\n\nQ: What is my office''s zip code?\n\nOptions:\nA)
+-        94107\nB) 94106\nC) cheesecake\nD) Insufficient information to answer this question\nE)
+-        -8\n\nInsufficient information to answer\n\nSingle Letter Answer:"}], "model":
+-        "gpt-4-turbo-2024-04-09", "stream": false, "temperature": 0.0}'
+-      headers:
+-        accept:
+-          - application/json
+-        accept-encoding:
+-          - gzip, deflate
+-        connection:
+-          - keep-alive
+-        content-length:
+-          - "396"
+-        content-type:
+-          - application/json
+-        host:
+-          - api.openai.com
+-        user-agent:
+-          - AsyncOpenAI/Python 1.54.3
+-        x-stainless-arch:
+-          - arm64
+-        x-stainless-async:
+-          - async:asyncio
+-        x-stainless-lang:
+-          - python
+-        x-stainless-os:
+-          - MacOS
+-        x-stainless-package-version:
+-          - 1.54.3
+-        x-stainless-raw-response:
+-          - "true"
+-        x-stainless-retry-count:
+-          - "0"
+-        x-stainless-runtime:
+-          - CPython
+-        x-stainless-runtime-version:
+-          - 3.12.7
+-      method: POST
+-      uri: https://api.openai.com/v1/chat/completions
+-    response:
+-      body:
+-        string: !!binary |
+-          H4sIAAAAAAAAA4ySS2vDMBCE7/4VQue4OI6b16000BAovTS5lGIUaW0rkSUhraEl5L8XOQ87NIVe
+-          fJhvZzy79iEihEpB54TyiiGvrYqf1qMtvrrn9/V4s1zsVmnzUizL/erNbzYFHQSH2e6A48X1wE1t
+-          FaA0+oS5A4YQUoeT0XCSTpLpsAW1EaCCrbQYZzE2bmviNEmzOMniZHZ2V0Zy8HROPiJCCDm0z9BT
+-          C/iic5IMLkoN3rMS6Pw6RAh1RgWFMu+lR6aRDjrIjUbQbfVFX3dQNJ6FbrpR6qwfry9SprTObP2Z
+-          X/VCaumr3AHzRodQj8bSlh4jQj7bhZqbjtQ6U1vM0exBh8DJ6BRHuzN2cHhmaJCpnicb3AnLBSCT
+-          yvfuQTnjFYjO2R2PNUKaHoh6K//uci/7tLbU5X/iO8A5WASRWwdC8tt9uzEH4R/7a+x64rYw9d8e
+-          oc4LqUtw1snTFy5sLh7FNBtPZ2Og0TH6AQAA//8DALbaBE7vAgAA
+-      headers:
+-        CF-Cache-Status:
+-          - DYNAMIC
+-        CF-RAY:
+-          - 8e3454d32aeff9ed-SJC
+-        Connection:
+-          - keep-alive
+-        Content-Encoding:
+-          - gzip
+-        Content-Type:
+-          - application/json
+-        Date:
+-          - Sat, 16 Nov 2024 03:18:01 GMT
+-        Server:
+-          - cloudflare
+-        Transfer-Encoding:
+-          - chunked
+-        X-Content-Type-Options:
+-          - nosniff
+-        access-control-expose-headers:
+-          - X-Request-ID
+-        alt-svc:
+-          - h3=":443"; ma=86400
+-        openai-organization:
+-          - future-house-xr4tdh
+-        openai-processing-ms:
+-          - "257"
+-        openai-version:
+-          - "2020-10-01"
+-        strict-transport-security:
+-          - max-age=31536000; includeSubDomains; preload
+-        x-ratelimit-limit-requests:
+-          - "3000"
+-        x-ratelimit-limit-tokens:
+-          - "250000"
+-        x-ratelimit-remaining-requests:
+-          - "2999"
+-        x-ratelimit-remaining-tokens:
+-          - "249917"
+-        x-ratelimit-reset-requests:
+-          - 20ms
+-        x-ratelimit-reset-tokens:
+-          - 19ms
+-        x-request-id:
+-          - req_aaa41e9c5fa6a8aaf24acab8d2767b06
+-      status:
+-        code: 200
+-        message: OK
+-version: 1
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors0-the answer is 94107-correct-expected_dreturns0].yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors0-the answer is 94107-correct-expected_dreturns0].yaml
+new file mode 100644
+index 0000000..4b5ad3d
+--- /dev/null
++++ b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors0-the answer is 94107-correct-expected_dreturns0].yaml	
+@@ -0,0 +1,109 @@
++interactions:
++  - request:
++      body:
++        '{"messages": [{"role": "user", "content": "Extract the single letter answer
++        from the following question and answer\n\nQuestion: Q: What is my office''s
++        zip code?\n\nOptions:\nA) 94107\nB) 94106\nC) cheesecake\nD) Insufficient information
++        to answer this question\nE) -8\n\nAnswer: the answer is 94107\n\nSingle Letter
++        Answer:"}], "model": "gpt-4-turbo-2024-04-09", "stream": false, "temperature":
++        0.0}'
++      headers:
++        accept:
++          - application/json
++        accept-encoding:
++          - gzip, deflate
++        connection:
++          - keep-alive
++        content-length:
++          - "399"
++        content-type:
++          - application/json
++        host:
++          - api.openai.com
++        user-agent:
++          - AsyncOpenAI/Python 1.54.4
++        x-stainless-arch:
++          - arm64
++        x-stainless-async:
++          - async:asyncio
++        x-stainless-lang:
++          - python
++        x-stainless-os:
++          - MacOS
++        x-stainless-package-version:
++          - 1.54.4
++        x-stainless-raw-response:
++          - "true"
++        x-stainless-retry-count:
++          - "0"
++        x-stainless-runtime:
++          - CPython
++        x-stainless-runtime-version:
++          - 3.12.7
++      method: POST
++      uri: https://api.openai.com/v1/chat/completions
++    response:
++      body:
++        string: !!binary |
++          H4sIAAAAAAAAA4ySS2+DMBCE7/wKy2eoCHnQcEulXnqs1CpVVSFjL8SNsS17kdJG+e+VyQOiplIv
++          HObbGWYX9hEhVApaEMo3DHlrVbJ6fRaN264f25f6ob3f8cU649Vu+V29PU1pHBym+gSOZ9cdN61V
++          gNLoI+YOGEJIneTTLJ3neb7oQWsEqGBrLCazBDtXmSRLs1mSzpJ0eXJvjOTgaUHeI0II2ffP0FML
++          2NGCpPFZacF71gAtLkOEUGdUUCjzXnpkGmk8QG40gu6rr8a6g7rzLHTTnVIn/XB5kTKNdabyJ37R
++          a6ml35QOmDc6hHo0lvb0EBHy0S/UXXWk1pnWYolmCzoE5vfHODqccYCTE0ODTI08y/hGWCkAmVR+
++          dA/KGd+AGJzD8VgnpBmBaLTy7y63so9rS938J34AnINFEKV1ICS/3ncYcxD+sb/GLifuC1P/5RHa
++          spa6AWedPH7h2pbTebpMgU8mNY0O0Q8AAAD//wMAhBVgfe8CAAA=
++      headers:
++        CF-Cache-Status:
++          - DYNAMIC
++        CF-RAY:
++          - 8e53de6e5cfaaaaf-SJC
++        Connection:
++          - keep-alive
++        Content-Encoding:
++          - gzip
++        Content-Type:
++          - application/json
++        Date:
++          - Tue, 19 Nov 2024 23:09:36 GMT
++        Server:
++          - cloudflare
++        Set-Cookie:
++          - __cf_bm=m4OE6Q9B5g1LZdV1lk5zJSF9ekmkXvjwnXg_ZmWK34Y-1732057776-1.0.1.1-DkqI4K5u9o18wi3CGoFkYhtXBEOxFdO3JgQw6OQnNr7jvnOYV.j4ykQrxs56Cqw4pGFdGX1QG8VPsylVr0cFHQ;
++            path=/; expires=Tue, 19-Nov-24 23:39:36 GMT; domain=.api.openai.com; HttpOnly;
++            Secure; SameSite=None
++          - _cfuvid=.rsw4i8X9rlhHL7NokZqqDhBAoei53pM9P2aDSADs6g-1732057776943-0.0.1.1-604800000;
++            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
++        Transfer-Encoding:
++          - chunked
++        X-Content-Type-Options:
++          - nosniff
++        access-control-expose-headers:
++          - X-Request-ID
++        alt-svc:
++          - h3=":443"; ma=86400
++        openai-organization:
++          - future-house-xr4tdh
++        openai-processing-ms:
++          - "462"
++        openai-version:
++          - "2020-10-01"
++        strict-transport-security:
++          - max-age=31536000; includeSubDomains; preload
++        x-ratelimit-limit-requests:
++          - "3000"
++        x-ratelimit-limit-tokens:
++          - "250000"
++        x-ratelimit-remaining-requests:
++          - "2999"
++        x-ratelimit-remaining-tokens:
++          - "249916"
++        x-ratelimit-reset-requests:
++          - 20ms
++        x-ratelimit-reset-tokens:
++          - 20ms
++        x-request-id:
++          - req_1dd10d37e219c66a5e13ea6f21b8a788
++      status:
++        code: 200
++        message: OK
++version: 1
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors1-the answer is 14004-incorrect-expected_dreturns1].yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors1-the answer is 14004-incorrect-expected_dreturns1].yaml
+new file mode 100644
+index 0000000..2f023ae
+--- /dev/null
++++ b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors1-the answer is 14004-incorrect-expected_dreturns1].yaml	
+@@ -0,0 +1,113 @@
++interactions:
++  - request:
++      body:
++        '{"messages": [{"role": "user", "content": "Extract the single letter answer
++        from the following question and answer\n\nQuestion: Q: What is my office''s
++        zip code?\n\nOptions:\nA) 94107\nB) 94106\nC) cheesecake\nD) Insufficient information
++        to answer this question\nE) -8\n\nAnswer: the answer is 14004\n\nSingle Letter
++        Answer:"}], "model": "gpt-4-turbo-2024-04-09", "stream": false, "temperature":
++        0.0}'
++      headers:
++        accept:
++          - application/json
++        accept-encoding:
++          - gzip, deflate
++        connection:
++          - keep-alive
++        content-length:
++          - "399"
++        content-type:
++          - application/json
++        host:
++          - api.openai.com
++        user-agent:
++          - AsyncOpenAI/Python 1.54.4
++        x-stainless-arch:
++          - arm64
++        x-stainless-async:
++          - async:asyncio
++        x-stainless-lang:
++          - python
++        x-stainless-os:
++          - MacOS
++        x-stainless-package-version:
++          - 1.54.4
++        x-stainless-raw-response:
++          - "true"
++        x-stainless-retry-count:
++          - "0"
++        x-stainless-runtime:
++          - CPython
++        x-stainless-runtime-version:
++          - 3.12.7
++      method: POST
++      uri: https://api.openai.com/v1/chat/completions
++    response:
++      body:
++        string: !!binary |
++          H4sIAAAAAAAAA4xTy27bMBC8+ysWvDQB5EBOFCjxpUgfh/bQQ2H0kbowaGolsaW4DLly6gb594K0
++          LTloCvQiQDs7w1nu8GECIHQl5iBUK1l1zkxvPn2s2u3idnHxIXwpZHG7ufPhfXHxdbvY3IosMmj9
++          AxUfWGeKOmeQNdkdrDxKxqg6Ky/O88uyLMsEdFShibTG8bSYcu/XND3Pz4tpXkzz6z27Ja0wiDl8
++          mwAAPKRv9Gkr/CXmkGeHSochyAbFfGgCEJ5MrAgZgg4sLYtsBBVZRpusL1qEoG1jEAwyowdpwz16
++          YAJuEe56DHEmWIrPrWTQAbotUF1rhS8C/NYOFFX4cingXnObOM7TRldYAblIDZH05hTe2dBHnkbL
++          oG1NvpNJmmk4tNVhOPIMFvFXB1ijkn3AJC4V99IcCIejMliKWZHnRbYUUBEGsMTQSVYtSBsNJ/LB
++          7uCs0Ru0cHID5OHVaQbSVqmRuEU/dJ28TsDbU5AeQRmU3mxBe48GN9JyZGuryHtUHG2jx5o8Zklr
++          X4fdStNlnB1vw2PdBxkTYXtj9vXHYb2GGudpHfb4UK+11aFdeZSBbFxlYHIioY8TgO8pRv2TZAjn
++          qXO8YvqJNgqWVzs5MYZ3BK9me5CJpRnrs8vr7Bm5VYUstQlHORRKqharkTqGVvaVpiNgcjT0326e
++          094Nrm3zP/IjoBQ6xmrlPFZaPZ14bPMY3/a/2oZLToZF2AbGblVr26B3Xu9eVu1Wql5f1tdYy1JM
++          Hid/AAAA//8DALHAjWhnBAAA
++      headers:
++        CF-Cache-Status:
++          - DYNAMIC
++        CF-RAY:
++          - 8e53de72fa35171a-SJC
++        Connection:
++          - keep-alive
++        Content-Encoding:
++          - gzip
++        Content-Type:
++          - application/json
++        Date:
++          - Tue, 19 Nov 2024 23:09:40 GMT
++        Server:
++          - cloudflare
++        Set-Cookie:
++          - __cf_bm=NN_CVQrdtVcfzj3hSKUVLPnr69pGiin75ODPqXRa7mY-1732057780-1.0.1.1-Z5hKrN8tRnSsireFjVAIIkS_RAjKjFet2gGcEusT3eabj9uF2wtvXmPkukpDBVXuGNE4szIXCiH.4lpv39_How;
++            path=/; expires=Tue, 19-Nov-24 23:39:40 GMT; domain=.api.openai.com; HttpOnly;
++            Secure; SameSite=None
++          - _cfuvid=rmhiOmMva8xhUwvNu2NHd1WUMeR7lCH4QEPePEpAvRg-1732057780929-0.0.1.1-604800000;
++            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
++        Transfer-Encoding:
++          - chunked
++        X-Content-Type-Options:
++          - nosniff
++        access-control-expose-headers:
++          - X-Request-ID
++        alt-svc:
++          - h3=":443"; ma=86400
++        openai-organization:
++          - future-house-xr4tdh
++        openai-processing-ms:
++          - "3712"
++        openai-version:
++          - "2020-10-01"
++        strict-transport-security:
++          - max-age=31536000; includeSubDomains; preload
++        x-ratelimit-limit-requests:
++          - "3000"
++        x-ratelimit-limit-tokens:
++          - "250000"
++        x-ratelimit-remaining-requests:
++          - "2999"
++        x-ratelimit-remaining-tokens:
++          - "249915"
++        x-ratelimit-reset-requests:
++          - 20ms
++        x-ratelimit-reset-tokens:
++          - 20ms
++        x-request-id:
++          - req_b9c919a23b80fe6870ed431ec2acd624
++      status:
++        code: 200
++        message: OK
++version: 1
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors2-the answer is 94106-incorrect-expected_dreturns2].yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors2-the answer is 94106-incorrect-expected_dreturns2].yaml
+new file mode 100644
+index 0000000..cfa1a25
+--- /dev/null
++++ b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors2-the answer is 94106-incorrect-expected_dreturns2].yaml	
+@@ -0,0 +1,109 @@
++interactions:
++  - request:
++      body:
++        '{"messages": [{"role": "user", "content": "Extract the single letter answer
++        from the following question and answer\n\nQuestion: Q: What is my office''s
++        zip code?\n\nOptions:\nA) 94107\nB) 94106\nC) cheesecake\nD) Insufficient information
++        to answer this question\nE) -8\n\nAnswer: the answer is 94106\n\nSingle Letter
++        Answer:"}], "model": "gpt-4-turbo-2024-04-09", "stream": false, "temperature":
++        0.0}'
++      headers:
++        accept:
++          - application/json
++        accept-encoding:
++          - gzip, deflate
++        connection:
++          - keep-alive
++        content-length:
++          - "399"
++        content-type:
++          - application/json
++        host:
++          - api.openai.com
++        user-agent:
++          - AsyncOpenAI/Python 1.54.4
++        x-stainless-arch:
++          - arm64
++        x-stainless-async:
++          - async:asyncio
++        x-stainless-lang:
++          - python
++        x-stainless-os:
++          - MacOS
++        x-stainless-package-version:
++          - 1.54.4
++        x-stainless-raw-response:
++          - "true"
++        x-stainless-retry-count:
++          - "0"
++        x-stainless-runtime:
++          - CPython
++        x-stainless-runtime-version:
++          - 3.12.7
++      method: POST
++      uri: https://api.openai.com/v1/chat/completions
++    response:
++      body:
++        string: !!binary |
++          H4sIAAAAAAAAA4ySzU7DMBCE73kKy+cGJW1K2t7aC0iAED1wQShy7U3i4tiWvZGAqu+OnP4kFUXi
++          ksN8O5PZTXYRIVQKuiCU1wx5Y1W8fF0L9T1eLW8f1vXkbrvKfZU93T9OnifpCx0Fh9lsgePJdcNN
++          YxWgNPqAuQOGEFLTfDJOpnk+SzvQGAEq2CqLcRZj6zYmHifjLE6yOJkf3bWRHDxdkLeIEEJ23TP0
++          1AI+6YIko5PSgPesAro4DxFCnVFBocx76ZFppKMecqMRdFd9NdQdlK1noZtulTrq+/OLlKmsMxt/
++          5Ge9lFr6unDAvNEh1KOxtKP7iJD3bqH2oiO1zjQWCzQfoENgPjvE0f6MPUyPDA0yNfDMR1fCCgHI
++          pPKDe1DOeA2id/bHY62QZgCiwcq/u1zLPqwtdfWf+B5wDhZBFNaBkPxy337MQfjH/ho7n7grTP2X
++          R2iKUuoKnHXy8IVLW/ByMy3nULKcRvvoBwAA//8DAO5farrvAgAA
++      headers:
++        CF-Cache-Status:
++          - DYNAMIC
++        CF-RAY:
++          - 8e53de8b4d72fa72-SJC
++        Connection:
++          - keep-alive
++        Content-Encoding:
++          - gzip
++        Content-Type:
++          - application/json
++        Date:
++          - Tue, 19 Nov 2024 23:09:41 GMT
++        Server:
++          - cloudflare
++        Set-Cookie:
++          - __cf_bm=JCFnJ5atqGGxkbjbEcDREU3enHVyvflCdBkMJrLKmh0-1732057781-1.0.1.1-CbxpRkQqVEFYTomzzGjvNQnrO1s3iU3xY0MWgGVJ283rFs1FmgLYlWvw_wJhr1E.9HcE1SsgRh0nn5qu6fRtAA;
++            path=/; expires=Tue, 19-Nov-24 23:39:41 GMT; domain=.api.openai.com; HttpOnly;
++            Secure; SameSite=None
++          - _cfuvid=LEmbG0PB.JQIF0IVOxpk7kL_UTPlu7Bi.WlZESJLxLo-1732057781465-0.0.1.1-604800000;
++            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
++        Transfer-Encoding:
++          - chunked
++        X-Content-Type-Options:
++          - nosniff
++        access-control-expose-headers:
++          - X-Request-ID
++        alt-svc:
++          - h3=":443"; ma=86400
++        openai-organization:
++          - future-house-xr4tdh
++        openai-processing-ms:
++          - "351"
++        openai-version:
++          - "2020-10-01"
++        strict-transport-security:
++          - max-age=31536000; includeSubDomains; preload
++        x-ratelimit-limit-requests:
++          - "3000"
++        x-ratelimit-limit-tokens:
++          - "250000"
++        x-ratelimit-remaining-requests:
++          - "2999"
++        x-ratelimit-remaining-tokens:
++          - "249916"
++        x-ratelimit-reset-requests:
++          - 20ms
++        x-ratelimit-reset-tokens:
++          - 20ms
++        x-request-id:
++          - req_a6f76439f805594f46c9fd28dacbb5bc
++      status:
++        code: 200
++        message: OK
++version: 1
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors3-Insufficient information-unsure-expected_dreturns3].yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors3-Insufficient information-unsure-expected_dreturns3].yaml
+new file mode 100644
+index 0000000..f443492
+--- /dev/null
++++ b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors3-Insufficient information-unsure-expected_dreturns3].yaml	
+@@ -0,0 +1,109 @@
++interactions:
++  - request:
++      body:
++        '{"messages": [{"role": "user", "content": "Extract the single letter answer
++        from the following question and answer\n\nQuestion: Q: What is my office''s
++        zip code?\n\nOptions:\nA) 94107\nB) 94106\nC) cheesecake\nD) Insufficient information
++        to answer this question\nE) -8\n\nAnswer: Insufficient information\n\nSingle
++        Letter Answer:"}], "model": "gpt-4-turbo-2024-04-09", "stream": false, "temperature":
++        0.0}'
++      headers:
++        accept:
++          - application/json
++        accept-encoding:
++          - gzip, deflate
++        connection:
++          - keep-alive
++        content-length:
++          - "404"
++        content-type:
++          - application/json
++        host:
++          - api.openai.com
++        user-agent:
++          - AsyncOpenAI/Python 1.54.4
++        x-stainless-arch:
++          - arm64
++        x-stainless-async:
++          - async:asyncio
++        x-stainless-lang:
++          - python
++        x-stainless-os:
++          - MacOS
++        x-stainless-package-version:
++          - 1.54.4
++        x-stainless-raw-response:
++          - "true"
++        x-stainless-retry-count:
++          - "0"
++        x-stainless-runtime:
++          - CPython
++        x-stainless-runtime-version:
++          - 3.12.7
++      method: POST
++      uri: https://api.openai.com/v1/chat/completions
++    response:
++      body:
++        string: !!binary |
++          H4sIAAAAAAAAA4ySzUvEMBDF7/0rQs5b6a7dz5ugBxEEBRURKdlkto2mmZBMZVX2f5d0P9rFFbz0
++          8H7zXt9M+50wxrXiC8ZlJUjWzqQXj/fKfISHYJ6yrxuTX10/341uIcN1Vc/4IDpw+QaS9q4zibUz
++          QBrtFksPgiCmDqfno2w8nc6GLahRgYm20lGap9T4JaajbJSnWZ5m8527Qi0h8AV7SRhj7Lt9xp5W
++          wZovWDbYKzWEIErgi8MQY9yjiQoXIehAwhIfdFCiJbBt9cu+7mHVBBG72caYnb45vMhg6Twuw44f
++          9JW2OlSFBxHQxtBA6HhLNwljr+1CzVFH7jzWjgrCd7AxcDrexvHujB0c7hghCdPzTAYnwgoFJLQJ
++          vXtwKWQFqnN2xxON0tgDSW/l311OZW/X1rb8T3wHpARHoArnQWl5vG835iH+Y3+NHU7cFubhMxDU
++          xUrbErzzevuFV65QYzXLJ7P5BHiySX4AAAD//wMAC/87Du8CAAA=
++      headers:
++        CF-Cache-Status:
++          - DYNAMIC
++        CF-RAY:
++          - 8e53de8e9d7922ba-SJC
++        Connection:
++          - keep-alive
++        Content-Encoding:
++          - gzip
++        Content-Type:
++          - application/json
++        Date:
++          - Tue, 19 Nov 2024 23:09:42 GMT
++        Server:
++          - cloudflare
++        Set-Cookie:
++          - __cf_bm=h0rV7dY7z.cMVvf1WsA0NTBkJMHvUqxT5jfnjOc_Hx8-1732057782-1.0.1.1-FERs0iLmm2suuiWGH0KnF2FiP77HtQ2mRVz7ASNBP.6T0g1EUIX6NHtIGsfFLGFrtebNzoSJxvO9T1w3xKvsqA;
++            path=/; expires=Tue, 19-Nov-24 23:39:42 GMT; domain=.api.openai.com; HttpOnly;
++            Secure; SameSite=None
++          - _cfuvid=5VkTfCWPe_730gMr_Zw7vkyCP3P.4uKa2TkDSmOBdQU-1732057782163-0.0.1.1-604800000;
++            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
++        Transfer-Encoding:
++          - chunked
++        X-Content-Type-Options:
++          - nosniff
++        access-control-expose-headers:
++          - X-Request-ID
++        alt-svc:
++          - h3=":443"; ma=86400
++        openai-organization:
++          - future-house-xr4tdh
++        openai-processing-ms:
++          - "525"
++        openai-version:
++          - "2020-10-01"
++        strict-transport-security:
++          - max-age=31536000; includeSubDomains; preload
++        x-ratelimit-limit-requests:
++          - "3000"
++        x-ratelimit-limit-tokens:
++          - "250000"
++        x-ratelimit-remaining-requests:
++          - "2999"
++        x-ratelimit-remaining-tokens:
++          - "249915"
++        x-ratelimit-reset-requests:
++          - 20ms
++        x-ratelimit-reset-tokens:
++          - 20ms
++        x-request-id:
++          - req_39559dc7be06f429f3bcca6173277e16
++      status:
++        code: 200
++        message: OK
++version: 1
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4].yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4].yaml
+new file mode 100644
+index 0000000..2a4ca9e
+--- /dev/null
++++ b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4].yaml	
+@@ -0,0 +1,110 @@
++interactions:
++  - request:
++      body:
++        '{"messages": [{"role": "user", "content": "Extract the single letter answer
++        from the following question and answer\n\nQuestion: Q: What is my office''s
++        zip code?\n\nOptions:\nA) 94107\nB) 94106\nC) cheesecake\nD) Insufficient information
++        to answer this question\nE) -8\n\nAnswer: the answer is 94106 or 94107\n\nSingle
++        Letter Answer:"}], "model": "gpt-4-turbo-2024-04-09", "stream": false, "temperature":
++        0.0}'
++      headers:
++        accept:
++          - application/json
++        accept-encoding:
++          - gzip, deflate
++        connection:
++          - keep-alive
++        content-length:
++          - "408"
++        content-type:
++          - application/json
++        host:
++          - api.openai.com
++        user-agent:
++          - AsyncOpenAI/Python 1.54.4
++        x-stainless-arch:
++          - arm64
++        x-stainless-async:
++          - async:asyncio
++        x-stainless-lang:
++          - python
++        x-stainless-os:
++          - MacOS
++        x-stainless-package-version:
++          - 1.54.4
++        x-stainless-raw-response:
++          - "true"
++        x-stainless-retry-count:
++          - "0"
++        x-stainless-runtime:
++          - CPython
++        x-stainless-runtime-version:
++          - 3.12.7
++      method: POST
++      uri: https://api.openai.com/v1/chat/completions
++    response:
++      body:
++        string: !!binary |
++          H4sIAAAAAAAAA4ySP2/bMBDFd32KA2crUCQ7jr21Q7q0S9EkQxAINHmSmFAkwTuh+QN/94CyYylI
++          CnTRcL97T++d9JoBCKPFFoTqJKs+2PzbzW/tls8/HoP5+euqwaZYlc5dn99sbosXsUgKv3tAxe+q
++          M+X7YJGNdwesIkrG5Hq+rspitV5fViPovUabZG3gfJnzEHc+L4tymRfLvNgc1Z03Ckls4S4DAHgd
++          nymn0/gktlAs3ic9EskWxfa0BCCit2kiJJEhlo7FYoLKO0Y3Rv/TIZBxrUWwyIwRpKO/GMEQfD+b
++          iyI2A8kU3A3WHuf7Uwrr2xD9jo78NG+MM9TVESV5l95I7IMY6T4DuB/bDh8KiBB9H7hm/4guGV6W
++          Bzsx3XiC6yNjz9LONJvFF2a1RpbG0uxYQknVoZ6U02XloI2fgWxW+XOWr7wPtY1r/8d+AkphYNR1
++          iKiN+th3WouYfsB/rZ1OPAYW9EyMfd0Y12IM0Rw+fxPqld5VRXVRNY3I9tkbAAAA//8DAKFZ6K4M
++          AwAA
++      headers:
++        CF-Cache-Status:
++          - DYNAMIC
++        CF-RAY:
++          - 8e53de938ca39e50-SJC
++        Connection:
++          - keep-alive
++        Content-Encoding:
++          - gzip
++        Content-Type:
++          - application/json
++        Date:
++          - Tue, 19 Nov 2024 23:09:43 GMT
++        Server:
++          - cloudflare
++        Set-Cookie:
++          - __cf_bm=aV5KoFnZfPtiMFt2Fn3dPJNrEi16NxO9V_yjzRiKygI-1732057783-1.0.1.1-TKyJqB3iZJTwaHunt_z9C9e8SxCETSJDfeHzJnTpjAPZe6d.ZEhu3z6P9SApM0R7vPdiYeurR10N.9ojjRYVzA;
++            path=/; expires=Tue, 19-Nov-24 23:39:43 GMT; domain=.api.openai.com; HttpOnly;
++            Secure; SameSite=None
++          - _cfuvid=K1cOgsWA5ej1vC6E4hZ.2y9sVbaissZfISgHzF3Iw4k-1732057783681-0.0.1.1-604800000;
++            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
++        Transfer-Encoding:
++          - chunked
++        X-Content-Type-Options:
++          - nosniff
++        access-control-expose-headers:
++          - X-Request-ID
++        alt-svc:
++          - h3=":443"; ma=86400
++        openai-organization:
++          - future-house-xr4tdh
++        openai-processing-ms:
++          - "1256"
++        openai-version:
++          - "2020-10-01"
++        strict-transport-security:
++          - max-age=31536000; includeSubDomains; preload
++        x-ratelimit-limit-requests:
++          - "3000"
++        x-ratelimit-limit-tokens:
++          - "250000"
++        x-ratelimit-remaining-requests:
++          - "2999"
++        x-ratelimit-remaining-tokens:
++          - "249914"
++        x-ratelimit-reset-requests:
++          - 20ms
++        x-ratelimit-reset-tokens:
++          - 20ms
++        x-request-id:
++          - req_2da12e94b26102dc7526bb046a926b70
++      status:
++        code: 200
++        message: OK
++version: 1
+diff --git a/tests/cassettes/TestLitQAEvaluation.test_from_question[What is the meaning of life--42-distractors5-14-incorrect-expected_dreturns5].yaml b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is the meaning of life--42-distractors5-14-incorrect-expected_dreturns5].yaml
+new file mode 100644
+index 0000000..6ca472e
+--- /dev/null
++++ b/tests/cassettes/TestLitQAEvaluation.test_from_question[What is the meaning of life--42-distractors5-14-incorrect-expected_dreturns5].yaml	
+@@ -0,0 +1,115 @@
++interactions:
++  - request:
++      body:
++        '{"messages": [{"role": "user", "content": "Extract the single letter answer
++        from the following question and answer\n\nQuestion: Q: What is the meaning of
++        life?\n\nOptions:\nA) 42\nB) 11\nC) cheesecake\nD) Insufficient information
++        to answer this question\nE) -84\n\nAnswer: 14\n\nSingle Letter Answer:"}], "model":
++        "gpt-4-turbo-2024-04-09", "stream": false, "temperature": 0.0}'
++      headers:
++        accept:
++          - application/json
++        accept-encoding:
++          - gzip, deflate
++        connection:
++          - keep-alive
++        content-length:
++          - "376"
++        content-type:
++          - application/json
++        host:
++          - api.openai.com
++        user-agent:
++          - AsyncOpenAI/Python 1.54.4
++        x-stainless-arch:
++          - arm64
++        x-stainless-async:
++          - async:asyncio
++        x-stainless-lang:
++          - python
++        x-stainless-os:
++          - MacOS
++        x-stainless-package-version:
++          - 1.54.4
++        x-stainless-raw-response:
++          - "true"
++        x-stainless-retry-count:
++          - "0"
++        x-stainless-runtime:
++          - CPython
++        x-stainless-runtime-version:
++          - 3.12.7
++      method: POST
++      uri: https://api.openai.com/v1/chat/completions
++    response:
++      body:
++        string: !!binary |
++          H4sIAAAAAAAAA4xUUW/bNhB+96848KUrIAeOq9Sp37JmaAsM2NAGA4p6MGjyJN5C8TQeFcco8t8H
++          SrLldBmwF0Pmd/d93x3v+H0GoMiqNSjjdDJN6+c3f3y2/OYr3v0Wvn52q8vFJyxX76X8Nd7631WR
++          M3j3F5p0zLow3LQeE3EYYBNRJ8ysl6s3y8XVanVd9kDDFn1Oq9s0L+epizueLxfLcr4o54t3Y7Zj
++          MihqDd9mAADf+9/sM1h8VGtYFMeTBkV0jWp9CgJQkX0+UVqEJOmQVDGBhkPC0Fu/cwh/dyjZN7SR
++          H8iiBRLQ0DryLNw6MtoDByyAq4QBXNdw5E78AXSQPUa0sKfkYKPK5UbBTgta4AC33NVeC9xY3cgr
++          2PRqHykZ5+ge4yuBDx1ZhMSQHMIH7fXjodgo2DuMCOUyG6npAQNo6UM6n6jRCUfhY2aDOlCogSvw
++          VGExxAZ6wChYgA4W8AHjITkK9QV85H3+O4SNTKfae2kS2KjLcvBCxoFlFAicwFJEk/wBDMeI0nKw
++          2YUOh6yeCbnNzTwa/+mmgJ8LeF/AbQG/vL7YhE34QsHguXjW2qhJpNHJuBc4h1LS+Z1puReoOIIG
++          oVB7BI8pYRypC6AEgtj0/YsIDdUuwQ5BQ0PSBYsxz4ft2xcBY+QIFHqRU08Grgv4VMEewXAQsrn7
++          Dodh6G2Zzqcuag8RK4yYSxzdH80ODTeeBeVY5HiD6dD2Y3acrWNn9tx5Cztc577dvIZymT/uXCcD
++          2cs1nyaw18vT/piG1o0yw83JOHokPwz7ZPi5/vkSRaw60XmRQ+f9eP502krPdRt5JyN+Oq8okLht
++          RC0c8gZK4lb16NMM4M9++7tnC63ayE2btonvMWTC1eVAp6Y3ZwIvV+WIJk7aT8CyvCpe4NtaTJq8
++          nL0fymjj0E6p02OjO0t8BszOqv63nZe4h8op1P+HfgKMwTah3bYRLZnnJU9hEfOb/F9hpy73hpUc
++          JGGzrSjUGNtIw4tYtVt7Za/Lt9fv3qKaPc3+AQAA//8DAFRoDUgfBgAA
++      headers:
++        CF-Cache-Status:
++          - DYNAMIC
++        CF-RAY:
++          - 8e53de9d497f175e-SJC
++        Connection:
++          - keep-alive
++        Content-Encoding:
++          - gzip
++        Content-Type:
++          - application/json
++        Date:
++          - Tue, 19 Nov 2024 23:09:52 GMT
++        Server:
++          - cloudflare
++        Set-Cookie:
++          - __cf_bm=MNWsjeR2aMPqGhyx4Ome7CWhQvu5X0Fqso2NlrQK7p4-1732057792-1.0.1.1-xjn.aYGRV3B7DlJL3JfTUKkJpBrjnq0ecR7RalDuGUb_yRHALOw2_Sq7tpItjxJqOZHOY4dqMdcUdvYA.F4FXw;
++            path=/; expires=Tue, 19-Nov-24 23:39:52 GMT; domain=.api.openai.com; HttpOnly;
++            Secure; SameSite=None
++          - _cfuvid=pgpnoOerkuwHAV2LDt6_xqP7OjZYP.OyWVrjaoNuRi4-1732057792188-0.0.1.1-604800000;
++            path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
++        Transfer-Encoding:
++          - chunked
++        X-Content-Type-Options:
++          - nosniff
++        access-control-expose-headers:
++          - X-Request-ID
++        alt-svc:
++          - h3=":443"; ma=86400
++        openai-organization:
++          - future-house-xr4tdh
++        openai-processing-ms:
++          - "8183"
++        openai-version:
++          - "2020-10-01"
++        strict-transport-security:
++          - max-age=31536000; includeSubDomains; preload
++        x-ratelimit-limit-requests:
++          - "3000"
++        x-ratelimit-limit-tokens:
++          - "250000"
++        x-ratelimit-remaining-requests:
++          - "2999"
++        x-ratelimit-remaining-tokens:
++          - "249922"
++        x-ratelimit-reset-requests:
++          - 20ms
++        x-ratelimit-reset-tokens:
++          - 18ms
++        x-request-id:
++          - req_ac28a187539ebf04fa1061f3ee8eff3c
++      status:
++        code: 200
++        message: OK
++version: 1
+diff --git a/tests/test_litqa.py b/tests/test_litqa.py
+index 267ac0c..9379a5f 100644
+--- a/tests/test_litqa.py
++++ b/tests/test_litqa.py
+@@ -1,3 +1,4 @@
++from collections.abc import Sequence
+ from typing import cast
+ 
+ import pytest
+@@ -9,19 +10,84 @@ from tests.conftest import VCR_DEFAULT_MATCH_ON
+ class TestLitQAEvaluation:
+     @staticmethod
+     def _assert_prompt_is_valid(
+-        qa_prompt: str, question: str, ideal: str, distractors: list[str]
+-    ):
++        qa_prompt: str, question: str, ideal: str, distractors: Sequence[str]
++    ) -> None:
+         for substr in (question, "Insufficient information", ideal, *distractors):
+             assert qa_prompt.count(substr) == 1
+ 
++    # Use for general purpose testing
++    ZIP_CODE_QUESTION_IDEAL_DISTRACTORS = (
++        "What is my office's zip code?",
++        "94107",
++        ["-8", "94106", "cheesecake"],
++    )
++    # Use to check we don't leak on the LLM's innate knowledge
++    MEANING_OF_LIFE_QUESTION_IDEAL_DISTRACTORS = (
++        "What is the meaning of life?",
++        "42",
++        ["-84", "11", "cheesecake"],
++    )
++
+     @pytest.mark.asyncio
+     @pytest.mark.vcr(match_on=[*VCR_DEFAULT_MATCH_ON, "body"])
+-    async def test_from_question(self) -> None:
++    @pytest.mark.parametrize(
++        (
++            "question",
++            "ideal",
++            "distractors",
++            "answer",
++            "expected_eval",
++            "expected_dreturns",
++        ),
++        [
++            (
++                *ZIP_CODE_QUESTION_IDEAL_DISTRACTORS,
++                "the answer is 94107",
++                LitQAEvaluation.CORRECT,
++                [0.25, 0.5, 1.0],
++            ),
++            (
++                *ZIP_CODE_QUESTION_IDEAL_DISTRACTORS,
++                "the answer is 14004",
++                LitQAEvaluation.INCORRECT,
++                [-0.25, -0.5, -1.0],
++            ),
++            (
++                *ZIP_CODE_QUESTION_IDEAL_DISTRACTORS,
++                "the answer is 94106",
++                LitQAEvaluation.INCORRECT,
++                [-0.25, -0.5, -1.0],
++            ),
++            (
++                *ZIP_CODE_QUESTION_IDEAL_DISTRACTORS,
++                "Insufficient information",
++                LitQAEvaluation.UNSURE,
++                [0.025, 0.05, 0.1],
++            ),
++            (
++                *ZIP_CODE_QUESTION_IDEAL_DISTRACTORS,
++                "the answer is 94106 or 94107",
++                LitQAEvaluation.INCORRECT,
++                [-0.25, -0.5, -1.0],
++            ),
++            (
++                *MEANING_OF_LIFE_QUESTION_IDEAL_DISTRACTORS,
++                "14",
++                LitQAEvaluation.INCORRECT,
++                [-0.25, -0.5, -1.0],
++            ),
++        ],
++    )
++    async def test_from_question(
++        self,
++        question: str,
++        ideal: str,
++        distractors: str | list[str],
++        answer: str,
++        expected_eval: LitQAEvaluation,
++        expected_dreturns: list[float],
++    ) -> None:
+         """Tests that we can create a LitQA question and evaluate answers."""
+-        question = "What is my office's zip code?"
+-        ideal = "94107"
+-        distractors = ["-8", "94106", "cheesecake"]
+-
+         qa_prompt, eval_fn = LitQAEvaluation.from_question(
+             ideal=ideal,
+             distractors=distractors,
+@@ -30,22 +96,13 @@ class TestLitQAEvaluation:
+         )
+         self._assert_prompt_is_valid(qa_prompt, question, ideal, distractors)
+ 
+-        for answer, expected in (
+-            ("the answer is 94107", LitQAEvaluation.CORRECT),
+-            # NOTE: The below case fails this test, because the LM doesn't accept an answer not in the options.
+-            # See https://github.com/Future-House/paper-qa/issues/693
+-            # ("the answer is 14004", LitQAEvaluation.INCORRECT),
+-            ("the answer is 94106", LitQAEvaluation.INCORRECT),
+-            ("Insufficient information to answer", LitQAEvaluation.UNSURE),
+-        ):
+-            result = await eval_fn(answer)
+-            assert result == expected
++        evaluation = await eval_fn(answer)
++        assert evaluation == expected_eval
++        assert evaluation.make_discounted_returns(3, discount=0.5) == expected_dreturns
+ 
+     def test_consistent_mc_options(self) -> None:
+         """Tests that creating multiple evaluations with the same seed results in the same prompt."""
+-        question = "What is the meaning of life?"
+-        ideal = "42"
+-        distractors = ["-84", "11", "cheesecake"]
++        question, ideal, distractors = self.MEANING_OF_LIFE_QUESTION_IDEAL_DISTRACTORS
+ 
+         qa_prompt_1, _ = LitQAEvaluation.from_question(
+             ideal=ideal, distractors=distractors, question=question, seed=0
+@@ -55,6 +112,7 @@ class TestLitQAEvaluation:
+         qa_prompt_2, _ = LitQAEvaluation.from_question(
+             ideal=ideal, distractors=distractors, question=question, seed=0
+         )
++        self._assert_prompt_is_valid(qa_prompt_1, question, ideal, distractors)
+         assert qa_prompt_1 == qa_prompt_2
+ 
+     def test_creating_litqa_questions(self) -> None:
+diff --git a/tests/test_task.py b/tests/test_task.py
+index 1766d12..736e0a3 100644
+--- a/tests/test_task.py
++++ b/tests/test_task.py
+@@ -20,6 +20,7 @@ from paperqa.agents.task import (
+     LitQAv2TaskSplit,
+ )
+ from paperqa.agents.tools import GenerateAnswer
++from paperqa.litqa import DEFAULT_REWARD_MAPPING, LitQAEvaluation
+ 
+ 
+ @pytest.fixture(name="base_query_request")
+@@ -180,7 +181,19 @@ class TestTaskDataset:
+         assert (
+             metrics_callback.eval_means["total_paper_count"] > 0
+         ), "Expected some papers to help us answer questions"
++        correct_percentage = metrics_callback.eval_means["correct"]
+         assert metrics_callback.eval_means["reward"] > 0, "Expected some wins"
++        correct_reward, incorrect_reward = (
++            DEFAULT_REWARD_MAPPING[evaluation.value]
++            for evaluation in (LitQAEvaluation.CORRECT, LitQAEvaluation.INCORRECT)
++        )
++        worst_case_reward_given_correct = (
++            correct_reward * correct_percentage
++            + incorrect_reward * (1 - correct_percentage)
++        )
++        assert (
++            metrics_callback.eval_means["reward"] >= worst_case_reward_given_correct
++        ), "Expected reward to be above worst case value"
+ 
+         with subtests.test(msg="confirming-reset-works"):
+             assert len(store_env_callback.query_to_envs) == len(dataset)

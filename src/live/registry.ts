@@ -28,10 +28,23 @@ export interface LiveSource {
 	sandboxId?: string;
 }
 
-/** Bare trial id from a sandbox id (e.g. `worktree:gsd-t1` → `gsd-t1`). */
+/**
+ * Canonical trial id from a sandbox id. Sandbox ids are colon-namespaced and
+ * always END in the canonical trial id, but the shape varies by provider:
+ *   worktree:gsd-t1            → gsd-t1
+ *   docker:he-gsd-t1           → gsd-t1   (CLI-container `he-` name prefix)
+ *   macos-vz:he-gsd-t1         → gsd-t1   (same prefix)
+ *   daytona:<vm-uuid>:gsd-t1   → gsd-t1   (extra sandbox segment)
+ *   e2b:<sandbox-id>:gsd-t1    → gsd-t1   (extra sandbox segment)
+ * The trial id is the LAST colon segment; CLI-container providers additionally
+ * prefix the container name with `he-` (see cli-container provision), which must
+ * be stripped so the key matches the canonical trial id the studio looks up.
+ * Getting this wrong leaves the live-build stream unable to find a building
+ * trial's output, so the UI sits on "waiting for the agent to start…".
+ */
 export function trialIdFromSandbox(sandboxId: string): string {
-	const i = sandboxId.indexOf(":");
-	return i >= 0 ? sandboxId.slice(i + 1) : sandboxId;
+	const last = sandboxId.slice(sandboxId.lastIndexOf(":") + 1);
+	return last.startsWith("he-") ? last.slice("he-".length) : last;
 }
 
 function pointerPath(trialId: string): string {

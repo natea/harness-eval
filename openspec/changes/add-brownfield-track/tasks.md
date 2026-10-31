@@ -5,10 +5,11 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 ## 1. Task bundle format + miner
 
 - [ ] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, dates, leak strata; hash verification
-- [ ] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test with reasons (from `validate.ts` screens)
+- [ ] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test / dependency-change with reasons (from `validate.ts` screens)
 - [ ] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
 - [ ] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
 - [ ] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
+- [ ] 1.6 Human baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, human diff size; unit tests for reviewed and unreviewed PRs
 
 ## 2. Studio task review (early — unblocks human labeling)
 
@@ -32,19 +33,21 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 - [ ] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
 - [ ] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
-- [ ] 4.3 Network lockdown (egress only to model API) per provider; start with docker/worktree
+- [ ] 4.3 Model gateway outside the sandbox: credential injection (placeholder in sandbox), forward only to the run's model, reject provider-side tool requests, request log; per-harness endpoint override (`ANTHROPIC_BASE_URL`, Codex `model_providers`); network lockdown (egress only to the gateway) per provider, starting with docker/worktree
 - [ ] 4.4 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
 - [ ] 4.5 Capture candidate patch at trial end
+- [ ] 4.6 Clean per-trial home/config: no operator MCP servers, plugins/skills, memory, global instructions, or prior-trial state
+- [ ] 4.7 Application egress: `appEgress: none` default (recorded fixtures only); `appEgress: gateway` opt-in with separate budget-capped credential and logging
 
 ## 5. Grading + audit + reporting
 
-- [ ] 5.1 Hidden-test grading: apply tests.patch over candidate tree, run offline suite, resolution verdict
+- [ ] 5.1 Hidden-test grading: restore test infrastructure (test dirs, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; record `cassette-miss`
 - [ ] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
 - [ ] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
-- [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model
+- [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason
 
 ## 6. Pilot
 
-- [ ] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit
+- [ ] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
 - [ ] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
 - [ ] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants

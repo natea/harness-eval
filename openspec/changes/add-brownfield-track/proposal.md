@@ -38,17 +38,31 @@ A spike on `Future-House/paper-qa` (2026-10-31; artifacts in
   repository; compute T*; reconstruct the issue at T* (title, body, labels,
   comments, edit history; bots tagged); rebuild a history-sanitized repo at the
   base commit; build an offline test environment; validate FAIL_TO_PASS /
-  PASS_TO_PASS with repeated gold runs; classify leakage in body and comments; and
-  freeze each task as a hashed **task bundle**.
+  PASS_TO_PASS with repeated gold runs; classify leakage in body and comments;
+  record a human baseline (coding window, review time, review rounds, issue
+  lifetime, diff size); reject PRs that change dependencies (`dependency-change`,
+  not installable offline from the base lockfile); and freeze each task as a
+  hashed **task bundle**.
 - **Three prompt variants as a run parameter:** `body`, `body+human`,
   `body+all` (humans + bots). Identical across candidates within a run.
 - **Orchestration:** a brownfield trial kind that seeds the sealed repo instead of
   an empty workspace, renders a brownfield base prompt (generic anti-cheat clause,
-  no PR number), blocks network egress except the model API, and disables
-  server-side web tools for every candidate.
-- **Grading:** hidden test patch applied to the candidate tree after the trial;
-  resolution = all FAIL_TO_PASS pass and all PASS_TO_PASS still pass. LLM judge
-  (issue + reference + candidate) and localization/diff metrics are secondary.
+  no PR number), blocks network egress except to a run-owned **model gateway**,
+  and disables server-side web tools for every candidate. The gateway (outside the
+  sandbox) injects credentials so workers never hold a real key, forwards only to
+  the run's model, rejects requests that enable provider-side tools, and lets any
+  harness with a compatible base-URL setting run the run's fixed model. Each
+  trial starts from a clean home/config (no user MCP servers, plugins, memory, or
+  prior-trial state). The application's own network traffic (e.g. paper-qa's LLM
+  calls) is recorded-fixtures-only by default, with a per-task gateway opt-in.
+- **Grading:** hidden test patch applied to the candidate tree after the trial,
+  with test infrastructure (test dirs, `conftest.py`, pytest config) restored
+  first and candidate edits to it flagged; resolution = all FAIL_TO_PASS pass and
+  all PASS_TO_PASS still pass. LLM judge (issue + reference + candidate) and
+  localization/diff metrics are secondary.
+- **Reporting:** agent wall-clock and USD per resolved task shown next to the
+  human baseline (coding window vs review time); no counterfactual
+  "would have merged sooner" claims.
 - **Transcript audit:** scan trial transcripts for solution reach (PR number,
   fix SHA, upstream URLs, forbidden commands) → disqualify, not penalize.
 - **Studio task review page:** blind human labeling of leak levels and test
@@ -77,7 +91,9 @@ PRD targets, their freeze invariants, and existing scoring are unchanged.
 
 - New: `src/brownfield/` (miner, snapshotter, validator, classifier, bundle I/O),
   Studio review view + routes, brownfield prompt template in `config/`.
-- Touched: orchestrator workspace seeding, provider network policy, grading entry
-  point, transcript audit.
+- New: model gateway (credential-injecting, tool-stripping egress proxy) run by
+  the orchestrator outside the sandbox.
+- Touched: orchestrator workspace seeding, provider network policy, per-trial
+  home/config setup, grading entry point, transcript audit.
 - Data: `brownfield/` holds committed task bundles and labels (regenerable bulk gitignored; attribution in `brownfield/NOTICE`).
 - Spend: mining/classification is cheap (≈$0.02/issue); trials are normal runs.

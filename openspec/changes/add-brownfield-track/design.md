@@ -32,7 +32,8 @@ tokenSpend unchanged.
 brownfield/<owner>__<repo>/tasks/<task-id>/      # task-id = pr<PR>-issue<N>
   task.yaml          repo, PR, issue(s), base SHA, T*, env digest, test cmd,
                      FAIL_TO_PASS[], PASS_TO_PASS[], env_broken[], sha256 of every file below,
-                     leak levels, dates (issue/PR) for contamination flags
+                     leak levels, dates (issue/PR) for contamination flags,
+                     human baseline (D16), appEgress (default none; D7)
   issue/body.md  issue/body+human.md  issue/body+all.md   # what the worker sees
   snapshot.json      structured reconstruction (comments, authors, isBot, edit sources)
   reference.patch    SEALED: non-test hunks of the PR
@@ -72,8 +73,11 @@ sandbox has no network). Rendering omits URLs that point at the future.
 ### D5. Task eligibility
 Reject when: the closing issue is in another repo; the PR changes no non-test
 code; the PR changes no test code; **the issue was created after T*** (2/37 in
-spike — fixer's notes, e.g. a bare permalink to the line to change); validation
-yields no FAIL_TO_PASS; or a gold run regresses a PASS_TO_PASS test.
+spike — fixer's notes, e.g. a bare permalink to the line to change); the PR
+changes the lockfile or dependency declarations (`dependency-change`: the base
+environment is prebaked and offline, so a candidate could not install the new
+package, and preinstalling it would hint at the fix); validation yields no
+FAIL_TO_PASS; or a gold run regresses a PASS_TO_PASS test.
 
 ### D6. Base commit and sealed history
 Base = first parent of the merge commit (all paper-qa merges are squash). The
@@ -94,6 +98,17 @@ predates its 2026-10-25 offline mode), credentials blanked, and a dead HTTP prox
 so un-cassetted live-API tests fail in seconds instead of retrying to timeout.
 paper-qa's VCR config matches on method/host/path/query, **not body**, so a fix
 that changes a prompt still replays.
+
+**Application network during trials.** Repos like paper-qa are themselves LLM
+applications. By default (`appEgress: none`) the application's own outbound
+traffic gets the same treatment as validation: recorded fixtures only, like CI;
+the worker may run the visible suite in playback mode but cannot run the app
+live. A task may opt in (`appEgress: gateway`): the app's provider calls are
+routed through the model gateway (D11) with a separate, budget-capped
+credential, the same provider-side tool stripping, and full request logging.
+Risk: a correct fix that makes HTTP calls the cassettes don't cover fails with a
+cassette miss; the grader records `cassette-miss` and surfaces the trial for
+review instead of silently scoring it as wrong.
 
 ### D8. Validation
 Run the test command at base+tests.patch (before) and base+tests+reference twice
@@ -125,15 +140,35 @@ actually differ (~15/37 in spike).
 ### D11. Anti-cheat
 - Base prompt carries a generic clause ("do not consult upstream history, pull
   requests, issues, or releases beyond what is provided"); it never names the PR.
-- Trial network egress blocked except the model API; dependencies are prebaked.
+- Trial network egress blocked except a run-owned **model gateway** outside the
+  sandbox; dependencies are prebaked. The sandbox holds only a placeholder
+  credential; the gateway injects the real one (API key or OAuth token),
+  forwards only to the run's provider and model, rejects (does not silently
+  strip) any request that enables provider-side tools, and logs every request.
+  Without it, a worker able to reach the model API could call it directly with
+  web search enabled, bypassing harness config.
+- The gateway also holds the model fixed across harnesses: any harness with an
+  endpoint override (Claude Code `ANTHROPIC_BASE_URL`, Codex custom
+  `model_providers`) is pointed at it, with protocol translation where needed.
+  Non-native pairings are reported as such (a harness tuned for another model
+  family may underperform; that is a finding, not noise).
 - Server-side web tools (Claude Code WebSearch/WebFetch, equivalents in other
   harnesses) disabled for **every** candidate via harness config — sandbox
-  firewalls can't see them.
+  firewalls can't see them; the gateway rejection is the enforcement backstop.
+- Clean per-trial environment: fresh `HOME` and harness config dirs generated
+  for the trial; no user MCP servers, plugins/skills, memory files, global
+  instructions, or state from earlier trials (matters most on `worktree`).
 - Transcript audit (D13) is the backstop; any reach disqualifies the trial.
 
 ### D12. Grading
-After the trial, the candidate's tree gets `tests.patch` applied (hidden test
-files overwrite any candidate edits to them), then the bundle's test command.
+After the trial, test infrastructure is restored to base before `tests.patch` is
+applied: test directories, every `conftest.py`, and pytest configuration
+(`pytest.ini`, `setup.cfg`/`tox.ini` pytest sections, pyproject
+`[tool.pytest*]`). This blocks passing by editing fixtures, skip markers, or
+collection config outside the hidden patch's paths. Any candidate edit to these
+paths is recorded as `test-infra-modified` (a flag for review, not a
+disqualification — adding tests is legitimate). Hidden test files then overwrite
+any candidate edits to them, and the bundle's test command runs.
 Resolution = all FAIL_TO_PASS pass ∧ all PASS_TO_PASS pass. Secondary signals:
 LLM judge (issue + reference + candidate → equivalent/better/partial/wrong +
 conventions), file-level localization precision/recall vs reference, diff-size
@@ -162,6 +197,22 @@ only to the bundle's `review/labels.jsonl`, append-only. An agreement view shows
 per-item disagreements and Cohen's κ. This needs a narrow exception to "Scoped
 writes only" (spec delta).
 
+### D16. Human baseline
+Computed at mining time from data the miner already fetches (PR commits,
+reviews, timeline) and stored in `task.yaml`:
+- `codingWindow`: T* → last PR commit before the first submitted review (→ last
+  commit before merge if never reviewed). An upper bound on human work time;
+  people multitask.
+- `reviewTime`: PR createdAt → mergedAt; `reviewRounds` (submitted reviews) and
+  `commitsAfterFirstReview`.
+- `issueLifetime`: issue createdAt → mergedAt (context only).
+- `humanDiff`: non-test lines added/removed and files touched.
+
+Reports put agent wall-clock and USD per resolved task beside these. They SHALL
+NOT claim counterfactual merge-time savings ("would have merged N days sooner"):
+review and queue time is outside what an agent changes. No conversion of human
+time to dollars (any rate would be a guess).
+
 ## Risks
 
 - **Small pool:** ~20 paper-qa candidates, likely ~10–15 valid → wide CIs. A second,
@@ -172,6 +223,9 @@ writes only" (spec delta).
 - **Classifier error:** LLM labels need human calibration before analysis relies
   on them (D15).
 - **Env drift for old commits:** mitigated by lockfiles; 2023–24 tasks are riskier.
+- **Selection bias:** rejecting doc-only, test-only, and dependency-change PRs
+  (D5) narrows the pool to test-verifiable code fixes; results don't speak to
+  other PR kinds. Report rejection counts by reason.
 
 ## Open Questions
 
@@ -179,3 +233,5 @@ writes only" (spec delta).
    labels, ignore regenerable bulk, attribute via `brownfield/NOTICE`.
 2. May workers run the visible test suite? (Default yes — realistic.)
 3. Second repository for post-cutoff tasks: which one?
+4. Doc-only and test-only PRs are rejected for lack of a test oracle. Worth
+   scoring them later with the judge alone (no resolution verdict)?

@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Task mining from merged PRs
-The miner SHALL enumerate merged pull requests of a configured repository that close at least one issue (via closing-issue references) and SHALL produce one candidate per PR ↔ same-repository issue pair. Candidates whose closing issue belongs to another repository, whose PR changes no non-test code, or whose PR changes no test code SHALL be rejected with a recorded reason.
+The miner SHALL enumerate merged pull requests of a configured repository that close at least one issue (via closing-issue references) and SHALL produce one candidate per PR ↔ same-repository issue pair. Candidates whose closing issue belongs to another repository, whose PR changes no non-test code, whose PR changes no test code, or whose PR changes the dependency lockfile or dependency declarations SHALL be rejected with a recorded reason.
 
 #### Scenario: Cross-repository issue rejected
 - **WHEN** a merged PR's closing reference points at an issue in a different repository
@@ -12,6 +12,21 @@ The miner SHALL enumerate merged pull requests of a configured repository that c
 #### Scenario: Documentation-only PR rejected
 - **WHEN** a merged PR changes only documentation or only test files
 - **THEN** the candidate is rejected with reason `no-src-code-change` or `no-test-change`
+
+#### Scenario: Dependency-changing PR rejected
+- **WHEN** a merged PR modifies the lockfile or adds, removes, or re-pins a dependency
+- **THEN** the candidate is rejected with reason `dependency-change`, because the offline base environment cannot install the new dependency
+
+### Requirement: Human baseline timings
+For each accepted task the miner SHALL record, from the PR's commits, reviews, and timeline: the coding window (T* to the last PR commit before the first submitted review, or before merge if the PR was never reviewed), the review time (PR creation to merge), the number of submitted reviews, the number of commits after the first review, the issue lifetime (issue creation to merge), and the non-test size of the human diff (lines added, lines removed, files touched).
+
+#### Scenario: Reviewed PR
+- **WHEN** a PR received its first review after three commits and two more commits followed
+- **THEN** the coding window ends at the third commit and `commitsAfterFirstReview` is 2
+
+#### Scenario: Unreviewed PR
+- **WHEN** a PR was merged without any submitted review
+- **THEN** the coding window ends at the last commit before merge and `reviewRounds` is 0
 
 ### Requirement: Fix-start cutoff (T*)
 For each candidate the miner SHALL compute T* as one second before the earliest of: the PR's creation time, the earliest author or committer date among the PR's commits, and the first cross-reference or connection event from the PR on the issue. The signal that set T* SHALL be recorded. A candidate whose issue was created after T* SHALL be rejected with reason `issue-after-fix-start`.

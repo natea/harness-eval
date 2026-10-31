@@ -13,6 +13,28 @@ Brownfield trials SHALL be graded by applying the task's hidden test patch to th
 - **WHEN** the candidate modified a test file that the hidden test patch also touches
 - **THEN** the hidden version is applied over it before tests run
 
+### Requirement: Test-infrastructure restoration
+Before the hidden test patch is applied, test infrastructure in the candidate's tree SHALL be restored to the base commit: the test paths recorded in the task bundle, every `conftest.py`, and pytest configuration files and sections. Any candidate modification of these SHALL be recorded as `test-infra-modified` for review.
+
+#### Scenario: Candidate edited test infrastructure
+- **WHEN** the candidate modified a `conftest.py` or pytest configuration that the hidden test patch does not touch
+- **THEN** that file is restored to its base version before tests run and the trial is flagged `test-infra-modified`
+
+#### Scenario: Nested test directory
+- **WHEN** a bundle records `tests/` and `packages/*/tests` as its test paths and the candidate edited a file under `packages/core/tests/`
+- **THEN** that file is restored to its base version and the trial is flagged `test-infra-modified`
+
+### Requirement: Cassette-miss handling
+A scored test SHALL be recorded as `cassette-miss` when it fails because a request had no recorded fixture: either the recorder raises its replay-only error (e.g. vcrpy `CannotOverwriteExistingCassetteException`) or the request fails at the blocked offline proxy (e.g. `APIConnectionError` or `ProxyError`). A trial with any `cassette-miss` SHALL be scored unresolved and flagged for review.
+
+#### Scenario: Blocked-proxy miss
+- **WHEN** a FAIL_TO_PASS test fails with a `ProxyError` from the offline proxy
+- **THEN** the test is recorded as `cassette-miss`, the trial is unresolved, and it is flagged for review
+
+#### Scenario: Replay-only recorder miss
+- **WHEN** a test fails with the recorder's replay-only exception
+- **THEN** the test is recorded as `cassette-miss`, with the same scoring
+
 ### Requirement: Secondary brownfield signals
 Brownfield grading SHALL additionally record, without overriding resolution: an LLM judge verdict given the issue, reference patch, and candidate patch (`equivalent`, `better`, `partial`, `wrong`, plus fit with repository conventions), file-level localization precision and recall against the reference, and the candidate-to-reference diff-size ratio. The judge model SHALL differ from the worker model.
 

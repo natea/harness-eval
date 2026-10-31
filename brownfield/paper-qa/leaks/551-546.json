@@ -1,0 +1,73 @@
+{
+  "pr": 551,
+  "issue": 546,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.018204599999999998,
+  "prAuthor": "whitead",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "json.decoder.JSONDecodeError: Extra data: line 7 column 1 (char 158)",
+      "rationale": "Traceback and logs showing LLM response with trailing explanation; names aadd but no diagnosis or fix.",
+      "author": "Snikch63200",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "there might be additional, unexpected content in the JSON string after the valid JSON object",
+      "rationale": "Vague generic guess; no specific location or change.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "How can I check JSON string ?",
+      "rationale": "Question only.",
+      "author": "Snikch63200",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "You can check the JSON string by printing it out before the `json.loads()` call",
+      "rationale": "Generic debugging advice.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Here is the `clean_text` variable content printed before` json.loads` call.",
+      "rationale": "Shows observed content with trailing explanation text; no diagnosis.",
+      "author": "Snikch63200",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/docs.py"
+      ],
+      "evidence": "json_part = clean_text.split('}\\n')[0] + '}'",
+      "rationale": "Diagnoses trailing text after closing brace and proposes splitting at '}' and re-adding it before json.loads, matching the reference's approach of isolating content up to the first '}'.",
+      "author": "dosubot",
+      "role": "other user"
+    }
+  ]
+}

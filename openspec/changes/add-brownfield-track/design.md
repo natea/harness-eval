@@ -44,6 +44,15 @@ brownfield/<owner>__<repo>/tasks/<task-id>/      # task-id = pr<PR>-issue<N>
 Bundles are mined once and never re-fetched at run time (GitHub content drifts);
 runs record the bundle hashes exactly as PRD runs record `prdSha256`.
 
+**Bundles are committed**, like `targets/`: a frozen bundle is the brownfield
+equivalent of a PRD (reproducible on any machine), and human review labels are
+irreplaceable. Only regenerable bulk is gitignored (raw GraphQL dumps, the
+issue-as-of-today `*.live.md`, validator logs/junit, worktrees, venvs). Issue
+text is public and the pilot repo is Apache-2.0; `brownfield/NOTICE` attributes
+upstreams and states that issue text belongs to its authors (same pattern as
+`targets/NOTICE`). Committing sealed patches does not leak into trials: worker
+sandboxes receive only the sealed repo and the issue file, never this checkout.
+
 ### D3. Cutoff T*
 `T* = min(PR createdAt, earliest authoredDate/committedDate over PR commits,
 first CrossReferenced/Connected event from the PR) − 1s`.
@@ -166,7 +175,7 @@ writes only" (spec delta).
 
 ## Open Questions
 
-1. Should frozen bundles be committed (reproducible across machines, like PRDs) or
-   stay gitignored? Issue text is third-party content; redistribution terms unclear.
+1. ~~Commit frozen bundles or gitignore them?~~ Resolved in D2: commit bundles and
+   labels, ignore regenerable bulk, attribute via `brownfield/NOTICE`.
 2. May workers run the visible test suite? (Default yes — realistic.)
 3. Second repository for post-cutoff tasks: which one?

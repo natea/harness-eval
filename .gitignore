@@ -9,5 +9,12 @@ skills/
 .DS_Store
 .playwright-mcp/
 
-# Brownfield track artifacts (task bundles, snapshots, labels) — regenerable/large, like runs/
-brownfield/
+# Brownfield track: task bundles, issue snapshots, leak labels and human review
+# labels ARE committed (frozen like targets/; labels are irreplaceable). Only
+# regenerable bulk is ignored.
+brownfield/**/*.raw.json
+brownfield/**/*.live.md
+brownfield/**/validate/*.log
+brownfield/**/validate/*.xml
+brownfield/**/wt/
+brownfield/**/.venv/

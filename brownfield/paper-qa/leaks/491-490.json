@@ -1,0 +1,47 @@
+{
+  "pr": 491,
+  "issue": 490,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0139666,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/readers.py"
+      ],
+      "evidence": "In readers.py, parsed_text, the code open a file with its path calling open directly. This happens when the file is not .pdf.",
+      "rationale": "Identifies the location (parse_text in readers.py) and that str is passed to path.open; suggests open(path), which is a loose version of handling str paths. Points to the root cause.",
+      "author": "fiyen",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "diagnosis",
+      "consistent_with_reference": false,
+      "reveals_files": [
+        "paperqa/readers.py"
+      ],
+      "evidence": "you need to ensure that the `path` parameter is a `Path` object from the `pathlib` module, not a string.",
+      "rationale": "Identifies cause but proposes caller-side conversion, not accepting str in parse_text as the reference does. It does not change the code. The cause is the same, but the proposed fix goes elsewhere, so it is a symptom-level guess that is inconsistent.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/readers.py"
+      ],
+      "evidence": "it's because `parse_text` intakes a `pathlib.Path`, not a `str`. However, it's fine to allow `str` path there, so I will make a PR for that.",
+      "rationale": "States the cause and the plan to allow str paths in parse_text, matching the reference fix.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

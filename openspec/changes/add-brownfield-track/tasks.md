@@ -26,7 +26,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [ ] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
 - [ ] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons
 - [ ] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
-- [ ] 3.6 Freeze: write bundle + manifest hashes; `validate --brownfield` checks hashes
+- [ ] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
 
 ## 4. Brownfield trials
 

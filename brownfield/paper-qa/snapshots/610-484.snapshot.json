@@ -1,0 +1,9 @@
+{
+  "pr": 610,
+  "issue": 484,
+  "tStar": "2024-10-18T19:28:05Z",
+  "title": "Bug: supporting `~` in `--paper_directory` in CLI",
+  "issueAuthor": "jamesbraza",
+  "body": "We should allow for `pqa --paper_directory=~/foo`",
+  "comments": []
+}

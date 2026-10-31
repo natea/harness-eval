@@ -1,0 +1,33 @@
+{
+  "pr": 491,
+  "issue": 490,
+  "tStar": "2024-09-27T01:51:31Z",
+  "title": "path.open AttributeError：str object has no attribute 'open'",
+  "issueAuthor": "fiyen",
+  "body": "In readers.py, parsed_text, the code open a file with its path calling open directly. This happens when the file is not .pdf. As far as I know, the str object can not be opened directly, use open(path, 'r') will be better.",
+  "comments": [
+    {
+      "at": "2024-09-27T01:46:53Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Greeting -->\nHello @fiyen! I'm here to help you with any bugs, questions, or contributions while you wait for a human maintainer. Let's tackle this together!\n\n<!-- Answer -->\nTo fix the `AttributeError: 'str' object has no attribute 'open'` in `readers.py`, you need to ensure that the `path` parameter is a `Path` object from the `pathlib` module, not a string. The `path.open()` method is available on `Path` objects, not on strings.\n\nHere is the relevant part of the code that needs to be fixed:\n\n```python\ndef parse_text(\n    path: Path, html: bool = False, split_lines: bool = False, use_tiktoken: bool = True\n) -> ParsedText:\n    \"\"\"Simple text splitter, can optionally use tiktoken, parse html, or split into newlines.\n\n    Args:\n        path: path to file.\n        html: flag to use html2text library for parsing.\n        split_lines: flag to split lines into a list.\n        use_tiktoken: flag to use tiktoken library to encode text.\n    \"\"\"\n    try:\n        with path.open() as f:\n            text = list(f) if split_lines else f.read()\n    except UnicodeDecodeError:\n        with path.open(encoding=\"utf-8\", errors=\"ignore\") as f:\n            text = f.read()\n\n    parsing_libraries: list[str] = [\"tiktoken (cl100k_base)\"] if use_tiktoken else []\n    if html:\n        if not isinstance(text, str):\n            raise NotImplementedError(\n                \"HTML parsing is not yet set up to work with split_lines.\"\n            )\n        text = html2text(text)\n        parsing_libraries.append(f\"html2text ({html2text_version})\")\n\n    return ParsedText(\n        content=text,\n        metadata=ParsedMetadata(\n            parsing_libraries=parsing_libraries,\n            paperqa_version=pqa_version,\n            total_parsed_text_length=(\n                len(text) if isinstance(text, str) else sum(len(t) for t in text)\n            ),\n            parse_type=\"txt\" if not html else \"html\",\n        ),\n    )\n```\n\nEnsure that when you call `parse_text`, you pass a `Path` object, not a string. For example:\n\n```python\nfrom pathlib import Path\n\n# Correct usage\npath = Path(\"path/to/your/file.txt\")\nparsed_text = parse_text(path)\n```\n\nIf you are passing a string path elsewhere in your code, convert it to a `Path` object before calling `parse_text` <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/paperqa/readers.py)</sup>.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language",
+        "code block"
+      ]
+    },
+    {
+      "at": "2024-09-27T01:51:23Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @fiyen it's because `parse_text` intakes a `pathlib.Path`, not a `str`. However, it's fine to allow `str` path there, so I will make a PR for that. You will see it in the next release coming tomorrow",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    }
+  ]
+}

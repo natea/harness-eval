@@ -1,0 +1,33 @@
+{
+  "pr": 1174,
+  "issue": 1172,
+  "tStar": "2025-11-03T22:48:15Z",
+  "title": "file_location empty when manifest not set",
+  "issueAuthor": "lucky0218",
+  "body": "The `file_location` attribute is None when executing `paper_search` if manifest is not explicitly set. (not set by default) \n```\n        all_doc_details: list[DocDetails] = []\n        for r in results:\n            # there's only one doc per result, so just take the first one\n            this_doc_details = cast(\"DocDetails\", next(iter(r.docs.values())))\n            # check if DocDetails have the attribute 'file_location' before appending, personnally added for debug\n            if hasattr(this_doc_details, 'file_location'):\n                print(\"file_location:\", this_doc_details.file_location)  --> This gets None\n            all_doc_details.append(this_doc_details)\n            await state.docs.aadd_texts(\n                texts=r.texts,\n                doc=this_doc_details,\n                settings=self.settings,\n                embedding_model=self.embedding_model,\n            )\n```\nIs this an expected behavior? ",
+  "comments": [
+    {
+      "at": "2025-11-02T13:34:46Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nYes, this is expected behavior. The file_location attribute in DocDetails is optional and defaults to None unless it is set explicitly, typically via a manifest CSV file. If you don't provide a manifest, no additional metadata (including file_location) is added, so the attribute remains None by design. This is supported by both the code and the settings documentation, which state that the manifest is optional and only certain fields (like file_location) are used when present for indexing and metadata enrichment. You can see this in the code for DocDetails and how manifest handling works in the indexing pipeline ([source 1](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/types.py#L396-L886), [source 2](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/settings.py#L412-L485)).\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*\n\n---\n<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/580438cd-cda9-44f0-9e4b-ece3c02e1e62?feedback_type=other)</sup>&nbsp;&nbsp;[![Chat with Dosu](https://dosu.dev/dosu-chat-badge.svg)](https://app.dosu.dev/0e493df4-ff8c-42a6-a866-71a34b293513/ask?utm_source=github)&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/1172)",
+      "source": "edit@2025-11-02T13:34:46Z",
+      "editedAfter": 1,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2025-11-02T19:28:08Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @lucky0218 thanks for the issue, I see the problem, we're throwing away `file_location` if there's not a manifest. Nice catch.\n\nI will have a fix out the door tomorrow, but if you need a quick fix now, around https://github.com/Future-House/paper-qa/blob/v5.29.1/src/paperqa/agents/search.py#L522-L527 just do:\n\n```python\nawait tmp_docs.aadd(\n    path=abs_file_path,\n    fields=[\"title\", \"author\", \"journal\", \"year\"],\n    settings=settings,\n    file_location=kwargs.pop(\"file_location\", file_location),\n    **kwargs,\n)\n```",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language",
+        "code block"
+      ]
+    }
+  ]
+}

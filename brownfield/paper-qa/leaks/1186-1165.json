@@ -1,0 +1,55 @@
+{
+  "pr": 1186,
+  "issue": 1165,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0191186,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "One piece of context maybe counted 2 or even more times.",
+      "rationale": "Describes duplicate contexts in aquery; points at aquery/filtering, not the add-time location the fix changed.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "Introducing a deduplication step before filtering would likely improve answer quality and prevent redundant citations.",
+      "rationale": "Proposes deduplicating text contexts, which matches the fix's goal. It's vague about where, and it says before filtering rather than at add-time.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "I guess we could deduplicate `Context` at add-time here, just to be safe: https://github.com/Future-House/paper-qa/blob/v5.29.1/src/paperqa/docs.py#L680",
+      "rationale": "Proposes deduplicating Contexts where they are added to session.contexts in docs.py (aget_evidence). This is what the reference fix does.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it's an issue in my customized version",
+      "rationale": "The author found the cause in their own customization. This has no technical content about the fix.",
+      "author": "lucky0218",
+      "role": "issue author"
+    }
+  ]
+}

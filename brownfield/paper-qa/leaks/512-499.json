@@ -1,0 +1,21 @@
+{
+  "pr": 512,
+  "issue": 499,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0172726,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "This log line shows up a lot at inference time",
+      "rationale": "Reports the log line appearing frequently and says it should happen less. It doesn't name the cause (get_directory_index being called by every tool) or propose a change. The link to another issue is only a vague hint.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ]
+}

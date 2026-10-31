@@ -79,5 +79,5 @@ PRD targets, their freeze invariants, and existing scoring are unchanged.
   Studio review view + routes, brownfield prompt template in `config/`.
 - Touched: orchestrator workspace seeding, provider network policy, grading entry
   point, transcript audit.
-- Data: `brownfield/` (gitignored) holds task bundles and labels.
+- Data: `brownfield/` holds committed task bundles and labels (regenerable bulk gitignored; attribution in `brownfield/NOTICE`).
 - Spend: mining/classification is cheap (≈$0.02/issue); trials are normal runs.

@@ -1,0 +1,139 @@
+{
+  "pr": 1029,
+  "issue": 1005,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0602506,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "data[\"doc_id\"] = encode_id(uuid4())",
+      "rationale": "Identifies that doc_id/dockey derive from DOI only in DocDetails validator, causing collisions; the reference changes this to compute_unique_doc_id in types.py. No fix proposed.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Clarifying question, no technical content toward fix.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Retraction of question.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "have the `doc_id` be a composite of fields from `paperqa.DocDetails`",
+      "rationale": "Proposes composite doc_id, which matches the reference (doi + content hash), though fields unspecified.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Dumps of DocDetails showing identical doc_ids.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "return None  #  ADDED BY ME",
+      "rationale": "Workaround disabling metadata query; not the fix.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The md5sum of their contents differ a lot.",
+      "rationale": "Observed output; mentions md5sum differing, a mild hint but mostly symptom.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Links to files.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c8",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "I guess taking into account a content hash if `file_location` is populated is a decent idea",
+      "rationale": "Suggests using content hash in the doc id, consistent with the reference (which populates content_hash from file_location).",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c9",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Environment details.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c10",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Debug output of queries.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c11",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "looks like we need to rely on a content hash, which we actually already have here: https://github.com/Future-House/paper-qa/blob/v5.25.0/paperqa/docs.py#L271",
+      "rationale": "States to use the content hash already computed in docs.py aadd, matching the reference.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

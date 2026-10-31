@@ -1,0 +1,9 @@
+{
+  "pr": 410,
+  "issue": 409,
+  "tStar": "2024-09-14T04:08:41Z",
+  "title": "Documentation in `CONTRIBUTING.md` for `pytest-recording` and VCR cassettes",
+  "issueAuthor": "jamesbraza",
+  "body": "We use `pytest-recording` plugin to make test cassettes to cache HTTP requests, making our unit tests more deterministic.\r\n\r\nWe need a little blurb in `CONTRIBUTING.md` that:\r\n- Links to `pytest-recording`\r\n- Gives a brief summary on how to record a new VCR using a command like `uv run pytest tests/test_module.py`\r\n- Links the config in `tests/conftest.py` and documents header removals from responses",
+  "comments": []
+}

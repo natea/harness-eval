@@ -1,0 +1,45 @@
+{
+  "pr": 974,
+  "issue": 958,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0118866,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "in the README is says the way to vary this parameter is \n```python\nsettings = Settings()\nsettings.answer.k = 30",
+      "rationale": "Points out the README uses settings.answer.k while believing evidence_k is correct; this identifies the README discrepancy the fix corrects.",
+      "author": "jacknguyen0810",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "settings.answer.evidence_k = 30",
+      "rationale": "States the correct field is evidence_k and README's settings.answer.k is wrong, which is exactly the README change.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Thank you.",
+      "rationale": "No technical content.",
+      "author": "jacknguyen0810",
+      "role": "issue author"
+    }
+  ]
+}

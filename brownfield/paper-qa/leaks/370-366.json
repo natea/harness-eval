@@ -1,0 +1,23 @@
+{
+  "pr": 370,
+  "issue": 366,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.017958599999999998,
+  "prAuthor": "geemi725",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/types.py"
+      ],
+      "evidence": "https://github.com/Future-House/paper-qa/blob/e1a8dadb9cfd2c7a5193734c9f3a9fda7c09e7b7/paperqa/types.py#L552",
+      "rationale": "The body is a permalink to the formatted_citation retraction line in types.py, which is the code the reference fix changes (handling a missing citation in the retraction message). The title says to make sure citations are none in the retraction notice. It points to the location but gives no fix. It does not reveal the crossref/retractions refactor.",
+      "author": "geemi725",
+      "role": "issue author"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "pr": 1029,
+  "issue": 1005,
+  "tStar": "2025-07-24T18:53:43Z",
+  "title": "Dockey confilct because of same Doi",
+  "issueAuthor": "lucky0218",
+  "body": "In the default settings, if two papers have the same Doi and the user doesn't set the doc_id, they'll have the same dockey, leading to one paper unable to be found.\n\n`\nelif \"doc_id\" not in data or not data[\"doc_id\"]:  # keep user defined doc_ids\n      data[\"doc_id\"] = encode_id(uuid4())\n        if \"dockey\" in data.get(\n            \"fields_to_overwrite_from_metadata\",\n            DEFAULT_FIELDS_TO_OVERWRITE_FROM_METADATA,\n        ) and (\"dockey\" not in data or not data[\"dockey\"]):\n            data[\"dockey\"] = data[\"doc_id\"]\n`\n\nIt may happen on the circumstance of two papers having the same Doi (e.g. one paper is normal thesis, the other one is its supplement information, like those published on ACS)\n",
+  "comments": [
+    {
+      "at": "2025-07-14T19:13:26Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Thanks for the report. From my understanding of DOIs, there is an assumption of uniqueness.\n\nCan you point out where one DOIs corresponds with two separate PDF papers?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-07-14T19:14:40Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "> Can you point out where one DOIs corresponds with two separate PDF papers?\n\n> > It may happen on the circumstance of two papers having the same Doi (e.g. one paper is normal thesis, the other one is its supplement information, like those published on ACS)\n\nNevermind to this, I should have read the full issue. I will get back to you on this shortly.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-07-14T19:20:24Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @lucky0218 I guess what we can do is have the `doc_id` be a composite of fields from `paperqa.DocDetails`.\n\nDo you mind sharing the `DocDetails` you get for the main text and the supp?  Mainly, I want to diff the two `paperqa.DocDetails` and see what fields we can use to make a composite key.\n\nFor example, does the `title` change between the two?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-07-15T05:53:11Z",
+      "author": "lucky0218",
+      "isBot": false,
+      "text": "Of course not!\n\n`{'fb08e04d658a5521': DocDetails(docname='lu2022enzymaticdnasynthesis', dockey='fb08e04d658a5521', citation='Xiaoyun Lu, Jinlong Li, Congyu Li, Qianqian Lou, Kai Peng, Bijun Cai, Ying Liu, Yonghong Yao, Lina Lu, Zhenyang Tian, Hongwu Ma, Wen Wang, Jian Cheng, Xiaoxian Guo, Huifeng Jiang, and Yanhe Ma. Enzymatic dna synthesis by engineering terminal deoxynucleotidyl transferase. ACS Catalysis, 2022. URL: https://doi.org/10.1021/acscatal.1c04879, doi:10.1021/acscatal.1c04879.', fields_to_overwrite_from_metadata={'doc_id', 'docname', 'dockey', 'citation', 'key'}, key='lu2022enzymaticdnasynthesis', bibtex='@article{lu2022enzymaticdnasynthesis,\\n    author = \"Lu, Xiaoyun and Li, Jinlong and Li, Congyu and Lou, Qianqian and Peng, Kai and Cai, Bijun and Liu, Ying and Yao, Yonghong and Lu, Lina and Tian, Zhenyang and Ma, Hongwu and Wang, Wen and Cheng, Jian and Guo, Xiaoxian and Jiang, Huifeng and Ma, Yanhe\",\\n    title = \"Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase\",\\n    year = \"2022\",\\n    journal = \"ACS Catalysis\",\\n    doi = \"10.1021/acscatal.1c04879\",\\n    url = \"https://doi.org/10.1021/acscatal.1c04879\"\\n}\\n', authors=['Xiaoyun Lu', 'Jinlong Li', 'Congyu Li', 'Qianqian Lou', 'Kai Peng', 'Bijun Cai', 'Ying Liu', 'Yonghong Yao', 'Lina Lu', 'Zhenyang Tian', 'Hongwu Ma', 'Wen Wang', 'Jian Cheng', 'Xiaoxian Guo', 'Huifeng Jiang', 'Yanhe Ma'], publication_date=None, year=2022, volume=None, issue=None, issn=None, pages=None, journal='ACS Catalysis', publisher=None, url=None, title='Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', citation_count=None, bibtex_type='article', source_quality=3, is_retracted=None, doi='10.1021/acscatal.1c04879', doi_url='https://doi.org/10.1021/acscatal.1c04879', doc_id='fb08e04d658a5521', file_location=None, license=None, pdf_url=None, other={'bibtex_source': ['self_generated'], 'paperId': '404bfea1c49cda1f55cf502a8b867b4c278132e3', 'externalIds': {'DOI': '10.1021/acscatal.1c04879', 'CorpusId': 246981124}, 'matchScore': 230.77332, 'client_source': ['semantic_scholar']}, formatted_citation='Xiaoyun Lu, Jinlong Li, Congyu Li, Qianqian Lou, Kai Peng, Bijun Cai, Ying Liu, Yonghong Yao, Lina Lu, Zhenyang Tian, Hongwu Ma, Wen Wang, Jian Cheng, Xiaoxian Guo, Huifeng Jiang, and Yanhe Ma. Enzymatic dna synthesis by engineering terminal deoxynucleotidyl transferase. ACS Catalysis, 2022. URL: https://doi.org/10.1021/acscatal.1c04879, doi:10.1021/acscatal.1c04879.')}`\n\nThe one above is main text, below is supp.\n\n`{'fb08e04d658a5521': DocDetails(docname='lu2022enzymaticdnasynthesis', dockey='fb08e04d658a5521', citation='Xiaoyun Lu, Jinlong Li, Congyu Li, Qianqian Lou, Kai Peng, Bijun Cai, Ying Liu, Yonghong Yao, Lina Lu, Zhenyang Tian, Hongwu Ma, Wen Wang, Jian Cheng, Xiaoxian Guo, Huifeng Jiang, and Yanhe Ma. Enzymatic dna synthesis by engineering terminal deoxynucleotidyl transferase. ACS Catalysis, 2022. URL: https://doi.org/10.1021/acscatal.1c04879, doi:10.1021/acscatal.1c04879.', fields_to_overwrite_from_metadata={'doc_id', 'dockey', 'citation', 'key', 'docname'}, key='lu2022enzymaticdnasynthesis', bibtex='@article{lu2022enzymaticdnasynthesis,\\n    author = \"Lu, Xiaoyun and Li, Jinlong and Li, Congyu and Lou, Qianqian and Peng, Kai and Cai, Bijun and Liu, Ying and Yao, Yonghong and Lu, Lina and Tian, Zhenyang and Ma, Hongwu and Wang, Wen and Cheng, Jian and Guo, Xiaoxian and Jiang, Huifeng and Ma, Yanhe\",\\n    title = \"Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase\",\\n    year = \"2022\",\\n    journal = \"ACS Catalysis\",\\n    doi = \"10.1021/acscatal.1c04879\",\\n    url = \"https://doi.org/10.1021/acscatal.1c04879\"\\n}\\n', authors=['Xiaoyun Lu', 'Jinlong Li', 'Congyu Li', 'Qianqian Lou', 'Kai Peng', 'Bijun Cai', 'Ying Liu', 'Yonghong Yao', 'Lina Lu', 'Zhenyang Tian', 'Hongwu Ma', 'Wen Wang', 'Jian Cheng', 'Xiaoxian Guo', 'Huifeng Jiang', 'Yanhe Ma'], publication_date=None, year=2022, volume=None, issue=None, issn=None, pages=None, journal='ACS Catalysis', publisher=None, url=None, title='Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', citation_count=None, bibtex_type='article', source_quality=3, is_retracted=None, doi='10.1021/acscatal.1c04879', doi_url='https://doi.org/10.1021/acscatal.1c04879', doc_id='fb08e04d658a5521', file_location=None, license=None, pdf_url=None, other={'bibtex_source': ['self_generated'], 'paperId': '404bfea1c49cda1f55cf502a8b867b4c278132e3', 'externalIds': {'DOI': '10.1021/acscatal.1c04879', 'CorpusId': 246981124}, 'matchScore': 235.32079, 'client_source': ['semantic_scholar']}, formatted_citation='Xiaoyun Lu, Jinlong Li, Congyu Li, Qianqian Lou, Kai Peng, Bijun Cai, Ying Liu, Yonghong Yao, Lina Lu, Zhenyang Tian, Hongwu Ma, Wen Wang, Jian Cheng, Xiaoxian Guo, Huifeng Jiang, and Yanhe Ma. Enzymatic dna synthesis by engineering terminal deoxynucleotidyl transferase. ACS Catalysis, 2022. URL: https://doi.org/10.1021/acscatal.1c04879, doi:10.1021/acscatal.1c04879.')}`",
+      "source": "edit@2025-07-15T05:53:42Z",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2025-07-15T05:55:23Z",
+      "author": "lucky0218",
+      "isBot": false,
+      "text": "I mitigate this issue modifying the code shown below:\n\n```\nclass DOIOrTitleBasedProvider(MetadataProvider[DOIQuery | TitleAuthorQuery]):\n\n    async def query(self, query: dict) -> DocDetails | None:\n        return None  #  ADDED BY ME\n        try:\n            client_query = self.query_transformer(query)\n            return await self._query(client_query)\n```\n\nwhich is nowhere near a good solution.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2025-07-15T05:57:48Z",
+      "author": "lucky0218",
+      "isBot": false,
+      "text": "After modifying the code, I got:\n\n`{'a58d048426a69f2acd4712a297f2930f': DocDetails(docname='Lu2022', dockey='a58d048426a69f2acd4712a297f2930f', citation='Lu, Xiaoyun, et al. \"Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase.\" *ACS Catalysis*, vol. 12, 2022, pp. 2988-2997. pubs.acs.org/acscatalysis. Accessed 11 Mar. 2025.', fields_to_overwrite_from_metadata=set(), key='xiaoyunUnknownyearenzymaticdnasynthesis', bibtex='@article{xiaoyunUnknownyearenzymaticdnasynthesis,\\n    author = \"Lu, Xiaoyun\",\\n    title = \"Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase\",\\n    year = \"Unknown year\",\\n    journal = \"Unknown journal\"\\n}\\n', authors=['Lu, Xiaoyun'], publication_date=None, year=None, volume=None, issue=None, issn=None, pages=None, journal=None, publisher=None, url=None, title='Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', citation_count=None, bibtex_type=None, source_quality=None, is_retracted=None, doi=None, doi_url=None, doc_id='6d7e19e4432b827a', file_location=None, license=None, pdf_url=None, other={}, formatted_citation='Lu, Xiaoyun, et al. \"Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase.\" *ACS Catalysis*, vol. 12, 2022, pp. 2988-2997. pubs.acs.org/acscatalysis. Accessed 11 Mar. 2025.')}`\n\nThe one above is main text, below is supp.\n\n{'c02c89b1bd4e82afff267047f3cfcdbf': DocDetails(docname='Lu', dockey='c02c89b1bd4e82afff267047f3cfcdbf', citation='Lu, Xiaoyun, et al. *Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase*.', fields_to_overwrite_from_metadata=set(), key='xiaoyunUnknownyearenzymaticdnasynthesis', bibtex='@article{xiaoyunUnknownyearenzymaticdnasynthesis,\\n    author = \"Lu, Xiaoyun\",\\n    title = \"Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase\",\\n    year = \"Unknown year\",\\n    journal = \"Unknown journal\"\\n}\\n', authors=['Lu, Xiaoyun'], publication_date=None, year=None, volume=None, issue=None, issn=None, pages=None, journal=None, publisher=None, url=None, title='Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', citation_count=None, bibtex_type=None, source_quality=None, is_retracted=None, doi=None, doi_url=None, doc_id='cf0c0f492970c8d9', file_location=None, license=None, pdf_url=None, other={}, formatted_citation='Lu, Xiaoyun, et al. *Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase*.')}\n\nThe md5sum of their contents differ a lot.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2025-07-15T06:00:32Z",
+      "author": "lucky0218",
+      "isBot": false,
+      "text": "Link to the main text: [Main](https://pubs.acs.org/doi/pdf/10.1021/acscatal.1c04879)\nLink to the supp text: [Supp](https://pubs.acs.org/doi/suppl/10.1021/acscatal.1c04879/suppl_file/cs1c04879_si_001.pdf)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2025-07-16T01:48:13Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "> Of course not!\n> \n> ...\n> \n> The one above is main text, below is supp.\n> \n> ...\n\nDiffing these blobs, they're nearly identical: https://www.diffchecker.com/qt3xx3TU/\n\nIt seems like supplemental info should have some different fields (e.g. title, URL, or BibTeX). I guess taking into account a content hash if `file_location` is populated is a decent idea, but first I would like to just understand how you arrived to this situation.\n\nTo construct those `DocDetails`:\n\n- What `query` dictionary are you passing to the `DOIOrTitleBasedProvider.query`?\n- What metadata provider (e.g. Crossref, Semantic Scholar) is providing data on both the main text and the supplementary information?\n\nOr, are you manually constructing your own `DocDetails` objects?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "diff block"
+      ]
+    },
+    {
+      "at": "2025-07-16T02:27:58Z",
+      "author": "lucky0218",
+      "isBot": false,
+      "text": "Thanks for your timely response. \n\nAs for metadata provider, it used default settings ( it's Semantic Scholar, crossRef get timed out). The settings are the same across main text and supplementary information.  I put the main text and supple info in the same directory. ",
+      "source": "edit@2025-07-16T03:06:18Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-07-16T03:14:51Z",
+      "author": "lucky0218",
+      "isBot": false,
+      "text": "`Query is: {'authors': ['Lu, Xiaoyun'], 'title': 'Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', 'fields': ['title', 'author', 'journal', 'year', 'doi', 'authors'], 'session': <aiohttp.client.ClientSession object at 0x0000017FC1988C50>}`\n`Query is: {'authors': ['Lu, Xiaoyun'], 'title': 'Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', 'fields': ['title', 'author', 'journal', 'year', 'doi', 'authors'], 'session': <aiohttp.client.ClientSession object at 0x0000020A586FF350>}`\n\nFirst one is supple, second one is main text. Exactly same. Dont know how to get the fields printed here, but they should be very much the same as shown in my previous answers.",
+      "source": "edit@2025-07-16T03:15:16Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-07-24T18:05:08Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @lucky0218 alright I have made a minimal reproducer of this with `paper-qa==5.25.0`:\n\n```python\nimport asyncio\nimport json\n\nfrom paperqa import Docs\n\n\nasync def main(common_doi: str = \"10.1021/acscatal.1c04879\") -> None:\n    main_docs = Docs()\n    common_docs = Docs()\n    main_name = await common_docs.aadd(\n        \"lu-et-al-main.pdf\", doi=common_doi\n    )\n    supp_name = await common_docs.aadd(\n        \"lu-et-al-supp.pdf\", doi=common_doi\n    )\n```\n\nI can indeed see the issue you're hitting. Yeah looks like we need to rely on a content hash, which we actually already have here: https://github.com/Future-House/paper-qa/blob/v5.25.0/paperqa/docs.py#L271",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like",
+        "code block"
+      ]
+    }
+  ]
+}

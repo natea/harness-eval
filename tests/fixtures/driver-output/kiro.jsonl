@@ -1,0 +1,5 @@
+{"type":"runStarted","data":{"sessionId":"kiro-sess-contract-1234"}}
+{"type":"sessionUpdate","data":{"sessionId":"kiro-sess-contract-1234","update":{"sessionUpdate":"agent_message_chunk","content":{"text":"Implemented the PRD."}}}}
+{"type":"sessionUpdate","data":{"sessionId":"kiro-sess-contract-1234","update":{"sessionUpdate":"tool_call","status":"completed"}}}
+{"type":"metadata","data":{"sessionId":"kiro-sess-contract-1234","meteringUsage":{"credits":1.5},"turnDurationMs":65000,"contextUsagePercentage":12}}
+{"type":"runFinished","data":{"sessionId":"kiro-sess-contract-1234","status":"success","stopReason":"end_turn"}}

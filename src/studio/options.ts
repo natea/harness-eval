@@ -156,6 +156,7 @@ export function validateRunRequest(
 	// image/snapshot, not the host's PATH.
 	const IMAGE_ONLY_HARNESSES = new Set([
 		"codex",
+		"kiro",
 		"opencode",
 		"qwen-code",
 		"zerocode",

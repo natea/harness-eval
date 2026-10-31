@@ -37,6 +37,24 @@ ARG OPENCODE_VERSION=2.2.5
 RUN npm install -g @opencode/cli@${OPENCODE_VERSION} \
     && opencode --version
 
+# Kiro CLI — PINNED. The release zip ships `kirocli/bin/kiro-cli` (+ helpers)
+# and `kirocli/install.sh`; Q_INSTALL_GLOBAL=1 installs them to /usr/local/bin
+# and Q_SKIP_SETUP=1 avoids the interactive post-install setup. Ubuntu 24.04's
+# glibc 2.39 satisfies the CLI's minimum (2.34 x86_64 / 2.39 aarch64).
+ARG KIRO_VERSION=2.37.0
+RUN arch="$(dpkg --print-architecture)" \
+    && case "$arch" in \
+         amd64) kiro_arch=x86_64 ;; \
+         arm64) kiro_arch=aarch64 ;; \
+         *) echo "unsupported arch: $arch" >&2; exit 1 ;; \
+       esac \
+    && curl -fsSL --retry 5 -o /tmp/kiro.zip \
+       "https://prod.download.cli.kiro.dev/stable/${KIRO_VERSION}/kirocli-${kiro_arch}-linux.zip" \
+    && unzip -q /tmp/kiro.zip -d /tmp/kiro \
+    && Q_INSTALL_GLOBAL=1 Q_SKIP_SETUP=1 sh /tmp/kiro/kirocli/install.sh \
+    && rm -rf /tmp/kiro /tmp/kiro.zip \
+    && kiro-cli --version
+
 # Qwen Code CLI — PINNED. Keep in sync with config/harnesses.yaml (qwen-code
 # driver). Binary is `qwen`.
 ARG QWEN_CODE_VERSION=0.26.4

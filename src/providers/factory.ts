@@ -20,6 +20,11 @@ export const OPENCODE_IMAGE_PROBE = {
 	command: "command -v opencode && opencode --version",
 };
 
+export const KIRO_IMAGE_PROBE = {
+	label: "kiro-cli",
+	command: "command -v kiro-cli && kiro-cli --version",
+};
+
 export const QWEN_CODE_IMAGE_PROBE = {
 	label: "qwen-code CLI",
 	command: "command -v qwen && qwen --version",
@@ -32,6 +37,7 @@ export const QWEN_CODE_IMAGE_PROBE = {
  */
 const IMAGE_ONLY_HARNESSES = new Set<HarnessId>([
 	"zerocode",
+	"kiro",
 	"opencode",
 	"qwen-code",
 ]);
@@ -87,6 +93,7 @@ export function resolveProviderSnapshot(
 
 export function preflightProbeForHarness(harness: HarnessId) {
 	if (harness === "zerocode") return ZEROCLAW_IMAGE_PROBE;
+	if (harness === "kiro") return KIRO_IMAGE_PROBE;
 	if (harness === "opencode") return OPENCODE_IMAGE_PROBE;
 	if (harness === "qwen-code") return QWEN_CODE_IMAGE_PROBE;
 	return undefined;

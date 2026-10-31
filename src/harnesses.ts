@@ -8,6 +8,7 @@ export class HarnessError extends Error {}
 export const HarnessDriver = z.enum([
 	"claude-code",
 	"codex",
+	"kiro",
 	"opencode",
 	"qwen-code",
 	"zerocode",

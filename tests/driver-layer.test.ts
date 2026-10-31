@@ -141,6 +141,7 @@ describe("shared print-cli driver", () => {
 		expect(runnableHarnessIds().sort()).toEqual([
 			"claude-code",
 			"codex",
+			"kiro",
 			"opencode",
 			"qwen-code",
 			"zerocode",

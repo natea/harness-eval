@@ -14,6 +14,7 @@ export const ModelTransport = z.enum([
 	"claude-code",
 	"anthropic-sdk",
 	"codex",
+	"kiro",
 	"opencode",
 	"qwen",
 ]);
@@ -211,6 +212,21 @@ export function resolveWorkerEnv(
 			env: { [p.authEnv]: key },
 			modelFlag: p.modelId,
 			note: `api-key (${p.authEnv})`,
+		};
+	}
+	if (p.transport === "kiro") {
+		// Kiro reads its API key from KIRO_API_KEY (subscription-metered, no
+		// per-token billing). Env-only; never written to the workspace.
+		const key = lookup[p.authEnv];
+		if (!key) {
+			throw new ModelError(
+				`${p.authEnv} is not set (required by model profile '${p.name}')`,
+			);
+		}
+		return {
+			env: { KIRO_API_KEY: key },
+			modelFlag: p.modelId,
+			note: "api-key",
 		};
 	}
 	if (p.transport === "qwen") {

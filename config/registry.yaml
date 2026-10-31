@@ -253,6 +253,13 @@ candidates:
         continuation:
           allowlist: ["proceed", "continue"]
           maxContinuations: 10
+      kiro:
+        install: []
+        session:
+          - prompt: "{{BASE_PROMPT}}"
+        continuation:
+          allowlist: ["proceed", "continue"]
+          maxContinuations: 10
       opencode:
         install: []
         session:

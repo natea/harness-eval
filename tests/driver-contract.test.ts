@@ -144,6 +144,22 @@ const CASES: DriverContractCase[] = [
 		},
 	},
 	{
+		// Kiro meters subscription credits, not per-token USD (costUsd = 0, usage
+		// typically 0), so against an unpriced non-anthropic profile this is
+		// tokens-only. One runFinished is one turn; sessionId comes from the event
+		// data.
+		harnessId: "kiro",
+		fixture: "kiro.jsonl",
+		profile: () => resolveProfile("glm-5.1", loadModels()),
+		expected: {
+			costSource: "tokens-only",
+			costUsd: null,
+			isError: false,
+			sessionId: "kiro-sess-contract-1234",
+			numTurns: 1,
+		},
+	},
+	{
 		// ZeroClaw drives the agent over ACP and reports usage but NO billed USD
 		// (record.costUsd = 0), so the parsed record carries no dollars; against an
 		// unpriced non-anthropic profile that classifies tokens-only. sessionId is

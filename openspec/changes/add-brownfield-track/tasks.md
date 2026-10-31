@@ -1,0 +1,50 @@
+# Tasks: Add Brownfield Track
+
+Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,classify}.ts`.
+
+## 1. Task bundle format + miner
+
+- [ ] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, dates, leak strata; hash verification
+- [ ] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test with reasons (from `validate.ts` screens)
+- [ ] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
+- [ ] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
+- [ ] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
+
+## 2. Studio task review (early — unblocks human labeling)
+
+- [ ] 2.1 Read-only routes listing bundles and serving one bundle (issue variants, snapshot, patches, validation, leak strata)
+- [ ] 2.2 Review view: side-by-side issue / reference patch / tests patch; keyboard leak labels per item; test-fairness verdict; bot tags visible
+- [ ] 2.3 Blind mode: LLM labels withheld until submit; append-only `review/labels.jsonl` endpoint (the only new write)
+- [ ] 2.4 Agreement summary: per-item diff, per-level agreement, Cohen's κ
+- [ ] 2.5 Import the spike's 37 paper-qa snapshots + LLM labels as provisional bundles so labeling can start before 3–4 land
+- [ ] 2.6 Human-label all paper-qa bodies and comments; record κ
+
+## 3. Sealed repo + environment + validation
+
+- [ ] 3.1 Sealed repo builder at merge^1 (single branch, no tags/remotes/reflog) with absence checks (`cat-file`, `log --all`, `fsck --lost-found`)
+- [ ] 3.2 Env builder: `uv sync --frozen` + package reinstall; `--exclude-newer` fallback; record env digest
+- [ ] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
+- [ ] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons
+- [ ] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
+- [ ] 3.6 Freeze: write bundle + manifest hashes; `validate --brownfield` checks hashes
+
+## 4. Brownfield trials
+
+- [ ] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
+- [ ] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
+- [ ] 4.3 Network lockdown (egress only to model API) per provider; start with docker/worktree
+- [ ] 4.4 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
+- [ ] 4.5 Capture candidate patch at trial end
+
+## 5. Grading + audit + reporting
+
+- [ ] 5.1 Hidden-test grading: apply tests.patch over candidate tree, run offline suite, resolution verdict
+- [ ] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
+- [ ] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
+- [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model
+
+## 6. Pilot
+
+- [ ] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit
+- [ ] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
+- [ ] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants

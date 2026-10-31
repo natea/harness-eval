@@ -8,3 +8,6 @@ runs/
 skills/
 .DS_Store
 .playwright-mcp/
+
+# Brownfield track artifacts (task bundles, snapshots, labels) — regenerable/large, like runs/
+brownfield/

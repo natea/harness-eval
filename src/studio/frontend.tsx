@@ -18,15 +18,15 @@ const BRAND = "CodingHarness";
 /** Map the current path to a human page name for the document title. Mirrors the
  *  routing in Routed() + Nav(). */
 function pageTitle(path: string): string {
-	if (path === "/configure") return "Configure";
-	if (path === "/inverse-scaling") return "Inverse-scaling";
-	if (path === "/bracket") return "Bracket";
+	if (path === "/configure") return "New Run";
+	if (path === "/inverse-scaling") return "Trends";
+	if (path === "/bracket") return "Tournament";
 	if (path === "/runs") return "Runs";
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[2]) return `Trial ${trial[2]}`;
 	const run = path.match(/^\/runs\/([^/]+)$/);
 	if (run?.[1]) return `Run ${run[1]}`;
-	return "Review";
+	return "Leaderboard";
 }
 
 /** Path-based routing: / → leaderboard, /configure → configure, /runs → queue,
@@ -105,10 +105,10 @@ function Nav() {
 	return (
 		<nav className="mb-4 flex items-center gap-1 border-b border-border pb-2">
 			<Logo />
-			{tab("/", "Review", path === "/")}
-			{tab("/configure", "Configure", path === "/configure")}
-			{tab("/inverse-scaling", "Inverse-scaling", path === "/inverse-scaling")}
-			{tab("/bracket", "Bracket", path === "/bracket")}
+			{tab("/", "Leaderboard", path === "/")}
+			{tab("/configure", "New Run", path === "/configure")}
+			{tab("/inverse-scaling", "Trends", path === "/inverse-scaling")}
+			{tab("/bracket", "Tournament", path === "/bracket")}
 			{tab("/runs", "Runs", path === "/runs")}
 			<ThemeToggle />
 		</nav>

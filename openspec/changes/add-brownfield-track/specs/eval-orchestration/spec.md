@@ -32,7 +32,7 @@ During a brownfield trial, network egress from the sandbox SHALL be blocked exce
 - **THEN** run validation rejects that candidate for brownfield runs with a message naming the tool
 
 ### Requirement: Model gateway
-The orchestrator SHALL run a model gateway outside the sandbox. The sandbox SHALL hold no real model credential; the gateway SHALL inject the credential, forward only to the run's configured provider and model, reject any request that enables provider-side tools, and log every request.
+The orchestrator SHALL run a model gateway outside the sandbox. The sandbox SHALL hold no real model credential; the gateway SHALL inject the credential (an API key by default), forward only to the run's configured provider and model, reject any request that enables provider-side tools, and log every request. Candidates SHALL reach the gateway only through an endpoint override in the gateway's own protocol; the gateway SHALL NOT translate between protocols.
 
 #### Scenario: Worker holds no real credential
 - **WHEN** a worker inspects its environment and configuration files
@@ -42,24 +42,52 @@ The orchestrator SHALL run a model gateway outside the sandbox. The sandbox SHAL
 - **WHEN** a request reaching the gateway enables a provider-side web search or fetch tool
 - **THEN** the gateway rejects it, logs it, and the trial is flagged for review
 
-#### Scenario: Fixed model across harnesses
-- **WHEN** a run holds the model fixed and a candidate's native provider differs from the run's model
-- **THEN** the candidate's endpoint override points it at the gateway serving the run's model, and the report marks the pairing as non-native
+#### Scenario: Protocol mismatch refused
+- **WHEN** a candidate's harness speaks a different API protocol than the gateway serving the run's model
+- **THEN** run validation refuses the candidate for that run rather than translating requests
 
-### Requirement: Clean per-trial environment
-Each brownfield trial SHALL start with a freshly generated home directory and harness configuration containing no user MCP servers, plugins or skills, memory files, global instructions, or state from earlier trials, beyond what the candidate definition installs.
+### Requirement: Model slot pinning
+Every Claude Code candidate in a brownfield run SHALL have all of its model slots (opus, sonnet, and haiku, including background requests) pinned to the run's model, so that every request it sends passes the gateway's model check.
 
-#### Scenario: No inherited configuration
-- **WHEN** a brownfield trial starts on a provider that shares the host filesystem (e.g. worktree)
-- **THEN** the harness sees only the trial's generated home and configuration, not the operator's
+#### Scenario: Background request on the haiku slot
+- **WHEN** a Claude Code candidate sends a background request on its haiku slot
+- **THEN** the request names the run's model and the gateway forwards it
+
+### Requirement: Gateway preflight probe
+Before any trial is dispatched, the orchestrator SHALL send one minimal request per candidate, with that candidate's harness configuration, through the gateway. If the gateway rejects or fails the probe, the run SHALL fail before any trial spend, naming the candidate and the rejection reason.
+
+#### Scenario: Harness still declares a server-side tool
+- **WHEN** a candidate's probe request declares a provider-side web tool despite its kill-switch
+- **THEN** the gateway rejects the probe and the run fails before dispatch, naming the candidate and the tool
 
 ### Requirement: Application network during trials
-The application's own outbound traffic during a brownfield trial (e.g. calls the repository's code makes to LLM provider APIs) SHALL default to recorded fixtures only, with no live egress. A task MAY opt in with `appEgress: gateway`, which SHALL route the application's provider calls through the model gateway with a separate, budget-capped credential, the same provider-side tool rejection, and request logging.
+The application's own outbound traffic during a brownfield trial (e.g. calls the repository's code makes to LLM provider APIs) SHALL default to recorded fixtures only, with no live egress. A task MAY opt in with an `appEgress` allowlist of provider endpoints and model names; the gateway SHALL forward the application's calls only to those entries, using a separate, budget-capped credential, the same provider-side tool rejection, and request logging.
 
 #### Scenario: Default task
-- **WHEN** a worker runs the application live in a task with `appEgress: none`
+- **WHEN** a worker runs the application live in a task with no `appEgress` allowlist
 - **THEN** the application's outbound calls fail, and tests remain runnable in recorded-fixture mode
 
 #### Scenario: Opt-in task
-- **WHEN** a task declares `appEgress: gateway`
-- **THEN** the application's provider calls succeed through the gateway under the task's budget cap and appear in the gateway log
+- **WHEN** a task's `appEgress` allowlist lists `gpt-4o` and `text-embedding-3-small` on the OpenAI endpoint
+- **THEN** the application's calls to those models succeed through the gateway under the task's budget cap and appear in the gateway log, and a call to any other model is rejected
+
+## MODIFIED Requirements
+
+### Requirement: Trial isolation
+Each trial SHALL execute in a freshly provisioned isolated environment with no state shared between trials. The orchestrator SHALL support two isolation providers behind one interface: Daytona sandboxes (primary) and local git worktrees with a per-trial `CLAUDE_CONFIG_DIR` (fallback). Each trial SHALL also start with a freshly generated home directory and harness configuration containing no operator MCP servers, plugins or skills, memory files, or global instructions beyond what the candidate definition installs.
+
+#### Scenario: Daytona trial provisioning
+- **WHEN** a trial starts with the Daytona provider configured and `DAYTONA_API_KEY` present in the environment
+- **THEN** the orchestrator creates a fresh sandbox from the pinned snapshot, installs the candidate framework per its registry definition, runs the trial, archives artifacts, and destroys the sandbox
+
+#### Scenario: Worktree fallback isolation
+- **WHEN** a trial runs with the worktree provider
+- **THEN** the trial executes in a dedicated worktree under `runs/<run-id>/trials/<trial-id>/` with a dedicated `CLAUDE_CONFIG_DIR`, so plugin and skill installs from one trial are not visible to any other trial or to the host's Claude Code configuration
+
+#### Scenario: Cross-trial contamination check
+- **WHEN** two trials of different candidates run concurrently
+- **THEN** neither trial's workspace, plugin set, skills directory, or npm global state is observable from the other trial's environment
+
+#### Scenario: No inherited operator configuration
+- **WHEN** a trial starts on a provider that shares the host filesystem (e.g. worktree)
+- **THEN** the harness sees only the trial's generated home and configuration, and none of the operator's MCP servers, memory files, or global instructions

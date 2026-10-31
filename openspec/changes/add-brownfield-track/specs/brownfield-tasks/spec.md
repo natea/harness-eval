@@ -124,7 +124,7 @@ The body leak level SHALL be recorded as a difficulty stratum and SHALL NOT by i
 - **THEN** run validation fails until the labels are regenerated with a different model
 
 ### Requirement: Frozen task bundle
-Each accepted task SHALL be frozen as a bundle containing a manifest with the SHA-256 of every bundle file, the base commit, T*, issue and PR dates, environment digest, test command, and test lists. Runs SHALL record bundle hashes in provenance and SHALL fail before dispatch if any hash mismatches. Bundles SHALL NOT be re-fetched from GitHub at run time.
+Each accepted task SHALL be frozen as a bundle containing a manifest with the SHA-256 of every bundle file, the base commit, T*, issue and PR dates, environment digest, test command, test paths (every directory holding the repository's tests), and test lists. Runs SHALL record bundle hashes in provenance and SHALL fail before dispatch if any hash mismatches. Bundles SHALL NOT be re-fetched from GitHub at run time.
 
 #### Scenario: Tampered bundle
 - **WHEN** a bundle file's content no longer matches its recorded hash

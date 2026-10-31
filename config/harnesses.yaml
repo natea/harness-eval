@@ -1,6 +1,7 @@
 # Harness registry - agent backends the orchestrator knows how to drive.
 # Candidate registry harness sections and run configs are validated against
-# these IDs. Claude Code, Codex, and zerocode (ZeroClaw) have runnable drivers.
+# these IDs. Claude Code, Codex, Kiro CLI, OpenCode, Qwen Code, and zerocode
+# (ZeroClaw) have runnable drivers.
 
 harnesses:
   - id: claude-code
@@ -15,6 +16,35 @@ harnesses:
     name: Codex CLI
     driver: codex
     defaultVersion: 0.50.0
+    reportsCost: false
+
+  # OpenCode (opencode.ai) — model-agnostic terminal coding agent. Headless via
+  # `opencode run --format json` (NDJSON events); ids are models.dev
+  # `provider/model` (the driver prefixes bare claude-*/gpt-* ids). Emits
+  # per-step USD cost → reportsCost stays true.
+  - id: opencode
+    name: OpenCode
+    driver: opencode
+    defaultVersion: 2.2.5
+
+  # Kiro CLI (kiro.dev) — AWS's terminal agent (successor to Amazon Q Developer
+  # CLI). Headless via `kiro-cli chat --no-interactive --trust-all-tools
+  # --output-format stream-json`. Auth: KIRO_API_KEY. Meters subscription
+  # credits, not per-token USD → cost is profile-priced/tokens-only.
+  - id: kiro
+    name: Kiro CLI
+    driver: kiro
+    defaultVersion: 2.37.0
+    reportsCost: false
+
+  # Qwen Code — Gemini-CLI fork from Alibaba, driven headlessly with
+  # `qwen -p ... --output-format stream-json --yolo`. OpenAI-compatible auth
+  # (OPENAI_API_KEY + OPENAI_BASE_URL from the model profile). Reports tokens
+  # but no billed USD → cost is profile-priced/tokens-only.
+  - id: qwen-code
+    name: Qwen Code
+    driver: qwen-code
+    defaultVersion: 0.26.4
     reportsCost: false
 
   # ZeroClaw (zerocode) — Rust agent runtime; driven headlessly per trial via

@@ -130,6 +130,43 @@ profiles:
     authEnv: DASHSCOPE_API_KEY
     authKind: auth-token
 
+  # --- OpenCode harness (transport: opencode) ---
+  # OpenCode is model-agnostic; model ids are `provider/model` from models.dev.
+  # The driver prefixes bare ids (claude-* → anthropic/, gpt-* → openai/), so a
+  # profile's modelId can stay a plain model name. Credentials are the
+  # provider-conventional env vars (authEnv); pricing comes from models.dev at
+  # runtime via OpenCode's per-step `cost` field.
+  - name: opencode-claude-sonnet-4-5
+    provider: anthropic
+    modelId: claude-sonnet-4-5
+    transport: opencode
+    authEnv: ANTHROPIC_API_KEY
+    authKind: api-key
+
+  # --- Kiro CLI harness (transport: kiro) ---
+  # Kiro is metered in subscription credits, not per-token USD, and headless runs
+  # do not emit token counts, so the Kiro harness records cost as tokens-only.
+  # Auth is KIRO_API_KEY (Pro/Pro+/Power plans).
+  - name: kiro-sonnet-4-5
+    provider: kiro
+    modelId: claude-sonnet-4.5
+    transport: kiro
+    authEnv: KIRO_API_KEY
+    authKind: api-key
+
+  # --- Qwen Code harness (transport: qwen) ---
+  # Qwen Code drives OpenAI-compatible endpoints. DashScope's compatible-mode
+  # base URL (note: the Anthropic-compatible sibling above is /apps/anthropic)
+  # carries qwen3-coder models with an OpenAI API key. Pricing omitted → the
+  # token-only Qwen Code harness records tokens-only cost.
+  - name: qwen3-coder-openai
+    provider: alibaba
+    modelId: qwen3-coder-plus
+    transport: qwen
+    baseUrl: https://dashscope-us.aliyuncs.com/compatible-mode/v1
+    authEnv: DASHSCOPE_API_KEY
+    authKind: api-key
+
   # --- OpenAI via the Codex CLI harness (transport: codex) ---
   # Codex is model-agnostic; this profile drives its built-in OpenAI provider.
   # The codex driver runs `codex login --with-api-key` reading $OPENAI_API_KEY.

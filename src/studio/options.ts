@@ -154,7 +154,13 @@ export function validateRunRequest(
 
 	// Harness/provider compatibility: these CLIs must come from the pinned trial
 	// image/snapshot, not the host's PATH.
-	const IMAGE_ONLY_HARNESSES = new Set(["codex", "zerocode"]);
+	const IMAGE_ONLY_HARNESSES = new Set([
+		"codex",
+		"kiro",
+		"opencode",
+		"qwen-code",
+		"zerocode",
+	]);
 	if (
 		req.harness &&
 		IMAGE_ONLY_HARNESSES.has(req.harness) &&

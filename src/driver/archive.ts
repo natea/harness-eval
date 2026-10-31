@@ -21,6 +21,7 @@ const SECRET_ENV_VARS = [
 	"MINIMAX_API_KEY",
 	"DASHSCOPE_API_KEY",
 	"OPENAI_API_KEY",
+	"KIRO_API_KEY",
 ];
 
 /** Patterns matching well-known credential shapes, independent of env. */

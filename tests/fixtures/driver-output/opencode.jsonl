@@ -1,0 +1,4 @@
+{"type":"step_start","timestamp":1730000000000,"sessionID":"oc-sess-contract-1234","part":{"id":"prt_1","sessionID":"oc-sess-contract-1234","messageID":"msg_1","type":"step-start"}}
+{"type":"text","timestamp":1730000001000,"sessionID":"oc-sess-contract-1234","part":{"id":"prt_2","sessionID":"oc-sess-contract-1234","messageID":"msg_1","type":"text","text":"Implemented the PRD.","time":{"start":1730000000000,"end":1730000001000}}}
+{"type":"tool_use","timestamp":1730000002000,"sessionID":"oc-sess-contract-1234","part":{"id":"prt_3","sessionID":"oc-sess-contract-1234","messageID":"msg_1","type":"tool"}}
+{"type":"step_finish","timestamp":1730000003000,"sessionID":"oc-sess-contract-1234","part":{"id":"prt_4","sessionID":"oc-sess-contract-1234","messageID":"msg_1","type":"step-finish","reason":"stop","cost":0.0123,"tokens":{"input":1200,"output":450,"cache":{"read":100,"write":50}}}}

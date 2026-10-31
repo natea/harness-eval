@@ -90,6 +90,21 @@ The validator SHALL run the task's test command once at base plus the test patch
 - **WHEN** a test passes before but fails under the reference patch
 - **THEN** the task is rejected
 
+### Requirement: Live-API task classification and recovery
+A task with no FAIL_TO_PASS test whose env-broken tests fail in gold on blocked or unauthenticated provider calls SHALL be rejected as `needs-live-api`, reported separately as recoverable. Recovery SHALL record the affected tests' provider responses once at mining time, add the recordings to the sealed test patch, and re-validate offline; a test whose before-run fails only on a missing recording SHALL NOT count as FAIL_TO_PASS.
+
+#### Scenario: Live-API task classified
+- **WHEN** a task's only fail→pass candidates fail in gold with connection or authentication errors to a provider API
+- **THEN** it is rejected as `needs-live-api`, not `no-fail-to-pass`
+
+#### Scenario: Recovered task
+- **WHEN** recordings captured at mining time make the tests pass offline under the reference patch and the before-run fails for a reason other than a missing recording
+- **THEN** the task is accepted with the recordings sealed in its test patch
+
+#### Scenario: Ambiguous before-failure
+- **WHEN** after recording, a test's before-run fails only because a request has no recording
+- **THEN** that test is not counted as FAIL_TO_PASS
+
 ### Requirement: Solution-leak classification
 The miner SHALL label the body and every retained comment against the reference patch as `noise`, `symptom`, `diagnosis`, `fix_sketch`, or `fix_code`, recording verbatim evidence, reference files revealed, consistency with the reference fix, author role, classifier model, and prompt hash. Content inconsistent with the reference SHALL be labeled no higher than `symptom`.
 

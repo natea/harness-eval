@@ -19,7 +19,11 @@ and leak-graded discussion as an experimental variable.
 A spike on `Future-House/paper-qa` (2026-10-31; artifacts in
 `brownfield/paper-qa/`, gitignored) validated the approach end to end:
 
-- 36 merged PRs close issues; after filters roughly 20 are candidates.
+- 36 merged PRs close issues; 15 are non-tasks (docs/deps-only, no test change,
+  cross-repo issue). Of the 21 test-verifiable PRs, **14 are valid tasks**, 6 are
+  `needs-live-api` (recoverable by recording at mining time, D17), and 1 is
+  excluded because its issue postdates the fix start. Every environment-build
+  failure turned out to be harness-side and was fixed.
 - The cutoff T* came from the **first PR commit** in 37/37 issues — commits
   predate PR creation, so "PR opened" would have leaked in-progress discussion.
 - Issue-body edit history (GraphQL `userContentEdits`) stores full text (5/5

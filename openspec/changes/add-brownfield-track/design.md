@@ -102,6 +102,34 @@ PASS_TO_PASS; differs between gold runs = flaky (dropped); fails in gold either
 way = env_broken (excluded, never scored). Production validation uses the full
 offline suite for PASS_TO_PASS; the spike only ran PR-touched test files.
 
+### D17. Live-API tasks: classify, then recover by recording at mining time
+(Numbered after D16; placed here because it extends validation.)
+
+A task whose would-be FAIL_TO_PASS tests fail in gold because they need a live
+provider API (blocked or unauthenticated network errors, e.g. `APIConnectionError`,
+`ProxyError`, `AuthenticationError`) and that has no other FAIL_TO_PASS is
+classified `needs-live-api` — a **recoverable** rejection, reported separately
+from tasks that are genuinely unverifiable. Spike: 6 of 20 test-verifiable
+paper-qa tasks (30%: #138, #512, #515, #717, #871, #1174), concentrated in the
+indexing/agent code that *is* the LLM application — dropping them would bias the
+pool away from what the repo actually does.
+
+Recovery (deferred until the gateway/`appEgress` and `cassette-miss` machinery
+exists, since it needs the same recording and miss detection):
+1. At mining time, run only the affected tests at base+tests+reference with a
+   real, budget-capped key in record mode; the new recordings join `tests.patch`
+   (sealed; workers never see them). One-off cost ≈ cents per task.
+2. Re-validate fully offline. The *before* run must fail for a reason other than
+   a missing recording: a before-failure that is only a `cassette-miss` makes the
+   FAIL_TO_PASS claim ambiguous, so the test is not counted.
+3. Grading inherits the caveats: recordings match on method/host/path/query, not
+   body, so a different-but-correct fix replays the reference's responses (usually
+   fine, occasionally semantically wrong); a fix that calls an endpoint the
+   reference never called surfaces as `cassette-miss` for review.
+
+Live API calls at grading time are ruled out (per-grade cost, nondeterministic
+answers → flaky tests, breaks offline grading).
+
 ### D9. Leak classification
 A gold-aware LLM labels the body and each kept comment:
 `noise < symptom < diagnosis < fix_sketch < fix_code`, with verbatim evidence,
@@ -164,7 +192,7 @@ writes only" (spec delta).
 
 ## Risks
 
-- **Small pool:** ~20 paper-qa candidates, likely ~10–15 valid → wide CIs. A second,
+- **Small pool:** 14 valid paper-qa tasks (20 if the 6 live-API tasks are recovered, D17) → wide CIs. A second,
   more active repo is the likely follow-up.
 - **Contamination** (D14) inflates absolutes and may compress differences.
 - **Test fairness:** hidden tests may encode names the issue never mentions

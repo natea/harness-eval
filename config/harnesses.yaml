@@ -1,7 +1,7 @@
 # Harness registry - agent backends the orchestrator knows how to drive.
 # Candidate registry harness sections and run configs are validated against
-# these IDs. Claude Code, Codex, OpenCode, and zerocode (ZeroClaw) have runnable
-# drivers.
+# these IDs. Claude Code, Codex, OpenCode, Qwen Code, and zerocode (ZeroClaw)
+# have runnable drivers.
 
 harnesses:
   - id: claude-code
@@ -26,6 +26,16 @@ harnesses:
     name: OpenCode
     driver: opencode
     defaultVersion: 2.2.5
+
+  # Qwen Code — Gemini-CLI fork from Alibaba, driven headlessly with
+  # `qwen -p ... --output-format stream-json --yolo`. OpenAI-compatible auth
+  # (OPENAI_API_KEY + OPENAI_BASE_URL from the model profile). Reports tokens
+  # but no billed USD → cost is profile-priced/tokens-only.
+  - id: qwen-code
+    name: Qwen Code
+    driver: qwen-code
+    defaultVersion: 0.26.4
+    reportsCost: false
 
   # ZeroClaw (zerocode) — Rust agent runtime; driven headlessly per trial via
   # `zeroclaw acp` (JSON-RPC 2.0 over stdio), one ACP turn per session step.

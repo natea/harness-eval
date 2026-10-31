@@ -143,6 +143,19 @@ profiles:
     authEnv: ANTHROPIC_API_KEY
     authKind: api-key
 
+  # --- Qwen Code harness (transport: qwen) ---
+  # Qwen Code drives OpenAI-compatible endpoints. DashScope's compatible-mode
+  # base URL (note: the Anthropic-compatible sibling above is /apps/anthropic)
+  # carries qwen3-coder models with an OpenAI API key. Pricing omitted → the
+  # token-only Qwen Code harness records tokens-only cost.
+  - name: qwen3-coder-openai
+    provider: alibaba
+    modelId: qwen3-coder-plus
+    transport: qwen
+    baseUrl: https://dashscope-us.aliyuncs.com/compatible-mode/v1
+    authEnv: DASHSCOPE_API_KEY
+    authKind: api-key
+
   # --- OpenAI via the Codex CLI harness (transport: codex) ---
   # Codex is model-agnostic; this profile drives its built-in OpenAI provider.
   # The codex driver runs `codex login --with-api-key` reading $OPENAI_API_KEY.

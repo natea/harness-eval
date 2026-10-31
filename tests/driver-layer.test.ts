@@ -142,6 +142,7 @@ describe("shared print-cli driver", () => {
 			"claude-code",
 			"codex",
 			"opencode",
+			"qwen-code",
 			"zerocode",
 		]);
 		expect(getHarnessDriver("claude-code").id).toBe("claude-code");

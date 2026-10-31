@@ -15,6 +15,7 @@ export const ModelTransport = z.enum([
 	"anthropic-sdk",
 	"codex",
 	"opencode",
+	"qwen",
 ]);
 export type ModelTransport = z.infer<typeof ModelTransport>;
 
@@ -211,6 +212,20 @@ export function resolveWorkerEnv(
 			modelFlag: p.modelId,
 			note: `api-key (${p.authEnv})`,
 		};
+	}
+	if (p.transport === "qwen") {
+		// Qwen Code speaks the OpenAI-compatible protocol. DashScope exposes a
+		// compatible-mode endpoint, so the profile's key + baseUrl map onto the
+		// env vars Qwen Code reads (never written to the workspace).
+		const key = lookup[p.authEnv];
+		if (!key) {
+			throw new ModelError(
+				`${p.authEnv} is not set (required by model profile '${p.name}')`,
+			);
+		}
+		const env: Record<string, string> = { OPENAI_API_KEY: key };
+		if (p.baseUrl) env.OPENAI_BASE_URL = p.baseUrl;
+		return { env, modelFlag: p.modelId, note: "openai-compatible api-key" };
 	}
 	if (p.transport === "codex") {
 		if (p.authKind === "oauth") {

@@ -37,6 +37,12 @@ ARG OPENCODE_VERSION=2.2.5
 RUN npm install -g @opencode/cli@${OPENCODE_VERSION} \
     && opencode --version
 
+# Qwen Code CLI — PINNED. Keep in sync with config/harnesses.yaml (qwen-code
+# driver). Binary is `qwen`.
+ARG QWEN_CODE_VERSION=0.26.4
+RUN npm install -g @qwen-code/qwen-code@${QWEN_CODE_VERSION} \
+    && qwen --version
+
 # ZeroClaw (zerocode harness) — PINNED. The release tarball ships the `zeroclaw`
 # (daemon/ACP/CLI) and `zerocode` (TUI) binaries at its root, plus a web bundle.
 # Asset names are `zeroclaw-<rust-triple>.tar.gz` (NO version in the filename) —

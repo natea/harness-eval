@@ -129,6 +129,21 @@ const CASES: DriverContractCase[] = [
 		},
 	},
 	{
+		// Qwen Code emits Claude-shaped stream-json but reports tokens only (costUsd
+		// = 0), so against an unpriced non-anthropic profile this is tokens-only.
+		// session_id is on the result line; numTurns comes from result.num_turns.
+		harnessId: "qwen-code",
+		fixture: "qwen-code.jsonl",
+		profile: () => resolveProfile("glm-5.1", loadModels()),
+		expected: {
+			costSource: "tokens-only",
+			costUsd: null,
+			isError: false,
+			sessionId: "qwen-sess-contract-1234",
+			numTurns: 3,
+		},
+	},
+	{
 		// ZeroClaw drives the agent over ACP and reports usage but NO billed USD
 		// (record.costUsd = 0), so the parsed record carries no dollars; against an
 		// unpriced non-anthropic profile that classifies tokens-only. sessionId is

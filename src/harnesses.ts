@@ -9,6 +9,7 @@ export const HarnessDriver = z.enum([
 	"claude-code",
 	"codex",
 	"opencode",
+	"qwen-code",
 	"zerocode",
 ]);
 export type HarnessDriver = z.infer<typeof HarnessDriver>;

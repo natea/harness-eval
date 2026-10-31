@@ -15,6 +15,18 @@ export const ZEROCLAW_IMAGE_PROBE = {
 		"command -v zeroclaw && zeroclaw --version && test -s /opt/zeroclaw/acp-client.ts && test -s /opt/zeroclaw/trial-config.toml",
 };
 
+export const OPENCODE_IMAGE_PROBE = {
+	label: "opencode CLI",
+	command: "command -v opencode && opencode --version",
+};
+
+/**
+ * Harnesses whose CLI ships only in the trial image/snapshot. The worktree
+ * provider runs on the host, which may have no CLI (or a different version), so
+ * these must be rejected before a trial is dispatched.
+ */
+const IMAGE_ONLY_HARNESSES = new Set<HarnessId>(["zerocode", "opencode"]);
+
 export interface ProviderOptions {
 	/** Daytona snapshot name / E2B template / local image tag, per provider. */
 	snapshot?: string;
@@ -34,7 +46,14 @@ export function resolveProviderSnapshot(
 	harness: HarnessId,
 	requested?: string,
 ): string | undefined {
-	if (harness !== "zerocode") return requested;
+	if (harness !== "zerocode") {
+		if (IMAGE_ONLY_HARNESSES.has(harness) && provider === "worktree") {
+			throw new Error(
+				`${harness} requires an image-backed provider (docker, daytona, e2b, or macos-vz) so its CLI is present at the pinned version; worktree runs on the host`,
+			);
+		}
+		return requested;
+	}
 	const required =
 		provider === "daytona"
 			? ZEROCLAW_DAYTONA_SNAPSHOT
@@ -58,7 +77,9 @@ export function resolveProviderSnapshot(
 }
 
 export function preflightProbeForHarness(harness: HarnessId) {
-	return harness === "zerocode" ? ZEROCLAW_IMAGE_PROBE : undefined;
+	if (harness === "zerocode") return ZEROCLAW_IMAGE_PROBE;
+	if (harness === "opencode") return OPENCODE_IMAGE_PROBE;
+	return undefined;
 }
 
 export function createProvider(

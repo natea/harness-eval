@@ -69,10 +69,10 @@ describe("registry validation (8.1)", () => {
 		const p = join(tmp, "unknown-harness-registry.yaml");
 		writeFileSync(
 			p,
-			`basePrompt: x\ncandidates:\n  - id: foo\n    name: Foo\n    repo: https://example.com/foo\n    pinnedVersion: 1.0.0\n    harnesses:\n      claude-code:\n        install: ["true"]\n        session:\n          - prompt: "p"\n      opencode:\n        install: ["true"]\n        session:\n          - prompt: "p"\n`,
+			`basePrompt: x\ncandidates:\n  - id: foo\n    name: Foo\n    repo: https://example.com/foo\n    pinnedVersion: 1.0.0\n    harnesses:\n      claude-code:\n        install: ["true"]\n        session:\n          - prompt: "p"\n      gemini-cli:\n        install: ["true"]\n        session:\n          - prompt: "p"\n`,
 		);
 		expect(() => loadRegistry(p)).toThrow(
-			/invalid harness section .*opencode|Invalid key/,
+			/invalid harness section .*gemini-cli|Invalid key/,
 		);
 	});
 
@@ -113,9 +113,9 @@ describe("registry validation (8.1)", () => {
 
 	test("shipped registry loads; unknown harness fails at load time", () => {
 		const registry = loadRegistry("config/registry.yaml");
-		expect(registry.candidates).toHaveLength(6);
-		expect(() => resolveCandidates(registry, ["gsd"], "opencode")).toThrow(
-			/unknown harness 'opencode'/,
+		expect(registry.candidates).toHaveLength(8);
+		expect(() => resolveCandidates(registry, ["gsd"], "gemini-cli")).toThrow(
+			/unknown harness 'gemini-cli'/,
 		);
 	});
 });

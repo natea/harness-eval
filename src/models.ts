@@ -14,6 +14,7 @@ export const ModelTransport = z.enum([
 	"claude-code",
 	"anthropic-sdk",
 	"codex",
+	"opencode",
 ]);
 export type ModelTransport = z.infer<typeof ModelTransport>;
 
@@ -195,6 +196,22 @@ export function resolveWorkerEnv(
 	p: ModelProfile,
 	lookup: NodeJS.ProcessEnv = process.env,
 ): ResolvedWorker {
+	if (p.transport === "opencode") {
+		// OpenCode is model-agnostic but takes its credential from the provider's
+		// conventional env var (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...), which is
+		// exactly the `authEnv` the profile names. Never write it to the workspace.
+		const key = lookup[p.authEnv];
+		if (!key) {
+			throw new ModelError(
+				`${p.authEnv} is not set (required by model profile '${p.name}')`,
+			);
+		}
+		return {
+			env: { [p.authEnv]: key },
+			modelFlag: p.modelId,
+			note: `api-key (${p.authEnv})`,
+		};
+	}
 	if (p.transport === "codex") {
 		if (p.authKind === "oauth") {
 			const src =

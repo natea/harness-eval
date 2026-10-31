@@ -130,6 +130,19 @@ profiles:
     authEnv: DASHSCOPE_API_KEY
     authKind: auth-token
 
+  # --- OpenCode harness (transport: opencode) ---
+  # OpenCode is model-agnostic; model ids are `provider/model` from models.dev.
+  # The driver prefixes bare ids (claude-* → anthropic/, gpt-* → openai/), so a
+  # profile's modelId can stay a plain model name. Credentials are the
+  # provider-conventional env vars (authEnv); pricing comes from models.dev at
+  # runtime via OpenCode's per-step `cost` field.
+  - name: opencode-claude-sonnet-4-5
+    provider: anthropic
+    modelId: claude-sonnet-4-5
+    transport: opencode
+    authEnv: ANTHROPIC_API_KEY
+    authKind: api-key
+
   # --- OpenAI via the Codex CLI harness (transport: codex) ---
   # Codex is model-agnostic; this profile drives its built-in OpenAI provider.
   # The codex driver runs `codex login --with-api-key` reading $OPENAI_API_KEY.

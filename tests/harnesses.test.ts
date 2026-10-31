@@ -86,9 +86,9 @@ describe("harness registry", () => {
 		const badDriver = write(
 			"bad-harness-driver.yaml",
 			`harnesses:
-  - id: opencode
-    name: OpenCode
-    driver: opencode
+  - id: gemini-cli
+    name: Gemini CLI
+    driver: gemini-cli
     defaultVersion: 1
 `,
 		);

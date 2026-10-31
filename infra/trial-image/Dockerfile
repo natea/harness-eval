@@ -31,6 +31,12 @@ ARG CODEX_VERSION=0.50.0
 RUN npm install -g @openai/codex@${CODEX_VERSION} \
     && codex --version
 
+# OpenCode CLI — PINNED. Keep in sync with config/harnesses.yaml (opencode
+# driver). v2 package is `@opencode/cli`; the binary is `opencode`.
+ARG OPENCODE_VERSION=2.2.5
+RUN npm install -g @opencode/cli@${OPENCODE_VERSION} \
+    && opencode --version
+
 # ZeroClaw (zerocode harness) — PINNED. The release tarball ships the `zeroclaw`
 # (daemon/ACP/CLI) and `zerocode` (TUI) binaries at its root, plus a web bundle.
 # Asset names are `zeroclaw-<rust-triple>.tar.gz` (NO version in the filename) —

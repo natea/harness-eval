@@ -1,6 +1,7 @@
 # Harness registry - agent backends the orchestrator knows how to drive.
 # Candidate registry harness sections and run configs are validated against
-# these IDs. Claude Code, Codex, and zerocode (ZeroClaw) have runnable drivers.
+# these IDs. Claude Code, Codex, OpenCode, and zerocode (ZeroClaw) have runnable
+# drivers.
 
 harnesses:
   - id: claude-code
@@ -16,6 +17,15 @@ harnesses:
     driver: codex
     defaultVersion: 0.50.0
     reportsCost: false
+
+  # OpenCode (opencode.ai) — model-agnostic terminal coding agent. Headless via
+  # `opencode run --format json` (NDJSON events); ids are models.dev
+  # `provider/model` (the driver prefixes bare claude-*/gpt-* ids). Emits
+  # per-step USD cost → reportsCost stays true.
+  - id: opencode
+    name: OpenCode
+    driver: opencode
+    defaultVersion: 2.2.5
 
   # ZeroClaw (zerocode) — Rust agent runtime; driven headlessly per trial via
   # `zeroclaw acp` (JSON-RPC 2.0 over stdio), one ACP turn per session step.

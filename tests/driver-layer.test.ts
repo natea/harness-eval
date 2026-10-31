@@ -141,6 +141,7 @@ describe("shared print-cli driver", () => {
 		expect(runnableHarnessIds().sort()).toEqual([
 			"claude-code",
 			"codex",
+			"opencode",
 			"zerocode",
 		]);
 		expect(getHarnessDriver("claude-code").id).toBe("claude-code");

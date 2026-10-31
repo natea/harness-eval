@@ -113,6 +113,22 @@ const CASES: DriverContractCase[] = [
 		},
 	},
 	{
+		// OpenCode reports models.dev-priced USD per step, but the production
+		// classifier only trusts harness dollars for native Anthropic profiles;
+		// against an unpriced non-anthropic profile this classifies tokens-only.
+		// sessionID is on every event; numTurns counts step_finish events.
+		harnessId: "opencode",
+		fixture: "opencode.jsonl",
+		profile: () => resolveProfile("glm-5.1", loadModels()),
+		expected: {
+			costSource: "tokens-only",
+			costUsd: null,
+			isError: false,
+			sessionId: "oc-sess-contract-1234",
+			numTurns: 1,
+		},
+	},
+	{
 		// ZeroClaw drives the agent over ACP and reports usage but NO billed USD
 		// (record.costUsd = 0), so the parsed record carries no dollars; against an
 		// unpriced non-anthropic profile that classifies tokens-only. sessionId is

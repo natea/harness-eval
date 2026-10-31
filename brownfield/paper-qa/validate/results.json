@@ -20,45 +20,6 @@
     "verdict": "skip:cross-repo-issue"
   },
   {
-    "pr": 1296,
-    "merged": "2026-02-20",
-    "issues": [
-      {
-        "n": 1274,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 2,
-    "srcFiles": [
-      "src/paperqa/agents/__init__.py"
-    ],
-    "testFiles": [
-      "tests/test_cli.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 2,
-    "selected": [
-      "tests/test_cli.py::test_cli_can_build_and_search_index",
-      "tests/test_cli.py::test_settings_index_name_used_when_index_arg_is_default"
-    ],
-    "counts": {
-      "f2p": 1,
-      "p2p": 0,
-      "flaky": 0,
-      "envBroken": 1,
-      "liveApi": 0,
-      "goldRegress": 0
-    },
-    "f2p": [
-      "tests.test_cli::test_settings_index_name_used_when_index_arg_is_default"
-    ],
-    "flaky": [],
-    "broken": [
-      "tests.test_cli::test_cli_can_build_and_search_index"
-    ],
-    "verdict": "VALID"
-  },
-  {
     "pr": 1311,
     "merged": "2026-03-04",
     "issues": [
@@ -133,6 +94,134 @@
     "verdict": "VALID"
   },
   {
+    "pr": 1296,
+    "merged": "2026-02-20",
+    "issues": [
+      {
+        "n": 1274,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 2,
+    "srcFiles": [
+      "src/paperqa/agents/__init__.py"
+    ],
+    "testFiles": [
+      "tests/test_cli.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 2,
+    "selected": [
+      "tests/test_cli.py::test_cli_can_build_and_search_index",
+      "tests/test_cli.py::test_settings_index_name_used_when_index_arg_is_default"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_cli::test_settings_index_name_used_when_index_arg_is_default"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_cli::test_cli_can_build_and_search_index"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1262,
+    "merged": "2026-01-05",
+    "issues": [
+      {
+        "n": 1257,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "src/paperqa/settings.py",
+      "src/paperqa/utils.py"
+    ],
+    "testFiles": [
+      "tests/test_paperqa.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 4,
+    "selected": [
+      "tests/test_paperqa.py::test_parse_pdf_string_resolution",
+      "tests/test_paperqa.py::test_timeout_resilience"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 1,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_paperqa::test_parse_pdf_string_resolution"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_paperqa::test_timeout_resilience"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1260,
+    "merged": "2025-12-31",
+    "issues": [
+      {
+        "n": 1258,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+      "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+      "src/paperqa/utils.py"
+    ],
+    "testFiles": [
+      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py",
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 5,
+    "selected": [
+      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_equation_parsing",
+      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_table_parsing",
+      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_table_parsing_orphaned_surrogate",
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_media_deduplication",
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_table_parsing",
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_table_parsing_orphaned_surrogate"
+    ],
+    "counts": {
+      "f2p": 6,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_equation_parsing",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing_orphaned_surrogate",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_media_deduplication",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing_orphaned_surrogate"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
     "pr": 1255,
     "merged": "2025-12-23",
     "issues": [
@@ -201,164 +290,6 @@
     "verdict": "skip:no-src-code-change"
   },
   {
-    "pr": 1260,
-    "merged": "2025-12-31",
-    "issues": [
-      {
-        "n": 1258,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 5,
-    "srcFiles": [
-      "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
-      "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
-      "src/paperqa/utils.py"
-    ],
-    "testFiles": [
-      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py",
-      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 5,
-    "selected": [
-      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_equation_parsing",
-      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_table_parsing",
-      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_table_parsing_orphaned_surrogate",
-      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_media_deduplication",
-      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_table_parsing",
-      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_table_parsing_orphaned_surrogate"
-    ],
-    "counts": {
-      "f2p": 6,
-      "p2p": 0,
-      "flaky": 0,
-      "envBroken": 0,
-      "liveApi": 0,
-      "goldRegress": 0
-    },
-    "f2p": [
-      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_equation_parsing",
-      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing",
-      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing_orphaned_surrogate",
-      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_media_deduplication",
-      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing",
-      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing_orphaned_surrogate"
-    ],
-    "flaky": [],
-    "broken": [],
-    "verdict": "VALID"
-  },
-  {
-    "pr": 1262,
-    "merged": "2026-01-05",
-    "issues": [
-      {
-        "n": 1257,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 3,
-    "srcFiles": [
-      "src/paperqa/settings.py",
-      "src/paperqa/utils.py"
-    ],
-    "testFiles": [
-      "tests/test_paperqa.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 4,
-    "selected": [
-      "tests/test_paperqa.py::test_parse_pdf_string_resolution",
-      "tests/test_paperqa.py::test_timeout_resilience"
-    ],
-    "counts": {
-      "f2p": 1,
-      "p2p": 0,
-      "flaky": 0,
-      "envBroken": 1,
-      "liveApi": 1,
-      "goldRegress": 0
-    },
-    "f2p": [
-      "tests.test_paperqa::test_parse_pdf_string_resolution"
-    ],
-    "flaky": [],
-    "broken": [
-      "tests.test_paperqa::test_timeout_resilience"
-    ],
-    "verdict": "VALID"
-  },
-  {
-    "pr": 1174,
-    "merged": "2025-11-04",
-    "issues": [
-      {
-        "n": 1172,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 3,
-    "srcFiles": [
-      "src/paperqa/agents/search.py",
-      "src/paperqa/types.py"
-    ],
-    "testFiles": [
-      "tests/test_agents.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 2,
-    "selected": [
-      "tests/test_agents.py::test_propagate_options"
-    ],
-    "counts": {
-      "f2p": 0,
-      "p2p": 0,
-      "flaky": 0,
-      "envBroken": 1,
-      "liveApi": 1,
-      "goldRegress": 0
-    },
-    "f2p": [],
-    "flaky": [],
-    "broken": [
-      "tests.test_agents::test_propagate_options"
-    ],
-    "verdict": "fail:needs-live-api"
-  },
-  {
-    "pr": 1027,
-    "merged": "2025-07-24",
-    "issues": [
-      {
-        "n": 1026,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 1,
-    "srcFiles": [
-      "src/paperqa/settings.py"
-    ],
-    "testFiles": [],
-    "verdict": "skip:no-test-change"
-  },
-  {
-    "pr": 974,
-    "merged": "2025-06-16",
-    "issues": [
-      {
-        "n": 958,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 1,
-    "srcFiles": [
-      "README.md"
-    ],
-    "testFiles": [],
-    "verdict": "skip:no-src-code-change"
-  },
-  {
     "pr": 1186,
     "merged": "2025-11-11",
     "issues": [
@@ -405,63 +336,41 @@
     "verdict": "VALID"
   },
   {
-    "pr": 894,
-    "merged": "2025-03-01",
+    "pr": 1174,
+    "merged": "2025-11-04",
     "issues": [
       {
-        "n": 889,
+        "n": 1172,
         "repo": "Future-House/paper-qa"
       }
     ],
-    "files": 2,
+    "files": 3,
     "srcFiles": [
-      "paperqa/settings.py"
-    ],
-    "testFiles": [
-      "tests/test_configs.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 10,
-    "verdict": "fail:env-build"
-  },
-  {
-    "pr": 871,
-    "merged": "2025-02-20",
-    "issues": [
-      {
-        "n": 796,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 5,
-    "srcFiles": [
-      ".github/workflows/tests.yml",
-      "README.md",
-      "paperqa/agents/main.py",
-      "paperqa/settings.py"
+      "src/paperqa/agents/search.py",
+      "src/paperqa/types.py"
     ],
     "testFiles": [
       "tests/test_agents.py"
     ],
     "env": "uv.lock",
-    "envSecs": 4,
-    "verdict": "fail:env-build"
-  },
-  {
-    "pr": 834,
-    "merged": "2025-01-27",
-    "issues": [
-      {
-        "n": 832,
-        "repo": "Future-House/paper-qa"
-      }
+    "envSecs": 2,
+    "selected": [
+      "tests/test_agents.py::test_propagate_options"
     ],
-    "files": 1,
-    "srcFiles": [
-      "README.md"
+    "counts": {
+      "f2p": 0,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 1,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_propagate_options"
     ],
-    "testFiles": [],
-    "verdict": "skip:no-src-code-change"
+    "verdict": "fail:needs-live-api"
   },
   {
     "pr": 1029,
@@ -486,7 +395,7 @@
       "tests/test_paperqa.py"
     ],
     "env": "uv.lock",
-    "envSecs": 2,
+    "envSecs": 92,
     "selected": [
       "tests/test_agents.py::test_get_directory_index",
       "tests/test_paperqa.py::test_docs_with_custom_embedding",
@@ -494,7 +403,256 @@
       "tests/test_paperqa.py::test_pdf_reader_match_doc_details",
       "tests/test_paperqa.py::test_pdf_reader_w_no_match_doc_details"
     ],
-    "verdict": "fail:pytest-crashed-or-timeout"
+    "counts": {
+      "f2p": 1,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 5,
+      "liveApi": 5,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_paperqa::test_pdf_reader_match_doc_details"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_get_directory_index",
+      "tests.test_paperqa::test_docs_with_custom_embedding[NumpyVectorStore]",
+      "tests.test_paperqa::test_docs_with_custom_embedding[QdrantVectorStore]",
+      "tests.test_paperqa::test_duplicate",
+      "tests.test_paperqa::test_pdf_reader_w_no_match_doc_details"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1027,
+    "merged": "2025-07-24",
+    "issues": [
+      {
+        "n": 1026,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 1,
+    "srcFiles": [
+      "src/paperqa/settings.py"
+    ],
+    "testFiles": [],
+    "verdict": "skip:no-test-change"
+  },
+  {
+    "pr": 974,
+    "merged": "2025-06-16",
+    "issues": [
+      {
+        "n": 958,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 1,
+    "srcFiles": [
+      "README.md"
+    ],
+    "testFiles": [],
+    "verdict": "skip:no-src-code-change"
+  },
+  {
+    "pr": 961,
+    "merged": "2025-06-11",
+    "issues": [
+      {
+        "n": 959,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 6,
+    "srcFiles": [
+      ".gitignore",
+      "paperqa/readers.py",
+      "paperqa/settings.py"
+    ],
+    "testFiles": [
+      "tests/stub_data/.DS_Store",
+      "tests/test_agents.py",
+      "tests/test_paperqa.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 8,
+    "selected": [
+      "tests/test_agents.py::test_resuming_crashed_index_build",
+      "tests/test_paperqa.py::test_chunk_metadata_reader",
+      "tests/test_paperqa.py::test_code"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 2,
+      "liveApi": 2,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_paperqa::test_chunk_metadata_reader"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_resuming_crashed_index_build",
+      "tests.test_paperqa::test_code"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 894,
+    "merged": "2025-03-01",
+    "issues": [
+      {
+        "n": 889,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 2,
+    "srcFiles": [
+      "paperqa/settings.py"
+    ],
+    "testFiles": [
+      "tests/test_configs.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 8,
+    "selected": [
+      "tests/test_configs.py::test_get_settings_missing_file",
+      "tests/test_configs.py::test_index_naming",
+      "tests/test_configs.py::test_settings_default_instantiation"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 2,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_configs::test_settings_default_instantiation"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 871,
+    "merged": "2025-02-20",
+    "issues": [
+      {
+        "n": 796,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      ".github/workflows/tests.yml",
+      "README.md",
+      "paperqa/agents/main.py",
+      "paperqa/settings.py"
+    ],
+    "testFiles": [
+      "tests/test_agents.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 7,
+    "selected": [
+      "tests/test_agents.py::test_agent_types"
+    ],
+    "counts": {
+      "f2p": 0,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 6,
+      "liveApi": 6,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_agent_types[gpt-4o-fake]",
+      "tests.test_agents::test_agent_types[gpt-4o-ToolSelector]",
+      "tests.test_agents::test_agent_types[gpt-4o-SimpleAgent]",
+      "tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-fake]",
+      "tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-ToolSelector]",
+      "tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-SimpleAgent]"
+    ],
+    "verdict": "fail:needs-live-api"
+  },
+  {
+    "pr": 834,
+    "merged": "2025-01-27",
+    "issues": [
+      {
+        "n": 832,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 1,
+    "srcFiles": [
+      "README.md"
+    ],
+    "testFiles": [],
+    "verdict": "skip:no-src-code-change"
+  },
+  {
+    "pr": 768,
+    "merged": "2025-01-05",
+    "issues": [
+      {
+        "n": 761,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 11,
+    "srcFiles": [
+      ".pre-commit-config.yaml",
+      "paperqa/_ldp_shims.py",
+      "paperqa/agents/env.py",
+      "paperqa/agents/models.py",
+      "paperqa/agents/task.py",
+      "paperqa/litqa.py",
+      "paperqa/types.py",
+      "pyproject.toml",
+      "uv.lock"
+    ],
+    "testFiles": [
+      "tests/test_litqa.py",
+      "tests/test_task.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 42,
+    "selected": [
+      "tests/test_litqa.py::test_creating_litqa_questions",
+      "tests/test_litqa.py::test_make_discounted_returns",
+      "tests/test_task.py::TestTaskDataset::test___len__",
+      "tests/test_task.py::TestTaskDataset::test_evaluation"
+    ],
+    "counts": {
+      "f2p": 3,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 4,
+      "liveApi": 4,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_litqa::test_make_discounted_returns[correct-expected_dreturns0]",
+      "tests.test_litqa::test_make_discounted_returns[incorrect-expected_dreturns1]",
+      "tests.test_litqa::test_make_discounted_returns[unsure-expected_dreturns2]"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_litqa::test_creating_litqa_questions",
+      "tests.test_task.TestTaskDataset::test___len__[train-159]",
+      "tests.test_task.TestTaskDataset::test___len__[eval-40]",
+      "tests.test_task.TestTaskDataset::test_evaluation"
+    ],
+    "verdict": "VALID"
   },
   {
     "pr": 763,
@@ -545,8 +703,33 @@
       "tests/test_litqa.py"
     ],
     "env": "uv.lock",
-    "envSecs": 420,
-    "verdict": "fail:env-build"
+    "envSecs": 8,
+    "selected": [
+      "tests/test_litqa.py::TestLitQAEvaluation::test_from_question"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 8,
+      "liveApi": 8,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-several-options]"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-correct-option]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[didnt-match-and-no-llm-innate-knowledge]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-incorrect-option]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-unsure-option]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer1]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[didnt-match-and-llm-has-innate-knowledge]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer2]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer3]"
+    ],
+    "verdict": "VALID"
   },
   {
     "pr": 717,
@@ -566,123 +749,25 @@
       "tests/test_paperqa.py"
     ],
     "env": "uv.lock",
-    "envSecs": 15,
-    "verdict": "fail:env-build"
-  },
-  {
-    "pr": 961,
-    "merged": "2025-06-11",
-    "issues": [
-      {
-        "n": 959,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 6,
-    "srcFiles": [
-      ".gitignore",
-      "paperqa/readers.py",
-      "paperqa/settings.py"
-    ],
-    "testFiles": [
-      "tests/stub_data/.DS_Store",
-      "tests/test_agents.py",
-      "tests/test_paperqa.py"
-    ],
-    "env": "uv.lock",
     "envSecs": 36,
     "selected": [
-      "tests/test_agents.py::test_resuming_crashed_index_build",
-      "tests/test_paperqa.py::test_chunk_metadata_reader",
-      "tests/test_paperqa.py::test_code"
+      "tests/test_paperqa.py::test_maybe_is_text",
+      "tests/test_paperqa.py::test_name_in_text"
     ],
-    "verdict": "fail:pytest-crashed-or-timeout"
-  },
-  {
-    "pr": 768,
-    "merged": "2025-01-05",
-    "issues": [
-      {
-        "n": 761,
-        "repo": "Future-House/paper-qa"
-      }
+    "counts": {
+      "f2p": 0,
+      "p2p": 1,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 1,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "tests.test_paperqa::test_maybe_is_text"
     ],
-    "files": 11,
-    "srcFiles": [
-      ".pre-commit-config.yaml",
-      "paperqa/_ldp_shims.py",
-      "paperqa/agents/env.py",
-      "paperqa/agents/models.py",
-      "paperqa/agents/task.py",
-      "paperqa/litqa.py",
-      "paperqa/types.py",
-      "pyproject.toml",
-      "uv.lock"
-    ],
-    "testFiles": [
-      "tests/test_litqa.py",
-      "tests/test_task.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 36,
-    "selected": [
-      "tests/test_litqa.py::test_creating_litqa_questions",
-      "tests/test_litqa.py::test_make_discounted_returns",
-      "tests/test_task.py::TestTaskDataset::test___len__",
-      "tests/test_task.py::TestTaskDataset::test_evaluation"
-    ],
-    "verdict": "fail:pytest-crashed-or-timeout"
-  },
-  {
-    "pr": 575,
-    "merged": "2024-10-11",
-    "issues": [
-      {
-        "n": 568,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 4,
-    "srcFiles": [
-      "paperqa/agents/helpers.py",
-      "paperqa/agents/main.py",
-      "paperqa/agents/models.py",
-      "paperqa/llms.py"
-    ],
-    "testFiles": [],
-    "verdict": "skip:no-test-change"
-  },
-  {
-    "pr": 610,
-    "merged": "2024-10-18",
-    "issues": [
-      {
-        "n": 484,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 1,
-    "srcFiles": [],
-    "testFiles": [
-      "tests/test_cli.py"
-    ],
-    "verdict": "skip:no-src-code-change"
-  },
-  {
-    "pr": 551,
-    "merged": "2024-10-09",
-    "issues": [
-      {
-        "n": 546,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 1,
-    "srcFiles": [
-      "paperqa/docs.py"
-    ],
-    "testFiles": [],
-    "verdict": "skip:no-test-change"
+    "verdict": "fail:needs-live-api"
   },
   {
     "pr": 708,
@@ -712,8 +797,176 @@
       "tests/test_task.py"
     ],
     "env": "uv.lock",
-    "envSecs": 465,
-    "verdict": "fail:env-build"
+    "envSecs": 8,
+    "selected": [
+      "tests/test_litqa.py::TestLitQAEvaluation",
+      "tests/test_litqa.py::TestLitQAEvaluation::test_consistent_mc_options",
+      "tests/test_litqa.py::TestLitQAEvaluation::test_creating_litqa_questions",
+      "tests/test_litqa.py::TestLitQAEvaluation::test_from_question",
+      "tests/test_task.py::TestTaskDataset::test_evaluation"
+    ],
+    "counts": {
+      "f2p": 7,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 2,
+      "liveApi": 2,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_litqa.TestLitQAEvaluation::test_consistent_mc_options",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors0-the answer is 94107-correct-expected_dreturns0]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors1-the answer is 14004-incorrect-expected_dreturns1]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors2-the answer is 94106-incorrect-expected_dreturns2]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors3-Insufficient information-unsure-expected_dreturns3]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is the meaning of life?-42-distractors5-14-incorrect-expected_dreturns5]"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_litqa.TestLitQAEvaluation::test_creating_litqa_questions",
+      "tests.test_task.TestTaskDataset::test_evaluation"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 610,
+    "merged": "2024-10-18",
+    "issues": [
+      {
+        "n": 484,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 1,
+    "srcFiles": [],
+    "testFiles": [
+      "tests/test_cli.py"
+    ],
+    "verdict": "skip:no-src-code-change"
+  },
+  {
+    "pr": 575,
+    "merged": "2024-10-11",
+    "issues": [
+      {
+        "n": 568,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 4,
+    "srcFiles": [
+      "paperqa/agents/helpers.py",
+      "paperqa/agents/main.py",
+      "paperqa/agents/models.py",
+      "paperqa/llms.py"
+    ],
+    "testFiles": [],
+    "verdict": "skip:no-test-change"
+  },
+  {
+    "pr": 551,
+    "merged": "2024-10-09",
+    "issues": [
+      {
+        "n": 546,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 1,
+    "srcFiles": [
+      "paperqa/docs.py"
+    ],
+    "testFiles": [],
+    "verdict": "skip:no-test-change"
+  },
+  {
+    "pr": 515,
+    "merged": "2024-10-02",
+    "issues": [
+      {
+        "n": 478,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 4,
+    "srcFiles": [
+      "paperqa/agents/main.py",
+      "paperqa/agents/models.py",
+      "paperqa/settings.py"
+    ],
+    "testFiles": [
+      "tests/test_agents.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 11,
+    "selected": [
+      "tests/test_agents.py::test_agent_sharing_state",
+      "tests/test_agents.py::test_gather_evidence_rejects_empty_docs",
+      "tests/test_agents.py::test_timeout"
+    ],
+    "counts": {
+      "f2p": 0,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 4,
+      "liveApi": 4,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_agent_sharing_state",
+      "tests.test_agents::test_gather_evidence_rejects_empty_docs",
+      "tests.test_agents::test_timeout[ToolSelector]",
+      "tests.test_agents::test_timeout[SimpleAgent]"
+    ],
+    "verdict": "fail:needs-live-api"
+  },
+  {
+    "pr": 512,
+    "merged": "2024-10-01",
+    "issues": [
+      {
+        "n": 488,
+        "repo": "Future-House/paper-qa"
+      },
+      {
+        "n": 499,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "paperqa/agents/env.py",
+      "paperqa/agents/main.py",
+      "paperqa/agents/search.py",
+      "paperqa/agents/tools.py"
+    ],
+    "testFiles": [
+      "tests/test_agents.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 5,
+    "selected": [
+      "tests/test_agents.py::test_agent_sharing_state",
+      "tests/test_agents.py::test_get_directory_index"
+    ],
+    "counts": {
+      "f2p": 0,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 2,
+      "liveApi": 2,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_agent_sharing_state",
+      "tests.test_agents::test_get_directory_index"
+    ],
+    "verdict": "fail:needs-live-api"
   },
   {
     "pr": 491,
@@ -823,55 +1076,6 @@
     "verdict": "skip:no-test-change"
   },
   {
-    "pr": 515,
-    "merged": "2024-10-02",
-    "issues": [
-      {
-        "n": 478,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 4,
-    "srcFiles": [
-      "paperqa/agents/main.py",
-      "paperqa/agents/models.py",
-      "paperqa/settings.py"
-    ],
-    "testFiles": [
-      "tests/test_agents.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 11,
-    "verdict": "fail:env-build"
-  },
-  {
-    "pr": 512,
-    "merged": "2024-10-01",
-    "issues": [
-      {
-        "n": 488,
-        "repo": "Future-House/paper-qa"
-      },
-      {
-        "n": 499,
-        "repo": "Future-House/paper-qa"
-      }
-    ],
-    "files": 5,
-    "srcFiles": [
-      "paperqa/agents/env.py",
-      "paperqa/agents/main.py",
-      "paperqa/agents/search.py",
-      "paperqa/agents/tools.py"
-    ],
-    "testFiles": [
-      "tests/test_agents.py"
-    ],
-    "env": "uv.lock",
-    "envSecs": 11,
-    "verdict": "fail:env-build"
-  },
-  {
     "pr": 314,
     "merged": "2024-09-11",
     "issues": [
@@ -890,8 +1094,76 @@
       "tests/test_clients.py"
     ],
     "env": "uv.lock",
-    "envSecs": 11,
-    "verdict": "fail:env-build"
+    "envSecs": 6,
+    "selected": [
+      "tests/test_clients.py::test_crossref_retraction_status",
+      "tests/test_clients.py::test_doi_search",
+      "tests/test_clients.py::test_ensure_sequential_run_early_stop",
+      "tests/test_clients.py::test_title_search"
+    ],
+    "counts": {
+      "f2p": 7,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_clients::test_doi_search[paper_attributes0]",
+      "tests.test_clients::test_doi_search[paper_attributes1]",
+      "tests.test_clients::test_doi_search[paper_attributes2]",
+      "tests.test_clients::test_ensure_sequential_run_early_stop",
+      "tests.test_clients::test_title_search[paper_attributes0]",
+      "tests.test_clients::test_title_search[paper_attributes1]",
+      "tests.test_clients::test_title_search[paper_attributes2]"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_clients::test_crossref_retraction_status"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 293,
+    "merged": "2024-06-25",
+    "issues": [
+      {
+        "n": 292,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "paperqa/utils.py",
+      "pyproject.toml"
+    ],
+    "testFiles": [
+      "tests/test_paperqa.py"
+    ],
+    "env": "exclude-newer 2024-06-21T15:35:24-07:00",
+    "envSecs": 13,
+    "selected": [
+      "tests/test_paperqa.py::test_chain_completion",
+      "tests/test_paperqa.py::test_llm_read_json",
+      "tests/test_paperqa.py::test_llm_read_json_newlines"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 4,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 1,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_paperqa::test_llm_read_json_newlines"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_paperqa::test_chain_completion"
+    ],
+    "verdict": "VALID"
   },
   {
     "pr": 138,
@@ -912,28 +1184,24 @@
       "tests/test_paperqa.py"
     ],
     "env": "exclude-newer 2023-06-09T20:34:15-04:00",
-    "envSecs": 17,
-    "verdict": "fail:env-build"
-  },
-  {
-    "pr": 293,
-    "merged": "2024-06-25",
-    "issues": [
-      {
-        "n": 292,
-        "repo": "Future-House/paper-qa"
-      }
+    "envSecs": 6,
+    "selected": [
+      "tests/test_paperqa.py::test_docs_pickle",
+      "tests/test_paperqa.py::test_docs_pickle_no_faiss"
     ],
-    "files": 3,
-    "srcFiles": [
-      "paperqa/utils.py",
-      "pyproject.toml"
+    "counts": {
+      "f2p": 0,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 1,
+      "liveApi": 1,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "::tests.test_paperqa"
     ],
-    "testFiles": [
-      "tests/test_paperqa.py"
-    ],
-    "env": "exclude-newer 2024-06-21T15:35:24-07:00",
-    "envSecs": 17,
-    "verdict": "fail:env-build"
+    "verdict": "fail:needs-live-api"
   }
 ]

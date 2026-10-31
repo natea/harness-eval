@@ -12,6 +12,7 @@ const cands: { n: number; m: string; d: string; issues: { n: number; repo: strin
 	JSON.parse(readFileSync(`${S}/candidates.json`, "utf8"));
 const only = process.argv.slice(2).map(Number);
 const CONC = 3;
+let envLock: Promise<void> = Promise.resolve();
 
 const isTest = (p: string) => /(^|\/)tests?\//.test(p) || /(^|\/)test_[^/]*\.py$/.test(p);
 const testEnv = {
@@ -77,6 +78,8 @@ async function validate(c: (typeof cands)[number]) {
 	const wt = `${S}/wt/${c.n}`;
 	if (!existsSync(wt)) await $`git -C ${REPO} worktree add -f -q --detach ${wt} ${c.m}^`.quiet();
 	await $`git -C ${wt} reset -q --hard ${c.m}^ && git -C ${wt} clean -qfd`.quiet();
+	// macOS Finder litters ignored .DS_Store files; some upstream PRs commit one (e.g. #961).
+	await $`find ${wt} -name .DS_Store -not -path '*/.venv/*' -delete`.nothrow().quiet();
 	const tp = `${OUT}/${c.n}-tests.patch`, sp = `${OUT}/${c.n}-src.patch`;
 	await $`git -C ${REPO} diff --binary ${c.m}^ ${c.m} -- ${testFiles} > ${tp}`.quiet();
 	await $`git -C ${REPO} diff --binary ${c.m}^ ${c.m} -- ${srcFiles} > ${sp}`.quiet();
@@ -85,9 +88,24 @@ async function validate(c: (typeof cands)[number]) {
 	const t0 = Date.now();
 	const hasLock = existsSync(`${wt}/uv.lock`);
 	const date = (await $`git -C ${REPO} show -s --format=%cI ${c.m}^`.text()).trim();
-	const env = hasLock
-		? await $`cd ${wt} && uv sync --frozen --all-extras --reinstall-package paper-qa 2>&1 || uv sync --frozen --reinstall-package paper-qa 2>&1`.nothrow().quiet()
-		: await $`cd ${wt} && uv venv -q --python 3.11 && uv pip install -q --exclude-newer ${date} -e '.[dev]' pytest pytest-timeout pytest-asyncio pytest-recording 2>&1 || uv pip install -q --exclude-newer ${date} -e . pytest pytest-timeout pytest-asyncio pytest-recording 2>&1`.nothrow().quiet();
+	// One env build at a time (parallel downloads flaked on a laptop network), retried, on the
+	// era-appropriate Python (3.13 lacks wheels for old pins like dm-tree 0.1.9).
+	const PY = process.env.VALIDATE_PY ?? "3.12";
+	const build = () => hasLock
+		? $`cd ${wt} && CMAKE_POLICY_VERSION_MINIMUM=3.5 UV_PYTHON=${PY} uv sync --frozen --all-extras --reinstall-package paper-qa 2>&1 || CMAKE_POLICY_VERSION_MINIMUM=3.5 UV_PYTHON=${PY} uv sync --frozen --reinstall-package paper-qa 2>&1`.nothrow().quiet()
+		: $`cd ${wt} && rm -rf .venv && uv venv -q --python 3.11 && uv pip install -q --exclude-newer ${date} -e '.[dev]' pytest pytest-timeout pytest-asyncio pytest-recording 2>&1 || uv pip install -q --exclude-newer ${date} -e . pytest pytest-timeout pytest-asyncio pytest-recording 2>&1`.nothrow().quiet();
+	let env: Awaited<ReturnType<typeof build>>;
+	await envLock;
+	let release!: () => void;
+	envLock = new Promise<void>((r) => (release = r));
+	try {
+		for (let attempt = 1; ; attempt++) {
+			env = await build();
+			const out = env.stdout.toString();
+			if (env.exitCode === 0 || attempt >= 3 || !/error sending request|Failed to fetch|failed after \d+ retries/i.test(out)) break;
+			await Bun.sleep(10_000 * attempt);
+		}
+	} finally { release(); }
 	Object.assign(r, { env: hasLock ? "uv.lock" : `exclude-newer ${date}`, envSecs: Math.round((Date.now() - t0) / 1000) });
 	writeFileSync(`${OUT}/${c.n}-env.log`, env.stdout);
 	if (env.exitCode !== 0) return { ...r, verdict: "fail:env-build" };

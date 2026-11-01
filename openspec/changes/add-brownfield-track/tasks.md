@@ -17,7 +17,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [ ] 2.2 Review view: side-by-side issue / reference patch / tests patch; keyboard leak labels per item; test-fairness verdict; bot tags visible
 - [ ] 2.3 Blind mode: LLM labels withheld until submit; append-only `review/labels.jsonl` endpoint (the only new write)
 - [ ] 2.4 Agreement summary: per-item diff, per-level agreement, Cohen's κ
-- [ ] 2.5 Import the spike's 37 paper-qa snapshots + LLM labels as provisional bundles so labeling can start before 3–4 land
+- [ ] 2.5 Import the spike snapshots + LLM labels as provisional bundles (paper-qa 37, xarray 53 valid, zarr 19 valid; `brownfield/<repo>/{snapshots,leaks}`) so labeling can start before 3–4 land
 - [ ] 2.6 Human-label all paper-qa bodies and comments; record κ
 
 ## 3. Sealed repo + environment + validation
@@ -29,6 +29,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [ ] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
 - [ ] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
 - [ ] 3.7 Classify `needs-live-api` (blocked/unauthenticated provider calls in gold, no other FAIL_TO_PASS); recovery per D17 — record affected tests at mining time with a budget-capped key, seal recordings in tests.patch, re-validate offline, reject cassette-miss-only before-failures. Depends on 4.3/4.7 recording + 5.1 cassette-miss detection; paper-qa targets: #138, #512, #515, #717, #871, #1174
+- [ ] 3.8 Validator verdicts from the spike: `deps-touched` flag with `dependency-change` decided by gold-in-base-env (D5); `needs-gpu` for module-level hardware skips; capture pytest stderr so crashes are never silent
 
 ## 4. Brownfield trials
 

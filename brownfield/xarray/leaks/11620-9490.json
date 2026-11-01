@@ -1,0 +1,23 @@
+{
+  "pr": 11620,
+  "issue": 9490,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0083326,
+  "prAuthor": "Yagnik-Trivedi",
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/treenode.py"
+      ],
+      "evidence": "It would also be nice to add a check like this for child names.",
+      "rationale": "Proposes adding a validation check for child names (forbidding path-like names), which is what the reference does via _validate_name in _check_children. The 'like this' refers to an external review comment, so it's vague about location, but it states the change to make.",
+      "author": "TomNicholas",
+      "role": "issue author"
+    }
+  ]
+}

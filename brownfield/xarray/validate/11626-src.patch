@@ -1,0 +1,57 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index bfbff532..5540de96 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -129,6 +129,13 @@ Bug Fixes
+ - Fixed a bug that caused rechunking a multi-dimensional cftime array along a
+   subset of its dimensions to raise an error (:issue:`11567`, :pull:`11576`).
+   By `Spencer Clark <https://github.com/spencerkclark>`_.
++- Fixed indexing with an empty indexer array. An empty indexer array is now always
++  turned into an empty slice for the backend, so that the in-memory part of the
++  decomposed indexer stays aligned with the axes of the loaded array. Previously the
++  ``h5netcdf`` and ``scipy`` engines raised ``IndexError`` for multi-dimensional
++  variables, the ``netCDF4`` engine silently returned a wrongly-sized array, and
++  ``pydap`` raised ``ValueError`` (:issue:`9075`, :issue:`11625`, :pull:`11626`).
++  By `Aniruddha Adak <https://github.com/aniruddhaadak80>`_.
+ 
+ .. _`pandas-dev/pandas#64793`: https://github.com/pandas-dev/pandas/pull/64793
+ 
+diff --git a/xarray/core/indexing.py b/xarray/core/indexing.py
+index a96b102f..c41519f3 100644
+--- a/xarray/core/indexing.py
++++ b/xarray/core/indexing.py
+@@ -1411,6 +1411,10 @@ def _decompose_outer_indexer(
+                 # empty np.ndarray key is converted to empty slice
+                 # see https://github.com/pydata/xarray/issues/10867
+                 backend_indexer.append(slice(0, 0))
++                # an empty slice does not drop the dimension (unlike an integer
++                # key), so np_indexer needs a matching entry to stay aligned
++                # with the axes of the loaded array
++                np_indexer.append(slice(None))
+             elif isinstance(k, np.ndarray) and i != array_index:
+                 # np.ndarray key is converted to slice that covers the entire
+                 # entries of this key.
+@@ -1437,6 +1441,10 @@ def _decompose_outer_indexer(
+                 bk_slice, np_slice = _decompose_slice(k, s)
+                 backend_indexer.append(bk_slice)
+                 np_indexer.append(np_slice)
++            elif isinstance(k, np.ndarray) and k.size == 0:
++                # empty np.ndarray key is converted to empty slice
++                backend_indexer.append(slice(0, 0))
++                np_indexer.append(slice(None))
+             elif isinstance(k, integer_types):
+                 backend_indexer.append(k)
+             elif isinstance(k, np.ndarray) and (np.diff(k) >= 0).all():
+@@ -1454,7 +1462,11 @@ def _decompose_outer_indexer(
+     assert indexing_support == IndexingSupport.BASIC
+ 
+     for k, s in zip(indexer_elems, shape, strict=False):
+-        if isinstance(k, np.ndarray):
++        if isinstance(k, np.ndarray) and k.size == 0:
++            # empty np.ndarray key is converted to empty slice
++            backend_indexer.append(slice(0, 0))
++            np_indexer.append(slice(None))
++        elif isinstance(k, np.ndarray):
+             # np.ndarray key is converted to slice that covers the entire
+             # entries of this key.
+             backend_indexer.append(slice(np.min(k), np.max(k) + 1))

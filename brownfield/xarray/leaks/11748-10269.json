@@ -1,0 +1,31 @@
+{
+  "pr": 11748,
+  "issue": 10269,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0197406,
+  "prAuthor": "vsaraikin",
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I expected that setting `use_zarr_fill_value_as_mask=True` would produce the \"old\" behavior, but instead it appears to be ignored.",
+      "rationale": "Describes the observed behavior and a repro, with a link to backend code about the option's semantics. It says the option is ignored but does not identify where it is dropped (the hardcoded None in open_dataset's store open call) or propose a change.",
+      "author": "rabernat",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Just ran into this and I agree this is quite problematic.",
+      "rationale": "Agrees with the secondary concern about fill_value missing from encoding. It has no technical content about the bug the reference fix addresses.",
+      "author": "tasansal",
+      "role": "other user"
+    }
+  ]
+}

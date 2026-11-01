@@ -1,0 +1,100 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 5494ba1b..c4cc7c98 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -63,6 +63,12 @@ Bug Fixes
+ - :py:func:`polyval` now propagates ``NaN`` for ``NaT`` entries in ``timedelta64``
+   coordinates instead of returning a large sentinel value (:issue:`11462`).
+   By `Dipak Chaudhari <https://github.com/dchaudhari7177>`_.
++- The zarr backend now writes boolean arrays with native ``bool`` dtype instead
++  of converting them to ``int8``. Zarr supports ``bool`` natively, so the
++  ``BooleanCoder`` (which was designed for NetCDF compatibility) is now skipped
++  for zarr writes. Existing zarr stores written with the old ``int8`` encoding
++  are still read correctly. (:issue:`2937`, :pull:`11318`)
++  By `Evan Lyall <https://github.com/elyall>`_.
+ 
+ 
+ Documentation
+diff --git a/xarray/backends/zarr.py b/xarray/backends/zarr.py
+index fe7fe070..f0d0d081 100644
+--- a/xarray/backends/zarr.py
++++ b/xarray/backends/zarr.py
+@@ -24,6 +24,7 @@ from xarray.backends.common import (
+     ensure_dtype_not_object,
+ )
+ from xarray.backends.store import StoreBackendEntrypoint
++from xarray.conventions import ZARR_CODERS
+ from xarray.core import indexing
+ from xarray.core.treenode import NodePath
+ from xarray.core.types import ZarrWriteModes
+@@ -530,8 +531,7 @@ def encode_zarr_variable(var, needs_copy=True, name=None):
+     out : Variable
+         A variable which has been encoded as described above.
+     """
+-
+-    var = conventions.encode_cf_variable(var, name=name)
++    var = conventions.encode_cf_variable(var, name=name, coders=ZARR_CODERS)
+     var = ensure_dtype_not_object(var, name=name)
+ 
+     # zarr allows unicode, but not variable-length strings, so it's both
+diff --git a/xarray/conventions.py b/xarray/conventions.py
+index d3ee05e5..d14db8ac 100644
+--- a/xarray/conventions.py
++++ b/xarray/conventions.py
+@@ -37,7 +37,16 @@ CF_RELATED_DATA_NEEDS_PARSING = (
+     "cell_measures",
+     "formula_terms",
+ )
+-
++ZARR_CODERS = (
++    CFDatetimeCoder(),
++    CFTimedeltaCoder(),
++    variables.CFScaleOffsetCoder(),
++    variables.CFMaskCoder(),
++    variables.NativeEnumCoder(),
++    variables.NonStringCoder(),
++    variables.DefaultFillvalueCoder(),
++)
++DEFAULT_CODERS = ZARR_CODERS + (variables.BooleanCoder(),)
+ 
+ if TYPE_CHECKING:
+     from xarray.backends.common import AbstractDataStore
+@@ -66,7 +75,7 @@ def ensure_not_multiindex(var: Variable, name: T_Name = None) -> None:
+ 
+ 
+ def encode_cf_variable(
+-    var: Variable, needs_copy: bool = True, name: T_Name = None
++    var: Variable, needs_copy: bool = True, name: T_Name = None, coders=None
+ ) -> Variable:
+     """
+     Converts a Variable into a Variable which follows some
+@@ -81,6 +90,8 @@ def encode_cf_variable(
+     ----------
+     var : Variable
+         A variable holding un-encoded data.
++    coders : list of VariableCoder, optional
++        List of coders to apply. If None, uses the default CF coder chain.
+ 
+     Returns
+     -------
+@@ -89,16 +100,10 @@ def encode_cf_variable(
+     """
+     ensure_not_multiindex(var, name=name)
+ 
+-    for coder in [
+-        CFDatetimeCoder(),
+-        CFTimedeltaCoder(),
+-        variables.CFScaleOffsetCoder(),
+-        variables.CFMaskCoder(),
+-        variables.NativeEnumCoder(),
+-        variables.NonStringCoder(),
+-        variables.DefaultFillvalueCoder(),
+-        variables.BooleanCoder(),
+-    ]:
++    if coders is None:
++        coders = DEFAULT_CODERS
++
++    for coder in coders:
+         var = coder.encode(var, name=name)
+ 
+     for attr_name in CF_RELATED_DATA:

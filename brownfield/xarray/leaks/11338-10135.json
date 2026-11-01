@@ -1,0 +1,435 @@
+{
+  "pr": 11338,
+  "issue": 10135,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.09558060000000002,
+  "prAuthor": "jules-ch",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Add a `.to_polars_df()` method (very similar to `.to_dataframe()`, which implicitly uses pandas)",
+      "rationale": "Feature request for a to_polars_df method; reference instead adds Arrow PyCapsule interface. Different approach.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Bot greeting.",
+      "author": "welcome",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Question about benefit; no technical solution.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I believe there is a sort of dataframe-library-agnostic dataframe specification (something about `__dataframe__` maybe)",
+      "rationale": "Suggests dataframe interchange protocol, not what reference did.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Scheduling.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Here is the dataframe interchange protocol spec",
+      "rationale": "Points to interchange protocol, not the PyCapsule.",
+      "author": "DocOtak",
+      "role": "other user"
+    },
+    {
+      "id": "c6",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Motivation only.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Asking for evidence.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c8",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Questioning benefit.",
+      "author": "TomNicholas",
+      "role": "maintainer"
+    },
+    {
+      "id": "c9",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Process.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c10",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Process.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c11",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Process.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c12",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Process.",
+      "author": "TomNicholas",
+      "role": "maintainer"
+    },
+    {
+      "id": "c13",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the columnar benchmark version",
+      "rationale": "Benchmarks only.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c14",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "are we confident that the resulting polars arrays are identically laid out",
+      "rationale": "Benchmark question.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c15",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "`create_index: bool, dataframe_constructor: Callable`",
+      "rationale": "Proposes API different from reference.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c16",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "provide an interface for dataframe libraries like pandas and polars to consume",
+      "rationale": "General interchange idea, not PyCapsule.",
+      "author": "DocOtak",
+      "role": "other user"
+    },
+    {
+      "id": "c17",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Question.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c18",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the likely-best way to implement this is with the [Dataframe Interchange Protocol]",
+      "rationale": "Different protocol than reference.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c19",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Question.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c20",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "added a method that returned an intermediate object defining only the dataframe protocol",
+      "rationale": "Different from reference.",
+      "author": "keewis",
+      "role": "maintainer"
+    },
+    {
+      "id": "c21",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Agreement.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c22",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataarray.py"
+      ],
+      "evidence": "Reckon XArray is a good candidate to export a PyCapsule object which dataframe libraries could consume?",
+      "rationale": "Proposes exporting via Arrow PyCapsule Interface, which is the reference approach, though not specific on where.",
+      "author": "MarcoGorelli",
+      "role": "other user"
+    },
+    {
+      "id": "c23",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "would encourage adoption of the Arrow PyCapsule Interface",
+      "rationale": "Recommends PyCapsule interface.",
+      "author": "kylebarron",
+      "role": "other user"
+    },
+    {
+      "id": "c24",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the standard backend is a numpy array",
+      "rationale": "Background.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c25",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "implement a generic Arrow PyCapsule Interface integration. This would require some Arrow backend",
+      "rationale": "Options including PyCapsule with pyarrow.",
+      "author": "kylebarron",
+      "role": "other user"
+    },
+    {
+      "id": "c26",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "pyproject.toml"
+      ],
+      "evidence": "we could have `pyarrow` as an optional dependency, that could work",
+      "rationale": "Optional pyarrow dependency matches the reference.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c27",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Opinion.",
+      "author": "DeflateAwning",
+      "role": "issue author"
+    },
+    {
+      "id": "c28",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Arrow makes more sense than Polars to be an interchange format.",
+      "rationale": "General opinion.",
+      "author": "kylebarron",
+      "role": "other user"
+    },
+    {
+      "id": "c29",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "allow `Dataset.to_dataframe()` to return an pyarrow-backed `pandas.DataFrame`",
+      "rationale": "Different approach.",
+      "author": "vladidobro",
+      "role": "other user"
+    },
+    {
+      "id": "c30",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "pa.table(data)",
+      "rationale": "Suggests building a pyarrow table directly from numpy arrays, which the reference does.",
+      "author": "MarcoGorelli",
+      "role": "other user"
+    },
+    {
+      "id": "c31",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Pyarrow does have Fixed shaped Tensor which could be the perfect ExtensionType for DataArray no ?",
+      "rationale": "Proposes tensor extension type; reference uses flat table with metadata. Partially overlaps with metadata idea but not the fix.",
+      "author": "jules-ch",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c32",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Question.",
+      "author": "TomNicholas",
+      "role": "maintainer"
+    },
+    {
+      "id": "c33",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "creating the meshgrid / tile / repeat in numpy and then call pyarrow.array(numpy_array)",
+      "rationale": "Loosely similar (numpy broadcast then pa.array) but general advice.",
+      "author": "alippai",
+      "role": "other user"
+    },
+    {
+      "id": "c34",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Polars supports fixed-size lists",
+      "rationale": "Not the reference approach.",
+      "author": "kylebarron",
+      "role": "other user"
+    },
+    {
+      "id": "c35",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "DuckDB has fixed-size list under the name Array",
+      "rationale": "Background.",
+      "author": "alippai",
+      "role": "other user"
+    },
+    {
+      "id": "c36",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "def __arrow_array__(self, type=None):",
+      "rationale": "Naive prototype using __arrow_array__ and tensor type; reference uses __arrow_c_stream__/schema.",
+      "author": "jules-ch",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c37",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Encouragement.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c38",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Discussion.",
+      "author": "jules-ch",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c39",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Off-topic.",
+      "author": "TomNicholas",
+      "role": "maintainer"
+    },
+    {
+      "id": "c40",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Off-topic discussion.",
+      "author": "jules-ch",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c41",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Status ping.",
+      "author": "jenchen95",
+      "role": "other user"
+    }
+  ]
+}

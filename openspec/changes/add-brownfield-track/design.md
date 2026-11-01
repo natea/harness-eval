@@ -74,11 +74,26 @@ sandbox has no network). Rendering omits URLs that point at the future.
 ### D5. Task eligibility
 Reject when: the closing issue is in another repo; the PR changes no non-test
 code; the PR changes no test code; **the issue was created after T*** (2/37 in
-spike — fixer's notes, e.g. a bare permalink to the line to change); the PR
-changes the lockfile or dependency declarations (`dependency-change`: the base
-environment is prebaked and offline, so a candidate could not install the new
-package, and preinstalling it would hint at the fix); validation yields no
-FAIL_TO_PASS; or a gold run regresses a PASS_TO_PASS test.
+spike — fixer's notes, e.g. a bare permalink to the line to change); the
+reference fix **needs** a dependency the base environment lacks
+(`dependency-change`: the base environment is prebaked and offline, so a
+candidate could not install the new package, and preinstalling it would hint at
+the fix); the FAIL_TO_PASS tests only run on hardware the sandboxes lack
+(`needs-gpu`, e.g. xarray's CuPy tests, which skip at module level); validation
+yields no FAIL_TO_PASS; or a gold run regresses a PASS_TO_PASS test.
+
+**`dependency-change` is decided by validation, not by the diff.** A PR that
+touches `pyproject.toml` or a lockfile is flagged `deps-touched`. It is rejected
+only if the gold runs fail in the base environment. Across the three pilot repos,
+11 valid-looking fixes touched dependency files:
+- 3 were config or version-number edits only;
+- 1 added a dependency the base lacked and failed (zarr #4063, `msgspec`);
+- 5 raised or tightened pins, or added an optional extra, yet passed against the
+  base environment (paper-qa #768; zarr #4260, #4397, #4465; xarray #11338).
+
+Rejecting on the diff alone would drop those 5 for no reason, because nothing new
+has to be installed. They stay eligible with the `deps-touched` flag, so the
+review page can check whether the version bump itself is part of the fix.
 
 ### D6. Base commit and sealed history
 Base = first parent of the merge commit (all paper-qa merges are squash). The
@@ -275,7 +290,7 @@ time to dollars (any rate would be a guess).
 
 ## Risks
 
-- **Small pool:** 14 valid paper-qa tasks (20 if the 6 live-API tasks are recovered, D17) → wide CIs. A second,
+- **Small pool (largely resolved):** 82 valid tasks across the pilot repos (14 paper-qa + 49 xarray + 19 zarr), +8 if live-API tasks are recovered (D17). Per-repo CIs stay wide for paper-qa. A second,
   more active repo is the likely follow-up.
 - **Contamination** (D14) inflates absolutes and may compress differences.
 - **Test fairness:** hidden tests may encode names the issue never mentions
@@ -291,11 +306,45 @@ time to dollars (any rate would be a guess).
   (D5) narrows the pool to test-verifiable code fixes; results don't speak to
   other PR kinds. Report rejection counts by reason.
 
+## Pilot repositories
+
+Chosen from a survey of about 95 Python repos: about 45 general, about 50
+scientific, plus the NVIDIA-BioNeMo org and alphaXiv/OpenResearch. Each was
+validated with the spike validator (`brownfield/paper-qa/spike/validate2.ts`).
+
+| Repo | Env | Issue-first candidates | Valid | Rejected | Post-cutoff | Body leak ≥ diagnosis |
+|---|---|---|---|---|---|---|
+| Future-House/paper-qa | `uv.lock` | 36 PRs (21 testable) | 14 | 6 needs-live-api, 1 issue-after-fix | **0** | 13/37 |
+| pydata/xarray | **no lockfile** → `--exclude-newer` | 56 | **49** | 6 no-F2P (2 needs-gpu), 1 no test change | **all** | 24/53 |
+| zarr-developers/zarr-python | `uv.lock` | 23 | **19** | 2 needs-live-api, 1 no-F2P, 1 dependency-change | **all** | 12/19 |
+
+Findings:
+- **The no-lockfile path cost xarray no tasks.** Dependency drift never broke an
+  environment.
+- **Bodies are leakier in scientific repos.** Maintainers often file issues that
+  already name the change. That supports D9's decision to stratify by body leak
+  level rather than exclude.
+- **The first real post-T* body edit was seen** (zarr #4220, a reporter removing
+  an empty heading). The edit-history self-check passed on all 83 xarray and zarr
+  issues.
+- **Bots:** xarray and zarr have only a greeter bot (`welcome`), unlike paper-qa's
+  diagnostic `dosubot`. So the `body+human` vs `body+all` split mostly exercises
+  paper-qa.
+
+Not chosen:
+- **openai/openai-agents-python** (~102 tasks): strong, but not science.
+- **alphaXiv/OpenResearch** (19 issue-first tasks, all post-cutoff): Rust and TS,
+  so it needs multi-language support. A follow-up change.
+- **NVIDIA-BioNeMo repos** (0–3 tasks each): model releases without an issue
+  workflow. The org's agent toolkit is proposed as a harness candidate instead.
+
 ## Open Questions
 
 1. ~~Commit frozen bundles or gitignore them?~~ Resolved in D2: commit bundles and
    labels, ignore regenerable bulk, attribute via `brownfield/NOTICE`.
 2. May workers run the visible test suite? (Default yes — realistic.)
-3. Second repository for post-cutoff tasks: which one?
+3. ~~Second repository for post-cutoff tasks?~~ Resolved: **pydata/xarray**
+   (second) and **zarr-developers/zarr-python** (third), both scientific Python
+   with every fix after the worker models' cutoff. See "Pilot repositories" below.
 4. Doc-only and test-only PRs are rejected for lack of a test oracle. Worth
    scoring them later with the judge alone (no resolution verdict)?

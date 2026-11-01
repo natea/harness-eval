@@ -1,0 +1,138 @@
+diff --git a/xarray/tests/arrays.py b/xarray/tests/arrays.py
+index c2e40857..141ee979 100644
+--- a/xarray/tests/arrays.py
++++ b/xarray/tests/arrays.py
+@@ -61,6 +61,12 @@ class DuckArrayWrapper(utils.NDArrayMixin):
+     def __getitem__(self, key):
+         return type(self)(self.array[key])
+ 
++    def astype(self, dtype: np.typing.DTypeLike, copy: bool = True) -> Self:
++        return type(self)(self.array.astype(dtype, copy=copy))
++
++    def reshape(self, shape: tuple[int, ...]) -> Self:
++        return type(self)(self.array.reshape(shape))
++
+     def to_numpy(self) -> np.ndarray:
+         """Allow explicit conversions to numpy in `to_numpy`, but disallow np.asarray etc."""
+         return self.array
+diff --git a/xarray/tests/test_cupy.py b/xarray/tests/test_cupy.py
+index 29b7055c..cb8945e8 100644
+--- a/xarray/tests/test_cupy.py
++++ b/xarray/tests/test_cupy.py
+@@ -1,5 +1,7 @@
+ from __future__ import annotations
+ 
++from typing import Any
++
+ import numpy as np
+ import pandas as pd
+ import pytest
+@@ -60,3 +62,31 @@ def test_where() -> None:
+     output = where(data < 1, 1, data).all()
+     assert output
+     assert isinstance(output, cp.ndarray)
++
++
++@pytest.mark.parametrize(
++    "indexers, expected_dims, expected",
++    [
++        ({"x": xr.DataArray(cp.array(2))}, ("y",), [12, 13, 14, 15, 16, 17]),
++        ({"x": cp.array(2)}, ("y",), [12, 13, 14, 15, 16, 17]),
++        (
++            {"x": xr.DataArray(cp.array(2)), "y": xr.DataArray(cp.array([0, 2]))},
++            ("dim_0",),
++            [12, 14],
++        ),
++        (
++            {"x": cp.array(2), "y": xr.DataArray(cp.array([0, 2]), dims="y")},
++            ("y",),
++            [12, 14],
++        ),
++    ],
++)
++def test_isel_0d_cupy_indexer(
++    indexers: dict[str, Any], expected_dims: tuple[str, ...], expected: list[int]
++) -> None:
++    # GH8820
++    da = xr.DataArray(cp.arange(24).reshape(4, 6), dims=["x", "y"])
++    actual = da.isel(indexers)
++    assert actual.dims == expected_dims
++    assert isinstance(actual.data, cp.ndarray)
++    np.testing.assert_array_equal(actual.data.get(), expected)
+diff --git a/xarray/tests/test_dask.py b/xarray/tests/test_dask.py
+index d35b8839..084edbf2 100644
+--- a/xarray/tests/test_dask.py
++++ b/xarray/tests/test_dask.py
+@@ -1966,3 +1966,11 @@ def test_conjugate():
+     assert dask.is_dask_collection(conj_data)
+ 
+     assert_equal(conj_data, data.conj())
++
++
++def test_isel_0d_dask_indexer_with_outer_indexer() -> None:
++    # GH8820: 0d dask indexer combined with an outer indexer on numpy data
++    data = xr.DataArray(np.arange(24).reshape(4, 6), dims=["x", "y"])
++    actual = data.isel(x=da.from_array(np.array(2)), y=[0, 2])
++    expected = data.isel(x=2, y=[0, 2])
++    assert_identical(actual, expected)
+diff --git a/xarray/tests/test_indexing.py b/xarray/tests/test_indexing.py
+index 3ca3a34e..24a60b93 100644
+--- a/xarray/tests/test_indexing.py
++++ b/xarray/tests/test_indexing.py
+@@ -997,6 +997,20 @@ def test_outer_indexer_consistency_with_broadcast_indexes_vectorized() -> None:
+         np.testing.assert_array_equal(actual_data, expected_data)
+ 
+ 
++def test_outer_to_vectorized_indexer_0d_duck_array() -> None:
++    # GH8820: a 0d non-numpy duck array should be treated like an integer
++    original = np.arange(24).reshape(4, 6)
++    outer_index = indexing.OuterIndexer(
++        (DuckArrayWrapper(np.array(2)), np.array([0, 2]))  # type: ignore[arg-type]
++    )
++    actual = indexing._outer_to_vectorized_indexer(outer_index, original.shape)
++    assert isinstance(actual.tuple[0], DuckArrayWrapper)
++    key = tuple(
++        k.to_numpy() if isinstance(k, DuckArrayWrapper) else k for k in actual.tuple
++    )
++    np.testing.assert_array_equal(original[key], original[2, [0, 2]])
++
++
+ def test_create_mask_outer_indexer() -> None:
+     indexer = indexing.OuterIndexer((np.array([0, -1, 2]),))
+     expected = np.array([False, True, False])
+diff --git a/xarray/tests/test_variable.py b/xarray/tests/test_variable.py
+index 99996222..a504457c 100644
+--- a/xarray/tests/test_variable.py
++++ b/xarray/tests/test_variable.py
+@@ -38,6 +38,7 @@ from xarray.core.types import T_DuckArray
+ from xarray.core.utils import NDArrayMixin
+ from xarray.core.variable import as_compatible_data, as_variable
+ from xarray.tests import (
++    DuckArrayWrapper,
+     IndexableArray,
+     assert_allclose,
+     assert_array_equal,
+@@ -1345,6 +1346,23 @@ class TestVariable(VariableSubclassobjects):
+         _, ind, _ = v._broadcast_indexes((vind, 3))
+         assert type(ind) is indexing.VectorizedIndexer
+ 
++    def test_broadcast_indexes_0d_duck_array(self) -> None:
++        # GH8820: a 0d non-numpy duck array indexer should drop its dimension
++        v = Variable(["x", "y"], np.arange(24).reshape(4, 6))
++        key = DuckArrayWrapper(np.array(2))
++
++        dims, ind, _ = v._broadcast_indexes((key, slice(None)))
++        assert dims == ("y",)
++        assert type(ind) is indexing.OuterIndexer
++
++        dims, ind, _ = v._broadcast_indexes((key, Variable("y", [0, 2])))
++        assert dims == ("y",)
++        assert type(ind) is indexing.OuterIndexer
++
++        dims, ind, _ = v._broadcast_indexes((key, Variable("z", [0, 2])))
++        assert dims == ("z",)
++        assert type(ind) is indexing.OuterIndexer
++
+     def test_indexer_type(self):
+         # GH:issue:1688. Wrong indexer type induces NotImplementedError
+         data = np.random.random((10, 11))

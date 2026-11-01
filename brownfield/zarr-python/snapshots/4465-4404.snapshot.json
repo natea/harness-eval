@@ -1,0 +1,9 @@
+{
+  "pr": 4465,
+  "issue": 4404,
+  "tStar": "2026-10-02T00:31:40Z",
+  "title": "require opt-in to access the pickle codec",
+  "issueAuthor": "d-v-b",
+  "body": "the pickle codec is useful but also a huge security hole, since it allows arbitrary code execution based on encoded data. opening data encoded with the pickle codec should probably fail unless the user has explicitly opted in to accessing the unsafe codec, e.g. via an environment variable and runtime configuration setting.",
+  "comments": []
+}

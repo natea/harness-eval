@@ -1,0 +1,1497 @@
+diff --git a/asv_bench/benchmarks/interp.py b/asv_bench/benchmarks/interp.py
+index ffbb19e8..a524e259 100644
+--- a/asv_bench/benchmarks/interp.py
++++ b/asv_bench/benchmarks/interp.py
+@@ -1,8 +1,11 @@
++from typing import Any
++
+ import numpy as np
+ import pandas as pd
+ from asv_runner.benchmarks.mark import parameterize
+ 
+ import xarray as xr
++from xarray.core.types import InterpOptions
+ 
+ from . import randn, requires_dask
+ 
+@@ -64,3 +67,59 @@ class InterpolationDask(Interpolation):
+         requires_dask()
+         super().setup(**kwargs)
+         self.ds = self.ds.chunk({"t": 50})
++
++
++class InterpolationVectorized:
++    # the destination coordinates vary along a dimension of the source (GH10683)
++    def setup(self, *args, **kwargs):
++        nt, nr, nz = 100, 50, 50
++        self.da = xr.DataArray(
++            randn((nt, nr, nz)),
++            dims=("t", "r", "z"),
++            coords={
++                "t": np.arange(nt),
++                "r": np.arange(nr),
++                "z": np.linspace(0, 1, nz),
++            },
++        )
++        self.new_z = xr.DataArray(np.linspace(0.1, 0.9, nt), dims="t")
++
++    @parameterize({"method": ["linear", "cubic"]})
++    def time_interpolation_vectorized(self, method):
++        self.da.interp(z=self.new_z, method=method).compute()
++
++
++class InterpolationVectorizedDask(InterpolationVectorized):
++    def setup(self, *args, **kwargs):
++        requires_dask()
++        super().setup(**kwargs)
++        self.da = self.da.chunk({"t": 25, "r": 25})
++
++
++class InterpolationDaskChunkedCoords:
++    # scipy casts integer data to float, which copies the whole block unless
++    # it is localized to the range of the (chunked) destination coordinates
++    def setup(self, *args: Any, **kwargs: Any) -> None:
++        requires_dask()
++        import dask.array
++
++        ny, nx = 16, 2_000_000
++        chunks = (8, nx)  # 122 MiB blocks, generated lazily
++        self.data = {
++            "int": dask.array.random.randint(0, 100, (ny, nx), chunks=chunks),
++            "float": dask.array.random.random((ny, nx), chunks=chunks),
++        }
++        self.x = np.arange(nx)
++        self.new_x = xr.DataArray(
++            dask.array.linspace(1000, 1500, 400, chunks=100), dims="z"
++        )
++
++    @parameterize({"method": ["linear", "nearest"], "dtype": ["int", "float"]})
++    def peakmem_interpolation_chunked_coords(
++        self, method: InterpOptions, dtype: str
++    ) -> None:
++        import dask
++
++        da = xr.DataArray(self.data[dtype], dims=("y", "x"), coords={"x": self.x})
++        with dask.config.set(scheduler="synchronous"):
++            da.interp(x=self.new_x, method=method).compute()
+diff --git a/doc/conf.py b/doc/conf.py
+index d4c8da70..c86ea269 100644
+--- a/doc/conf.py
++++ b/doc/conf.py
+@@ -83,7 +83,6 @@ copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.{3,}: | {5,8}:
+ copybutton_prompt_is_regexp = True
+ 
+ # myst-nb
+-nb_execution_excludepatterns = ["examples/apply_ufunc_vectorize_1d.ipynb"]
+ # RTD does not publish the .err.log report, so print tracebacks in the build log
+ nb_execution_show_tb = True
+ 
+@@ -339,6 +338,7 @@ rediraffe_redirects = {
+     "quick-overview.rst": "getting-started-guide/quick-overview.rst",
+     "contributing.rst": "contribute/contributing.rst",
+     "developers-meeting.rst": "contribute/developers-meeting.rst",
++    "examples/apply_ufunc_vectorize_1d.ipynb": "gallery.rst",
+ }
+ 
+ # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+diff --git a/doc/examples/apply_ufunc_vectorize_1d.ipynb b/doc/examples/apply_ufunc_vectorize_1d.ipynb
+deleted file mode 100644
+index 6348f690..00000000
+--- a/doc/examples/apply_ufunc_vectorize_1d.ipynb
++++ /dev/null
+@@ -1,741 +0,0 @@
+-{
+- "cells": [
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {
+-    "deletable": true,
+-    "editable": true,
+-    "slideshow": {
+-     "slide_type": ""
+-    },
+-    "tags": []
+-   },
+-   "source": [
+-    "# Applying unvectorized functions with `apply_ufunc`"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "This example will illustrate how to conveniently apply an unvectorized function `func` to xarray objects using `apply_ufunc`. `func` expects 1D numpy arrays and returns a 1D numpy array. Our goal is to conveniently apply this function along a dimension of xarray objects that may or may not wrap dask arrays with a signature.\n",
+-    "\n",
+-    "We will illustrate this using `np.interp`: \n",
+-    "\n",
+-    "    Signature: np.interp(x, xp, fp, left=None, right=None, period=None)\n",
+-    "    Docstring:\n",
+-    "        One-dimensional linear interpolation.\n",
+-    "\n",
+-    "    Returns the one-dimensional piecewise linear interpolant to a function\n",
+-    "    with given discrete data points (`xp`, `fp`), evaluated at `x`.\n",
+-    "\n",
+-    "and write an `xr_interp` function with signature\n",
+-    "\n",
+-    "    xr_interp(xarray_object, dimension_name, new_coordinate_to_interpolate_to)\n",
+-    "\n",
+-    "## Load data\n",
+-    "\n",
+-    "First let's load an example dataset"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:45:51.659160Z",
+-     "start_time": "2020-01-15T14:45:50.528742Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "import xarray as xr\n",
+-    "import numpy as np\n",
+-    "\n",
+-    "xr.set_options(display_style=\"html\")  # fancy HTML repr\n",
+-    "\n",
+-    "air = (\n",
+-    "    xr.tutorial.load_dataset(\"air_temperature\")\n",
+-    "    .air.sortby(\"lat\")  # np.interp needs coordinate in ascending order\n",
+-    "    .isel(time=slice(4), lon=slice(3))\n",
+-    ")  # choose a small subset for convenience\n",
+-    "air"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "The function we will apply is `np.interp` which expects 1D numpy arrays. This functionality is already implemented in xarray so we use that capability to make sure we are not making mistakes."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:45:55.431708Z",
+-     "start_time": "2020-01-15T14:45:55.104701Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "newlat = np.linspace(15, 75, 100)\n",
+-    "air.interp(lat=newlat)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Let's define a function that works with one vector of data along `lat` at a time."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:45:57.889496Z",
+-     "start_time": "2020-01-15T14:45:57.792269Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "def interp1d_np(data, x, xi):\n",
+-    "    return np.interp(xi, x, data)\n",
+-    "\n",
+-    "\n",
+-    "interped = interp1d_np(air.isel(time=0, lon=0), air.lat, newlat)\n",
+-    "expected = air.interp(lat=newlat)\n",
+-    "\n",
+-    "# no errors are raised if values are equal to within floating point precision\n",
+-    "np.testing.assert_allclose(expected.isel(time=0, lon=0).values, interped)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## No errors are raised so our interpolation is working.\n",
+-    "\n",
+-    "This function consumes and returns numpy arrays, which means we need to do a lot of work to convert the result back to an xarray object with meaningful metadata. This is where `apply_ufunc` is very useful.\n",
+-    "\n",
+-    "### `apply_ufunc`\n",
+-    "\n",
+-    "    Apply a vectorized function for unlabeled arrays on xarray objects.\n",
+-    "\n",
+-    "    The function will be mapped over the data variable(s) of the input arguments using \n",
+-    "    xarray’s standard rules for labeled computation, including alignment, broadcasting, \n",
+-    "    looping over GroupBy/Dataset variables, and merging of coordinates.\n",
+-    "    \n",
+-    "`apply_ufunc` has many capabilities but for simplicity this example will focus on the common task of vectorizing 1D functions over nD xarray objects. We will iteratively build up the right set of arguments to `apply_ufunc` and read through many error messages in doing so."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:45:59.768626Z",
+-     "start_time": "2020-01-15T14:45:59.543808Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.isel(time=0, lon=0),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,\n",
+-    "    newlat,\n",
+-    ")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "`apply_ufunc` needs to know a lot of information about what our function does so that it can reconstruct the outputs. In this case, the size of dimension lat has changed and we need to explicitly specify that this will happen. xarray helpfully tells us that we need to specify the kwarg `exclude_dims`."
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## `exclude_dims`"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "\n",
+-    "```\n",
+-    "exclude_dims : set, optional\n",
+-    "        Core dimensions on the inputs to exclude from alignment and\n",
+-    "        broadcasting entirely. Any input coordinates along these dimensions\n",
+-    "        will be dropped. Each excluded dimension must also appear in\n",
+-    "        ``input_core_dims`` for at least one argument. Only dimensions listed\n",
+-    "        here are allowed to change size between input and output objects.\n",
+-    "```"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:02.187012Z",
+-     "start_time": "2020-01-15T14:46:02.105563Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.isel(time=0, lon=0),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,\n",
+-    "    newlat,\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be set!\n",
+-    ")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## Core dimensions\n",
+-    "\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Core dimensions are central to using `apply_ufunc`. In our case, our function expects to receive a 1D vector along `lat` &#x2014; this is the dimension that is \"core\" to the function's functionality. Multiple core dimensions are possible. `apply_ufunc` needs to know which dimensions of each variable are core dimensions.\n",
+-    "\n",
+-    "    input_core_dims : Sequence[Sequence], optional\n",
+-    "        List of the same length as ``args`` giving the list of core dimensions\n",
+-    "        on each input argument that should not be broadcast. By default, we\n",
+-    "        assume there are no core dimensions on any input arguments.\n",
+-    "\n",
+-    "        For example, ``input_core_dims=[[], ['time']]`` indicates that all\n",
+-    "        dimensions on the first argument and all dimensions other than 'time'\n",
+-    "        on the second argument should be broadcast.\n",
+-    "\n",
+-    "        Core dimensions are automatically moved to the last axes of input\n",
+-    "        variables before applying ``func``, which facilitates using NumPy style\n",
+-    "        generalized ufuncs [2]_.\n",
+-    "        \n",
+-    "    output_core_dims : List[tuple], optional\n",
+-    "        List of the same length as the number of output arguments from\n",
+-    "        ``func``, giving the list of core dimensions on each output that were\n",
+-    "        not broadcast on the inputs. By default, we assume that ``func``\n",
+-    "        outputs exactly one array, with axes corresponding to each broadcast\n",
+-    "        dimension.\n",
+-    "\n",
+-    "        Core dimensions are assumed to appear as the last dimensions of each\n",
+-    "        output in the provided order.\n",
+-    "        \n",
+-    "Next we specify `\"lat\"` as `input_core_dims` on both `air` and `air.lat`"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:05.031672Z",
+-     "start_time": "2020-01-15T14:46:04.947588Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.isel(time=0, lon=0),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,\n",
+-    "    newlat,\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], []],\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be set!\n",
+-    ")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "xarray is telling us that it expected to receive back a numpy array with 0 dimensions but instead received an array with 1 dimension corresponding to `newlat`. We can fix this by specifying `output_core_dims`"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:09.325218Z",
+-     "start_time": "2020-01-15T14:46:09.303020Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.isel(time=0, lon=0),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,\n",
+-    "    newlat,\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], []],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"lat\"]],\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be set!\n",
+-    ")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Finally we get some output! Let's check that this is right\n",
+-    "\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:11.295440Z",
+-     "start_time": "2020-01-15T14:46:11.226553Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "interped = xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.isel(time=0, lon=0),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,\n",
+-    "    newlat,\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], []],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"lat\"]],\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be set!\n",
+-    ")\n",
+-    "interped[\"lat\"] = newlat  # need to add this manually\n",
+-    "xr.testing.assert_allclose(expected.isel(time=0, lon=0), interped)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "No errors are raised so it is right!"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## Vectorization with `np.vectorize`"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Now our function currently only works on one vector of data which is not so useful given our 3D dataset.\n",
+-    "Let's try passing the whole dataset. We add a `print` statement so we can see what our function receives."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:13.808646Z",
+-     "start_time": "2020-01-15T14:46:13.680098Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "def interp1d_np(data, x, xi):\n",
+-    "    print(f\"data: {data.shape} | x: {x.shape} | xi: {xi.shape}\")\n",
+-    "    return np.interp(xi, x, data)\n",
+-    "\n",
+-    "\n",
+-    "interped = xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.isel(\n",
+-    "        lon=slice(3), time=slice(4)\n",
+-    "    ),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,\n",
+-    "    newlat,\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], []],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"lat\"]],\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be set!\n",
+-    ")\n",
+-    "interped[\"lat\"] = newlat  # need to add this manually\n",
+-    "xr.testing.assert_allclose(expected.isel(time=0, lon=0), interped)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "That's a hard-to-interpret error but our `print` call helpfully printed the shapes of the input data: \n",
+-    "\n",
+-    "    data: (10, 53, 25) | x: (25,) | xi: (100,)\n",
+-    "\n",
+-    "We see that `air` has been passed as a 3D numpy array which is not what `np.interp` expects. Instead we want loop over all combinations of `lon` and `time`; and apply our function to each corresponding vector of data along `lat`.\n",
+-    "`apply_ufunc` makes this easy by specifying `vectorize=True`:\n",
+-    "\n",
+-    "    vectorize : bool, optional\n",
+-    "        If True, then assume ``func`` only takes arrays defined over core\n",
+-    "        dimensions as input and vectorize it automatically with\n",
+-    "        :py:func:`numpy.vectorize`. This option exists for convenience, but is\n",
+-    "        almost always slower than supplying a pre-vectorized function.\n",
+-    "        Using this option requires NumPy version 1.12 or newer.\n",
+-    "        \n",
+-    "Also see the documentation for `np.vectorize`: https://docs.scipy.org/doc/numpy/reference/generated/numpy.vectorize.html. Most importantly\n",
+-    "\n",
+-    "    The vectorize function is provided primarily for convenience, not for performance. \n",
+-    "    The implementation is essentially a for loop."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:26.633233Z",
+-     "start_time": "2020-01-15T14:46:26.515209Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "def interp1d_np(data, x, xi):\n",
+-    "    print(f\"data: {data.shape} | x: {x.shape} | xi: {xi.shape}\")\n",
+-    "    return np.interp(xi, x, data)\n",
+-    "\n",
+-    "\n",
+-    "interped = xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air,  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,  # as above\n",
+-    "    newlat,  # as above\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], []],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"lat\"]],  # returned data has one dimension\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be set!\n",
+-    "    vectorize=True,  # loop over non-core dims\n",
+-    ")\n",
+-    "interped[\"lat\"] = newlat  # need to add this manually\n",
+-    "xr.testing.assert_allclose(expected, interped)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "This unfortunately is another cryptic error from numpy. \n",
+-    "\n",
+-    "Notice that `newlat` is not an xarray object. Let's add a dimension name `new_lat` and modify the call. Note this cannot be `lat` because xarray expects dimensions to be the same size (or broadcastable) among all inputs. `output_core_dims` needs to be modified appropriately. We'll manually rename `new_lat` back to `lat` for easy checking."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:46:30.026663Z",
+-     "start_time": "2020-01-15T14:46:29.893267Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "def interp1d_np(data, x, xi):\n",
+-    "    print(f\"data: {data.shape} | x: {x.shape} | xi: {xi.shape}\")\n",
+-    "    return np.interp(xi, x, data)\n",
+-    "\n",
+-    "\n",
+-    "interped = xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air,  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,  # as above\n",
+-    "    newlat,  # as above\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], [\"new_lat\"]],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"new_lat\"]],  # returned data has one dimension\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be a set!\n",
+-    "    vectorize=True,  # loop over non-core dims\n",
+-    ")\n",
+-    "interped = interped.rename({\"new_lat\": \"lat\"})\n",
+-    "interped[\"lat\"] = newlat  # need to add this manually\n",
+-    "xr.testing.assert_allclose(\n",
+-    "    expected.transpose(*interped.dims), interped  # order of dims is different\n",
+-    ")\n",
+-    "interped"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Notice that the printed input shapes are all 1D and correspond to one vector along the `lat` dimension.\n",
+-    "\n",
+-    "The result is now an xarray object with coordinate values copied over from `data`. This is why `apply_ufunc` is so convenient; it takes care of a lot of boilerplate necessary to apply functions that consume and produce numpy arrays to xarray objects.\n",
+-    "\n",
+-    "One final point: `lat` is now the *last* dimension in `interped`. This is a \"property\" of core dimensions: they are moved to the end before being sent to `interp1d_np` as was noted in the docstring for `input_core_dims`\n",
+-    "\n",
+-    "        Core dimensions are automatically moved to the last axes of input\n",
+-    "        variables before applying ``func``, which facilitates using NumPy style\n",
+-    "        generalized ufuncs [2]_."
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## Parallelization with dask\n",
+-    "\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "So far our function can only handle numpy arrays. A real benefit of `apply_ufunc` is the ability to easily parallelize over dask chunks _when needed_. \n",
+-    "\n",
+-    "We want to apply this function in a vectorized fashion over each chunk of the dask array. This is possible using dask's `blockwise`, `map_blocks`, or `apply_gufunc`. Xarray's `apply_ufunc` wraps dask's `apply_gufunc` and asking it to map the function over chunks using `apply_gufunc` is as simple as specifying `dask=\"parallelized\"`. With this level of flexibility we need to provide dask with some extra information: \n",
+-    "  1. `output_dtypes`: dtypes of all returned objects, and \n",
+-    "  2. `output_sizes`: lengths of any new dimensions. \n",
+-    "  \n",
+-    "Here we need to specify `output_dtypes` since `apply_ufunc` can infer the size of the new dimension `new_lat` from the argument corresponding to the third element in `input_core_dims`. Here I choose the chunk sizes to illustrate that `np.vectorize` is still applied so that our function receives 1D vectors even though the blocks are 3D."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:48:42.469341Z",
+-     "start_time": "2020-01-15T14:48:42.344209Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "def interp1d_np(data, x, xi):\n",
+-    "    print(f\"data: {data.shape} | x: {x.shape} | xi: {xi.shape}\")\n",
+-    "    return np.interp(xi, x, data)\n",
+-    "\n",
+-    "\n",
+-    "interped = xr.apply_ufunc(\n",
+-    "    interp1d_np,  # first the function\n",
+-    "    air.chunk(\n",
+-    "        {\"time\": 2, \"lon\": 2}\n",
+-    "    ),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,  # as above\n",
+-    "    newlat,  # as above\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], [\"new_lat\"]],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"new_lat\"]],  # returned data has one dimension\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be a set!\n",
+-    "    vectorize=True,  # loop over non-core dims\n",
+-    "    dask=\"parallelized\",\n",
+-    "    output_dtypes=[air.dtype],  # one per output\n",
+-    ").rename({\"new_lat\": \"lat\"})\n",
+-    "interped[\"lat\"] = newlat  # need to add this manually\n",
+-    "xr.testing.assert_allclose(expected.transpose(*interped.dims), interped)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Yay! our function is receiving 1D vectors, so we've successfully parallelized applying a 1D function over a block. If you have a distributed dashboard up, you should see computes happening as equality is checked.\n",
+-    "\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## High performance vectorization: gufuncs, numba & guvectorize\n",
+-    "\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "`np.vectorize` is a very convenient function but is unfortunately slow. It is only marginally faster than writing a for loop in Python and looping. A common way to get around this is to write a base interpolation function that can handle nD arrays in a compiled language like Fortran and then pass that to `apply_ufunc`.\n",
+-    "\n",
+-    "Another option is to use the numba package which provides a very convenient `guvectorize` decorator: https://numba.pydata.org/numba-doc/latest/user/vectorize.html#the-guvectorize-decorator\n",
+-    "\n",
+-    "Any decorated function gets compiled and will loop over any non-core dimension in parallel when necessary. We need to specify some extra information:\n",
+-    "\n",
+-    "   1. Our function cannot return a variable any more. Instead it must receive a variable (the last argument) whose contents the function will modify. So we change from `def interp1d_np(data, x, xi)` to `def interp1d_np_gufunc(data, x, xi, out)`. Our computed results must be assigned to `out`. All values of `out` must be assigned explicitly.\n",
+-    "   \n",
+-    "   2. `guvectorize` needs to know the dtypes of the input and output. This is specified in string form as the first argument. Each element of the tuple corresponds to each argument of the function. In this case, we specify `float64` for all inputs and outputs: `\"(float64[:], float64[:], float64[:], float64[:])\"` corresponding to `data, x, xi, out`\n",
+-    "   \n",
+-    "   3. Now we need to tell numba the size of the dimensions the function takes as inputs and returns as output i.e. core dimensions. This is done in symbolic form i.e. `data` and `x` are vectors of the same length, say `n`; `xi` and the output `out` have a different length, say `m`. So the second argument is (again as a string)\n",
+-    "         `\"(n), (n), (m) -> (m).\"` corresponding again to `data, x, xi, out`\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:48:45.267633Z",
+-     "start_time": "2020-01-15T14:48:44.943939Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "from numba import float64, guvectorize\n",
+-    "\n",
+-    "\n",
+-    "@guvectorize(\"(float64[:], float64[:], float64[:], float64[:])\", \"(n), (n), (m) -> (m)\")\n",
+-    "def interp1d_np_gufunc(data, x, xi, out):\n",
+-    "    # numba doesn't really like this.\n",
+-    "    # seem to support fstrings so do it the old way\n",
+-    "    print(\n",
+-    "        \"data: \" + str(data.shape) + \" | x:\" + str(x.shape) + \" | xi: \" + str(xi.shape)\n",
+-    "    )\n",
+-    "    out[:] = np.interp(xi, x, data)\n",
+-    "    # gufuncs don't return data\n",
+-    "    # instead you assign to a the last arg\n",
+-    "    # return np.interp(xi, x, data)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "The warnings are about object-mode compilation relating to the `print` statement. This means we don't get much speed up: https://numba.pydata.org/numba-doc/latest/user/performance-tips.html#no-python-mode-vs-object-mode. We'll keep the `print` statement temporarily to make sure that `guvectorize` acts like we want it to."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:48:54.755405Z",
+-     "start_time": "2020-01-15T14:48:54.634724Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "interped = xr.apply_ufunc(\n",
+-    "    interp1d_np_gufunc,  # first the function\n",
+-    "    air.chunk(\n",
+-    "        {\"time\": 2, \"lon\": 2}\n",
+-    "    ),  # now arguments in the order expected by 'interp1_np'\n",
+-    "    air.lat,  # as above\n",
+-    "    newlat,  # as above\n",
+-    "    input_core_dims=[[\"lat\"], [\"lat\"], [\"new_lat\"]],  # list with one entry per arg\n",
+-    "    output_core_dims=[[\"new_lat\"]],  # returned data has one dimension\n",
+-    "    exclude_dims=set((\"lat\",)),  # dimensions allowed to change size. Must be a set!\n",
+-    "    # vectorize=True,  # not needed since numba takes care of vectorizing\n",
+-    "    dask=\"parallelized\",\n",
+-    "    output_dtypes=[air.dtype],  # one per output\n",
+-    ").rename({\"new_lat\": \"lat\"})\n",
+-    "interped[\"lat\"] = newlat  # need to add this manually\n",
+-    "xr.testing.assert_allclose(expected.transpose(*interped.dims), interped)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "Yay! Our function is receiving 1D vectors and is working automatically with dask arrays. Finally let's comment out the print line and wrap everything up in a nice reusable function"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "ExecuteTime": {
+-     "end_time": "2020-01-15T14:49:28.667528Z",
+-     "start_time": "2020-01-15T14:49:28.103914Z"
+-    }
+-   },
+-   "outputs": [],
+-   "source": [
+-    "from numba import float64, guvectorize\n",
+-    "\n",
+-    "\n",
+-    "@guvectorize(\n",
+-    "    \"(float64[:], float64[:], float64[:], float64[:])\",\n",
+-    "    \"(n), (n), (m) -> (m)\",\n",
+-    "    nopython=True,\n",
+-    ")\n",
+-    "def interp1d_np_gufunc(data, x, xi, out):\n",
+-    "    out[:] = np.interp(xi, x, data)\n",
+-    "\n",
+-    "\n",
+-    "def xr_interp(data, dim, newdim):\n",
+-    "    interped = xr.apply_ufunc(\n",
+-    "        interp1d_np_gufunc,  # first the function\n",
+-    "        data,  # now arguments in the order expected by 'interp1_np'\n",
+-    "        data[dim],  # as above\n",
+-    "        newdim,  # as above\n",
+-    "        input_core_dims=[[dim], [dim], [\"__newdim__\"]],  # list with one entry per arg\n",
+-    "        output_core_dims=[[\"__newdim__\"]],  # returned data has one dimension\n",
+-    "        exclude_dims=set((dim,)),  # dimensions allowed to change size. Must be a set!\n",
+-    "        # vectorize=True,  # not needed since numba takes care of vectorizing\n",
+-    "        dask=\"parallelized\",\n",
+-    "        output_dtypes=[\n",
+-    "            data.dtype\n",
+-    "        ],  # one per output; could also be float or np.dtype(\"float64\")\n",
+-    "    ).rename({\"__newdim__\": dim})\n",
+-    "    interped[dim] = newdim  # need to add this manually\n",
+-    "\n",
+-    "    return interped\n",
+-    "\n",
+-    "\n",
+-    "xr.testing.assert_allclose(\n",
+-    "    expected.transpose(*interped.dims),\n",
+-    "    xr_interp(air.chunk({\"time\": 2, \"lon\": 2}), \"lat\", newlat),\n",
+-    ")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "This technique is generalizable to any 1D function."
+-   ]
+-  }
+- ],
+- "metadata": {
+-  "kernelspec": {
+-   "display_name": "Python 3",
+-   "language": "python",
+-   "name": "python3"
+-  },
+-  "language_info": {
+-   "codemirror_mode": {
+-    "name": "ipython",
+-    "version": 3
+-   },
+-   "file_extension": ".py",
+-   "mimetype": "text/x-python",
+-   "name": "python",
+-   "nbconvert_exporter": "python",
+-   "pygments_lexer": "ipython3",
+-   "version": "3.8.10"
+-  },
+-  "org": null,
+-  "toc": {
+-   "base_numbering": 1,
+-   "nav_menu": {},
+-   "number_sections": false,
+-   "sideBar": true,
+-   "skip_h1_title": false,
+-   "title_cell": "Table of Contents",
+-   "title_sidebar": "Contents",
+-   "toc_cell": false,
+-   "toc_position": {},
+-   "toc_section_display": true,
+-   "toc_window_display": true
+-  }
+- },
+- "nbformat": 4,
+- "nbformat_minor": 4
+-}
+diff --git a/doc/gallery.rst b/doc/gallery.rst
+index 9e0cb22d..c625c914 100644
+--- a/doc/gallery.rst
++++ b/doc/gallery.rst
+@@ -24,7 +24,6 @@ Notebook Examples
+     examples/visualization_gallery
+     examples/ROMS_ocean_model
+     examples/ERA5-GRIB-example
+-    examples/apply_ufunc_vectorize_1d
+     examples/blank_template
+ 
+ 
+diff --git a/doc/gallery.yml b/doc/gallery.yml
+index 0701e393..cd6cf465 100644
+--- a/doc/gallery.yml
++++ b/doc/gallery.yml
+@@ -23,11 +23,11 @@ notebooks-examples:
+     path: examples/ERA5-GRIB-example.html
+     thumbnail: _static/thumbnails/ERA5-GRIB-example.png
+ 
++external-examples:
+   - title: Applying unvectorized functions with apply_ufunc
+-    path: examples/apply_ufunc_vectorize_1d.html
++    path: https://tutorial.xarray.dev/advanced/apply_ufunc/example-interp.html
+     thumbnail: _static/logos/Xarray_Logo_RGB_Final.svg
+ 
+-external-examples:
+   - title: Managing raster data with rioxarray
+     path: https://vylor.github.io/rioxarray/stable/examples/examples.html
+     thumbnail: _static/logos/Xarray_Logo_RGB_Final.svg
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 9f6d856b..25e60ec1 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -13,6 +13,11 @@ v2026.09.1 (unreleased)
+ 
+ New Features
+ ~~~~~~~~~~~~
++- :py:func:`apply_ufunc` accepts dimension names for ``vectorize``, e.g.
++  ``vectorize=["time"]``, to only loop over these broadcast dimensions and pass
++  all other broadcast dimensions to ``func`` in bulk. This is much faster than
++  ``vectorize=True`` if ``func`` can broadcast its inputs, for numpy and dask
++  arrays alike (:pull:`11681`).
+ - :py:class:`~xarray.Variable` is now generic in the types of its shape, dtype
+   and dimension names, like :py:class:`~xarray.NamedArray`: it is defined as
+   ``class Variable(NamedArray[ShapeType_co, DType_co, DimType_co])``, so static
+@@ -201,6 +206,9 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Fix :py:meth:`Dataset.interp` and :py:meth:`DataArray.interp` with
++  ``method="linear"`` or ``"nearest"`` raising a ``ValueError`` for empty new
++  coordinates (:pull:`11681`).
+ - :py:meth:`DataArray.to_unstacked_dataset` no longer raises ``KeyError`` for
+   unused variable labels left in the stacked index after selecting features
+   (:pull:`11808`).
+@@ -420,6 +428,12 @@ Bug Fixes
+ 
+ Documentation
+ ~~~~~~~~~~~~~
++- Add examples from basic to advanced usage to the :py:func:`apply_ufunc`
++  docstring. The ``apply_ufunc`` example notebook was removed in favor of the
++  `apply_ufunc interpolation tutorial
++  <https://tutorial.xarray.dev/advanced/apply_ufunc/example-interp.html>`_
++  (:pull:`11681`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - Document how :py:meth:`Dataset.interp` and :py:meth:`DataArray.interp` handle
+   chunks of Dask arrays, and that loading chunked new coordinates first can
+   reduce the memory use for ``method="linear"`` and ``"nearest"``
+@@ -494,6 +508,12 @@ Performance
+   ones instead of sorting them. This avoids copying the data before
+   interpolating (:issue:`9758`, :pull:`11658`).
+   By `Bhaskar Gurram <https://github.com/bhaskargurram-ai>`_.
++- Fix a performance regression in :py:meth:`Dataset.interp` and
++  :py:meth:`DataArray.interp` when the new coordinates vary along a dimension
++  of the interpolated object, e.g. ``da.interp(z=new_z)`` where ``new_z`` has a
++  dimension ``t`` of ``da``. The interpolation now only loops over the
++  dimensions the new coordinates depend on, for numpy and dask arrays alike
++  (:issue:`10683`, :pull:`11681`).
+ - :py:meth:`Dataset.unstack` and :py:meth:`DataArray.unstack` reshape the data
+   instead of copying it when the MultiIndex contains every combination of its
+   levels in order, e.g. after :py:meth:`Dataset.stack`. The unstacked data is
+@@ -6674,7 +6694,7 @@ Documentation
+ - Added examples for :py:meth:`DataArray.quantile`, :py:meth:`Dataset.quantile` and
+   ``GroupBy.quantile``. (:pull:`3576`)
+   By `Justus Magin <https://github.com/keewis>`_.
+-- Add new :doc:`example notebook <examples/apply_ufunc_vectorize_1d>` example notebook demonstrating
++- Add new ``apply_ufunc_vectorize_1d`` example notebook demonstrating
+   vectorization of a 1D function using :py:func:`apply_ufunc` , dask and numba.
+   By `Deepak Cherian <https://github.com/dcherian>`_.
+ - Added example for :py:func:`~xarray.map_blocks`. (:pull:`3667`)
+diff --git a/xarray/computation/apply_ufunc.py b/xarray/computation/apply_ufunc.py
+index 96ca21dc..2b73b4a0 100644
+--- a/xarray/computation/apply_ufunc.py
++++ b/xarray/computation/apply_ufunc.py
+@@ -17,7 +17,7 @@ from collections.abc import (
+ from collections.abc import (
+     Set as AbstractSet,
+ )
+-from typing import TYPE_CHECKING, Any, Literal
++from typing import TYPE_CHECKING, Any, Literal, cast
+ 
+ import numpy as np
+ 
+@@ -703,6 +703,142 @@ def _vectorize(func, signature, output_dtypes, exclude_dims):
+     return func
+ 
+ 
++def _vectorize_dims[T](
++    func: Callable[..., T],
++    signature: _UFuncSignature,
++    loop_axes: Sequence[int],
++    nbroadcast: int,
++    output_dtypes: Sequence | None,
++    output_core_sizes: Mapping[Hashable, int],
++) -> Callable[..., T]:
++    """Vectorize ``func`` over some of the broadcast dimensions.
++
++    Like :py:class:`numpy.vectorize` with a signature, but ``func`` is only
++    looped over the given broadcast (non-core) dimensions. All other broadcast
++    dimensions are passed to ``func`` in bulk.
++
++    Parameters
++    ----------
++    func : callable
++        Function to vectorize. It must accept inputs with leading broadcast
++        dimensions that broadcast against each other following numpy's rules,
++        and return outputs with the broadcast dimensions followed by the
++        output core dimensions.
++    signature : _UFuncSignature
++        Core dimensions signature for the operation.
++    loop_axes : sequence of int
++        Positions of the broadcast dimensions to loop over, in loop order.
++    nbroadcast : int
++        Number of broadcast dimensions. Inputs may omit leading broadcast
++        dimensions, which then have size 1.
++    output_dtypes : sequence of dtype or None
++        Dtypes of the outputs. If None, they are taken from the results of
++        ``func``, so they are required if the loop is empty.
++    output_core_sizes : mapping of hashable to int
++        Sizes of the output core dimensions. Only needed if the loop is empty,
++        so that ``func`` is never called.
++
++    Returns
++    -------
++    callable
++        Vectorized version of ``func``, taking the same arguments.
++    """
++    input_core_ndims = [len(dims) for dims in signature.input_core_dims]
++    num_outputs = signature.num_outputs
++
++    @functools.wraps(func)
++    def wrapper(*args: Any) -> T:
++        loop_shapes = [
++            np.shape(arg)[: np.ndim(arg) - ndim]
++            for arg, ndim in zip(args, input_core_ndims, strict=True)
++        ]
++        broadcast_shape = np.broadcast_shapes(*loop_shapes)
++        nloop = len(broadcast_shape)
++        # broadcast dimensions are aligned to the right, as in numpy broadcasting
++        offsets = [nloop - len(shape) for shape in loop_shapes]
++        axes = [
++            axis - (nbroadcast - nloop)
++            for axis in loop_axes
++            # dimensions missing on all inputs have size 1
++            if axis >= nbroadcast - nloop
++        ]
++        if not axes:
++            return func(*args)
++
++        outputs = None
++        output_key: list[int | slice] = [slice(None)] * nloop
++        for index in np.ndindex(*(broadcast_shape[axis] for axis in axes)):
++            loop_index = dict(zip(axes, index, strict=True))
++            sliced_args = []
++            for arg, shape, offset in zip(args, loop_shapes, offsets, strict=True):
++                # select the loop index, or the only element along a size-1 axis
++                key = tuple(
++                    (loop_index[axis] if shape[axis - offset] != 1 else 0)
++                    if axis in loop_index
++                    else slice(None)
++                    for axis in range(offset, nloop)
++                )
++                sliced_args.append(arg[key] if key else arg)
++
++            result = func(*sliced_args)
++            results: tuple[Any, ...]
++            if num_outputs == 1:
++                results = (result,)
++            elif isinstance(result, tuple) and len(result) == num_outputs:
++                results = result
++            else:
++                raise ValueError(
++                    f"applied function does not have the number of outputs "
++                    f"specified in the ufunc signature. Expected {num_outputs} "
++                    f"outputs, got {result!r}"
++                )
++
++            if outputs is None:
++                outputs = tuple(
++                    np.empty_like(
++                        result,
++                        shape=broadcast_shape
++                        + np.shape(result)[np.ndim(result) - len(core_dims) :],
++                        dtype=None if output_dtypes is None else output_dtypes[i],
++                    )
++                    for i, (result, core_dims) in enumerate(
++                        zip(results, signature.output_core_dims, strict=True)
++                    )
++                )
++
++            for axis, i in loop_index.items():
++                output_key[axis] = i
++            for output, result in zip(outputs, results, strict=True):
++                output[tuple(output_key)] = result
++
++        if outputs is None:
++            # the loop is empty, so func was never called
++            missing_dims = {
++                dim
++                for dims in signature.output_core_dims
++                for dim in dims
++                if dim not in output_core_sizes
++            }
++            if output_dtypes is None or missing_dims:
++                raise ValueError(
++                    "cannot vectorize over an empty loop dimension unless "
++                    "``output_dtypes`` is set and the sizes of all output core "
++                    "dimensions are known"
++                )
++            outputs = tuple(
++                np.empty(
++                    broadcast_shape + tuple(output_core_sizes[dim] for dim in dims),
++                    dtype=dtype,
++                )
++                for dims, dtype in zip(
++                    signature.output_core_dims, output_dtypes, strict=True
++                )
++            )
++        return cast(T, outputs[0] if num_outputs == 1 else outputs)
++
++    return wrapper
++
++
+ def apply_variable_ufunc(
+     func,
+     *args,
+@@ -710,7 +846,7 @@ def apply_variable_ufunc(
+     exclude_dims=frozenset(),
+     dask="forbidden",
+     output_dtypes=None,
+-    vectorize=False,
++    vectorize: bool | tuple[Hashable, ...] = False,
+     keep_attrs="override",
+     dask_gufunc_kwargs=None,
+ ) -> Variable | tuple[Variable, ...]:
+@@ -793,12 +929,26 @@ def apply_variable_ufunc(
+                         f"dimension '{key}' in 'output_core_dims' needs corresponding (dim, size) in 'output_sizes'"
+                     )
+ 
++            if isinstance(vectorize, tuple):
++                numpy_func = _vectorize_dims(
++                    numpy_func,
++                    signature,
++                    loop_axes=[
++                        broadcast_dims.index(d)
++                        for d in vectorize
++                        if d in broadcast_dims
++                    ],
++                    nbroadcast=len(broadcast_dims),
++                    output_dtypes=output_dtypes,
++                    output_core_sizes={**dim_sizes, **output_sizes},
++                )
++
+             def func(*arrays):
+                 res = chunkmanager.apply_gufunc(
+                     numpy_func,
+                     signature.to_gufunc_string(exclude_dims),
+                     *arrays,
+-                    vectorize=vectorize,
++                    vectorize=vectorize is True,
+                     output_dtypes=output_dtypes,
+                     **dask_gufunc_kwargs,
+                 )
+@@ -811,6 +961,18 @@ def apply_variable_ufunc(
+             raise ValueError(
+                 f"unknown setting for chunked array handling in apply_ufunc: {dask}"
+             )
++    elif isinstance(vectorize, tuple):
++        output_sizes = (dask_gufunc_kwargs or {}).get("output_sizes", {})
++        func = _vectorize_dims(
++            func,
++            signature,
++            loop_axes=[
++                broadcast_dims.index(d) for d in vectorize if d in broadcast_dims
++            ],
++            nbroadcast=len(broadcast_dims),
++            output_dtypes=output_dtypes,
++            output_core_sizes={**dim_sizes, **output_sizes},
++        )
+     elif vectorize:
+         func = _vectorize(
+             func, signature, output_dtypes=output_dtypes, exclude_dims=exclude_dims
+@@ -898,7 +1060,7 @@ def apply_ufunc(
+     input_core_dims: Sequence[Sequence] | None = None,
+     output_core_dims: Sequence[Sequence] | None = ((),),
+     exclude_dims: AbstractSet = frozenset(),
+-    vectorize: bool = False,
++    vectorize: bool | str | Iterable[Hashable] = False,
+     join: JoinOptions = "exact",
+     dataset_join: str = "exact",
+     dataset_fill_value: object = _NO_FILL_VALUE,
+@@ -956,11 +1118,16 @@ def apply_ufunc(
+         will be dropped. Each excluded dimension must also appear in
+         ``input_core_dims`` for at least one argument. Only dimensions listed
+         here are allowed to change size between input and output objects.
+-    vectorize : bool, optional
++    vectorize : bool, str or iterable of Hashable, optional
+         If True, then assume ``func`` only takes arrays defined over core
+         dimensions as input and vectorize it automatically with
+         :py:func:`numpy.vectorize`. This option exists for convenience, but is
+         almost always slower than supplying a pre-vectorized function.
++
++        If dimension names, only loop over these broadcast dimensions and pass
++        all others to ``func`` in bulk, so ``func`` must broadcast its inputs
++        following numpy's rules. Loop dimensions of size 0 require
++        ``output_dtypes`` and known sizes of all output core dimensions.
+     join : {"outer", "inner", "left", "right", "exact"}, default: "exact"
+         Method for joining the indexes of the passed objects along each
+         dimension, and the variables of Dataset objects with mismatched
+@@ -1050,7 +1217,7 @@ def apply_ufunc(
+ 
+     Examples
+     --------
+-    Calculate the vector magnitude of two arguments:
++    **Element-wise functions.** Calculate the vector magnitude of two arguments:
+ 
+     >>> def magnitude(a, b):
+     ...     func = lambda x, y: np.sqrt(x**2 + y**2)
+@@ -1080,17 +1247,17 @@ def apply_ufunc(
+     Coordinates:
+       * x        (x) float64 24B 0.1 0.2 0.3
+ 
+-    Other examples of how you could use ``apply_ufunc`` to write functions to
+-    (very nearly) replicate existing xarray functionality:
++    **Core dimensions** are moved to the end of the arrays passed to ``func``.
++    Reduce over ``y`` like ``.mean("y")``:
+ 
+-    Compute the mean (``.mean``) over one dimension:
+-
+-    >>> def mean(obj, dim):
+-    ...     # note: apply always moves core dimensions to the end
+-    ...     return apply_ufunc(
+-    ...         np.mean, obj, input_core_dims=[[dim]], kwargs={"axis": -1}
+-    ...     )
+-    ...
++    >>> da = xr.DataArray(
++    ...     np.arange(6.0).reshape(2, 3), coords={"x": [10, 20], "y": [0, 1, 2]}
++    ... )
++    >>> xr.apply_ufunc(np.mean, da, input_core_dims=[["y"]], kwargs={"axis": -1})
++    <xarray.DataArray (x: 2)> Size: 16B
++    array([1., 4.])
++    Coordinates:
++      * x        (x) int64 16B 10 20
+ 
+     Inner product over a specific dimension (like :py:func:`dot`):
+ 
+@@ -1099,35 +1266,66 @@ def apply_ufunc(
+     ...     return result[..., 0, 0]
+     ...
+     >>> def inner_product(a, b, dim):
+-    ...     return apply_ufunc(_inner, a, b, input_core_dims=[[dim], [dim]])
++    ...     return xr.apply_ufunc(_inner, a, b, input_core_dims=[[dim], [dim]])
+     ...
+ 
++    **Output core dimensions** that change size must be listed in
++    ``exclude_dims``:
++
++    >>> xr.apply_ufunc(
++    ...     np.diff,
++    ...     da,
++    ...     input_core_dims=[["y"]],
++    ...     output_core_dims=[["y"]],
++    ...     exclude_dims={"y"},
++    ...     kwargs={"axis": -1},
++    ... )
++    <xarray.DataArray (x: 2, y: 2)> Size: 32B
++    array([[1., 1.],
++           [1., 1.]])
++    Coordinates:
++      * x        (x) int64 16B 10 20
++    Dimensions without coordinates: y
++
+     Stack objects along a new dimension (like :py:func:`concat`):
+ 
+     >>> def stack(objects, dim, new_coord):
+     ...     # note: this version does not stack coordinates
+     ...     func = lambda *x: np.stack(x, axis=-1)
+-    ...     result = apply_ufunc(
++    ...     result = xr.apply_ufunc(
+     ...         func,
+     ...         *objects,
+     ...         output_core_dims=[[dim]],
+     ...         join="outer",
+-    ...         dataset_fill_value=np.nan
++    ...         dataset_fill_value=np.nan,
+     ...     )
+     ...     result[dim] = new_coord
+     ...     return result
+     ...
+ 
+-    If your function is not vectorized but can be applied only to core
+-    dimensions, you can use ``vectorize=True`` to turn into a vectorized
+-    function. This wraps :py:func:`numpy.vectorize`, so the operation isn't
+-    terribly fast. Here we'll use it to calculate the distance between
+-    empirical samples from two probability distributions, using a scipy
++    **Multiple outputs** need one entry in ``output_core_dims`` each:
++
++    >>> quotient, remainder = xr.apply_ufunc(
++    ...     np.divmod, da, 4, output_core_dims=[[], []]
++    ... )
++    >>> remainder
++    <xarray.DataArray (x: 2, y: 3)> Size: 48B
++    array([[0., 1., 2.],
++           [3., 0., 1.]])
++    Coordinates:
++      * x        (x) int64 16B 10 20
++      * y        (y) int64 24B 0 1 2
++
++    **Vectorizing functions.** If your function is not vectorized but can be
++    applied only to core dimensions, you can use ``vectorize=True`` to turn into
++    a vectorized function. This wraps :py:func:`numpy.vectorize`, so the
++    operation isn't terribly fast. Here we'll use it to calculate the distance
++    between empirical samples from two probability distributions, using a scipy
+     function that needs to be applied to vectors:
+ 
+     >>> import scipy.stats
+     >>> def earth_mover_distance(first_samples, second_samples, dim="ensemble"):
+-    ...     return apply_ufunc(
++    ...     return xr.apply_ufunc(
+     ...         scipy.stats.wasserstein_distance,
+     ...         first_samples,
+     ...         second_samples,
+@@ -1136,6 +1334,41 @@ def apply_ufunc(
+     ...     )
+     ...
+ 
++    **Vectorizing over some dimensions only.** ``make_interp_spline``
++    interpolates all ``x`` at once, but only to a single set of new points.
++    These vary along ``time``, so only loop over ``time``:
++
++    >>> from scipy.interpolate import make_interp_spline
++    >>> da = xr.DataArray(
++    ...     np.arange(24.0).reshape(2, 3, 4),
++    ...     dims=("time", "x", "z"),
++    ...     coords={"z": [0, 1, 2, 3]},
++    ... )
++    >>> new_z = xr.DataArray([[0.5, 1.5], [1.0, 2.5]], dims=("time", "new_z"))
++    >>> def interp(data, z, new_z):
++    ...     # data has shape (x, z), new_z has size 1 along x
++    ...     return make_interp_spline(z, data, k=1, axis=-1)(new_z.reshape(-1))
++    ...
++    >>> xr.apply_ufunc(
++    ...     interp,
++    ...     da,
++    ...     da.z,
++    ...     new_z,
++    ...     input_core_dims=[["z"], ["z"], ["new_z"]],
++    ...     output_core_dims=[["new_z"]],
++    ...     exclude_dims={"z"},
++    ...     vectorize=["time"],
++    ... )
++    <xarray.DataArray (time: 2, x: 3, new_z: 2)> Size: 96B
++    array([[[ 0.5,  1.5],
++            [ 4.5,  5.5],
++            [ 8.5,  9.5]],
++    <BLANKLINE>
++           [[13. , 14.5],
++            [17. , 18.5],
++            [21. , 22.5]]])
++    Dimensions without coordinates: time, x, new_z
++
+     Most of NumPy's builtin functions already broadcast their inputs
+     appropriately for use in ``apply_ufunc``. You may find helper functions such as
+     :py:func:`numpy.broadcast_arrays` helpful in writing your function. ``apply_ufunc`` also
+@@ -1162,6 +1395,24 @@ def apply_ufunc(
+ 
+     signature = _UFuncSignature(input_core_dims, output_core_dims)
+ 
++    if isinstance(vectorize, str):
++        vectorize = (vectorize,)
++    if isinstance(vectorize, Iterable):
++        vectorize = tuple(vectorize)
++        if core_dims := set(vectorize) & signature.all_core_dims:
++            raise ValueError(
++                f"vectorize can only loop over broadcast dimensions, but "
++                f"{core_dims} are core dimensions"
++            )
++        all_dims = set().union(*(getattr(arg, "dims", ()) for arg in args))
++        if missing_dims := set(vectorize) - all_dims:
++            raise ValueError(
++                f"vectorize got dimensions {missing_dims} that are not present "
++                f"on any of the arguments"
++            )
++    else:
++        vectorize = bool(vectorize)
++
+     if exclude_dims:
+         if not isinstance(exclude_dims, set):
+             raise TypeError(
+diff --git a/xarray/core/missing.py b/xarray/core/missing.py
+index 2cf035fa..7b0c6cf1 100644
+--- a/xarray/core/missing.py
++++ b/xarray/core/missing.py
+@@ -580,7 +580,7 @@ def _localize[T](obj: T, indexes_coords: SourceDest) -> tuple[T, SourceDest]:
+     """
+     indexes = {}
+     for dim, [x, new_x] in indexes_coords.items():
+-        if is_chunked_array(new_x._data):
++        if is_chunked_array(new_x._data) or new_x.size == 0:
+             continue
+         new_x_loaded = new_x.data
+         minval = np.nanmin(new_x_loaded)
+@@ -698,7 +698,20 @@ def interpolate_variable(
+     else:
+         func, kwargs = _get_interpolator_nd(method, **kwargs)
+ 
+-    in_coords, result_coords = zip(*(v for v in indexes_coords.values()), strict=True)
++    localize = kwargs.get("method") in ["linear", "nearest"]
++    if localize:
++        # simple speed up for the local interpolation
++        var, indexes_coords = _localize(var, dict(indexes_coords))
++
++    in_coords, result_coords = _floatize_x(
++        *(list(_) for _ in zip(*indexes_coords.values(), strict=True))
++    )
++    # `_localize` skips chunked destination coordinates, so localize each block
++    # instead: scipy casts integer data to float, which would otherwise copy
++    # the whole block
++    localize_blocks = localize and any(
++        is_chunked_array(coord._data) for coord in result_coords
++    )
+ 
+     # input coordinates along which we are interpolation are core dimensions
+     # the corresponding output coordinates may or may not have the same name,
+@@ -717,7 +730,10 @@ def interpolate_variable(
+     # we are explicitly interpolating. These are the dimensions along which we vectorize.
+     # `q` is the only input core dimensions, and changes size (disappears)
+     # so it is in exclude_dims.
+-    vectorize_dims = (result_dims - all_in_core_dims) & set(var.dims)
++    # ordered like var.dims, since it also determines the loop order
++    vectorize_dims = [
++        d for d in var.dims if d in result_dims and d not in all_in_core_dims
++    ]
+ 
+     # remove any output broadcast dimensions from the list of core dimensions
+     output_core_dims = tuple(d for d in result_dims if d not in vectorize_dims)
+@@ -758,11 +774,14 @@ def interpolate_variable(
+             # on the method and the coordinate dtypes, so cast the result to
+             # the dtype we promise dask
+             dtype=dtype,
++            localize=localize_blocks,
+         ),
+         # TODO: deprecate and have the user rechunk themselves
+         dask_gufunc_kwargs=dict(output_sizes=output_sizes, allow_rechunk=True),
+         output_dtypes=[dtype],
+-        vectorize=bool(vectorize_dims),
++        # only loop over the dimensions along which the destination coordinates vary,
++        # vectorize=True would also loop over all other broadcast dimensions (GH10683)
++        vectorize=vectorize_dims,
+         keep_attrs=True,
+     )
+     return result
+@@ -790,21 +809,28 @@ def _interpnd(
+     data: np.ndarray,
+     *coords: np.ndarray,
+     interp_func: Interpolator | InterpCallable,
+-    interp_kwargs,
++    interp_kwargs: dict[str, Any],
+     result_coord_core_dims: list[tuple[Hashable, ...]],
+     dtype: np.dtype,
++    localize: bool = False,
+ ) -> np.ndarray:
+     """Core nD array interpolation routine.
+ 
+     The first half arrays in `coords` are original coordinates,
+     the other half are destination coordinates.
++
++    `data` has the loop dimensions first, followed by the dimensions we
++    interpolate along. ``apply_ufunc`` only loops over the loop dimensions along
++    which the destination coordinates vary, e.g. ``t`` for
++    ``da[t, r, z].interp(z=target[t])``, so the destination coordinates have
++    size 1 along all remaining loop dimensions.
+     """
+     n_x = len(coords) // 2
+     ndim = data.ndim
+     nconst = ndim - n_x
+ 
+-    # Convert everything to Variables, since that makes applying
+-    # `_localize` and `_floatize_x` much easier
++    # Convert everything to Variables, since that makes broadcasting the
++    # destination coordinates much easier
+     x: list[Variable] = [
+         Variable([f"dim_{nconst + dim}"], _x, fastpath=True)
+         for dim, _x in enumerate(coords[:n_x])
+@@ -812,30 +838,27 @@ def _interpnd(
+     new_x = list(
+         broadcast_variables(
+             *(
+-                Variable(dims, _x, fastpath=True)
++                # drop the size-1 loop dimensions
++                Variable(
++                    dims, reshape(_x, _x.shape[_x.ndim - len(dims) :]), fastpath=True
++                )
+                 for dims, _x in zip(result_coord_core_dims, coords[n_x:], strict=True)
+             )
+         )
+     )
+     var = Variable([f"dim_{dim}" for dim in range(ndim)], data, fastpath=True)
+ 
+-    if interp_kwargs.get("method") in ["linear", "nearest"]:
++    if localize:
+         indexes_coords = {
+             _x.dims[0]: (_x, _new_x) for _x, _new_x in zip(x, new_x, strict=True)
+         }
+-        # simple speed up for the local interpolation
+         var, indexes_coords = _localize(var, indexes_coords)
+-        x, new_x = tuple(
+-            list(_)
+-            for _ in zip(*(indexes_coords[d] for d in indexes_coords), strict=True)
+-        )
+-
+-    x_list, new_x_list = _floatize_x(x, new_x)
++        x, new_x = (list(_) for _ in zip(*indexes_coords.values(), strict=True))
+ 
+     if len(x) == 1:
+         # TODO: narrow interp_func to interpolator here
+         return astype(
+-            _interp1d(var, x_list, new_x_list, interp_func, interp_kwargs),  # type: ignore[arg-type]
++            _interp1d(var, x, new_x, interp_func, interp_kwargs),  # type: ignore[arg-type]
+             dtype,
+             copy=False,
+         )
+@@ -844,8 +867,8 @@ def _interpnd(
+     data = transpose(var._data, range(-len(x), var.ndim - len(x)))
+ 
+     # stack new_x to 1 vector, with reshape
+-    xi = stack([ravel(x1.data) for x1 in new_x_list], axis=-1)
+-    rslt: np.ndarray = interp_func(x_list, data, xi, **interp_kwargs)  # type: ignore[assignment]
++    xi = stack([ravel(x1.data) for x1 in new_x], axis=-1)
++    rslt: np.ndarray = interp_func(x, data, xi, **interp_kwargs)  # type: ignore[assignment]
+     # move back the interpolation axes to the last position
+     rslt = transpose(rslt, range(-rslt.ndim + 1, 1))
+     rslt = reshape(rslt, rslt.shape[:-1] + new_x[0].shape)

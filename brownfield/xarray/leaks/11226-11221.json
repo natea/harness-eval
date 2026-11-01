@@ -1,0 +1,35 @@
+{
+  "pr": 11226,
+  "issue": 11221,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0471886,
+  "prAuthor": "wavebyrd",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/backends/zarr.py"
+      ],
+      "evidence": "the default argument is of type `Default` which is a dummy type and thus causes issues when checking it",
+      "rationale": "Identifies the cause in open_zarr's chunks annotation and suggests type from docstring; reference retypes chunks as T_Chunks | Default | None. Not full fix for all args.",
+      "author": "C-Loftus",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/backends/zarr.py"
+      ],
+      "evidence": "there is a `xarray.core.types.T_Chunks` that should cover it.\nProbably need to add a `| Literal[_default]`.",
+      "rationale": "Proposes typing all open_zarr args and using T_Chunks plus Default for chunks, which matches the reference annotation change in open_zarr.",
+      "author": "headtr1ck",
+      "role": "maintainer"
+    }
+  ]
+}

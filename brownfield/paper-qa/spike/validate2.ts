@@ -58,7 +58,7 @@ async function runTests(wt: string, files: string[], tag: string, n: number) {
 	const p = Bun.spawn(
 		["uv", "run", "--no-sync", "pytest", ...files, "-p", "no:sugar", "-p", "no:cacheprovider",
 			"--timeout", "90", "-o", "addopts=", `--junitxml=${xml}`, "-q"],
-		{ cwd: wt, env: testEnv, stdout: Bun.file(log), stderr: "pipe" },
+		{ cwd: wt, env: testEnv, stdout: Bun.file(log), stderr: Bun.file(`${log}.err`) },
 	);
 	const killer = setTimeout(() => p.kill(), 15 * 60_000);
 	await p.exited;
@@ -74,7 +74,8 @@ async function validate(c: (typeof cands)[number]) {
 	const srcFiles = files.filter((f) => !isTest(f));
 	const srcCode = srcFiles.filter((f) => f.endsWith(".py"));
 	const testPy = testFiles.filter((f) => /test_[^/]*\.py$/.test(f));
-	Object.assign(r, { files: files.length, srcFiles, testFiles });
+	const depsTouched = srcFiles.some((f) => /(^|\/)(uv|poetry|pdm|pixi)\.lock$|requirements[^/]*\.txt$|(^|\/)pyproject\.toml$|(^|\/)setup\.(py|cfg)$/.test(f));
+	Object.assign(r, { files: files.length, srcFiles, testFiles, depsTouched });
 	if (crossRepo) return { ...r, verdict: "skip:cross-repo-issue" };
 	if (srcCode.length === 0) return { ...r, verdict: "skip:no-src-code-change" };
 	if (testPy.length === 0) return { ...r, verdict: "skip:no-test-change" };
@@ -126,7 +127,7 @@ async function validate(c: (typeof cands)[number]) {
 	if ((await $`git -C ${wt} apply --binary ${sp}`.nothrow().quiet()).exitCode !== 0) return { ...r, verdict: "fail:src-patch-apply" };
 	const gold1 = await runTests(wt, run, "gold1", c.n);
 	const gold2 = await runTests(wt, run, "gold2", c.n);
-	if (!before || !gold1 || !gold2) return { ...r, verdict: "fail:pytest-crashed-or-timeout" };
+	if (!before || !gold1 || !gold2) return { ...r, verdict: depsTouched && (!gold1 || !gold2) ? "fail:dependency-change" : "fail:pytest-crashed-or-timeout" };
 
 	const ids = new Set([...Object.keys(before), ...Object.keys(gold1), ...Object.keys(gold2)]);
 	const liveBroken = new Set<string>();

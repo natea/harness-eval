@@ -1,0 +1,34 @@
+{
+  "pr": 11736,
+  "issue": 10928,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.026068599999999997,
+  "prAuthor": "galleonli",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I am unsure if the root cause lies within Xarray's concatenation logic, Dask's task graph generation for mixed dtypes, or an interaction between the two.",
+      "rationale": "Reports behavior and MVCE; author explicitly unsure of the cause. Only notes that astype(float64) avoids the issue.",
+      "author": "josephnowak",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/structure/concat.py",
+        "xarray/core/variable.py"
+      ],
+      "evidence": "On our side, `concat` should cast to the common dtype before broadcasting, and/or broadcast dask arrays with chunks that match the other inputs.",
+      "rationale": "Diagnoses that broadcast via set_dims in ensure_common_dims in concat.py precedes the dask dtype cast, which materializes a huge chunk. Proposes casting to the common dtype before broadcasting, which is exactly what the reference does. It doesn't give code.",
+      "author": "headtr1ck",
+      "role": "maintainer"
+    }
+  ]
+}

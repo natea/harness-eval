@@ -1,0 +1,74 @@
+{
+  "pr": 4402,
+  "issue": 3575,
+  "tStar": "2026-09-24T11:46:10Z",
+  "title": "Zarr over https returns an empty string in `keys()`",
+  "issueAuthor": "b8raoult",
+  "body": "### Zarr version\n\n3.1.3\n\n### Numcodecs version\n\n0.15.1\n\n### Python Version\n\n3.12.9\n\n### Operating System\n\nMac\n\n### Installation\n\nuv pip install zarr\n\n### Description\n\nThe following code:\n\n```python\nimport zarr, numcodecs\n\nz = zarr.open('https://data.ecmwf.int/anemoi-datasets/era5-o96-1979-2023-6h-v8.zarr', mode='r')\nprint(list(z.keys()))\n```\n\nwill show that one of the keys is the empty string `''`. This is likely because the directory listing links to itself.\n\nSee https://data.ecmwf.int/anemoi-datasets/era5-o96-1979-2023-6h-v8.zarr\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.11\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\n# your reproducer code\n# zarr.print_debug_info()\n```\n\n\n### Additional output\n\n_No response_",
+  "comments": [
+    {
+      "at": "2025-11-09T12:38:11Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "directory listing over http is not to my knowledge standardized, so we are relying on fsspec's heuristics, which iirc involve assuming that a request against `\"path/\"` follows the static file server contention of returning a list of links to `path/a`, `path/b`, etc. I'm not sure if this is something zarr or fsspec should fix. On our side, we could develop a special storage backend for http storage that deals with this.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-11-09T12:41:58Z",
+      "author": "b8raoult",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I understand that. I just wanted to report it. I'll exclude the empty string in my code.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-11-09T12:43:40Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "we should definitely not be conveying the existence of keys that do not exist, so as a short-term fix we should probably sanitize the results of directory listing",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-11-09T13:00:56Z",
+      "author": "b8raoult",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Please note that zarr 2.18.7 does not return that empty string.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-11-09T14:28:41Z",
+      "author": "b8raoult",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "But, zarr2 did return `.zgroup`. I expect `keys()` to return all arrays and sub-groups.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-11-09T14:50:41Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "one step forward, one step back",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

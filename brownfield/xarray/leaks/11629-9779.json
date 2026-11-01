@@ -1,0 +1,151 @@
+{
+  "pr": 11629,
+  "issue": 9779,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0873266,
+  "prAuthor": "headtr1ck",
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "the code fails with `segmentation fault` error",
+      "rationale": "Reports crashes and repro only; no cause identified.",
+      "author": "enrico-mi",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Thanks for opening your first issue here at xarray!",
+      "rationale": "Bot greeting.",
+      "author": "welcome",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "We are seeing the same issue in some form",
+      "rationale": "Reports same issue elsewhere.",
+      "author": "aradhakrishnanGFDL",
+      "role": "other user"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "RuntimeError: NetCDF: Can't open HDF5 attribute",
+      "rationale": "Tracebacks and reproduction attempts only.",
+      "author": "charles-turner-1",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "my workaround has been to pass a lock myself instead of relying on xarray",
+      "rationale": "Workaround without mechanism.",
+      "author": "enrico-mi",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "this is all stemming from the libnetcdf not being thread safe",
+      "rationale": "General cause guess (thread-unsafe netcdf), no code location.",
+      "author": "charles-turner-1",
+      "role": "other user"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "the netCDF C library is not thread-safe",
+      "rationale": "General argument that xarray should lock; no specific location.",
+      "author": "enrico-mi",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "We are missing a lock someplace but no one has debugged this.",
+      "rationale": "Vague; no location identified.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c8",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "#32 0x00007fffd0e837e4 in nc_open ()",
+      "rationale": "Backtrace only.",
+      "author": "charles-turner-1",
+      "role": "other user"
+    },
+    {
+      "id": "c9",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "There's no world where you should be throwing a threadpool at netCDF operations without a lock.",
+      "rationale": "General statement, no location.",
+      "author": "dopplershift",
+      "role": "other user"
+    },
+    {
+      "id": "c10",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "we were _unintentionally_ relying on the GIL, and we haven't tracked down where yet.",
+      "rationale": "Explicitly no location.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c11",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Would you have any pointer for where to start?",
+      "rationale": "Asks for help.",
+      "author": "enrico-mi",
+      "role": "issue author"
+    },
+    {
+      "id": "c12",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the segfaults seems to be the result of locks being created within threads?",
+      "rationale": "Unconfirmed guess that differs from the reference (reentrant locks, metadata lock); traceback shows open path only.",
+      "author": "charles-turner-1",
+      "role": "other user"
+    },
+    {
+      "id": "c13",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "What is the status on this?",
+      "rationale": "Status ping with environment.",
+      "author": "CptOrange16",
+      "role": "other user"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "pr": 11348,
+  "issue": 11341,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0168386,
+  "prAuthor": "puneetdixit200",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/indexes.py"
+      ],
+      "evidence": "the nested tuple is usable as a single key for locating the match, but is also treated as sequence-like for determining whether the result should preserve the dimension.",
+      "rationale": "Identifies the mechanism: nested tuple is treated as a sequence of keys (via _is_nested_tuple/get_locs) rather than a single key, though it doesn't name the exact function or give the fix.",
+      "author": "cfriedland5",
+      "role": "issue author"
+    }
+  ]
+}

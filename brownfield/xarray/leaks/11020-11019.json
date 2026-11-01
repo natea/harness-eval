@@ -1,0 +1,23 @@
+{
+  "pr": 11020,
+  "issue": 11019,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0168106,
+  "prAuthor": "max-sixty",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataset.py"
+      ],
+      "evidence": "there are only two options for a `DataArray` processed within `map()`:\n1. Get a direct copy (really, reference) to the original `DataArray`'s `.attrs`\n2. Have `.attrs` set to `{}`",
+      "rationale": "Identifies the mechanism in Dataset.map: with keep_attrs it copies original attrs over the result, otherwise clears them, so function-set attrs are lost. The reference changes exactly this logic in Dataset.map. It does not propose a specific fix, though it implies leaving function-set attrs alone.",
+      "author": "dopplershift",
+      "role": "issue author"
+    }
+  ]
+}

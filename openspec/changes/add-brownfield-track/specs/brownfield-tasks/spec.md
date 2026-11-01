@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Task mining from merged PRs
-The miner SHALL enumerate merged pull requests of a configured repository that close at least one issue (via closing-issue references) and SHALL produce one candidate per PR ↔ same-repository issue pair. Candidates whose closing issue belongs to another repository, whose PR changes no non-test code, whose PR changes no test code, or whose PR changes the dependency lockfile or dependency declarations SHALL be rejected with a recorded reason.
+The miner SHALL enumerate merged pull requests of a configured repository that close at least one issue (via closing-issue references) and SHALL produce one candidate per PR ↔ same-repository issue pair. Candidates whose closing issue belongs to another repository, whose PR changes no non-test code, or whose PR changes no test code SHALL be rejected with a recorded reason.
 
 #### Scenario: Cross-repository issue rejected
 - **WHEN** a merged PR's closing reference points at an issue in a different repository
@@ -13,9 +13,16 @@ The miner SHALL enumerate merged pull requests of a configured repository that c
 - **WHEN** a merged PR changes only documentation or only test files
 - **THEN** the candidate is rejected with reason `no-src-code-change` or `no-test-change`
 
+### Requirement: Dependency changes decided by validation
+A PR that changes the dependency lockfile or dependency declarations SHALL be flagged `deps-touched`, and SHALL be rejected as `dependency-change` only if the reference patch fails validation in the base environment.
+
 #### Scenario: Dependency-changing PR rejected
-- **WHEN** a merged PR modifies the lockfile or adds, removes, or re-pins a dependency
+- **WHEN** a merged PR adds a dependency the base environment lacks and the gold runs fail there
 - **THEN** the candidate is rejected with reason `dependency-change`, because the offline base environment cannot install the new dependency
+
+#### Scenario: Dependency touched but not needed
+- **WHEN** a merged PR tightens a pin or edits the lockfile, and the gold runs pass in the base environment
+- **THEN** the candidate stays eligible and is flagged `deps-touched` for review
 
 ### Requirement: Human baseline timings
 For each accepted task the miner SHALL record, from the PR's commits, reviews, and timeline: the coding window (T* to the last PR commit before the first submitted review, or before merge if the PR was never reviewed), the review time (PR creation to merge), the number of submitted reviews, the number of commits after the first review, the issue lifetime (issue creation to merge), and the non-test size of the human diff (lines added, lines removed, files touched).

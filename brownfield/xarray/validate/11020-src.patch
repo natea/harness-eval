@@ -1,0 +1,132 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 69a47663..d4baa1ac 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -1010,6 +1010,10 @@ Breaking Changes
+ Bug Fixes
+ ~~~~~~~~~
+ 
++- :py:meth:`Dataset.map` now merges attrs from the function result and the original
++  using the ``drop_conflicts`` strategy when ``keep_attrs=True``, preserving attrs
++  set by the function (:issue:`11019`, :pull:`11020`).
++  By `Maximilian Roos <https://github.com/max-sixty>`_.
+ - Ensure that ``keep_attrs='drop'`` and ``keep_attrs=False`` remove attrs from result, even when there is
+   only one xarray object given to :py:func:`apply_ufunc` (:issue:`10982`, :pull:`10997`).
+   By `Julia Signell <https://github.com/jsignell>`_.
+diff --git a/xarray/computation/weighted.py b/xarray/computation/weighted.py
+index e3f1497b..10d2319c 100644
+--- a/xarray/computation/weighted.py
++++ b/xarray/computation/weighted.py
+@@ -545,14 +545,34 @@ class DataArrayWeighted(Weighted["DataArray"]):
+ 
+         dataset = self.obj._to_temp_dataset()
+         dataset = dataset.map(func, dim=dim, **kwargs)
+-        return self.obj._from_temp_dataset(dataset)
++        result = self.obj._from_temp_dataset(dataset)
++
++        # Clear attrs when keep_attrs is explicitly False
++        # (weighted operations can propagate attrs from weights through internal computations)
++        if kwargs.get("keep_attrs") is False:
++            result.attrs = {}
++            for var in result.coords.values():
++                var.attrs = {}
++
++        return result
+ 
+ 
+ class DatasetWeighted(Weighted["Dataset"]):
+     @override
+     def _implementation(self, func, dim, **kwargs) -> Dataset:
+         self._check_dim(dim)
+-        return self.obj.map(func, dim=dim, **kwargs)
++        result = self.obj.map(func, dim=dim, **kwargs)
++
++        # Clear attrs when keep_attrs is explicitly False
++        # (weighted operations can propagate attrs from weights through internal computations)
++        if kwargs.get("keep_attrs") is False:
++            result.attrs = {}
++            for var in result.data_vars.values():
++                var.attrs = {}
++            for var in result.coords.values():
++                var.attrs = {}
++
++        return result
+ 
+ 
+ def _inject_docstring(cls, cls_name):
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index a20656dd..ec85bbb3 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -7047,8 +7047,10 @@ class Dataset(
+             DataArray.
+         keep_attrs : bool or None, optional
+             If True, both the dataset's and variables' attributes (`attrs`) will be
+-            copied from the original objects to the new ones. If False, the new dataset
+-            and variables will be returned without copying the attributes.
++            combined from the original objects and the function results using the
++            ``drop_conflicts`` strategy: matching attrs are kept, conflicting attrs
++            are dropped. If False, the new dataset and variables will have only
++            the attributes set by the function.
+         args : iterable, optional
+             Positional arguments passed on to `func`.
+         **kwargs : Any
+@@ -7097,16 +7099,19 @@ class Dataset(
+         coords = Coordinates._construct_direct(coords=coord_vars, indexes=indexes)
+ 
+         if keep_attrs:
++            # Merge attrs from function result and original, dropping conflicts
++            from xarray.structure.merge import merge_attrs
++
+             for k, v in variables.items():
+-                v._copy_attrs_from(self.data_vars[k])
++                v.attrs = merge_attrs(
++                    [v.attrs, self.data_vars[k].attrs], "drop_conflicts"
++                )
+             for k, v in coords.items():
+                 if k in self.coords:
+-                    v._copy_attrs_from(self.coords[k])
+-        else:
+-            for v in variables.values():
+-                v.attrs = {}
+-            for v in coords.values():
+-                v.attrs = {}
++                    v.attrs = merge_attrs(
++                        [v.attrs, self.coords[k].attrs], "drop_conflicts"
++                    )
++        # When keep_attrs=False, leave attrs as the function returned them
+ 
+         attrs = self.attrs if keep_attrs else None
+         return type(self)(variables, coords=coords, attrs=attrs)
+diff --git a/xarray/core/datatree.py b/xarray/core/datatree.py
+index dce9d492..5d2129a0 100644
+--- a/xarray/core/datatree.py
++++ b/xarray/core/datatree.py
+@@ -405,8 +405,10 @@ class DatasetView(Dataset):
+             DataArray.
+         keep_attrs : bool | None, optional
+             If True, both the dataset's and variables' attributes (`attrs`) will be
+-            copied from the original objects to the new ones. If False, the new dataset
+-            and variables will be returned without copying the attributes.
++            combined from the original objects and the function results using the
++            ``drop_conflicts`` strategy: matching attrs are kept, conflicting attrs
++            are dropped. If False, the new dataset and variables will have only
++            the attributes set by the function.
+         args : iterable, optional
+             Positional arguments passed on to `func`.
+         **kwargs : Any
+@@ -446,8 +448,13 @@ class DatasetView(Dataset):
+             for k, v in self.data_vars.items()
+         }
+         if keep_attrs:
++            # Merge attrs from function result and original, dropping conflicts
++            from xarray.structure.merge import merge_attrs
++
+             for k, v in variables.items():
+-                v._copy_attrs_from(self.data_vars[k])
++                v.attrs = merge_attrs(
++                    [v.attrs, self.data_vars[k].attrs], "drop_conflicts"
++                )
+         attrs = self.attrs if keep_attrs else None
+         # return type(self)(variables, attrs=attrs)
+         return Dataset(variables, attrs=attrs)

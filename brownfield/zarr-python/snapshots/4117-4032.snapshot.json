@@ -1,0 +1,36 @@
+{
+  "pr": 4117,
+  "issue": 4032,
+  "tStar": "2026-07-02T20:35:07Z",
+  "title": "ObjectStore.list_dir(\"g\") raises ValueError when an object keyed \"g/\" exists",
+  "issueAuthor": "blinkybool",
+  "body": "### Zarr version\n\n3.2.1\n\n### Numcodecs version\n\nv0.16.5\n\n### Python Version\n\n3.14\n\n### Operating System\n\nMac\n\n### Installation\n\nuv\n\n### Description\n\nI hit this while using zarr.ObjectStore to walk a S3/R2 looking for zarr stores in a bucket that also contains directory-marker keys. Walking the hierarchy with list_dir raises at any directory that has a marker. \n\nConcretely, `list_dir(\"g\")` (or `\"g/\"` — the argument is `rstrip(\"/\")`-ed) raises whenever an object keyed \"g/\" exists. obstore lists with prefix \"g/\", and the marker keyed \"g/\" is returned as an object that obstore reports as path \"g\". That entry is then run through `_transform_list_dir` / `_relativize_path` (zarr/storage/_obstore.py, zarr/storage/_utils.py):\n\n```py\nasync def _transform_list_dir(\n    list_result_coroutine: Coroutine[Any, Any, ListResult[Sequence[ObjectMeta]]], prefix: str\n) -> AsyncGenerator[str, None]:\n    list_result = await list_result_coroutine\n    prefix = prefix.rstrip(\"/\")\n    for path in chain(\n        list_result[\"common_prefixes\"], map(itemgetter(\"path\"), list_result[\"objects\"])\n    ):\n        yield _relativize_path(path=path, prefix=prefix)\n\n\ndef _relativize_path(*, path: str, prefix: str) -> str:\n    if prefix == \"\":\n        return path\n    else:\n        _prefix = f\"{prefix}/\"\n        if not path.startswith(_prefix):\n            raise ValueError(f\"The first component of {path} does not start with {prefix}.\")\n        return path.removeprefix(_prefix)\n```\n\nWith path=\"g\" and prefix=\"g\", `\"g\".startswith(\"g/\")` is false, so it raises instead of skipping the entry. (For prefix == \"\" it returns early, so only non-root listings are affected.)\n\nReproduced on Python 3.14.4, zarr 3.2.1, obstore 0.10.0. The key cannot be written through obstore, which strips the trailing slash on put, so the repro creates it with boto3. LocalStore and MemoryStore cannot reproduce this: a filesystem cannot hold both a file \"g\" and a directory \"g/\", and obstore's MemoryStore strips the trailing slash on put.\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.11\"\n# dependencies = [\n#     \"zarr==3.2.1\",\n#     \"obstore==0.10.0\",\n#     \"boto3==1.43.22\",\n#     \"moto[server]==5.2.1\",\n# ]\n# ///\nimport asyncio, boto3, obstore.store\nfrom moto.server import ThreadedMotoServer\nfrom zarr.storage import ObjectStore\n\nserver = ThreadedMotoServer(port=0)\nserver.start()\nhost, port = server.get_host_and_port()\nendpoint = f\"http://{host}:{port}\"\n\ns3 = boto3.client(\"s3\", endpoint_url=endpoint, region_name=\"us-east-1\",\n                  aws_access_key_id=\"x\", aws_secret_access_key=\"x\")\ns3.create_bucket(Bucket=\"bucket\")\ns3.put_object(Bucket=\"bucket\", Key=\"g/\", Body=b\"\")  # directory-placeholder object\n\nstore = ObjectStore(obstore.store.S3Store(\n    bucket=\"bucket\", endpoint=endpoint, region=\"us-east-1\",\n    access_key_id=\"x\", secret_access_key=\"x\",\n    client_options={\"allow_http\": True}, virtual_hosted_style_request=False,\n))\n\n\nasync def main():\n    # ValueError: The first component of g does not start with g.\n    return [name async for name in store.list_dir(\"g\")]\n\n\nprint(asyncio.run(main()))\n```\n\n\n### Additional output\n\n```\nStarting a new Thread with MotoServer running on 0.0.0.0:0...\n127.0.0.1 - - [04/Jun/2026 13:34:36] \"PUT /bucket HTTP/1.1\" 200 -\n127.0.0.1 - - [04/Jun/2026 13:34:36] \"PUT /bucket/g/ HTTP/1.1\" 200 -\n127.0.0.1 - - [04/Jun/2026 13:34:36] \"GET /bucket?delimiter=/&list-type=2&prefix=g/ HTTP/1.1\" 200 -\nTraceback (most recent call last):\n  File \"/tmp/repro.py\", line 36, in <module>\n    print(asyncio.run(main()))\n          ~~~~~~~~~~~^^^^^^^^\n  File \"/Users/billy/.local/share/uv/python/cpython-3.14.4-macos-aarch64-none/lib/python3.14/asyncio/runners.py\", line 204, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/Users/billy/.local/share/uv/python/cpython-3.14.4-macos-aarch64-none/lib/python3.14/asyncio/runners.py\", line 127, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/Users/billy/.local/share/uv/python/cpython-3.14.4-macos-aarch64-none/lib/python3.14/asyncio/base_events.py\", line 719, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"/tmp/repro.py\", line 33, in main\n    return [name async for name in store.list_dir(\"g\")]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/billy/.cache/uv/environments-v2/repro-f019c5f27b4e421e/lib/python3.14/site-packages/zarr/storage/_obstore.py\", line 270, in _transform_list_dir\n    yield _relativize_path(path=path, prefix=prefix)\n          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/billy/.cache/uv/environments-v2/repro-f019c5f27b4e421e/lib/python3.14/site-packages/zarr/storage/_utils.py\", line 272, in _relativize_path\n    raise ValueError(f\"The first component of {path} does not start with {prefix}.\")\nValueError: The first component of g does not start with g.\n```",
+  "comments": [
+    {
+      "at": "2026-06-04T03:47:51Z",
+      "author": "blinkybool",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I think [this proposal](https://github.com/zarr-developers/zarr-python/issues/3773#issuecomment-4331582667) in issue #3773 would fix it.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions #N",
+        "sha-like",
+        "fix language"
+      ]
+    },
+    {
+      "at": "2026-07-02T20:22:39Z",
+      "author": "AMBRA7592",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "I can take a look at this and try a small fix around ObjectStore.list_dir handling directory-marker keys, with a regression test for the non-root prefix case.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    }
+  ]
+}

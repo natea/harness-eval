@@ -1,0 +1,33 @@
+{
+  "pr": 11704,
+  "issue": 11702,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0171866,
+  "prAuthor": "headtr1ck",
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataset.py"
+      ],
+      "evidence": "`Dataset.diff` handles `n > 1` by calling itself with `n - 1`, so each order of difference adds a stack frame",
+      "rationale": "Identifies the recursion in Dataset.diff as the root cause and proposes replacing it with a loop of n iterations, which is what the reference does. It does not mention the label=\"lower\" slicing bug the fix also addressed.",
+      "author": "jbrown9513",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I'll cook up a PR :)",
+      "rationale": "Only says a PR is coming. It has no technical content.",
+      "author": "headtr1ck",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

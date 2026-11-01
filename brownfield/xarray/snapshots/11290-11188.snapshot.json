@@ -1,0 +1,49 @@
+{
+  "pr": 11290,
+  "issue": 11188,
+  "tStar": "2026-04-09T20:05:58Z",
+  "title": "DataArray.groupby drops empty coordinates",
+  "issueAuthor": "eugene57",
+  "body": "### What happened?\n\nWhen I run groupby on an empty `DataArray`, empty coordinates are dropped.\nThis is is xarray version 2024.10.0.\n\n```\nimport numpy as np\nimport xarray as xr\n\ndata = xr.DataArray(np.empty((0, 2)), dims=['x', 'y'], coords={'x': [], 'y': [1, 1]})\nprint(data.groupby('y').sum())\n\n\n<xarray.DataArray (x: 0, y: 1)> Size: 0B\narray([], shape=(0, 1), dtype=float64)\nCoordinates:\n  * y        (y) int64 8B 1\nDimensions without coordinates: x\n```\nAs you see, `x` coordinate is not longer present.\n\n### What did you expect to happen?\n\nI expect `x` coordinate to be preserved.\nE.g., here is the optuput of the same snippet in xarray==2024.2.0:\n```\n<xarray.DataArray (x: 0, y: 1)> Size: 0B\narray([], shape=(0, 1), dtype=float64)\nCoordinates:\n  * x        (x) float64 0B \n  * y        (y) int64 8B 1\n```\n\n### Minimal Complete Verifiable Example\n\n```Python\nimport xarray as xr\nxr.show_versions()\n\n# your reproducer code ...\nimport numpy as np\nimport xarray as xr\n\ndata = xr.DataArray(np.empty((0, 2)), dims=['x', 'y'], coords={'x': [], 'y': [1, 1]})\nassert 'x' in data.groupby('y').sum().coords\n```\n\n### Steps to reproduce\n\n_No response_\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [ ] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\n\n```\n\n### Anything else we need to know?\n\nThis issue is caused by the change introduced to `DataArray._replace_maybe_drop_dims` function in scope of https://github.com/pydata/xarray/issues/5361.\n\nIn this case `self.dims == ('x', 'y')` and `variable.dims == ('y', 'x')` so the condition `set(self.dims) == set(variable.dims)` is True.\nHowever, the next line `new_sizes = dict(zip(self.dims, variable.shape, strict=True))` assumes that the dims order is the same, otherwise it does not have any sense.\n\n### Environment\n\n<details>\n\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.12.7 (main, Oct  1 2024, 02:05:46) [GCC 13.3.0]\npython-bits: 64\nOS: Linux\nOS-release: 4.18.0-553.34.1.el8_10.x86_64\nmachine: x86_64\nprocessor: \nbyteorder: little\nLC_ALL: None\nLANG: en_US.UTF-8\nLOCALE: ('en_US', 'UTF-8')\nlibhdf5: 1.14.5\nlibnetcdf: 4.9.2\n\nxarray: 2024.10.0\npandas: 2.2.3\nnumpy: 1.26.4\nscipy: 1.14.1\nnetCDF4: 1.7.1.post2\npydap: None\nh5netcdf: 1.4.0\nh5py: 3.12.1\nzarr: 3.1.1\ncftime: 1.6.4\nnc_time_axis: 1.4.1\niris: None\nbottleneck: 1.4.0\ndask: 2025.11.0\ndistributed: 2025.11.0\nmatplotlib: 3.9.2\ncartopy: None\nseaborn: 0.13.2\nnumbagg: 0.8.2\nfsspec: 2024.3.0\ncupy: 13.3.0\npint: None\nsparse: 0.15.4\nflox: None\nnumpy_groupies: None\nsetuptools: 75.1.1.post0\npip: 24.0\nconda: None\npytest: 8.3.3\nmypy: 1.11.2\nIPython: 8.29.0\nsphinx: 7.4.7\n\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2026-02-20T19:10:48Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2026-02-25T22:42:35Z",
+      "author": "ianhi",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "Hi @eugene57 thanks for the report and debugging pass!\n\na quick workaround for you is to install [flox](https://flox.readthedocs.io/en/latest/) into your environment which xarray will then automatically use. This fixes your bug and should also be faster (or as fast) as the default. xarray groupby.\n\nnote for any one else trying to repro this means that to reproduce from a dev env you must set:  `xr.set_options(use_flox=False)`\n\nnevertheless there is a bug here as you have identified. Its also beyond just empty dims. I think its any time you group by a non-leading dim (i.e. reordering hapapens) and the dims don't have the same lengths\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2026-03-08T19:02:37Z",
+      "author": "kkollsga",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "@ianhi confirmed — it's any non-leading dim groupby where dims have different lengths.\n\nThe root cause is in `_replace_maybe_drop_dims` ([dataarray.py:529-531](https://github.com/pydata/xarray/blob/main/xarray/core/dataarray.py#L529-L531)). PR #9517 relaxed the `elif` condition to `set(self.dims) == set(variable.dims)`, but the next line still assumes matching order:\n\n```python\nnew_sizes = dict(zip(self.dims, variable.shape, strict=True))\n```\n\nWhen dims are reordered, this maps wrong shapes to wrong dims, so the coordinate filter drops coords it shouldn't. Fix: replace with `dict(variable.sizes)`.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions #N",
+        "mentions PR",
+        "fix language",
+        "code block"
+      ]
+    }
+  ]
+}

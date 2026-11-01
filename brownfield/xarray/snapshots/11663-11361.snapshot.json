@@ -1,0 +1,9 @@
+{
+  "pr": 11663,
+  "issue": 11361,
+  "tStar": "2026-10-03T11:15:18Z",
+  "title": "add `use_zarr_fill_value_as_mask` in `open_datatree` for Zarr Stores",
+  "issueAuthor": "vincentsarago",
+  "body": "Maybe I'm totally mistaken but it seems that `use_zarr_fill_value_as_mask` option is not available when using `xarray.open_datatree` for a Zarr store, while it's available for `open_dataset`\n\nhttps://github.com/pydata/xarray/blob/d022da54265253ce19d426bbe1cbda7ca4f8821b/xarray/backends/zarr.py#L1770-L1808\n\nLooking at https://github.com/pydata/xarray/blob/d022da54265253ce19d426bbe1cbda7ca4f8821b/xarray/backends/zarr.py#L1840-L1851 \n\nit seems that we should be able to forward a `use_zarr_fill_value_as_mask` option \n\ncc @d-v-b ",
+  "comments": []
+}

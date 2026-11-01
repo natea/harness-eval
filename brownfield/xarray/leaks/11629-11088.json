@@ -1,0 +1,41 @@
+{
+  "pr": 11629,
+  "issue": 11088,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0458466,
+  "prAuthor": "headtr1ck",
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "When opening a mf_dataset using netcdf4 engine and parallel=True a segmentation fault arises.",
+      "rationale": "Reports a segfault with parallel=True and netcdf4; no cause or location identified.",
+      "author": "ArielDeVora",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "RuntimeError: NetCDF: Not a valid ID",
+      "rationale": "Repro and traceback only; the traceback's close path is a different error and no root cause is given.",
+      "author": "jsignell",
+      "role": "maintainer"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Signal: Segmentation fault (11)",
+      "rationale": "Confirms the segfault; no diagnosis.",
+      "author": "ArielDeVora",
+      "role": "issue author"
+    }
+  ]
+}

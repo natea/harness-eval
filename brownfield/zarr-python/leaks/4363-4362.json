@@ -1,0 +1,33 @@
+{
+  "pr": 4363,
+  "issue": 4362,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0416766,
+  "prAuthor": "d-v-b",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/core/group.py"
+      ],
+      "evidence": "assert data.pop(\"node_type\", None) in (\"group\", None)",
+      "rationale": "Identifies the load-bearing assert in GroupMetadata.from_dict that is stripped under -O, which the reference fix replaces with a proper NodeTypeValidationError. It doesn't describe the fix itself and doesn't mention the other asserts.",
+      "author": "mezdej",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I agree, it is bad. happy to review a PR that fixes it",
+      "rationale": "Agreement and an offer to review. It has no technical content.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

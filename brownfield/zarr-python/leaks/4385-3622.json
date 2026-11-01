@@ -1,0 +1,53 @@
+{
+  "pr": 4385,
+  "issue": 3622,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0507006,
+  "prAuthor": "d-v-b",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "ValueError: No Zarr data type found that matches {'name': '>u1', 'object_codec_id': None}",
+      "rationale": "Traceback and repro only; names match_json in registry.py (where the fix lands) but that's just the traceback.",
+      "author": "dstansby",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I am guessing this is zarr data created by a non-python client, because `>u1` is not a data type string that numpy will create.",
+      "rationale": "Speculation about data origin, no fix content.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "If it's not valid Zarr v2 data that's fine too",
+      "rationale": "No technical content about the fix.",
+      "author": "dstansby",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/core/dtype/registry.py"
+      ],
+      "evidence": "numpy turns `\">u1\"` into `\"|u1\"`, which is what we recognize in zarr-python right now. I think it's fine for us to read `>u1` or `<u1`",
+      "rationale": "States the mechanism (only |u1 recognized) and proposes accepting >u1/<u1 as the canonical |u1, matching the fix's alias approach, though without specifics.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

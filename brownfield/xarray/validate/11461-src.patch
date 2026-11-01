@@ -1,0 +1,72 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index f6618e06..880dea33 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -17,7 +17,9 @@ New Features
+ 
+ Breaking Changes
+ ~~~~~~~~~~~~~~~~
+-
++- Disable using bottleneck by default, as certain operations are less numerically
++  stable than the equivalent numpy functions.
++  By `Thomas Kluyver <https://github.com/takluyver>`_.
+ 
+ Deprecations
+ ~~~~~~~~~~~~
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index d7c16e0b..5806236c 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -100,6 +100,7 @@ from xarray.core.utils import (
+     is_duck_dask_array,
+     is_scalar,
+     maybe_wrap_array,
++    module_available,
+     parse_dims_as_set,
+ )
+ from xarray.core.variable import (
+@@ -8447,11 +8448,8 @@ class Dataset(
+         ranked : Dataset
+             Variables that do not depend on `dim` are dropped.
+         """
+-        if not OPTIONS["use_bottleneck"]:
+-            raise RuntimeError(
+-                "rank requires bottleneck to be enabled."
+-                " Call `xr.set_options(use_bottleneck=True)` to enable it."
+-            )
++        if not module_available("bottleneck"):
++            raise ImportError("rank requires bottleneck to be installed.")
+ 
+         if dim not in self.dims:
+             raise ValueError(
+diff --git a/xarray/core/options.py b/xarray/core/options.py
+index b43e4ff3..d7955025 100644
+--- a/xarray/core/options.py
++++ b/xarray/core/options.py
+@@ -103,7 +103,7 @@ OPTIONS: T_Options = {
+     "keep_attrs": "default",
+     "netcdf_engine_order": ("netcdf4", "h5netcdf", "scipy"),
+     "warn_for_unclosed_files": False,
+-    "use_bottleneck": True,
++    "use_bottleneck": False,
+     "use_flox": True,
+     "use_new_combine_kwarg_defaults": False,
+     "use_numbagg": True,
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index 1b5e0d4f..1ea86254 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -2093,11 +2093,8 @@ class Variable(NamedArray, AbstractArray, VariableArithmetic):
+         Dataset.rank, DataArray.rank
+         """
+         # This could / should arguably be implemented at the DataArray & Dataset level
+-        if not OPTIONS["use_bottleneck"]:
+-            raise RuntimeError(
+-                "rank requires bottleneck to be enabled."
+-                " Call `xr.set_options(use_bottleneck=True)` to enable it."
+-            )
++        if not module_available("bottleneck"):
++            raise ImportError("rank requires bottleneck to be installed.")
+ 
+         import bottleneck as bn
+ 

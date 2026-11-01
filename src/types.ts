@@ -62,6 +62,11 @@ export const HarnessSetup = z.object({
 	install: z.array(z.string().min(1)),
 	/** Ordered session steps; rendered with the shared base prompt. */
 	session: z.array(SessionStep).min(1),
+	/**
+	 * Steps for brownfield runs when the framework's greenfield flow doesn't fit an
+	 * existing repo and one issue. Same rules: the framework's own commands only.
+	 */
+	brownfieldSession: z.array(SessionStep).min(1).optional(),
 	continuation: ContinuationPolicy.default(ContinuationPolicy.parse({})),
 });
 export type HarnessSetup = z.infer<typeof HarnessSetup>;
@@ -167,6 +172,8 @@ export const SessionRecord = z.object({
 	costUsd: z.number().nonnegative(),
 	usage: TokenUsage,
 	isError: z.boolean().default(false),
+	/** No final message: duration is measured and cost is a lower-bound estimate. */
+	partial: z.boolean().optional(),
 });
 export type SessionRecord = z.infer<typeof SessionRecord>;
 
@@ -178,6 +185,8 @@ export const TrialTelemetry = z.object({
 	totalCostUsd: z.number().nonnegative(),
 	totalTokens: TokenUsage,
 	totalTurns: z.int().nonnegative(),
+	/** Absent on archived trials, whose session costs are as the CLI reported them. */
+	costBasis: z.enum(["per-step", "corrected-from-cumulative"]).optional(),
 });
 export type TrialTelemetry = z.infer<typeof TrialTelemetry>;
 

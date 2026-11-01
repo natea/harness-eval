@@ -1,3 +1,4 @@
+import { withCorrectedCosts } from "../driver/telemetry";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { RunResults, type TrialGrades } from "../types";
@@ -65,6 +66,8 @@ export function loadRunIndex(runsDir = "runs"): RunIndexEntry[] {
 						) as TrialGrades;
 					}
 				}
+				// Archived costs are corrected for display, never rewritten on disk.
+				raw.trials = (raw.trials ?? []).map(withCorrectedCosts);
 				entry = {
 					runId: raw.runId ?? name,
 					dir,

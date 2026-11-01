@@ -1,6 +1,7 @@
 import type { Sandbox } from "../providers/types";
 import type { ContinuationPolicy, SessionRecord, SessionStep } from "../types";
 import { claudeCodeDriver } from "./claude";
+import { reportsCumulativeResumeCost } from "./telemetry";
 import {
 	type DriverResult,
 	type HarnessDriver,
@@ -62,6 +63,28 @@ export async function executeSessionScript(
 	let spentUsd = 0;
 	let sessionId: string | undefined;
 	let stepIndex = 0;
+	// Recent Claude Code reports a resumed session's total since it began, not this
+	// step's cost; summing those would count every earlier step again.
+	const reportedBySession = new Map<string, number>();
+	const ownCost = (result: DriverResult, resumedFrom?: string): void => {
+		const prior = resumedFrom ? (reportedBySession.get(resumedFrom) ?? 0) : 0;
+		const reported = result.record.costUsd;
+		if (result.record.partial) {
+			// Estimated from this step's own messages, so already per-step.
+			reportedBySession.set(result.sessionId, prior + reported);
+			return;
+		}
+		if (!reportsCumulativeResumeCost(result.harnessVersion)) return;
+		reportedBySession.set(result.sessionId, reported);
+		// A running total can't fall; if this one did, it's already per-step.
+		if (reported >= prior) result.record.costUsd = reported - prior;
+	};
+	const failed = (message: string): SessionScriptResult => {
+		notes.push(message);
+		return remainingMs() <= 0
+			? capped("wall-clock")
+			: { records, transcripts, status: "error", cappedBy: null, notes };
+	};
 
 	const remainingMs = () => opts.wallClockBudgetMs - (Date.now() - startedAt);
 	const capped = (by: "wall-clock" | "cost"): SessionScriptResult => ({
@@ -77,12 +100,13 @@ export async function executeSessionScript(
 		if (spentUsd >= opts.costBudgetUsd) return capped("cost");
 
 		let result: DriverResult;
+		const resumedFrom = step.newSession ? undefined : sessionId;
 		try {
 			result = await run(sandbox, {
 				model: opts.model,
 				prompt: step.prompt,
 				stepIndex: stepIndex++,
-				resumeSessionId: step.newSession ? undefined : sessionId,
+				resumeSessionId: resumedFrom,
 				timeoutMs: remainingMs(),
 				env: opts.env,
 				isolated: opts.isolated,
@@ -97,14 +121,17 @@ export async function executeSessionScript(
 			notes.push(`step ${i} failed: ${err}`);
 			return { records, transcripts, status: "error", cappedBy: null, notes };
 		}
+		ownCost(result, resumedFrom);
 		records.push(result.record);
 		transcripts.push(result.transcript);
 		sessionId = result.sessionId || sessionId;
 		spentUsd += result.record.costUsd;
-		if (result.record.isError) {
-			notes.push(`step ${i} returned error result`);
-			return { records, transcripts, status: "error", cappedBy: null, notes };
-		}
+		if (result.record.isError)
+			return failed(
+				result.record.partial
+					? `step ${i} ended without a result message (exit ${result.exitCode}); telemetry partial, cost estimated`
+					: `step ${i} returned error result`,
+			);
 
 		// Approval gates: issue generic continuations until the gate clears.
 		let continuations = 0;
@@ -119,16 +146,18 @@ export async function executeSessionScript(
 			notes.push(
 				`step ${i}: continuation ${continuations + 1} ('${continuationPrompt}')`,
 			);
+			const contFrom = sessionId;
 			const cont = await run(sandbox, {
 				model: opts.model,
 				prompt: continuationPrompt,
 				stepIndex: stepIndex++,
-				resumeSessionId: sessionId,
+				resumeSessionId: contFrom,
 				timeoutMs: remainingMs(),
 				env: opts.env,
 				isolated: opts.isolated,
 				netns: opts.netns,
 			});
+			ownCost(cont, contFrom);
 			records.push(cont.record);
 			transcripts.push(cont.transcript);
 			sessionId = cont.sessionId || sessionId;
@@ -136,8 +165,7 @@ export async function executeSessionScript(
 			text = cont.resultText;
 			continuations++;
 			if (cont.record.isError) {
-				notes.push(`continuation after step ${i} errored`);
-				return { records, transcripts, status: "error", cappedBy: null, notes };
+				return failed(`continuation after step ${i} errored`);
 			}
 		}
 		if (continuations >= opts.continuation.maxContinuations) {

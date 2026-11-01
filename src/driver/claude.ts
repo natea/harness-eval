@@ -32,6 +32,9 @@ const runClaudePrintCli = createPrintCliSessionRunner({
 			.join(" ");
 	},
 	parseOutput: parseStreamJson,
+	parsePartial: parsePartialStreamJson,
+	// [c] keeps the pattern from matching the shell running this very command.
+	stopCommand: 'pkill -TERM -f "[c]laude -p" || true',
 });
 
 export const claudeCodeDriver: HarnessDriver = {
@@ -61,11 +64,14 @@ export function parseStreamJson(
 ): ClaudeResult {
 	let result: Record<string, unknown> | null = null;
 	let sessionId = "";
+	let harnessVersion: string | undefined;
 	const lines = output.split("\n").filter((l) => l.trim().startsWith("{"));
 	for (const line of lines) {
 		try {
 			const obj = JSON.parse(line) as Record<string, unknown>;
 			if (typeof obj.session_id === "string") sessionId = obj.session_id;
+			if (typeof obj.claude_code_version === "string")
+				harnessVersion = obj.claude_code_version;
 			if (obj.type === "result") result = obj;
 		} catch {
 			// non-JSON noise in stream; ignore
@@ -97,7 +103,83 @@ export function parseStreamJson(
 		resultText: typeof result.result === "string" ? result.result : "",
 		sessionId,
 		transcript: output,
+		harnessVersion,
 	};
 }
 
 export class SessionParseError extends Error {}
+
+/**
+ * $/Mtok [input, output, cache read, cache write], only for models checked against
+ * real sessions: Claude Code's `total_cost_usd` reproduced to the cent from each
+ * result's token usage. Cache writes bill at the 1-hour rate.
+ */
+const VERIFIED_RATES: Record<string, [number, number, number, number]> = {
+	"claude-sonnet-4-6": [3, 15, 0.3, 6],
+};
+
+/**
+ * Telemetry for a session with no `result` message, rebuilt from its assistant
+ * messages. Usage is keyed by message id because one message spans several events.
+ * Cost is an estimate and a lower bound: on complete sessions this method came in * roughly 10–35% under the real figure. Zero when the model has no verified rates.
+ */
+export function parsePartialStreamJson(
+	output: string,
+	stepIndex: number,
+	exitCode: number,
+	elapsedMs: number,
+): ClaudeResult | null {
+	let sessionId = "";
+	let model = "";
+	const usageById = new Map<string, Record<string, unknown>>();
+	for (const line of output.split("\n")) {
+		if (!line.trim().startsWith("{")) continue;
+		let obj: Record<string, any>;
+		try {
+			obj = JSON.parse(line);
+		} catch {
+			continue;
+		}
+		if (typeof obj.session_id === "string") sessionId = obj.session_id;
+		if (obj.type !== "assistant" || !obj.message?.id) continue;
+		model = obj.message.model ?? model;
+		usageById.set(obj.message.id, obj.message.usage ?? {});
+	}
+	if (usageById.size === 0) return null;
+	const usage = {
+		inputTokens: 0,
+		outputTokens: 0,
+		cacheReadTokens: 0,
+		cacheCreationTokens: 0,
+	};
+	for (const u of usageById.values()) {
+		usage.inputTokens += Number(u.input_tokens ?? 0);
+		usage.outputTokens += Number(u.output_tokens ?? 0);
+		usage.cacheReadTokens += Number(u.cache_read_input_tokens ?? 0);
+		usage.cacheCreationTokens += Number(u.cache_creation_input_tokens ?? 0);
+	}
+	const rates = VERIFIED_RATES[model];
+	const costUsd = rates
+		? (usage.inputTokens * rates[0] +
+				usage.outputTokens * rates[1] +
+				usage.cacheReadTokens * rates[2] +
+				usage.cacheCreationTokens * rates[3]) /
+			1e6
+		: 0;
+	return {
+		record: {
+			sessionId,
+			stepIndex,
+			durationMs: Math.round(elapsedMs),
+			numTurns: usageById.size,
+			costUsd,
+			usage: TokenUsage.parse(usage),
+			isError: true,
+			partial: true,
+		},
+		resultText: "",
+		sessionId,
+		transcript: output,
+		exitCode,
+	};
+}

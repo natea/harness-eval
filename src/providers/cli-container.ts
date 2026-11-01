@@ -51,16 +51,26 @@ export interface ResourceLimits {
 
 const WORKSPACE = "/home/ubuntu/workspace";
 
+/** Exit code for a command stopped by its timeout (same as `timeout(1)`). */
+export const EXIT_TIMED_OUT = 124;
+
 export async function cli(
 	binary: string,
 	args: string[],
 	opts: { timeoutMs?: number; input?: string } = {},
 ): Promise<ExecResult> {
+	const timeoutMs = opts.timeoutMs ?? 120_000;
+	const startedAt = Date.now();
+	// A timeout SIGTERMs the client, and `docker exec` answers that with exit 0 and
+	// no output while the command keeps running in the container. Elapsed time is
+	// the only reliable signal, so report it the way `timeout(1)` does.
+	const timedOut = () => Date.now() - startedAt >= timeoutMs;
 	try {
 		const { stdout, stderr } = await execFileAsync(binary, args, {
-			timeout: opts.timeoutMs ?? 120_000,
+			timeout: timeoutMs,
 			maxBuffer: 64 * 1024 * 1024,
 		});
+		if (timedOut()) return { exitCode: EXIT_TIMED_OUT, stdout, stderr };
 		return { exitCode: 0, stdout, stderr };
 	} catch (err) {
 		const e = err as {
@@ -69,7 +79,11 @@ export async function cli(
 			stderr?: string;
 		};
 		return {
-			exitCode: typeof e.code === "number" ? e.code : 1,
+			exitCode: timedOut()
+				? EXIT_TIMED_OUT
+				: typeof e.code === "number"
+					? e.code
+					: 1,
 			stdout: e.stdout ?? "",
 			stderr: e.stderr ?? String(err),
 		};

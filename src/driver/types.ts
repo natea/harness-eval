@@ -8,6 +8,10 @@ export interface DriverResult {
 	sessionId: string;
 	/** Raw session transcript, usually one JSON object per line. */
 	transcript: string;
+	/** Set on salvaged partial sessions, for the trial notes. */
+	exitCode?: number;
+	/** CLI version the session reported about itself, when it reports one. */
+	harnessVersion?: string;
 }
 
 export interface DriverRunOptions {

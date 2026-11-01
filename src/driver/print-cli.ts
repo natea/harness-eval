@@ -3,6 +3,7 @@ import {
 	trialIdFromSandbox,
 	unregisterLiveSource,
 } from "../live/registry";
+import { EXIT_TIMED_OUT } from "../providers/cli-container";
 import type { Sandbox } from "../providers/types";
 import type { DriverResult, DriverRunOptions, RunDriverSession } from "./types";
 
@@ -18,6 +19,19 @@ export interface PrintCliDriverOptions {
 		stepIndex: number,
 		exitCode: number,
 	) => DriverResult;
+	/**
+	 * Salvage a session that ended without its final message (usually the wall
+	 * clock), so its transcript and spend aren't lost. Null when the CLI produced
+	 * no work; the parse error then propagates (e.g. harness never started).
+	 */
+	parsePartial?: (
+		output: string,
+		stepIndex: number,
+		exitCode: number,
+		elapsedMs: number,
+	) => DriverResult | null;
+	/** Stops the CLI inside a container after a timeout: the exec client dying doesn't. */
+	stopCommand?: string;
 }
 
 /**
@@ -61,12 +75,33 @@ export function createPrintCliSessionRunner(
 			sandboxId: sandbox.id,
 		});
 		try {
+			const startedAt = Date.now();
 			const res = await sandbox.exec(command, {
 				timeoutMs: run.timeoutMs,
 				env: run.env,
 			});
+			const elapsedMs = Date.now() - startedAt;
+			// Otherwise the agent keeps editing while the patch is being captured.
+			// Never on worktree: that pattern would match the operator's own sessions.
+			if (
+				res.exitCode === EXIT_TIMED_OUT &&
+				opts.stopCommand &&
+				!sandbox.id.startsWith("worktree:")
+			)
+				await sandbox.exec(opts.stopCommand, { timeoutMs: 30_000 });
 			const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
-			return opts.parseOutput(read.stdout, run.stepIndex, res.exitCode);
+			try {
+				return opts.parseOutput(read.stdout, run.stepIndex, res.exitCode);
+			} catch (err) {
+				const partial = opts.parsePartial?.(
+					read.stdout,
+					run.stepIndex,
+					res.exitCode,
+					elapsedMs,
+				);
+				if (partial) return partial;
+				throw err;
+			}
 		} finally {
 			unregisterLiveSource(trialId);
 		}

@@ -250,12 +250,32 @@ All three runs answered correctly, for about $0.0024 in Haiku calls:
 - **Provider-side tools can appear mid-session.** With default tools on, the
   first request carried 12 tools; web search is deferred behind `ToolSearch`,
   and the `mid-conversation-tool-changes` beta is set. The rejection check
-  therefore runs on **every** request. Whether a loaded WebSearch shows up as a
-  server-tool type is checked in 4.4.
+  therefore runs on **every** request. Confirmed in 4.4 (below): a loaded
+  WebSearch arrives as the server tool `web_search_20250305`.
 - **Decision: API key, not OAuth.** OAuth works technically, but whether
   routing a subscription token through a gateway is within the plan's terms was
   not verified. The operator chose the API key (2026-11-01). The gateway
   supports only the API key; OAuth injection is not built.
+
+**Gateway core (task 4.4, 2026-11-01, `src/gateway/anthropic.ts`).** Policy:
+- The sandbox presents a **per-run random placeholder** (`sk-ant-api03-hegw-…`).
+  Anything else, including a real key, gets 401, so only that run's trials can
+  use the gateway.
+- Only `POST /v1/messages` and `/v1/messages/count_tokens` are forwarded, plus
+  `GET /api/hello`; every other path gets 403.
+- Typed tools are allowed only if they execute in the client (`custom`, `bash_*`,
+  `text_editor_*`, `computer_*`, `memory_*`). Any other typed tool (web search,
+  web fetch, code execution, server tool search) or an `mcp_servers`/`container`
+  field is rejected with 403, never stripped.
+- Claude Code env: placeholder key, `ANTHROPIC_MODEL`, `ANTHROPIC_SMALL_FAST_MODEL`,
+  all three `ANTHROPIC_DEFAULT_*_MODEL` slots and `CLAUDE_CODE_SUBAGENT_MODEL`
+  pinned to the run's model, nonessential traffic off.
+
+Smoke with real Claude Code (Haiku, about $0.01): a plain prompt passed
+(12 tools, none provider-side). Asked to use WebSearch, Claude Code sent
+`web_search_20250305` and the gateway rejected it. The agent then got the answer
+another way (it cited PyPI metadata), on a host with open egress. **The gateway
+alone is not enough; the egress lockdown is required.**
 
 ### D12. Grading
 After the trial, test infrastructure is restored to base before `tests.patch` is

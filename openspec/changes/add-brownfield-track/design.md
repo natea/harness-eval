@@ -233,6 +233,31 @@ actually differ (~15/37 in spike).
   already gives each trial its own `CLAUDE_CONFIG_DIR`).
 - Transcript audit (D13) is the backstop; any reach disqualifies the trial.
 
+**Gateway spike (task 4.3, 2026-11-01, Claude Code 2.1.316, `scripts/gateway-spike.ts`).**
+Claude Code ran headless with a fresh `HOME`/`CLAUDE_CONFIG_DIR`,
+`ANTHROPIC_BASE_URL` pointed at a local proxy, and only a placeholder credential.
+All three runs answered correctly, for about $0.0024 in Haiku calls:
+- **API key works.** The client sends `x-api-key: <placeholder>`; the gateway
+  replaces it with the real key.
+- **Subscription OAuth works.** Given an OAuth-shaped placeholder
+  (`sk-ant-oat01-…`), Claude Code itself sends `Authorization: Bearer` plus
+  `anthropic-beta: oauth-2025-04-20`; the gateway only swaps the token.
+  - Claude Code picks the auth scheme from which variable is set and from the
+    token prefix, so **placeholders must keep the real prefix**.
+- **Gateway requirements found:**
+  - Pass through the `/api/hello` health check, which runs before any message.
+  - Drop `content-encoding` and `content-length` when re-serving a body that
+    `fetch` already decompressed.
+- **Provider-side tools can appear mid-session.** With default tools on, the
+  first request carried 12 tools; web search is deferred behind `ToolSearch`,
+  and the `mid-conversation-tool-changes` beta is set. The rejection check
+  therefore runs on **every** request. Whether a loaded WebSearch shows up as a
+  server-tool type is checked in 4.4.
+- **Permission is unresolved.** OAuth works technically, but whether routing a
+  subscription token through a gateway is within the plan's terms is a policy
+  question for the operator. The gateway defaults to the **API key** until that
+  is confirmed.
+
 ### D12. Grading
 After the trial, test infrastructure is restored to base before `tests.patch` is
 applied: the bundle's recorded `testPaths` (not inferred — paper-qa has

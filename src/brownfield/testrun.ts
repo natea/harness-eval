@@ -32,7 +32,7 @@ export type Outcome = "pass" | "fail" | "fail-live" | "skip" | "skip-gpu";
 
 /** A failure caused by a blocked or unauthenticated network call: the test needs a live API. */
 export const LIVE_API_RE =
-	/APIConnectionError|ProxyError|ConnectError|ClientConnectorError|AuthenticationError|api[_ ]key/i;
+	/APIConnectionError|ProxyError|ConnectError|ClientConnectorError|AuthenticationError|CannotOverwriteExistingCassetteException|api[_ ]key/i;
 /** A skip whose reason is missing GPU hardware or GPU libraries. */
 export const GPU_SKIP_RE = /cupy|cuda|\bgpu\b|nvidia/i;
 

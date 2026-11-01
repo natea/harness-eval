@@ -30,6 +30,10 @@
  *       Validation runs tests locally (no spend); --classify spends ≈$0.02/issue.
  *   bun run src/cli.ts brownfield verify
  *       Hash-verify every bundle.
+ *   bun run src/cli.ts brownfield selfcheck --repo owner/name --clone <dir> --ids <id,...> \
+ *       [--pkg <dist>] [--extras io,etc] [--work <dir>]
+ *       Grade each bundle's reference patch (must resolve) and an empty patch
+ *       (must not). No spend; catches broken tasks before trials.
  */
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -126,12 +130,50 @@ function verifyBrownfieldBundles(): void {
 	console.log(`brownfield OK: ${dirs.length} bundles hash-verified`);
 }
 
+async function brownfieldSelfCheck(): Promise<void> {
+	const repo = arg("repo");
+	const clone = arg("clone");
+	const ids = arg("ids")?.split(",");
+	if (!repo || !clone || !ids?.length)
+		throw new Error("brownfield selfcheck needs --repo, --clone and --ids");
+	const { bundleDir, repoDirName } = await import("./brownfield/bundle");
+	const { selfCheck } = await import("./brownfield/grade");
+	const workRoot = arg("work") ?? join("runs", "brownfield-work", "selfcheck");
+	let failures = 0;
+	for (const id of ids) {
+		const bundle = loadBundle(bundleDir(repoDirName(repo), id));
+		const r = await selfCheck(bundle, {
+			clone,
+			workDir: join(workRoot, repoDirName(repo), id),
+			pkg: arg("pkg"),
+			extras: arg("extras"),
+		});
+		if (!r.ok) failures++;
+		const f2p = (g: typeof r.reference) =>
+			`${Object.values(g.failToPass).filter((o) => o === "pass").length}/${Object.keys(g.failToPass).length} f2p`;
+		console.log(
+			`${r.ok ? "✓" : "✗"} ${id}: reference ${r.reference.resolved ? "resolved" : "UNRESOLVED"} (${f2p(r.reference)}), empty ${r.empty.resolved ? "RESOLVED" : "unresolved"} (${f2p(r.empty)})` +
+				(r.reference.cassetteMiss.length
+					? `  cassette-miss: ${r.reference.cassetteMiss.length}`
+					: "") +
+				(r.reference.testInfraModified.length
+					? `  test-infra: ${r.reference.testInfraModified.join(",")}`
+					: ""),
+		);
+	}
+	if (failures)
+		throw new Error(
+			`${failures}/${ids.length} bundles failed the grading self-check`,
+		);
+}
+
 async function cmdBrownfield(): Promise<void> {
 	const sub = process.argv[3];
 	if (sub === "verify") return verifyBrownfieldBundles();
+	if (sub === "selfcheck") return brownfieldSelfCheck();
 	if (sub !== "mine") {
 		console.error(
-			"usage: brownfield <mine|verify> [options]   (see file header)",
+			"usage: brownfield <mine|verify|selfcheck> [options]   (see file header)",
 		);
 		process.exit(2);
 	}

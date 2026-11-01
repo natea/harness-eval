@@ -79,6 +79,9 @@ export const TaskManifest = z.object({
 			method: z.string(),
 			digest: z.string().nullable(),
 			python: z.string(),
+			/** Distribution name and extras, so grading can rebuild the same environment. */
+			pkg: z.string().optional(),
+			extras: z.string().optional(),
 		})
 		.optional(),
 	/** Which tests validation ran: PR-touched only, or the full suite under testPaths. */

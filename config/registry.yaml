@@ -21,6 +21,25 @@ basePrompt: |
   unless {{PRD_FILE}} constrains it. When you consider the work complete,
   stop.
 
+# Brownfield trials (add-brownfield-track). The issue file carries all task
+# content; this text is identical for every task and candidate, and must never
+# name the fixing PR, its commits, or its URL.
+brownfieldBasePrompt: |
+  Resolve the issue described in {{ISSUE_FILE}} (in this repository's root) by
+  changing this repository's code. {{ISSUE_FILE}} is the issue as it was
+  reported; treat it as the complete task statement.
+
+  Work within the existing codebase and follow its conventions. You may read
+  the code, run the existing test suite, and add or update tests. Do not edit
+  {{ISSUE_FILE}}.
+
+  Do not consult the upstream project's pull requests, issues, releases, or
+  any other copy of this repository, and do not fetch history beyond this
+  checkout. Work only from this checkout and {{ISSUE_FILE}}.
+
+  Leave your changes in the working tree. When you consider the issue
+  resolved, stop.
+
 candidates:
   - id: superpowers
     name: Superpowers

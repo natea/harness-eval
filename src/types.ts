@@ -90,6 +90,13 @@ export type CandidateEntry = z.infer<typeof CandidateEntry>;
 export const Registry = z.object({
 	/** Shared base task prompt template; identical for every candidate. */
 	basePrompt: z.string().min(1),
+	/**
+	 * Base prompt for brownfield trials (add-brownfield-track). Its only
+	 * placeholder is {{ISSUE_FILE}}: all task content lives in the issue file, so
+	 * the rendered prompt is identical for every task and candidate and can never
+	 * name the fixing PR.
+	 */
+	brownfieldBasePrompt: z.string().min(1).optional(),
 	candidates: z.array(CandidateEntry).min(1),
 });
 export type Registry = z.infer<typeof Registry>;

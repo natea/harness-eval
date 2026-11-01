@@ -305,6 +305,8 @@ export async function minePr(
 						method: validation.env.method,
 						digest: validation.env.digest,
 						python: opts.env.python ?? "3.12",
+						pkg: opts.env.pkg,
+						extras: opts.env.extras,
 					}
 				: undefined,
 			validationSelection: opts.selection,

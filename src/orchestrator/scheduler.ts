@@ -248,6 +248,7 @@ function baseProvenance(
 						variant: plan.task.variant,
 						bundleSha256: plan.task.bundleSha256,
 						baseSha: plan.task.baseSha,
+						mergeSha: plan.task.mergeSha,
 					},
 				}
 			: {}),
@@ -264,7 +265,7 @@ function skippedResult(
 	provenance.endedAt = provenance.startedAt;
 	provenance.notes.push(reason);
 	persistProvenance(deps.runDir, provenance);
-	return { provenance, telemetry: null, grades: null };
+	return { provenance, telemetry: null, grades: null, resolution: null };
 }
 
 export async function runTrial(
@@ -384,7 +385,7 @@ export async function runTrial(
 			}
 			provenance.endedAt = new Date().toISOString();
 			persistProvenance(deps.runDir, provenance);
-			return { provenance, telemetry, grades: null };
+			return { provenance, telemetry, grades: null, resolution: null };
 		} catch (err) {
 			// Cancelled mid-trial: the error is the torn-down sandbox, not real
 			// infra failure — terminate now, never retry.
@@ -395,7 +396,7 @@ export async function runTrial(
 					"cancelled by operator (in-flight sandbox torn down)",
 				);
 				persistProvenance(deps.runDir, provenance);
-				return { provenance, telemetry: null, grades: null };
+				return { provenance, telemetry: null, grades: null, resolution: null };
 			}
 			if (isInfraFailure(err) && attempt < config.infraRetryLimit) {
 				provenance.notes.push(
@@ -410,7 +411,7 @@ export async function runTrial(
 			provenance.endedAt = new Date().toISOString();
 			provenance.notes.push(String(err).slice(0, 500));
 			persistProvenance(deps.runDir, provenance);
-			return { provenance, telemetry: null, grades: null };
+			return { provenance, telemetry: null, grades: null, resolution: null };
 		} finally {
 			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
 			// Time-box teardown: destroy() is itself bounded + escalating, but cap

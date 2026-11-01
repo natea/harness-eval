@@ -209,6 +209,7 @@ export const BrownfieldProvenance = z.object({
 	/** sha256 of the bundle manifest (which hashes every bundle file). */
 	bundleSha256: z.string().length(64),
 	baseSha: z.string().min(7),
+	mergeSha: z.string().min(7),
 });
 export type BrownfieldProvenance = z.infer<typeof BrownfieldProvenance>;
 
@@ -378,10 +379,22 @@ export type TrialGrades = z.infer<typeof TrialGrades>;
 // Results / report JSON
 // ---------------------------------------------------------------------------
 
+/** Hidden-test resolution for a brownfield trial (task 5.1). */
+export const BrownfieldResolution = z.object({
+	verdict: z.enum(["resolved", "unresolved"]),
+	reason: z.string().nullable(),
+	failToPass: z.record(z.string(), z.string()),
+	passToPass: z.record(z.string(), z.string()),
+	testInfraModified: z.array(z.string()),
+	cassetteMiss: z.array(z.string()),
+});
+export type BrownfieldResolution = z.infer<typeof BrownfieldResolution>;
+
 export const TrialResult = z.object({
 	provenance: TrialProvenance,
 	telemetry: TrialTelemetry.nullable(),
 	grades: TrialGrades.nullable(),
+	resolution: BrownfieldResolution.nullable().optional(),
 });
 export type TrialResult = z.infer<typeof TrialResult>;
 

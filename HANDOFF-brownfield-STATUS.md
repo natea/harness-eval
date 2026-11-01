@@ -12,7 +12,7 @@ paper-qa trial can run as early as possible.
 - [x] **Workspace seeding + brownfield prompt** — sealed repo + `ISSUE.md` + anti-cheat template; byte-identical prompts across candidates
 - [x] **Patch capture** — candidate diff saved at trial end
 - [x] **Trial isolation** — fresh HOME/config, no operator MCP/plugins/skills/memory/instructions
-- [ ] **Hidden-test grading** — restore test infra, apply `tests.patch`, offline suite, resolution verdict, `cassette-miss`
+- [x] **Hidden-test grading** — restore test infra, apply `tests.patch`, offline suite, resolution verdict, `cassette-miss`
 - [x] **Web-tool kill-switch** — per harness; refuse candidates that can't comply
 - [ ] **Gateway + probe** — credential injection, model/tool enforcement, `model probe` extension (4.3/4.4/4.5)
 - [ ] **Wet evals** — n=1 smoke (6.2) then adversarial smoke (6.1), real Anthropic spend; OpenAI if the key works
@@ -48,6 +48,12 @@ paper-qa trial can run as early as possible.
    brownfield; codex's `tools.web_search=false` is unverified pending 6.1.
 9. Trial isolation drops all host env except a PATH/locale allowlist; worker
    auth arrives only through the explicit env argument.
+10. Grading replays `candidate.patch` onto a pristine sealed base instead of the
+    archived workspace: env/test tampering cannot reach the verdict. Test infra
+    (testPaths, conftest.py, pytest config) is restored from base and flagged.
+11. `pyproject.toml` is restored only when `[tool.pytest.ini_options]` changed,
+    so a legitimate dependency edit survives grading.
+12. Grading runs automatically for brownfield runs (`--no-grade` opts out).
 
 ## Real-spend runs
 
@@ -57,7 +63,8 @@ paper-qa trial can run as early as possible.
 
 - `543742f` kickoff status file and plan
 - `98d1d78` run config, seeding, prompt + patch capture (4.1/4.2/4.7)
-- (next) trial isolation + web-tool kill-switch (4.6/4.8)
+- `8a2e489` trial isolation + web-tool kill-switch (4.6/4.8)
+- (next) hidden-test grading (5.1)
 
 ## Blockers
 

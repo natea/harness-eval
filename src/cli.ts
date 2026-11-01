@@ -34,7 +34,8 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
-import { listBundleDirs, loadBundle } from "./brownfield/bundle";
+import { listBundleDirs, loadBundle, readText } from "./brownfield/bundle";
+import { gradeCandidate, writeGrade } from "./brownfield/grade";
 import {
 	loadPromptTemplate,
 	PROMPT_TEMPLATE_PATH,
@@ -421,10 +422,6 @@ async function cmdRun(): Promise<void> {
 }
 
 async function cmdRunBrownfield(): Promise<void> {
-	if (flag("grade"))
-		throw new Error(
-			"brownfield grading lands in task 5.1; run without --grade and grade the run afterwards",
-		);
 	const spec = parseBrownfieldSpec({
 		repo: arg("brownfield"),
 		tasks: arg("tasks"),
@@ -569,6 +566,53 @@ async function cmdRunBrownfield(): Promise<void> {
 			},
 		},
 	);
+
+	// Hidden-test grading (5.1): each trial's captured patch is replayed onto a
+	// pristine sealed base, test infrastructure restored, tests.patch applied.
+	if (!flag("no-grade")) {
+		for (const trial of trials) {
+			const ref = trial.provenance.brownfield;
+			if (!ref) continue;
+			const bundle = byId.get(ref.taskId);
+			if (!bundle) continue;
+			const trialDir = join(runDir, "trials", trial.provenance.trialId);
+			const patchPath = join(trialDir, "candidate.patch");
+			const sealed = await ensureSealedRepo({
+				clone,
+				baseSha: ref.baseSha,
+				futureShas: [ref.mergeSha],
+				repoDir: ref.repoDir,
+			});
+			const grade = await gradeCandidate({
+				sealedDir: sealed,
+				candidatePatch: existsSync(patchPath)
+					? readFileSync(patchPath, "utf8")
+					: "",
+				manifest: {
+					failToPass: bundle.manifest.failToPass,
+					passToPass: bundle.manifest.passToPass,
+					testPaths: bundle.manifest.testPaths,
+					env: bundle.manifest.env,
+				},
+				testsPatch: readText(bundle.dir, "tests.patch") ?? "",
+				workDir: join(runDir, "grading", trial.provenance.trialId),
+			});
+			writeGrade(trialDir, grade);
+			trial.resolution = {
+				verdict: grade.verdict,
+				reason: grade.reason,
+				failToPass: grade.failToPass,
+				passToPass: grade.passToPass,
+				testInfraModified: grade.testInfraModified,
+				cassetteMiss: grade.cassetteMiss,
+			};
+			console.log(
+				`grade ${trial.provenance.candidate} ${ref.taskId}: ${grade.verdict}` +
+					`${grade.reason ? ` (${grade.reason})` : ""}` +
+					`${grade.cassetteMiss.length ? ` cassette-miss=${grade.cassetteMiss.join(",")}` : ""}`,
+			);
+		}
+	}
 
 	const results = buildResults({
 		runId,

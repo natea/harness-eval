@@ -1,0 +1,1 @@
+{"reviewer":"Justin","at":"2026-11-01T03:41:50.063Z","items":[{"id":"body","label":"fix_code"},{"id":"c1","label":"symptom"},{"id":"c2","label":"fix_sketch"},{"id":"c3","label":"diagnosis"}],"fairness":{"verdict":"no","note":"issue describes Context explicitly, unit tests unfairly extend that to dedup other fields"}}

@@ -1,0 +1,1 @@
+{"reviewer":"Justin","at":"2026-11-01T04:33:10.356Z","items":[{"id":"body","label":"symptom"},{"id":"c1","label":"symptom"},{"id":"c2","label":"diagnosis"}],"fairness":{"verdict":"yes","note":"tests hit the code interpretation as lambda/partial in addition to normal parsing. fair test, given the final diagnosis from james"}}

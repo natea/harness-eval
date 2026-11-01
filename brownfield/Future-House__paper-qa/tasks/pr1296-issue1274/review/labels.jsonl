@@ -1,0 +1,1 @@
+{"reviewer":"Justin","at":"2026-11-01T04:54:06.363Z","items":[{"id":"body","label":"symptom"},{"id":"c1","label":"diagnosis"},{"id":"c2","label":"noise"},{"id":"c3","label":"noise"}],"fairness":{"verdict":"yes","note":"issue is narrow enough that this test is fair"}}

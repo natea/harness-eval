@@ -58,6 +58,19 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 30px; } h2 .badge { ve
 @media (max-width: 720px) { .shots { grid-template-columns: 1fr; } }
 .cta { display: inline-block; background: #2f81f7; color: #fff; padding: 8px 14px; border-radius: 7px; font-weight: 600; margin: 12px 10px 0 0; }
 .cta.ghost { background: transparent; border: 1px solid #30363d; color: #e6edf3; }
+.bf-note { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; color: #8b949e; margin: 12px 0; }
+.bf-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; white-space: nowrap; background: #21262d; color: #c9d1d9; }
+.bf-tag.good { background: #12351f; color: #56d364; } .bf-tag.bad { background: #3d1518; color: #ff8e88; } .bf-tag.warn { background: #5a3e00; color: #f0c674; }
+#board, #trials, #runs, #bf-trials, #bf-confusion { overflow-x: auto; }
+#bf-trials tr.row { cursor: pointer; } #bf-trials tr.row td:first-child::before { content: "▸ "; color: #8b949e; } #bf-trials tr.row.open td:first-child::before { content: "▾ "; }
+#bf-trials tr.detail > td { background: #0a0d12; padding: 12px 14px; } #bf-trials tr.detail:hover > td { background: #0a0d12; }
+#bf-trials h3 { font-size: 13px; margin: 14px 0 4px; } #bf-trials h3:first-child { margin-top: 0; }
+.bf-diffs { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.bf-diff { margin: 0; max-height: 360px; overflow: auto; background: #010409; border: 1px solid #21262d; border-radius: 6px; padding: 8px; font: 11px/1.45 ui-monospace, monospace; white-space: pre; }
+.bf-diff .add { color: #56d364; } .bf-diff .del { color: #ff8e88; } .bf-diff .hunk { color: #79c0ff; }
+.bf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+.bf-stats div { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; color: #8b949e; font-size: 12px; }
+.bf-stats b { display: block; color: #e6edf3; font-size: 20px; }
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="02050033-3400-4ace-9669-2c2bf81b6017"></script>
 </head>
@@ -66,6 +79,7 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 30px; } h2 .badge { ve
 	<p><a href="../">← about harness-eval</a></p>
 	<h1>🏆 Demo leaderboard <span class="badge">static snapshot</span></h1>
 	<p class="muted" id="meta"></p>
+	<p class="muted">Also on this page: <a href="#brownfield">the brownfield track</a>, real merged PRs replayed against each framework.</p>
 
 	<h2>Leaderboard <span class="muted" style="font-size:12px;text-transform:none">— one PRD, framework is the only variable</span></h2>
 	<div class="weights">
@@ -102,6 +116,17 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 30px; } h2 .badge { ve
 	</div>
 	<a class="cta" href="../#see-it-in-action">See the full walkthrough →</a>
 	<a class="cta ghost" href="https://github.com/natea/harness-eval">Run it yourself</a>
+
+	<h2 id="brownfield" style="margin-top:48px">Brownfield track <span class="badge">pilot · static snapshot</span></h2>
+	<p>Most real agent work is fixing an issue in a codebase the agent didn't write. Each trial here replays a real merged PR: the framework gets the issue as it stood before the fix, the PR's own tests stay hidden until grading, and a blind judge compares the result with the original PR.</p>
+	<p class="bf-note" id="bf-scope"></p>
+	<h2>Every trial <span class="muted" style="font-size:12px;text-transform:none">— newest first; click a row for the judge's scores and both diffs</span></h2>
+	<div id="bf-trials"></div>
+	<h2>People check the tasks first</h2>
+	<p>Before a task runs, a reviewer labels how much of the fix each issue and comment gives away, without seeing the LLM's labels, and says whether the hidden tests are fair. The two sets of labels are then compared.</p>
+	<div class="bf-stats" id="bf-stats"></div>
+	<div id="bf-confusion"></div>
+	<a class="cta ghost" href="../#brownfield">Read how the brownfield track works →</a>
 </main>
 <script>
 const HELP = {
@@ -190,6 +215,67 @@ fetch("./data/runs.json").then((r) => r.json()).then((runs) => {
 		<td class="mono"><span class="ok">${r.completed}</span>/${r.trials}</td>
 		<td class="mono">${new Date(r.startedAt).toLocaleDateString()}</td></tr>`).join("")}</tbody></table>`;
 }).catch(() => {});
+
+// Brownfield snapshot, built by scripts/build-demo-brownfield.ts.
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const bfVerdict = (t) => t.verdict === "resolved" ? '<span class="bf-tag good">resolved</span>'
+	: t.verdict ? `<span class="bf-tag bad">${esc(t.verdict)}</span>` : `<span class="bf-tag warn">${esc(t.status)}</span>`;
+const bfUsed = (t) => t.candidate === "bare" ? '<span class="bf-tag">no framework</span>'
+	: t.engaged === true ? '<span class="bf-tag good">engaged</span>'
+	: t.engaged === false ? '<span class="bf-tag bad">not engaged</span>' : '<span class="muted">—</span>';
+const bfPref = (q) => q.preference === "tie" && q.votes.tie < 2 ? "split vote" : q.preference === "tie" ? "tie" : `prefers ${esc(q.preference === "original" ? "original PR" : q.preference)}`;
+const bfDiff = (patch) => patch ? `<pre class="bf-diff">${patch.split("\n").map((l) => {
+	const c = l.startsWith("+") && !l.startsWith("+++") ? "add" : l.startsWith("-") && !l.startsWith("---") ? "del" : l.startsWith("@@") ? "hunk" : "";
+	return c ? `<span class="${c}">${esc(l)}</span>` : esc(l);
+}).join("\n")}</pre>` : '<p class="muted">No patch.</p>';
+const bfDetail = (t, run) => `
+	<p class="muted">${esc(run.id)} · ${esc(t.candidate)}${t.version ? " " + esc(t.version) : ""} · ${esc(run.model)} · status ${esc(t.status)}${t.reason ? " · " + esc(t.reason) : ""}</p>
+	${t.activitySummary ? `<p>${esc(t.activitySummary)}</p>` : ""}
+	${t.testFilesEdited?.length ? `<p class="muted">Test files edited: <span class="mono">${t.testFilesEdited.map(esc).join(", ")}</span></p>` : ""}
+	${t.quality ? `<h3>Blind judge, harness vs original PR (${esc(t.quality.judgeModel)})</h3>
+	<table><thead><tr><th>Criterion</th><th>Harness</th><th>Original</th><th>Judge's note, first sample</th></tr></thead><tbody>
+	${t.quality.criteria.map((c) => `<tr><td>${esc(c.label)}</td><td class="mono">${esc(c.harness)}</td><td class="mono">${esc(c.original)}</td><td class="muted">${esc(c.note)}</td></tr>`).join("")}
+	</tbody></table>` : ""}
+	${t.candidatePatch || t.referencePatch ? `<div class="bf-diffs"><div><h3>Harness diff</h3>${bfDiff(t.candidatePatch)}</div><div><h3>Original PR diff</h3>${bfDiff(t.referencePatch)}</div></div>` : ""}`;
+fetch("./data/brownfield.json").then((r) => r.json()).then((d) => {
+	const all = d.runs.flatMap((run) => run.trials.map((t) => ({ t, run }))).reverse();
+	const n = (f) => all.filter(({ t }) => f(t)).length;
+	const tasks = new Set(all.map(({ t }) => t.task?.id));
+	const repos = [...new Set(all.map(({ t }) => t.task?.repo))].filter(Boolean);
+	document.getElementById("bf-scope").textContent =
+		`${all.length} trials across ${d.runs.length} runs on ${new Date(d.runs[0].startedAt).toLocaleDateString(undefined, { timeZone: "UTC" })}, on ${tasks.size} tasks from ${repos.join(", ")}: ` +
+		`${n((t) => t.verdict === "resolved")} resolved, ${n((t) => t.verdict && t.verdict !== "resolved")} unresolved, ${n((t) => !t.verdict)} that failed to run. ` +
+		`Nothing is filtered out, including trials from while the harness was still being fixed. Most frameworks have only a few trials on one task, so this shows how the track works and isn't a ranking.`;
+	document.getElementById("bf-trials").innerHTML = `<table><thead><tr>
+		<th>Framework</th><th>Task</th><th>Verdict</th><th>Framework used</th><th>Quality: harness vs original</th><th>Lines: harness / original</th><th>File overlap</th><th>Agent time</th><th>Cost</th>
+	</tr></thead><tbody>${all.map(({ t, run }, i) => `<tr class="row" data-i="${i}">
+		<td><strong>${esc(t.candidate)}</strong></td>
+		<td>${esc(t.task?.title)}<br><a class="mono" href="${esc(t.task?.prUrl)}" target="_blank" rel="noopener">PR #${esc(t.task?.pr)}</a></td>
+		<td>${bfVerdict(t)}</td><td>${bfUsed(t)}</td>
+		<td class="mono">${t.quality ? `<b>${t.quality.harness}</b> vs ${t.quality.original}<br><span class="muted">${bfPref(t.quality)} (${t.quality.votes.harness}/${t.quality.votes.original}/${t.quality.votes.tie})</span>` : "—"}</td>
+		<td class="mono">${t.signals ? `${t.signals.harnessLines} / ${t.signals.originalLines}` : "—"}</td>
+		<td class="mono">${t.signals ? `F1 ${t.signals.f1.toFixed(2)}` : "—"}</td>
+		<td class="mono">${t.minutes != null ? t.minutes.toFixed(1) + "m" : "—"}</td>
+		<td class="mono">${t.costUsd != null ? "$" + t.costUsd.toFixed(2) : "—"}</td>
+	</tr>`).join("")}</tbody></table>`;
+	document.querySelectorAll("#bf-trials tr.row").forEach((row) => row.addEventListener("click", (e) => {
+		if (e.target.closest("a")) return;
+		const open = row.nextElementSibling?.classList.contains("detail");
+		if (open) { row.nextElementSibling.remove(); row.classList.remove("open"); return; }
+		const { t, run } = all[+row.dataset.i];
+		row.classList.add("open");
+		row.insertAdjacentHTML("afterend", `<tr class="detail"><td colspan="9">${bfDetail(t, run)}</td></tr>`);
+	}));
+	const a = d.agreement;
+	document.getElementById("bf-stats").innerHTML = [
+		[a.reviewedTasks, "tasks reviewed"], [a.n, "items labeled"], [`${Math.round(a.observed * 100)}%`, "exact agreement, reviewer vs LLM"],
+		[a.kappa.toFixed(2), "Cohen's κ"], [a.weightedKappa.toFixed(2), "weighted κ"],
+		[`${a.fairness.yes} / ${a.fairness.no} / ${a.fairness.unsure}`, "tests fair: yes / no / unsure"],
+	].map(([v, l]) => `<div><b>${esc(v)}</b>${esc(l)}</div>`).join("");
+	const L = Object.keys(a.confusion);
+	document.getElementById("bf-confusion").innerHTML = `<table><thead><tr><th>Reviewer ↓ / LLM →</th>${L.map((l) => `<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>
+		${L.map((r) => `<tr><td class="mono">${esc(r)}</td>${L.map((c) => `<td class="mono${r === c ? " ok" : ""}">${a.confusion[r][c] || (r === c ? 0 : "·")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}).catch(() => { document.getElementById("bf-scope").textContent = "Brownfield data failed to load."; });
 </script>
 </body>
 </html>

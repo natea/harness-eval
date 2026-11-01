@@ -68,6 +68,21 @@ const server = Bun.serve({
 								startedAt: e.results.startedAt,
 								prdSha256: e.results.prdSha256,
 								testPlanSha256: e.results.testPlanSha256,
+								// Brownfield runs have no PRD scores; list who ran from the trials.
+								candidates: [
+									...new Set(
+										e.results.trials.map((t) => t.provenance.candidate),
+									),
+								],
+								brownfieldTasks: [
+									...new Set(
+										e.results.trials.flatMap((t) =>
+											t.provenance.brownfield
+												? [t.provenance.brownfield.taskId]
+												: [],
+										),
+									),
+								],
 							}
 						: undefined,
 				}));

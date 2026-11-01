@@ -31,6 +31,8 @@ interface RunSummary {
 		startedAt: string;
 		prdSha256: string;
 		testPlanSha256: string | null;
+		candidates?: string[];
+		brownfieldTasks?: string[];
 	};
 }
 
@@ -321,11 +323,22 @@ function Leaderboard() {
 							</td>
 							<td>
 								<a href={`/runs/${r.runId}`}>{r.runId}</a>
+								{(r.summary?.brownfieldTasks?.length ?? 0) > 0 && (
+									<span
+										className="badge ok"
+										title={r.summary?.brownfieldTasks?.join(", ")}
+									>
+										brownfield · {r.summary?.brownfieldTasks?.join(", ")}
+									</span>
+								)}
 							</td>
 							<td className="muted">{r.summary?.config.provider ?? "—"}</td>
 							<td className="muted">
 								{r.summary
-									? r.summary.scores.map((s) => s.candidate).join(", ")
+									? (r.summary.scores.length
+											? r.summary.scores.map((s) => s.candidate)
+											: (r.summary.candidates ?? [])
+										).join(", ") || "—"
 									: "—"}
 							</td>
 							<td>

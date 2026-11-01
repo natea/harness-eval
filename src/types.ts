@@ -390,11 +390,21 @@ export const BrownfieldResolution = z.object({
 });
 export type BrownfieldResolution = z.infer<typeof BrownfieldResolution>;
 
+/** Judge-based secondary signal for a brownfield trial (task 5.2). */
+export const BrownfieldJudge = z.object({
+	resolvesIssue: z.boolean(),
+	quality: z.enum(["good", "partial", "poor"]),
+	notes: z.string(),
+	model: z.string(),
+});
+export type BrownfieldJudge = z.infer<typeof BrownfieldJudge>;
+
 export const TrialResult = z.object({
 	provenance: TrialProvenance,
 	telemetry: TrialTelemetry.nullable(),
 	grades: TrialGrades.nullable(),
 	resolution: BrownfieldResolution.nullable().optional(),
+	judge: BrownfieldJudge.nullable().optional(),
 });
 export type TrialResult = z.infer<typeof TrialResult>;
 

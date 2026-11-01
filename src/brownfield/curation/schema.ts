@@ -31,6 +31,7 @@ export const Verdict = z.object({
 		"similar_fix",
 		"eligibility",
 		"objection",
+		"tool_call",
 	]),
 	item: z.string().optional(),
 	value: z.unknown(),
@@ -68,6 +69,8 @@ export const CurationOutput = z.object({
 	}),
 	difficulty: DifficultyLevel,
 	overBudget: z.boolean(),
+	/** The arm produced no labels for a reason other than the cap (e.g. the controller never finished). */
+	failed: z.boolean().optional(),
 	spendUsd: z.number(),
 	capUsd: z.number(),
 	provenance: z.object({

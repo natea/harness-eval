@@ -1,0 +1,2 @@
+
+Additionally, give a test-fairness opinion from your evidence: would a competent developer who fixes the issue AS DESCRIBED (body and comments) be expected to arrive at the reference behavior? `fair` if the issue describes the behavior the reference implements; `unfair` if the reference implements requirements the issue never states (new APIs, unrelated features, renamed interfaces) that hidden tests would plausibly check; `unsure` otherwise. Give a one-sentence reason.

@@ -277,6 +277,18 @@ Smoke with real Claude Code (Haiku, about $0.01): a plain prompt passed
 another way (it cited PyPI metadata), on a host with open egress. **The gateway
 alone is not enough; the egress lockdown is required.**
 
+**Docker egress lock (task 4.4, `src/providers/egress.ts`).** Setup runs with
+network access. Before the agent starts, the trial container joins a per-run
+`docker network create --internal` network and leaves every other network. That
+network has no route out, no external DNS and no host access (checked
+empirically). A relay container (alias `gateway`, port 8080) sits on that network
+and on the bridge, and forwards HTTP only to the host gateway, with the target
+fixed at run start. Verified: after the lock, curl to api.anthropic.com, pypi.org
+and 1.1.1.1, and DNS for github.com, all fail, and requests through the relay
+reach the gateway, which still enforces its policy. Docker Desktop for Mac
+reaches a gateway bound to 127.0.0.1 via `host.docker.internal`; on Linux the
+gateway must bind the docker bridge address.
+
 ### D12. Grading
 After the trial, test infrastructure is restored to base before `tests.patch` is
 applied: the bundle's recorded `testPaths` (not inferred — paper-qa has

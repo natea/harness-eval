@@ -356,6 +356,7 @@ async function cmdRun(): Promise<void> {
 		(config.harness === "zerocode"
 			? undefined
 			: (defaults.snapshot as string | undefined));
+
 	const provider = createProvider(config.provider, {
 		snapshot: resolveProviderSnapshot(
 			config.provider,
@@ -559,6 +560,19 @@ async function cmdRunBrownfield(): Promise<void> {
 		console.log(
 			`gateway: ${gateway.url} → api.anthropic.com (model ${workerProfile.modelId})`,
 		);
+	}
+
+	// Gateway preflight (4.5): one tiny request per candidate before dispatch, so
+	// a rejected key/model fails the run before any sandbox or trial spend.
+	if (gateway && workerEnv) {
+		for (const candidate of candidates) {
+			const probe = await probeGatewaySession(workerEnv, rw.modelFlag);
+			if (!probe.ok)
+				throw new Error(
+					`gateway preflight failed for candidate '${candidate.name}': ${probe.reason} (no trial dispatched)`,
+				);
+			console.log(`gateway preflight: ${candidate.name} ok`);
+		}
 	}
 	const provider = createProvider(config.provider, {
 		snapshot: resolveProviderSnapshot(
@@ -770,6 +784,45 @@ async function cmdRunBrownfield(): Promise<void> {
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
 	if (results.trials.some((t) => t.provenance.brownfield))
 		console.log(`brownfield report: ${writeBrownfieldReport(runDir, results)}`);
+}
+
+/** One tiny request through the run gateway, exactly as a candidate's session would. */
+async function probeGatewaySession(
+	env: Record<string, string>,
+	modelFlag: string,
+	timeoutMs = 90_000,
+): Promise<{ ok: boolean; reason: string }> {
+	const proc = Bun.spawn(
+		[
+			"claude",
+			"-p",
+			"--model",
+			modelFlag,
+			"--output-format",
+			"json",
+			"--strict-mcp-config",
+			"--dangerously-skip-permissions",
+		],
+		{
+			stdin: new TextEncoder().encode("Reply with exactly: OK"),
+			stdout: "pipe",
+			stderr: "pipe",
+			env: { ...process.env, ...env },
+		},
+	);
+	const timer = setTimeout(() => proc.kill(), timeoutMs);
+	const out = await new Response(proc.stdout).text();
+	const err = await new Response(proc.stderr).text();
+	clearTimeout(timer);
+	const code = await proc.exited;
+	const line = out
+		.split("\n")
+		.reverse()
+		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
+	if (code === 0 && line) return { ok: true, reason: "" };
+	const reason =
+		err.trim().split("\n").slice(-2).join(" ") || `exit ${code}`;
+	return { ok: false, reason: reason.slice(0, 300) };
 }
 
 async function cmdModel(): Promise<void> {

@@ -1079,7 +1079,7 @@ async function cmdRunBrownfield(): Promise<void> {
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
-	// Code-quality comparison vs the merged human PR (blind, position-balanced),
+	// Code-quality comparison vs the original PR (blind, position-balanced),
 	// with the same judge as the resolution signal; skip with --no-quality.
 	if (judgeProfile && !flag("no-quality")) {
 		const { compareRunQuality } = await import("./brownfield/quality");

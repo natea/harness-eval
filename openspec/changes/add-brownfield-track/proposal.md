@@ -43,7 +43,7 @@ A spike on `Future-House/paper-qa` (2026-10-31; artifacts in
   comments, edit history; bots tagged); rebuild a history-sanitized repo at the
   base commit; build an offline test environment; validate FAIL_TO_PASS /
   PASS_TO_PASS with repeated gold runs; classify leakage in body and comments;
-  record a human baseline (coding window, review time, review rounds, issue
+  record a original PR baseline (coding window, review time, review rounds, issue
   lifetime, diff size); reject PRs that change dependencies (`dependency-change`,
   not installable offline from the base lockfile); and freeze each task as a
   hashed **task bundle**.
@@ -69,7 +69,7 @@ A spike on `Future-House/paper-qa` (2026-10-31; artifacts in
   with no recording) leaves the trial unresolved and flagged. LLM judge (issue +
   reference + candidate) and localization/diff metrics are secondary.
 - **Reporting:** agent wall-clock and USD per resolved task shown next to the
-  human baseline (coding window vs review time); no counterfactual
+  original PR baseline (coding window vs review time); no counterfactual
   "would have merged sooner" claims; resolution also shown with `cassette-miss`
   trials excluded.
 - **Transcript audit:** scan trial transcripts for solution reach (PR number,
@@ -85,7 +85,7 @@ PRD targets, their freeze invariants, and existing scoring are unchanged.
 - `brownfield-tasks` (new)
 - `eval-orchestration` (added requirements; modified: trial isolation)
 - `grading-rubric` (added requirements)
-- `eval-reporting` (added requirements: human-baseline report, cassette-miss sensitivity)
+- `eval-reporting` (added requirements: original-PR-baseline report, cassette-miss sensitivity)
 - `trial-transcript-audit` (added requirement)
 - `eval-studio` (modified: scoped writes; added: task review page)
 

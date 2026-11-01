@@ -33,7 +33,7 @@ brownfield/<owner>__<repo>/tasks/<task-id>/      # task-id = pr<PR>-issue<N>
   task.yaml          repo, PR, issue(s), base SHA, T*, env digest, test cmd,
                      FAIL_TO_PASS[], PASS_TO_PASS[], env_broken[], sha256 of every file below,
                      leak levels, dates (issue/PR) for contamination flags,
-                     human baseline (D16), appEgress allowlist (default empty; D7),
+                     original PR baseline (D16), appEgress allowlist (default empty; D7),
                      testPaths (all test dirs, e.g. tests/ and packages/*/tests)
   issue/body.md  issue/body+human.md  issue/body+all.md   # what the worker sees
   snapshot.json      structured reconstruction (comments, authors, isBot, edit sources)
@@ -391,7 +391,7 @@ reviews, and they disagree (diagnosis vs symptom), so human–human agreement is
 unmeasured. Test fairness: 9 yes, 4 unsure, 1 no (pr1186: hidden tests extend
 dedup beyond the field the issue names).
 
-### D16. Human baseline
+### D16. Original PR baseline
 Computed at mining time from data the miner already fetches (PR commits,
 reviews, timeline) and stored in `task.yaml`:
 - `codingWindow`: T* → last PR commit before the first submitted review (→ last

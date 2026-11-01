@@ -55,7 +55,7 @@ describe("judgeCandidate", () => {
 	test("prompt carries both diffs and clips long bodies", () => {
 		const prompt = buildJudgePrompt({ ...input, issueBody: "x".repeat(9000) });
 		expect(prompt).toContain("Candidate diff");
-		expect(prompt).toContain("Human reference diff");
+		expect(prompt).toContain("Original PR reference diff");
 		expect(prompt).toContain("truncated");
 	});
 

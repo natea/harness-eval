@@ -9,7 +9,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [x] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
 - [x] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
 - [x] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
-- [x] 1.6 Human baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, human diff size; unit tests for reviewed and unreviewed PRs
+- [x] 1.6 Original PR baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, original PR diff size; unit tests for reviewed and unreviewed PRs
 
 ## 2. Studio task review (early — unblocks human labeling)
 
@@ -55,7 +55,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [x] 5.7 Harness activity per trial from the session log (plugins, available skills/commands, commands run, skills invoked, subagents → engaged / not engaged / no framework) in the report and dashboard (`src/brownfield/activity.ts`)
 - [ ] 5.8 Audit framework engagement for every candidate (gsd, compound-engineering, agent-skills, gstack, ruflo, superpowers): does each engage when invoked as configured, or does the model fall back to plain Claude Code?
 - [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
-- [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
+- [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the original PR baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 
 ## 6. Pilot
 

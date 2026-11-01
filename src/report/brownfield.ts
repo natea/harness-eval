@@ -1,6 +1,6 @@
 /**
  * Brownfield run report (task 5.4, eval-reporting spec): resolution by
- * candidate, stratified by body leak level, with agent time/USD beside the human
+ * candidate, stratified by body leak level, with agent time/USD beside the original PR
  * baseline. Claims are limited to what the run measured.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -164,10 +164,10 @@ export function renderBrownfieldReport(
 	}
 	lines.push("");
 
-	// Per-trial detail, human baseline beside the agent.
+	// Per-trial detail, original PR baseline beside the agent.
 	lines.push("## Trials", "");
 	lines.push(
-		"| Candidate | Task | Variant | Verdict | Reason | Agent time | USD | Human time | Human rounds |",
+		"| Candidate | Task | Variant | Verdict | Reason | Agent time | USD | Original PR time | Original PR review rounds |",
 	);
 	lines.push("| --- | --- | --- | --- | --- | --: | --: | --: | --: |");
 	for (const t of trials) {
@@ -276,7 +276,7 @@ export function renderBrownfieldReport(
 	}
 
 	lines.push(
-		"Human baseline is the recorded human coding + review time for the same task at merge time; it is shown beside the agent, not as a counterfactual.",
+		"Original PR time is the recorded coding + review time of the original PR for the same task at merge time; it is shown beside the agent, not as a counterfactual.",
 		"",
 	);
 	return lines.join("\n");

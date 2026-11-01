@@ -59,7 +59,7 @@ function trial(
 	} satisfies Record<string, unknown>;
 }
 
-test("renders resolution, strata and human baseline columns", () => {
+test("renders resolution, strata and original PR baseline columns", () => {
 	const results = {
 		trials: [
 			trial("bare", "pr1262-issue1257", "resolved"),

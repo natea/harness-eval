@@ -2,12 +2,12 @@
 
 ## ADDED Requirements
 
-### Requirement: Brownfield report with human baseline
-Brownfield reports SHALL show, per task, each candidate's raw wall-clock minutes and USD for resolved trials beside the task's human baseline (coding window, review time, review rounds, human diff size), noting that the coding window comes from client-supplied commit dates. Reports SHALL NOT state counterfactual merge-time savings and SHALL NOT convert human time to cost.
+### Requirement: Brownfield report with original PR baseline
+Brownfield reports SHALL show, per task, each candidate's raw wall-clock minutes and USD for resolved trials beside the task's original PR baseline (coding window, review time, review rounds, original PR diff size), noting that the coding window comes from client-supplied commit dates. Reports SHALL NOT state counterfactual merge-time savings and SHALL NOT convert original PR time to cost.
 
 #### Scenario: Report row
 - **WHEN** a candidate resolves a task
-- **THEN** the report row shows the candidate's minutes and USD next to the human coding window and review time for that task
+- **THEN** the report row shows the candidate's minutes and USD next to the original PR coding window and review time for that task
 
 ### Requirement: Cassette-miss sensitivity
 Brownfield reports SHALL list trials flagged `cassette-miss` and SHALL show each candidate's resolution rate both as scored and with those trials excluded.

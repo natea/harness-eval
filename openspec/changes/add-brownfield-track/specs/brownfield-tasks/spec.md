@@ -24,8 +24,8 @@ A PR that changes the dependency lockfile or dependency declarations SHALL be fl
 - **WHEN** a merged PR tightens a pin or edits the lockfile, and the gold runs pass in the base environment
 - **THEN** the candidate stays eligible and is flagged `deps-touched` for review
 
-### Requirement: Human baseline timings
-For each accepted task the miner SHALL record, from the PR's commits, reviews, and timeline: the coding window (T* to the last PR commit before the first submitted review, or before merge if the PR was never reviewed), the review time (PR creation to merge), the number of submitted reviews, the number of commits after the first review, the issue lifetime (issue creation to merge), and the non-test size of the human diff (lines added, lines removed, files touched).
+### Requirement: Original PR baseline timings
+For each accepted task the miner SHALL record, from the PR's commits, reviews, and timeline: the coding window (T* to the last PR commit before the first submitted review, or before merge if the PR was never reviewed), the review time (PR creation to merge), the number of submitted reviews, the number of commits after the first review, the issue lifetime (issue creation to merge), and the non-test size of the original PR diff (lines added, lines removed, files touched).
 
 #### Scenario: Reviewed PR
 - **WHEN** a PR received its first review after three commits and two more commits followed

@@ -615,7 +615,8 @@ export function BrownfieldTrialView({
 								Harness <strong>{q.harnessScore}</strong> vs original PR{" "}
 								<strong>{q.humanScore}</strong> · judge prefers{" "}
 								<strong>{prefLabel(q.preference)}</strong> (votes harness{" "}
-								{q.votes.harness} / human {q.votes.human} / tie {q.votes.tie})
+								{q.votes.harness} / original PR {q.votes.human} / tie{" "}
+								{q.votes.tie})
 							</p>
 							<table>
 								<thead>

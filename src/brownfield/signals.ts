@@ -56,7 +56,7 @@ export function localization(
 	return { matched, missed, extra, precision, recall, f1 };
 }
 
-/** Candidate diff size as a ratio of the reference (human) change size. */
+/** Candidate diff size as a ratio of the original PR's change size. */
 export function diffSizeRatio(
 	candidate: DiffStats,
 	reference: DiffStats,

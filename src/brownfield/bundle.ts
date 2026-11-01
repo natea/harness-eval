@@ -86,7 +86,7 @@ export const TaskManifest = z.object({
 		.optional(),
 	/** Which tests validation ran: PR-touched only, or the full suite under testPaths. */
 	validationSelection: z.enum(["touched", "full"]).optional(),
-	/** Human baseline timings (D16). */
+	/** Original PR baseline timings (D16). */
 	humanBaseline: z
 		.object({
 			codingWindowMinutes: z.number(),

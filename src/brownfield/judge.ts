@@ -4,7 +4,7 @@
  * by the caller via `assertClassifierIndependent`.
  */
 export const JUDGE_SYSTEM =
-	"You are a strict senior Python reviewer. You see an issue report, the candidate's diff, and the human reference diff. Judge only whether the candidate addresses the reported behaviour; do not reward stylistic similarity to the reference.";
+	"You are a strict senior Python reviewer. You see an issue report, the candidate's diff, and the original PR's reference diff. Judge only whether the candidate addresses the reported behaviour; do not reward stylistic similarity to the reference.";
 
 export interface JudgeInput {
 	issueTitle: string;
@@ -48,7 +48,7 @@ export function buildJudgePrompt(input: JudgeInput): string {
 	return [
 		`## Issue\n\n${input.issueTitle}\n\n${clip(input.issueBody, 6_000)}`,
 		`## Candidate diff\n\n\`\`\`diff\n${clip(input.candidatePatch || "(empty diff)", MAX_PATCH)}\n\`\`\``,
-		`## Human reference diff (context only)\n\n\`\`\`diff\n${clip(input.referencePatch || "(none)", MAX_PATCH)}\n\`\`\``,
+		`## Original PR reference diff (context only)\n\n\`\`\`diff\n${clip(input.referencePatch || "(none)", MAX_PATCH)}\n\`\`\``,
 	].join("\n\n");
 }
 

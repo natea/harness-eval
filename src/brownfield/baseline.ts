@@ -1,6 +1,6 @@
 /**
- * Human baseline timings (design D16). Computed from data the miner already
- * fetches. Reports show these beside agent time; they never convert human time to
+ * Original PR baseline timings (design D16). Computed from data the miner already
+ * fetches. Reports show these beside agent time; they never convert original PR time to
  * cost or claim counterfactual merge-time savings.
  */
 import type { GhPullRequest } from "./github";

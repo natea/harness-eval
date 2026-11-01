@@ -66,12 +66,22 @@ paper-qa trial can run as early as possible.
     ungraded (e.g. after an audit correction).
 17. The gateway sets `idleTimeout: 255`: Bun's 10-second default cut a slow
     first-token response (a `Bun.serve timed out` warning mid-run).
-18. `pr724-issue709` has an env-level import failure (`ldp`) under a fresh build;
-    flagged for re-validation instead of being counted as a candidate failure.
+18. `pr724-issue709` is not an offline task: its single F2P
+    (`matched-several-options`) reports `fail-live` against a healthy env, and 8
+    sibling parametrizations were already `envBroken`/`liveApi` in validation.
+    Excluded from the offline demo set; it is a 3.7 (needs-live-api) example.
+    (The original `pytest-crashed` was a separate grading bug, below.)
 19. `superpowers` re-pinned 5.1.0 → 7.0.1: the upstream marketplace now serves
     7.0.1 and accepts no version pin, so the install check asserts the observed
     version. Other candidates keep their original pins and may need the same
     treatment; recorded here rather than silently loosening all checks.
+20. Grading installs the **base** `uv.lock`: a candidate that regenerates the
+    lockfile can otherwise break its own grading environment (pr724's candidate
+    bumped openai to 2.28 against pydantic 2.10 and every test crashed at
+    import). The lock is restored from base before the env build and the patch
+    is reported as `depsTouched`. Code edits still grade normally.
+21. `pytest-crashed` with an empty pytest log now points at a real env problem;
+    `logs/pytest.log.err` holds the traceback (`runPytest` redirects stderr).
 
 ## Real-spend runs
 
@@ -111,14 +121,15 @@ paper-qa trial can run as early as possible.
    gateway): both completed (7.9m/$0.73, 6.4m/$0.55), both unresolved after
    re-grading. Framework install path now works end to end.
 
-9. `runs/run-2026-11-01T08-40-42-115Z` — bare × `pr724-issue709` (smallest
-   reference patch), sonnet + gateway: completed, **unresolved
-   (pytest-crashed)**. The grade log shows an ImportError from `ldp` in the
-   freshly built env, i.e. a task-environment problem, not a candidate failure;
-   this bundle needs re-validation before it is used in a matrix.
+9. `runs/run-2026-11-01T08-40-42-115Z` — bare × `pr724-issue709`, sonnet +
+   gateway: completed, initially **unresolved (pytest-crashed)**. Reproduced
+   offline: the candidate's patch rewrote `uv.lock` (openai 2.28 vs pydantic
+   2.10) so the env was unimportable. Grading now restores the base lock and
+   re-graded this trial as **unresolved (fail-to-pass, `fail-live`)** — the task
+   itself needs the live API, so it leaves the offline demo set (decision 18).
 
-Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet),
-**$0 OpenAI**. Target caps ($40/$20) untouched.
+Total real spend: **≈$5.40 Anthropic**, **$0 OpenAI** (see run list; haiku
+matrix + two sonnet runs + probes). Caps ($40/$20) untouched.
 
 ## Commits
 
@@ -132,6 +143,7 @@ Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet)
 - `014c46e` gateway fix + adversarial smoke (4.4/6.2)
 - `708aa8b` audit repo match, secondary signals, superpowers re-pin (5.2)
 - `b611caa` audit assistant-actions only, reaudit/grade scripts
+- `6b6d897` gateway idle timeout + run status (4.4/6.3)
 
 ## Labels (task 2.6)
 
@@ -143,4 +155,13 @@ Only one task has a second human review, so human-vs-human κ is a single pair
 
 ## Blockers
 
-(none yet)
+1. **OpenAI has no credits.** `OPENAI_API_KEY` authenticates but every model
+   returns "You have no credits remaining" (and the codex model ids are not
+   available on the account). The OpenAI half of any pilot matrix is blocked on
+   billing, not on code; all brownfield evidence so far is Anthropic.
+2. **Worktree egress is still open** (4.4 lockdown). The audit catches
+   solution-reach attempts (`disqualified:solution-reach`) but a worker can
+   reach the network; only provider-side tools are killed at the driver/gateway.
+3. **Disk pressure**: paper-qa venvs are ~8 GB each. Archives and grading now
+   drop env dirs and grading repos, and a stale 7.9 GB grading tree was removed
+   (runs/ is 1.2 GB). Still ~42 GB free; larger matrices need care.

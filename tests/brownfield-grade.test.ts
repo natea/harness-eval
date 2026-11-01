@@ -46,6 +46,7 @@ async function baseRepo(): Promise<string> {
 		'[project]\nname = "demo"\n\n[tool.pytest.ini_options]\ntestpaths = ["tests"]\n',
 	);
 	writeFileSync(join(dir, "src.py"), "def f():\n    return 1\n");
+	writeFileSync(join(dir, "uv.lock"), "version = 1\nlock = 1\n");
 	writeFileSync(
 		join(dir, "tests/test_base.py"),
 		"def test_ok():\n    assert True\n",
@@ -132,6 +133,32 @@ describe("gradeCandidate", () => {
 		expect(grade.verdict).toBe("resolved");
 		expect(grade.reason).toBeNull();
 		expect(grade.failToPass[F2P]).toBe("pass");
+	});
+
+	test("grades against the base lockfile, not the candidate's", async () => {
+		const base = await baseRepo();
+		const candidate = await patchFor(base, (c) => {
+			writeFileSync(join(c, "src.py"), "def f():\n    return 2\n");
+			writeFileSync(join(c, "uv.lock"), "version = 1\nlock = 2\n");
+		});
+		let seen = "";
+		const grade = await gradeCandidate({
+			sealedDir: base,
+			candidatePatch: candidate,
+			manifest,
+			testsPatch: await testsPatch(base),
+			workDir: join(root, "work"),
+			deps: {
+				buildEnv: async (dir) => {
+					seen = readFileSync(join(dir, "uv.lock"), "utf8");
+					return { ok: true, method: "stub", log: "", digest: "d", seconds: 0 };
+				},
+				runSuite: suite({ [F2P]: "pass", [P2P]: "pass" }),
+			},
+		});
+		expect(seen).toBe("version = 1\nlock = 1\n");
+		expect(grade.depsTouched).toBe(true);
+		expect(grade.verdict).toBe("resolved");
 	});
 
 	test("unresolved when an F2P test fails or is missing", async () => {

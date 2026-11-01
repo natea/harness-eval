@@ -49,6 +49,8 @@ export interface GradeResult {
 	passToPass: Record<string, Outcome | "missing">;
 	/** Candidate patch touched these test-infra paths (restored before grading). */
 	testInfraModified: string[];
+	/** Candidate patch touched the lockfile: graded against the base lock. */
+	depsTouched: boolean;
 	/** F2P/P2P tests that fail because a recorded HTTP fixture is missing. */
 	cassetteMiss: string[];
 	envDigest: string | null;
@@ -180,6 +182,7 @@ export async function gradeCandidate(input: GradeInput): Promise<GradeResult> {
 		failToPass: {},
 		passToPass: {},
 		testInfraModified: [],
+		depsTouched: false,
 		cassetteMiss: [],
 		envDigest: null,
 		logs: {
@@ -220,11 +223,19 @@ export async function gradeCandidate(input: GradeInput): Promise<GradeResult> {
 		return pytestConfig(baseToml) !== pytestConfig(candidateToml);
 	});
 	await restorePaths(repo, baseSha, restore);
+	const depsTouched = touched.includes("uv.lock");
 
 	const testsPatchPath = join(workDir, "tests.patch");
 	writeFileSync(testsPatchPath, ensureNewline(input.testsPatch));
 	if (!(await applyPatch(repo, testsPatchPath)))
-		return result("unresolved", "tests-patch-failed");
+		return result("unresolved", "tests-patch-failed", {
+			testInfraModified,
+			depsTouched,
+		});
+
+	// Grading installs the merge-time dependency set: a candidate that rewrote
+	// the lockfile is reported, not obeyed (otherwise it can break its own env).
+	if (depsTouched) await git(repo, ["checkout", baseSha, "--", "uv.lock"]);
 
 	const envLog = join(logs, "env.log");
 	let digest: string | null = null;
@@ -242,12 +253,16 @@ export async function gradeCandidate(input: GradeInput): Promise<GradeResult> {
 		if (!env.ok)
 			return result("unresolved", "env-build-failed", {
 				testInfraModified,
+				depsTouched,
 				envDigest: null,
 			});
 		digest = env.digest ?? null;
 	} catch (err) {
 		writeFileSync(envLog, String(err));
-		return result("unresolved", "env-build-failed", { testInfraModified });
+		return result("unresolved", "env-build-failed", {
+			testInfraModified,
+			depsTouched,
+		});
 	}
 
 	const targets = [...input.manifest.failToPass, ...input.manifest.passToPass]
@@ -256,6 +271,7 @@ export async function gradeCandidate(input: GradeInput): Promise<GradeResult> {
 	if (!targets.length)
 		return result("unresolved", "pytest-crashed", {
 			testInfraModified,
+			depsTouched,
 			envDigest: digest,
 		});
 	const junitPath = join(logs, "junit.xml");
@@ -270,6 +286,7 @@ export async function gradeCandidate(input: GradeInput): Promise<GradeResult> {
 	if (!outcomes)
 		return result("unresolved", "pytest-crashed", {
 			testInfraModified,
+			depsTouched,
 			envDigest: digest,
 		});
 
@@ -305,6 +322,7 @@ export async function gradeCandidate(input: GradeInput): Promise<GradeResult> {
 		failToPass: f2p,
 		passToPass: p2p,
 		testInfraModified,
+		depsTouched,
 		cassetteMiss,
 		envDigest: digest,
 		logs: { junit: junitPath, log: logPath, env: envLog },

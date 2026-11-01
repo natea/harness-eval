@@ -156,8 +156,35 @@ paper-qa trial can run as early as possible.
     **$0.13**. Judged bare/pr1298 «good, resolves» although the hidden test
     fails — exactly the divergence the secondary signal exists to expose.
 
-Total real spend: **≈$8.10 Anthropic**, **$0 OpenAI** (matrix $2.05 + smoke
+13. `runs/run-2026-11-01T12-14-38-642Z` — single trial validating the **in-run
+    judge** path (`--judge claude-sonnet-4-6-key`): bare × pr1262 (haiku), 10.5m,
+    $0.95, unresolved (fail-to-pass); judge «poor, does not resolve».
+14. `runs/run-2026-11-01T12-27-10-236Z` — **success case**: bare × sonnet on the
+    two smallest paper-qa tasks, both **resolved** (pr293-issue292 3.1m/$0.40,
+    pr1296-issue1274 4.8m/$0.65; hidden F2P passes, no test-infra changes, no
+    cassette miss). Judge (haiku, since sonnet was the worker) agrees «good».
+    Total $1.06.
+
+Total real spend: **≈$10.20 Anthropic**, **$0 OpenAI** (matrix $2.05 + smoke
 $0.50 + judge $0.13 + earlier ~$5.4). Caps ($40/$20) untouched.
+
+## How to run the demo
+
+```bash
+# one task, one candidate, real spend, graded + judged + audited
+bun run src/cli.ts run --brownfield Future-House/paper-qa \
+  --tasks pr293-issue292 --variant body --candidates bare \
+  --worker-model claude-sonnet-4-6-key --judge claude-haiku-4-5-key \
+  --gateway --clone ../clones/paper-qa --trial-minutes 20
+
+# artefacts: runs/<id>/{results.json,scorecard.md,brownfield.md,gateway.jsonl}
+#           runs/<id>/trials/<trial>/{candidate.patch,grade.json,judge.json,audit.json}
+# no spend: bun run scripts/grade-run.ts runs/<id>
+# variant pairing: bun run scripts/compare-variants.ts runs/<A> runs/<B>
+```
+
+`--gateway` uses `ANTHROPIC_API_KEY` from the environment; the sandbox only ever
+sees a placeholder. `--provider` defaults to `worktree`.
 
 ## Commits
 

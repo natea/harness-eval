@@ -508,6 +508,7 @@ async function cmdRunBrownfield(): Promise<void> {
 	const judgeProfile = arg("judge")
 		? resolveProfile(arg("judge") as string, models)
 		: null;
+	const judgeCodeEnv = judgeProfile ? resolveClaudeCodeEnv(judgeProfile) : null;
 	if (judgeProfile)
 		assertClassifierIndependent(judgeProfile.modelId, workerProfile.modelId);
 
@@ -587,6 +588,18 @@ async function cmdRunBrownfield(): Promise<void> {
 			console.log(`gateway preflight: ${candidate.name} ok`);
 		}
 	}
+	// Egress reduction (4.4): worker shells see a dead proxy, with loopback
+	// exempt so the gateway (and nothing else) stays reachable. Best-effort:
+	// raw sockets bypass it; the audit is the backstop.
+	workerEnv = {
+		...(workerEnv ?? {}),
+		HTTP_PROXY: "http://127.0.0.1:9",
+		HTTPS_PROXY: "http://127.0.0.1:9",
+		ALL_PROXY: "http://127.0.0.1:9",
+		NO_PROXY: "127.0.0.1,localhost,::1",
+		no_proxy: "127.0.0.1,localhost,::1",
+	};
+
 	const provider = createProvider(config.provider, {
 		snapshot: resolveProviderSnapshot(
 			config.provider,
@@ -798,7 +811,10 @@ async function cmdRunBrownfield(): Promise<void> {
 					referencePatch: readText(bundle.dir, "reference.patch") ?? "",
 					candidatePatch: readFileSync(patchPath, "utf8"),
 				},
-				{ model: judgeProfile.modelId },
+				{
+					model: judgeCodeEnv?.modelFlag ?? judgeProfile.modelId,
+					env: judgeCodeEnv?.env,
+				},
 			);
 			writeFileSync(
 				join(trialDir, "judge.json"),

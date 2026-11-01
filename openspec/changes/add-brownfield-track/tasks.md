@@ -48,10 +48,10 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [x] 5.1 Hidden-test grading: restore test infrastructure (bundle `testPaths`, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; detect `cassette-miss` (vcrpy replay-only exception or offline-proxy `APIConnectionError`/`ProxyError`) → unresolved + flagged
 - [x] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
 - [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
-- [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
+- [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 
 ## 6. Pilot
 
-- [ ] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
+- [x] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
 - [x] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
-- [ ] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants
+- [x] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants

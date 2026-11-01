@@ -2,7 +2,7 @@
 /**
  * Judge already-finished brownfield trials that have no judge signal (task 5.2).
  *
- *   bun run scripts/judge-run.ts runs/<run-id> [--model claude-sonnet-4-6-key]
+ *   bun run scripts/judge-run.ts runs/<run-id> [--profile claude-sonnet-4-6-key]
  *
  * Costs one model call per trial; the judge must differ from the worker model.
  */
@@ -11,18 +11,23 @@ import { join } from "node:path";
 import { loadBundle, readSnapshot, readText } from "../src/brownfield/bundle";
 import { assertClassifierIndependent } from "../src/brownfield/classify";
 import { judgeCandidate } from "../src/brownfield/judge";
+import { resolveClaudeCodeEnv, resolveProfile } from "../src/models";
 import { writeBrownfieldReport } from "../src/report/brownfield";
 import type { RunResults } from "../src/types";
 
 const runDir = process.argv[2];
 if (!runDir || !existsSync(join(runDir, "results.json")))
 	throw new Error(
-		"usage: bun run scripts/judge-run.ts runs/<run-id> [--model <profile>]",
+		"usage: bun run scripts/judge-run.ts runs/<run-id> [--profile <name>]",
 	);
 
-const modelIdx = process.argv.indexOf("--model");
-const modelId = modelIdx > 0 ? process.argv[modelIdx + 1] : "claude-sonnet-4-6";
-if (!modelId) throw new Error("--model needs a value");
+const modelIdx = process.argv.indexOf("--profile");
+const profileRef = modelIdx > 0 ? process.argv[modelIdx + 1] : "claude-sonnet-4-6-key";
+if (!profileRef) throw new Error("--profile needs a value");
+const { loadModels } = await import("../src/models");
+const profile = resolveProfile(profileRef, loadModels());
+const codeEnv = resolveClaudeCodeEnv(profile);
+const modelId = profile.modelId;
 
 const resultsPath = join(runDir, "results.json");
 const results = JSON.parse(readFileSync(resultsPath, "utf8")) as RunResults;
@@ -46,7 +51,7 @@ for (const trial of results.trials) {
 			referencePatch: readText(bundle.dir, "reference.patch") ?? "",
 			candidatePatch: readFileSync(patchPath, "utf8"),
 		},
-		{ model: modelId },
+		{ model: codeEnv.modelFlag, env: codeEnv.env },
 	);
 	writeFileSync(
 		join(trialDir, "judge.json"),

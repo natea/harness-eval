@@ -25,6 +25,8 @@ export type JudgeRunner = (args: {
 	system: string;
 	prompt: string;
 	schema: object;
+	/** Extra CLI env (model-slot pins, credentials); defaults to the API key. */
+	env?: Record<string, string>;
 }) => Promise<{ structured: Record<string, unknown>; costUsd: number }>;
 
 const MAX_PATCH = 12_000;
@@ -52,11 +54,16 @@ export function buildJudgePrompt(input: JudgeInput): string {
 
 export async function judgeCandidate(
 	input: JudgeInput,
-	opts: { model: string; runner?: JudgeRunner },
+	opts: {
+		model: string;
+		env?: Record<string, string>;
+		runner?: JudgeRunner;
+	},
 ): Promise<JudgeResult> {
 	const runner = opts.runner ?? anthropicApiJudgeRunner;
 	const { structured, costUsd } = await runner({
 		model: opts.model,
+		env: opts.env,
 		system: JUDGE_SYSTEM,
 		prompt: buildJudgePrompt(input),
 		schema: JUDGE_SCHEMA,
@@ -75,6 +82,7 @@ export async function judgeCandidate(
 /** Judge via the Claude Code CLI with the API key (no operator login needed). */
 export const anthropicApiJudgeRunner: JudgeRunner = async ({
 	model,
+	env,
 	system,
 	prompt,
 	schema,

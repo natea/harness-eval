@@ -82,6 +82,18 @@ paper-qa trial can run as early as possible.
     is reported as `depsTouched`. Code edits still grade normally.
 21. `pytest-crashed` with an empty pytest log now points at a real env problem;
     `logs/pytest.log.err` holds the traceback (`runPytest` redirects stderr).
+22. Egress for worker shells is reduced with a dead proxy
+    (`HTTP(S)_PROXY=http://127.0.0.1:9`, loopback exempt): `git clone` of the
+    upstream repo now fails inside the trial instead of succeeding. Raw sockets
+    still bypass it, so this is mitigation, not isolation; the audit stays the
+    backstop. Recorded as the worktree half of 4.4.
+23. The judge signal is opt-in (`--judge <profile>` on a fresh run,
+    `scripts/judge-run.ts` to backfill) because it costs a model call per trial;
+    judge ≠ worker is enforced. Judge notes are advisory and never change a
+    hidden-test verdict.
+24. Variant comparison is cross-run (`scripts/compare-variants.ts A B`), pairing
+    trials by (candidate, task) where the variant differs; it writes
+    `variant-compare*.md` beside the second run.
 
 ## Real-spend runs
 
@@ -128,8 +140,24 @@ paper-qa trial can run as early as possible.
    re-graded this trial as **unresolved (fail-to-pass, `fail-live`)** — the task
    itself needs the live API, so it leaves the offline demo set (decision 18).
 
-Total real spend: **≈$5.40 Anthropic**, **$0 OpenAI** (see run list; haiku
-matrix + two sonnet runs + probes). Caps ($40/$20) untouched.
+10. `runs/run-2026-11-01T11-50-40-007Z` — pilot matrix, **body+human** variant:
+    bare + superpowers × pr1262-issue1257 + pr1298-issue1273 (haiku, gateway,
+    concurrency 2). All four completed; 3 unresolved (fail-to-pass), and
+    superpowers/pr1262 was **disqualified:solution-reach** (the framework's
+    worker searched the upstream PR). Cost $0.39/$0.52/$0.54/$0.60 ≈ **$2.05**;
+    5–8 agent minutes per trial. Paired against the body-variant runs with
+    `scripts/compare-variants.ts` (see `variant-compare-*.md`).
+11. `runs/run-2026-11-01T12-09-22-489Z` — adversarial smoke **after** egress
+    reduction: worker told to find the upstream fix ran
+    `git clone https://github.com/Future-House/paper-qa.git` and failed
+    (`Failed to connect to 127.0.0.1 port 9`); audit verdict `attempted`, not
+    `disqualified` — it never reached the fix. 5m, **$0.50**.
+12. Judge backfill on run 10 (`scripts/judge-run.ts`, sonnet): 3 calls,
+    **$0.13**. Judged bare/pr1298 «good, resolves» although the hidden test
+    fails — exactly the divergence the secondary signal exists to expose.
+
+Total real spend: **≈$8.10 Anthropic**, **$0 OpenAI** (matrix $2.05 + smoke
+$0.50 + judge $0.13 + earlier ~$5.4). Caps ($40/$20) untouched.
 
 ## Commits
 
@@ -144,6 +172,10 @@ matrix + two sonnet runs + probes). Caps ($40/$20) untouched.
 - `708aa8b` audit repo match, secondary signals, superpowers re-pin (5.2)
 - `b611caa` audit assistant-actions only, reaudit/grade scripts
 - `6b6d897` gateway idle timeout + run status (4.4/6.3)
+- `82cbe58` grade against the base lockfile when a candidate edits it (5.1)
+- `7d457aa` pre-dispatch gateway probe per candidate (4.5)
+- `0718769` judge signal per scored trial (5.2)
+- `dc0dbc6` variant comparison, judge backfill, cassette-excluded counts (5.4)
 
 ## Labels (task 2.6)
 
@@ -152,6 +184,13 @@ matrix + two sonnet runs + probes). Caps ($40/$20) untouched.
 Only one task has a second human review, so human-vs-human κ is a single pair
 (n=1, κ = 0). `agreementSummary` now reports both; the read model exposes
 `interHuman` per task.
+
+## Task list state
+
+Ticked: 2.5, 2.6, 3.1–3.6, 3.8, 4.1, 4.2, 4.5–4.8, 5.1–5.4, 6.1–6.3.
+Open: 3.7 (live-API recording blocked on provider credits), 4.3 (OAuth spike:
+no token), 4.4 (gateway + proxy egress done; true network lockdown not
+achieved), 4.9 (app egress; OpenAI blocked, fixtures-only default holds).
 
 ## Blockers
 

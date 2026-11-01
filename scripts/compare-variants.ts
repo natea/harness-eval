@@ -80,7 +80,7 @@ lines.push("");
 if (!pairs.length)
 	lines.push("No paired trials with differing variants were found.");
 const md = `${lines.join("\n")}\n`;
-const out = join(dirB, "variant-compare.md");
+const out = join(dirB, process.argv[4] ?? "variant-compare.md");
 writeFileSync(out, md);
 console.log(md);
 console.log(`wrote ${out}`);

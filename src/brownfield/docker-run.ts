@@ -12,6 +12,7 @@
 import { join } from "node:path";
 import { archiveTrial } from "../driver/archive";
 import { claudeCodeGatewayEnv } from "../gateway/anthropic";
+import { resolveGatewayCredential } from "../gateway/credential";
 import {
 	gatewayIncompatibility,
 	type RunEgress,
@@ -34,6 +35,8 @@ export interface DockerBrownfieldOptions {
 	harness: HarnessId;
 	model: string;
 	baseImage?: string;
+	/** Real credential the gateway injects (default: subscription OAuth). */
+	credential?: string;
 	/** Preflight through the gateway (throws to abort before dispatch). */
 	probe: (env: Record<string, string>, modelFlag: string) => Promise<void>;
 	log?: (m: string) => void;
@@ -63,11 +66,10 @@ export async function startDockerBrownfield(
 	const log = opts.log ?? (() => {});
 	const why = gatewayIncompatibility(opts.harness);
 	if (why) throw new Error(why);
-	const apiKey = process.env.ANTHROPIC_API_KEY;
-	if (!apiKey)
-		throw new Error(
-			"--provider docker needs ANTHROPIC_API_KEY (injected by the gateway; the sandbox only sees a placeholder)",
-		);
+	const credential = resolveGatewayCredential(opts.credential ?? "oauth");
+	log(
+		`gateway credential: ${credential.kind === "oauth" ? "Claude subscription (OAuth)" : "API key (bills API credits)"}`,
+	);
 	const baseImage = opts.baseImage ?? DEFAULT_TRIAL_IMAGE;
 
 	const images = new Map<string, string>();
@@ -87,7 +89,7 @@ export async function startDockerBrownfield(
 		runId: opts.runId,
 		image: baseImage,
 		model: opts.model,
-		apiKey,
+		credential,
 		logPath: join(opts.runDir, "gateway.jsonl"),
 	});
 	try {

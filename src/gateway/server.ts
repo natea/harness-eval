@@ -6,6 +6,7 @@
  */
 import { appendFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { dirname } from "node:path";
+import { type GatewayCredential, injectCredential } from "./credential";
 
 /** Provider-side tools a worker must not use (server executes them upstream). */
 const BLOCKED_TOOL_RE = /^web_(search|fetch)|^code_execution|^computer_/;
@@ -22,7 +23,10 @@ export interface GatewayLogEntry {
 export interface GatewayOptions {
 	/** Upstream base, e.g. https://api.anthropic.com */
 	upstream: string;
-	apiKey: string;
+	/** Real credential to inject (default: subscription OAuth, see credential.ts). */
+	credential?: GatewayCredential;
+	/** Legacy API-key form. */
+	apiKey?: string;
 	/** The only model this run may use. */
 	model: string;
 	logPath: string;
@@ -128,8 +132,13 @@ export function startGateway(opts: GatewayOptions): Gateway {
 					continue;
 				headers.set(k, v);
 			}
-			headers.set("x-api-key", opts.apiKey);
-			headers.set("authorization", `Bearer ${opts.apiKey}`);
+			if (opts.credential) injectCredential(headers, opts.credential);
+			else {
+				// Legacy form: some Anthropic-compatible endpoints (e.g. z.ai, used by
+				// `model probe --gateway`) read the Bearer header, so send both.
+				headers.set("x-api-key", opts.apiKey ?? "");
+				headers.set("authorization", `Bearer ${opts.apiKey ?? ""}`);
+			}
 			const upstream = await fetch(
 				`${opts.upstream}${url.pathname}${url.search}`,
 				{
@@ -189,7 +198,11 @@ export function startUnixRelay(socketPath: string, tcpPort: number): UnixRelay {
 		unlinkSync(socketPath);
 	} catch {}
 	const proc = Bun.spawn(
-		["socat", `UNIX-LISTEN:${socketPath},fork,reuseaddr`, `TCP:127.0.0.1:${tcpPort}`],
+		[
+			"socat",
+			`UNIX-LISTEN:${socketPath},fork,reuseaddr`,
+			`TCP:127.0.0.1:${tcpPort}`,
+		],
 		{ stdin: "ignore", stdout: "ignore", stderr: "ignore" },
 	);
 	proc.unref();

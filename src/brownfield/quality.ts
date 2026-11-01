@@ -1,9 +1,9 @@
 /**
- * Brownfield code-quality comparison (task 5.2): the harness's PR vs the human
+ * Brownfield code-quality comparison (task 5.2): the harness's PR vs the original
  * PR that was actually merged for the same issue, scored on one rubric.
  *
  * Blind and position-balanced: the judge sees two diffs labelled A and B and is
- * never told which is human. The human side is the merged PR as submitted
+ * never told which is which. The original side is the merged PR as submitted
  * (reference.patch + tests.patch), so both sides include their tests. Samples
  * alternate which side is A, so a position bias cancels instead of favouring
  * one side; per-criterion scores are medians over samples (same method as the
@@ -91,7 +91,7 @@ export interface QualityInput {
 	issueBody: string;
 	/** The harness's patch. */
 	candidatePatch: string;
-	/** The merged human PR: reference.patch + tests.patch. */
+	/** The original (merged) PR: reference.patch + tests.patch. */
 	humanPatch: string;
 }
 
@@ -197,8 +197,8 @@ export async function compareQuality(
 			if (notes[id])
 				slot.notes.push(
 					notes[id]
-						.replace(/\bA\b/g, harnessIsA ? "harness" : "human")
-						.replace(/\bB\b/g, harnessIsA ? "human" : "harness"),
+						.replace(/\bA\b/g, harnessIsA ? "harness" : "original PR")
+						.replace(/\bB\b/g, harnessIsA ? "original PR" : "harness"),
 				);
 		}
 		const pref = String(structured.preference);
@@ -207,8 +207,8 @@ export async function compareQuality(
 		else votes.human++;
 		rationales.push(
 			String(structured.rationale ?? "")
-				.replace(/\bPR A\b|\bA\b/g, harnessIsA ? "harness PR" : "human PR")
-				.replace(/\bPR B\b|\bB\b/g, harnessIsA ? "human PR" : "harness PR"),
+				.replace(/\bPR A\b|\bA\b/g, harnessIsA ? "harness PR" : "original PR")
+				.replace(/\bPR B\b|\bB\b/g, harnessIsA ? "original PR" : "harness PR"),
 		);
 	}
 	const criteria: QualityCriterion[] = QUALITY_CRITERIA.map((c) => {
@@ -330,4 +330,18 @@ export async function compareRunQuality(
 		);
 	}
 	return { compared, skipped, costUsd };
+}
+
+/**
+ * Display wording: the comparison is harness PR vs the original PR (not human vs
+ * machine). Older quality.json files stored "human"; reword them when shown,
+ * without rewriting archived trial artifacts.
+ */
+export function originalPrWording(text: string): string {
+	return text
+		.replace(/\bmerged human PR\b/gi, "original PR")
+		.replace(/\bhuman PR's\b/gi, "original PR's")
+		.replace(/\bhuman PR\b/gi, "original PR")
+		.replace(/\bhuman's\b/gi, "original PR's")
+		.replace(/\bhuman\b/gi, "original PR");
 }

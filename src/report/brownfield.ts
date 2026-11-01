@@ -6,7 +6,11 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadBundle } from "../brownfield/bundle";
-import { QUALITY_FILE, type QualityComparison } from "../brownfield/quality";
+import {
+	originalPrWording,
+	QUALITY_FILE,
+	type QualityComparison,
+} from "../brownfield/quality";
 import type { RunResults } from "../types";
 
 const pct = (n: number, d: number) =>
@@ -212,17 +216,17 @@ export function renderBrownfieldReport(
 	if (compared.length) {
 		const first = quality.get(compared[0]!.provenance.trialId)!;
 		lines.push(
-			`## Code quality vs the merged human PR (${first.judgeModel}, ${first.samples} samples)`,
+			`## Code quality vs the original PR (${first.judgeModel}, ${first.samples} samples)`,
 			"",
-			"Blind comparison: the judge sees the harness's diff and the merged PR's diff (fix + tests) labelled only A and B, with sides alternating across samples. Scores are 0–100 (mean of per-criterion medians × 10). This is a secondary signal; it never changes the resolution verdict.",
+			"Blind comparison: the judge sees the harness's diff and the original PR's diff (fix + tests) labelled only A and B, with sides alternating across samples. Scores are 0–100 (mean of per-criterion medians × 10). This is a secondary signal; it never changes the resolution verdict.",
 			"",
-			"| Candidate | Task | Harness | Human PR | Preferred (harness/human/tie votes) |",
+			"| Candidate | Task | Harness | Original PR | Preferred (harness/original/tie votes) |",
 			"| --- | --- | --: | --: | --- |",
 		);
 		for (const t of compared) {
 			const q = quality.get(t.provenance.trialId)!;
 			lines.push(
-				`| ${t.provenance.candidate} | ${t.provenance.brownfield!.taskId} | ${q.harnessScore} | ${q.humanScore} | **${q.preference}** (${q.votes.harness}/${q.votes.human}/${q.votes.tie}) |`,
+				`| ${t.provenance.candidate} | ${t.provenance.brownfield!.taskId} | ${q.harnessScore} | ${q.humanScore} | **${q.preference === "human" ? "original PR" : q.preference}** (${q.votes.harness}/${q.votes.human}/${q.votes.tie}) |`,
 			);
 		}
 		lines.push("");
@@ -231,14 +235,14 @@ export function renderBrownfieldReport(
 			lines.push(
 				`### ${t.provenance.candidate} × ${t.provenance.brownfield!.taskId}`,
 				"",
-				"| Criterion | Harness | Human PR | Judge's note |",
+				"| Criterion | Harness | Original PR | Judge's note |",
 				"| --- | --: | --: | --- |",
 				...q.criteria.map(
 					(c) =>
-						`| ${c.label} | ${c.harness} | ${c.human} | ${(c.notes[0] ?? "").replace(/\|/g, "/")} |`,
+						`| ${c.label} | ${c.harness} | ${c.human} | ${originalPrWording(c.notes[0] ?? "").replace(/\|/g, "/")} |`,
 				),
 				"",
-				`**Judge's rationale:** ${q.rationales[0] ?? ""}`,
+				`**Judge's rationale:** ${originalPrWording(q.rationales[0] ?? "")}`,
 				"",
 			);
 		}

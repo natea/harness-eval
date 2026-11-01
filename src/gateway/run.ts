@@ -52,7 +52,7 @@ export interface DockerGatewayEgressOptions {
 	/** Image with bun, used for the relay (the trial image). */
 	image: string;
 	model: string;
-	apiKey: string;
+	credential: import("./credential").GatewayCredential;
 	logPath: string;
 	upstream?: string;
 	/** Address the gateway binds; Docker Desktop for Mac reaches 127.0.0.1. */
@@ -71,7 +71,7 @@ export async function startDockerGatewayEgress(
 ): Promise<RunEgress> {
 	const gateway = startGateway({
 		model: opts.model,
-		apiKey: opts.apiKey,
+		credential: opts.credential,
 		logPath: opts.logPath,
 		upstream: opts.upstream,
 		hostname: opts.hostname,

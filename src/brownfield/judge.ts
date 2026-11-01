@@ -87,8 +87,15 @@ export const anthropicApiJudgeRunner: JudgeRunner = async ({
 	prompt,
 	schema,
 }) => {
+	// Subscription OAuth by default (operator decision 2026-11-01); the API key
+	// only when no OAuth token is configured. Never both: Claude Code prefers
+	// the API key when both are set.
+	const oauth = process.env.CLAUDE_CODE_OAUTH_TOKEN;
 	const key = process.env.ANTHROPIC_API_KEY;
-	if (!key) throw new Error("ANTHROPIC_API_KEY is not set");
+	if (!oauth && !key)
+		throw new Error(
+			"judge needs CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY)",
+		);
 	const p = Bun.spawn(
 		[
 			"claude",
@@ -114,8 +121,9 @@ export const anthropicApiJudgeRunner: JudgeRunner = async ({
 			stderr: "pipe",
 			env: {
 				...process.env,
-				ANTHROPIC_API_KEY: key,
-				CLAUDE_CODE_OAUTH_TOKEN: "",
+				...(oauth
+					? { CLAUDE_CODE_OAUTH_TOKEN: oauth, ANTHROPIC_API_KEY: "" }
+					: { ANTHROPIC_API_KEY: key as string, CLAUDE_CODE_OAUTH_TOKEN: "" }),
 			},
 		},
 	);

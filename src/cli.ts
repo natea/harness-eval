@@ -115,6 +115,10 @@ import {
 } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
 import { DEFAULT_TRIAL_IMAGE } from "./providers/docker";
+import {
+	placeholderAuthEnv,
+	resolveGatewayCredential,
+} from "./gateway/credential";
 import { writeBrownfieldReport } from "./report/brownfield";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
@@ -674,18 +678,17 @@ async function cmdRunBrownfield(): Promise<void> {
 			throw new Error(
 				`--gateway supports the claude-code harness only (got '${config.harness}'); refusing a protocol mismatch`,
 			);
-		const key = process.env.ANTHROPIC_API_KEY;
-		if (!key)
-			throw new Error(
-				"--gateway needs ANTHROPIC_API_KEY for credential injection",
-			);
+		const credential = resolveGatewayCredential(arg("credential") ?? "oauth");
+		console.log(
+			`gateway credential: ${credential.kind === "oauth" ? "Claude subscription (OAuth)" : "API key (bills API credits)"}`,
+		);
 		if (config.provider !== "worktree")
 			console.warn(
 				`[brownfield] gateway: ${config.provider} cannot reach 127.0.0.1; use the worktree provider`,
 			);
 		gateway = startGateway({
 			upstream: "https://api.anthropic.com",
-			apiKey: key,
+			credential,
 			model: workerProfile.modelId,
 			logPath: join(runDir, "gateway.jsonl"),
 		});
@@ -727,7 +730,11 @@ async function cmdRunBrownfield(): Promise<void> {
 			...rw.env,
 			...workerEnvExtra,
 			ANTHROPIC_BASE_URL: gateway.url,
-			ANTHROPIC_API_KEY: "gateway-placeholder",
+			...placeholderAuthEnv(
+				credential.kind === "oauth"
+					? "sk-ant-oat01-gateway-placeholder"
+					: "sk-ant-api03-gateway-placeholder",
+			),
 			// Every Claude Code slot resolves to the one model the gateway allows.
 			ANTHROPIC_DEFAULT_OPUS_MODEL: workerProfile.modelId,
 			ANTHROPIC_DEFAULT_SONNET_MODEL: workerProfile.modelId,
@@ -799,6 +806,7 @@ async function cmdRunBrownfield(): Promise<void> {
 				harness: config.harness,
 				model: workerProfile.modelId,
 				baseImage: arg("base-image"),
+				credential: arg("credential") ?? "oauth",
 				probe: async (env, modelFlag) => {
 					for (const candidate of candidates) {
 						const r = await probeGatewaySession(env, modelFlag);

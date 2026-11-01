@@ -8,6 +8,12 @@
  */
 
 import { appendFileSync } from "node:fs";
+import {
+	type GatewayCredential,
+	injectCredential,
+	newPlaceholderFor,
+	placeholderAuthEnv,
+} from "./credential";
 
 export const UPSTREAM_ANTHROPIC = "https://api.anthropic.com";
 /** Claude Code picks its auth scheme from the key prefix, so the placeholder keeps it. */
@@ -28,8 +34,10 @@ const SERVER_SIDE_FIELDS = ["mcp_servers", "container"] as const;
 export interface GatewayOptions {
 	/** The one model this run may call. */
 	model: string;
-	/** Real credential; never leaves the gateway. */
-	apiKey: string;
+	/** Real credential; never leaves the gateway. Default: the subscription OAuth token. */
+	credential?: GatewayCredential;
+	/** Legacy: an API key (same as credential {kind: "api-key"}). */
+	apiKey?: string;
 	/** JSONL request log. */
 	logPath: string;
 	upstream?: string;
@@ -182,7 +190,11 @@ export interface Gateway {
 }
 
 export function startGateway(opts: GatewayOptions): Gateway {
-	if (!opts.apiKey) throw new Error("gateway needs a real API key");
+	const cred: GatewayCredential = opts.credential ?? {
+		kind: "api-key",
+		token: opts.apiKey ?? "",
+	};
+	if (!cred.token) throw new Error("gateway needs a real credential");
 	const upstream = opts.upstream ?? UPSTREAM_ANTHROPIC;
 	const rejected: GatewayLogEntry[] = [];
 	const trials = new Map<string, string>();
@@ -236,7 +248,7 @@ export function startGateway(opts: GatewayOptions): Gateway {
 			const headers = new Headers(req.headers);
 			for (const h of ["host", "authorization", "x-api-key", "content-length"])
 				headers.delete(h);
-			headers.set("x-api-key", opts.apiKey);
+			injectCredential(headers, cred);
 			let up: Response;
 			try {
 				up = await fetch(upstream + url.pathname + url.search, {
@@ -276,7 +288,7 @@ export function startGateway(opts: GatewayOptions): Gateway {
 		url: `http://${host}:${server.port}`,
 		port: server.port as number,
 		issue: (trialId) => {
-			const p = newPlaceholder();
+			const p = newPlaceholderFor(cred.kind);
 			trials.set(p, trialId);
 			return p;
 		},
@@ -308,9 +320,7 @@ export function claudeCodeGatewayEnv(
 	return {
 		env: {
 			ANTHROPIC_BASE_URL: baseUrl,
-			ANTHROPIC_API_KEY: placeholder,
-			ANTHROPIC_AUTH_TOKEN: "",
-			CLAUDE_CODE_OAUTH_TOKEN: "",
+			...placeholderAuthEnv(placeholder),
 			ANTHROPIC_MODEL: model,
 			ANTHROPIC_SMALL_FAST_MODEL: model,
 			ANTHROPIC_DEFAULT_OPUS_MODEL: model,

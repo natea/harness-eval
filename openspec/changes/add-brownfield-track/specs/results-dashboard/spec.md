@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Brownfield run view
-The results dashboard SHALL render a brownfield run as a per-trial table: task (linking the issue and the merged PR), verdict and reason, harness vs human quality score and preference, patch size and file overlap against the merged PR, agent time and cost beside the human baseline, and review flags.
+The results dashboard SHALL render a brownfield run as a per-trial table: task (linking the issue and the merged PR), verdict and reason, harness vs original-PR quality score and preference, patch size and file overlap against the merged PR, agent time and cost beside the human baseline, and review flags.
 
 #### Scenario: Brownfield run opened
 - **WHEN** an operator opens a run whose trials are brownfield

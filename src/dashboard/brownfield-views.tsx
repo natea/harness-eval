@@ -158,8 +158,17 @@ const verdictBadge = (v: string | null, status?: string) =>
 		<span className="muted">—</span>
 	);
 
+/** Harness PR vs the original PR (older quality.json files say "human"). */
+const originalPrWording = (text: string) =>
+	text
+		.replace(/\bmerged human PR\b/gi, "original PR")
+		.replace(/\bhuman PR's\b/gi, "original PR's")
+		.replace(/\bhuman PR\b/gi, "original PR")
+		.replace(/\bhuman's\b/gi, "original PR's")
+		.replace(/\bhuman\b/gi, "original PR");
+
 const prefLabel = (p: string) =>
-	p === "harness" ? "harness" : p === "human" ? "human PR" : "tie";
+	p === "harness" ? "harness" : p === "human" ? "original PR" : "tie";
 
 function TaskLinks({ task }: { task: TaskMeta | null }) {
 	if (!task) return <span className="muted">unknown task</span>;
@@ -224,8 +233,8 @@ export function BrownfieldRunView({
 			<p className="muted">
 				Each trial replays a real merged PR: the harness gets the issue as it
 				stood before the fix, and is graded by the PR's hidden tests. Quality
-				compares the harness's PR with the human PR that was merged (blind A/B
-				judge, 0–100).
+				compares the harness's PR with the original PR that was merged (blind
+				A/B judge, 0–100).
 			</p>
 			{!rows ? (
 				<p className="muted">loading…</p>
@@ -236,10 +245,10 @@ export function BrownfieldRunView({
 							<th>Candidate</th>
 							<th>Task</th>
 							<th>Verdict</th>
-							<th>Quality: harness vs human</th>
-							<th>Lines: harness / human</th>
+							<th>Quality: harness vs original</th>
+							<th>Lines: harness / original</th>
 							<th>File overlap</th>
-							<th>Agent vs human time</th>
+							<th>Agent vs original time</th>
 							<th>Cost</th>
 							<th>Flags</th>
 						</tr>
@@ -524,7 +533,7 @@ export function BrownfieldTrialView({
 					)}
 
 					<h2>
-						Code quality vs the merged human PR{" "}
+						Code quality vs the original PR{" "}
 						{q && (
 							<span className="muted">
 								({q.judgeModel}, {q.samples} blind samples)
@@ -534,7 +543,7 @@ export function BrownfieldTrialView({
 					{q ? (
 						<>
 							<p>
-								Harness <strong>{q.harnessScore}</strong> vs human PR{" "}
+								Harness <strong>{q.harnessScore}</strong> vs original PR{" "}
 								<strong>{q.humanScore}</strong> · judge prefers{" "}
 								<strong>{prefLabel(q.preference)}</strong> (votes harness{" "}
 								{q.votes.harness} / human {q.votes.human} / tie {q.votes.tie})
@@ -544,7 +553,7 @@ export function BrownfieldTrialView({
 									<tr>
 										<th>Criterion</th>
 										<th>Harness</th>
-										<th>Human PR</th>
+										<th>Original PR</th>
 										<th>Judge's note</th>
 									</tr>
 								</thead>
@@ -564,13 +573,14 @@ export function BrownfieldTrialView({
 											>
 												{c.human}
 											</td>
-											<td>{c.notes[0] ?? ""}</td>
+											<td>{originalPrWording(c.notes[0] ?? "")}</td>
 										</tr>
 									))}
 								</tbody>
 							</table>
 							<p>
-								<strong>Rationale:</strong> {q.rationales[0]}
+								<strong>Rationale:</strong>{" "}
+								{originalPrWording(q.rationales[0] ?? "")}
 							</p>
 						</>
 					) : (
@@ -592,7 +602,7 @@ export function BrownfieldTrialView({
 						</p>
 					)}
 
-					<h2>Harness PR vs merged human PR</h2>
+					<h2>Harness PR vs original PR</h2>
 					{bf?.signals && (
 						<p className="mono muted">
 							files matched{" "}
@@ -612,7 +622,7 @@ export function BrownfieldTrialView({
 						</div>
 						<div>
 							<h3>
-								Merged human PR{" "}
+								Original PR{" "}
 								{task && (
 									<a href={task.prUrl} target="_blank" rel="noreferrer">
 										#{task.pr}
@@ -624,7 +634,7 @@ export function BrownfieldTrialView({
 								empty="no reference patch"
 							/>
 							<details>
-								<summary>human PR's tests (hidden from the harness)</summary>
+								<summary>original PR's tests (hidden from the harness)</summary>
 								<DiffBlock
 									patch={bf?.testsPatch ?? null}
 									empty="no test patch"

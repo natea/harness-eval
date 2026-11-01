@@ -85,5 +85,7 @@ export async function seedDockerTrial(
 		.split("\n")
 		.filter((l) => l.trim() && l.trim() !== `?? ${task.issueFile}`);
 	if (ex.exitCode !== 0 || unexpected.length)
-		throw new Error(`workspace has unexpected changes after seeding:\n${unexpected.join("\n")}`);
+		throw new Error(
+			`workspace has unexpected changes after seeding:\n${unexpected.join("\n")}`,
+		);
 }

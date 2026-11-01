@@ -43,7 +43,7 @@ Brownfield grading SHALL additionally record, without overriding resolution: an 
 - **THEN** the trial remains resolved and the disagreement is surfaced for review
 
 ### Requirement: Code-quality comparison against the merged PR
-Brownfield grading SHALL score each scored trial's patch and the human PR merged for the same issue on one rubric (correctness, scope, clarity, codebase fit, robustness, tests; 0–10 per side). The human side SHALL be the merged PR as submitted (reference patch plus test patch). The judge model SHALL differ from the worker model, and the comparison SHALL NOT change the resolution verdict.
+Brownfield grading SHALL score each scored trial's patch and the original PR merged for the same issue on one rubric (correctness, scope, clarity, codebase fit, robustness, tests; 0–10 per side). The original side SHALL be the merged PR as submitted (reference patch plus test patch). The judge model SHALL differ from the worker model, and the comparison SHALL NOT change the resolution verdict.
 
 #### Scenario: Stored per trial
 - **WHEN** a trial is compared
@@ -54,7 +54,7 @@ Brownfield grading SHALL score each scored trial's patch and the human PR merged
 - **THEN** no comparison is made for it
 
 ### Requirement: Blind, position-balanced quality judging
-The quality comparison SHALL show the judge two diffs labelled only A and B, never indicating which is human. Samples SHALL alternate which side is A; per-criterion scores SHALL be medians over samples and the preference a majority vote.
+The quality comparison SHALL show the judge two diffs labelled only A and B, never indicating which is the original. Samples SHALL alternate which side is A; per-criterion scores SHALL be medians over samples and the preference a majority vote.
 
 #### Scenario: Position bias cancels
 - **WHEN** a judge always prefers whichever diff is shown first

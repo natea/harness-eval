@@ -1,0 +1,1107 @@
+[
+  {
+    "pr": 11292,
+    "merged": "2026-09-29",
+    "issues": [
+      {
+        "n": 11234,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/dataarray.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataarray.py"
+    ],
+    "env": "exclude-newer 2026-09-29T07:40:10Z",
+    "envSecs": 12,
+    "selected": [
+      "xarray/tests/test_dataarray.py::TestDataArray::test_constructor",
+      "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_invalid",
+      "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_tuple_coords_no_warning_when_names_match_dims",
+      "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_tuple_coords_warn_when_dims_override_names"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 3,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataarray.TestDataArray::test_constructor_tuple_coords_warn_when_dims_override_names"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11164,
+    "merged": "2026-10-17",
+    "issues": [
+      {
+        "n": 10998,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/plot/dataarray_plot.py",
+      "xarray/plot/facetgrid.py",
+      "xarray/plot/utils.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_plot.py"
+    ],
+    "env": "exclude-newer 2026-10-17T10:58:12+02:00",
+    "envSecs": 17,
+    "selected": [
+      "xarray/tests/test_plot.py::TestFacetGrid::test_colorbar_scatter",
+      "xarray/tests/test_plot.py::TestFacetGrid::test_empty_cell",
+      "xarray/tests/test_plot.py::TestFacetGrid::test_legend_deduplicates_line_hue",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_coords_line_plot",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_line_accepts_hue_kw",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_line_duplicate_hue_respects_user_color",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_line_duplicate_hue_shares_color",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_line_duplicate_hue_shares_cycled_style",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_line_missing_hue_values",
+      "xarray/tests/test_plot.py::TestPlot::test_2d_line_unique_hue_palette_unchanged"
+    ],
+    "counts": {
+      "f2p": 5,
+      "p2p": 7,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_plot.TestFacetGrid::test_legend_deduplicates_line_hue",
+      "xarray.tests.test_plot.TestPlot::test_2d_line_duplicate_hue_shares_color",
+      "xarray.tests.test_plot.TestPlot::test_2d_line_duplicate_hue_shares_cycled_style",
+      "xarray.tests.test_plot.TestPlot::test_2d_line_missing_hue_values[category0]",
+      "xarray.tests.test_plot.TestPlot::test_2d_line_missing_hue_values[category2]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11413,
+    "merged": "2026-10-12",
+    "issues": [
+      {
+        "n": 11323,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/backends/scipy_.py"
+    ],
+    "testFiles": [
+      "xarray/tests/backends/base.py"
+    ],
+    "verdict": "skip:no-test-change"
+  },
+  {
+    "pr": 10680,
+    "merged": "2026-10-11",
+    "issues": [
+      {
+        "n": 10112,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 6,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/computation/computation.py",
+      "xarray/core/dataarray.py",
+      "xarray/core/dataset.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataarray.py",
+      "xarray/tests/test_dataset.py"
+    ],
+    "env": "exclude-newer 2026-10-09T22:30:13+02:00",
+    "envSecs": 19,
+    "selected": [
+      "xarray/tests/test_dataarray.py::TestReduce",
+      "xarray/tests/test_dataarray.py::TestReduce1D::test_idxmax",
+      "xarray/tests/test_dataarray.py::TestReduce1D::test_idxmin",
+      "xarray/tests/test_dataarray.py::TestReduce2D::test_argmax_dim",
+      "xarray/tests/test_dataarray.py::TestReduce2D::test_idxmax",
+      "xarray/tests/test_dataarray.py::TestReduce2D::test_idxmax_dim",
+      "xarray/tests/test_dataarray.py::TestReduce2D::test_idxmin",
+      "xarray/tests/test_dataarray.py::TestReduce2D::test_idxmin_dim",
+      "xarray/tests/test_dataarray.py::TestReduce3D::test_argmax_dim",
+      "xarray/tests/test_dataarray.py::TestReduce3D::test_idxminmax_dim",
+      "xarray/tests/test_dataarray.py::TestReduceND::test_idxminmax_dask",
+      "xarray/tests/test_dataset.py::TestDataset::test_idxminmax_multiple_dims_raises",
+      "xarray/tests/test_dataset.py::TestDataset::test_reduce_strings"
+    ],
+    "counts": {
+      "f2p": 145,
+      "p2p": 17,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[numpy-int]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[numpy-float]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[numpy-nan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[numpy-obj]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[numpy-allnan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[numpy-datetime]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[dask-int]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[dask-float]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[dask-nan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[dask-obj]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmax[dask-allnan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[numpy-int]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[numpy-float]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[numpy-nan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[numpy-obj]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[numpy-allnan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[numpy-datetime]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[dask-int]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[dask-float]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[dask-nan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[dask-obj]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[dask-allnan]",
+      "xarray.tests.test_dataarray.TestReduce1D::test_idxmin[dask-datetime]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[numpy-int]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[numpy-nan]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[numpy-obj]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[numpy-datetime]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[dask-int]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[dask-nan]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax[dask-obj]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax_dim[int]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmax_dim[datetime]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[numpy-int]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[numpy-nan]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[numpy-obj]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[numpy-datetime]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[dask-int]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[dask-nan]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin[dask-obj]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin_dim[int]",
+      "xarray.tests.test_dataarray.TestReduce2D::test_idxmin_dim[datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim0-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim1-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim2-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim3-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim4-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim5-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-min-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-max-obj]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[None-dim6-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim0-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim0-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim0-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim0-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim0-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim0-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim1-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim1-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim1-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim1-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim1-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim1-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim2-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim2-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim2-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim2-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim2-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim2-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim3-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim3-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim3-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim3-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim3-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim3-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim4-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim4-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim4-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim4-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim4-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim4-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim5-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim5-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim5-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim5-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim5-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim5-max-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim6-min-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim6-min-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim6-min-datetime]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim6-max-int]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim6-max-nan]",
+      "xarray.tests.test_dataarray.TestReduce3D::test_idxminmax_dim[False-dim6-max-datetime]",
+      "xarray.tests.test_dataset.TestDataset::test_idxminmax_multiple_dims_raises[dim0-idxmin]",
+      "xarray.tests.test_dataset.TestDataset::test_idxminmax_multiple_dims_raises[dim0-idxmax]",
+      "xarray.tests.test_dataset.TestDataset::test_idxminmax_multiple_dims_raises[dim1-idxmin]",
+      "xarray.tests.test_dataset.TestDataset::test_idxminmax_multiple_dims_raises[dim1-idxmax]",
+      "xarray.tests.test_dataset.TestDataset::test_idxminmax_multiple_dims_raises[dim2-idxmin]",
+      "xarray.tests.test_dataset.TestDataset::test_idxminmax_multiple_dims_raises[dim2-idxmax]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11338,
+    "merged": "2026-08-19",
+    "issues": [
+      {
+        "n": 10135,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "pyproject.toml",
+      "xarray/core/dataarray.py"
+    ],
+    "testFiles": [
+      "xarray/tests/__init__.py",
+      "xarray/tests/test_dataarray.py"
+    ],
+    "env": "exclude-newer 2026-08-19T14:10:35-06:00",
+    "envSecs": 6,
+    "selected": [
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_arrow_schema_fields",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_arrow_schema_metadata",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_dask_dataarray",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_data_array_unnamed_variable",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_polars_dataframe_1d",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_polars_dataframe_2d",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_polars_pyarrow_consistent",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_1d",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_2d",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_curvilinear_coords",
+      "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_transposed_coords",
+      "xarray/tests/test_dataarray.py::test_unstack_index_var"
+    ],
+    "counts": {
+      "f2p": 8,
+      "p2p": 1,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_arrow_schema_fields",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_arrow_schema_metadata",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_dask_dataarray",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_data_array_unnamed_variable",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_1d",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_2d",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_curvilinear_coords",
+      "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_transposed_coords"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11476,
+    "merged": "2026-08-19",
+    "issues": [
+      {
+        "n": 11452,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/plot/utils.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_plot.py"
+    ],
+    "env": "exclude-newer 2026-08-19T14:46:44-06:00",
+    "envSecs": 4,
+    "selected": [
+      "xarray/tests/test_plot.py::TestPlot::test1d",
+      "xarray/tests/test_plot.py::TestPlot::test_label_from_attrs"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 1,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_plot.TestPlot::test_label_from_attrs"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11478,
+    "merged": "2026-07-29",
+    "issues": [
+      {
+        "n": 11462,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/computation/computation.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_computation.py"
+    ],
+    "env": "exclude-newer 2026-07-29T12:49:03+02:00",
+    "envSecs": 8,
+    "selected": [
+      "xarray/tests/test_computation.py::test_polyfit_polyval_integration",
+      "xarray/tests/test_computation.py::test_polyval_degree_dim_checks",
+      "xarray/tests/test_computation.py::test_polyval_timedelta_nat"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 17,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_computation::test_polyval_timedelta_nat"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11552,
+    "merged": "2026-09-09",
+    "issues": [
+      {
+        "n": 9789,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 4,
+    "srcFiles": [
+      "xarray/computation/apply_ufunc.py",
+      "xarray/ufuncs.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_computation.py",
+      "xarray/tests/test_ufuncs.py"
+    ],
+    "env": "exclude-newer 2026-09-08T10:36:18-06:00",
+    "envSecs": 2,
+    "selected": [
+      "xarray/tests/test_computation.py::test_apply_1d_and_0d",
+      "xarray/tests/test_computation.py::test_apply_dask_parallelized_two_args",
+      "xarray/tests/test_computation.py::test_apply_datatree_two_outputs",
+      "xarray/tests/test_computation.py::test_apply_datatree_with_core_dims_and_scalar",
+      "xarray/tests/test_computation.py::test_apply_groupby_add",
+      "xarray/tests/test_computation.py::test_apply_identity",
+      "xarray/tests/test_computation.py::test_apply_identity_datatree",
+      "xarray/tests/test_computation.py::test_apply_non_isomorphic_datatrees",
+      "xarray/tests/test_computation.py::test_apply_two_datatrees",
+      "xarray/tests/test_computation.py::test_apply_two_inputs",
+      "xarray/tests/test_computation.py::test_dataset_join",
+      "xarray/tests/test_computation.py::test_keep_attrs",
+      "xarray/tests/test_ufuncs.py::TestXarrayUfuncs::test_ufunc_datatree",
+      "xarray/tests/test_ufuncs.py::TestXarrayUfuncs::test_ufunc_pickle",
+      "xarray/tests/test_ufuncs.py::TestXarrayUfuncs::test_ufunc_scalar"
+    ],
+    "counts": {
+      "f2p": 6,
+      "p2p": 9,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_computation::test_apply_datatree_two_outputs",
+      "xarray.tests.test_computation::test_apply_datatree_with_core_dims_and_scalar",
+      "xarray.tests.test_computation::test_apply_identity_datatree",
+      "xarray.tests.test_computation::test_apply_non_isomorphic_datatrees",
+      "xarray.tests.test_computation::test_apply_two_datatrees",
+      "xarray.tests.test_ufuncs.TestXarrayUfuncs::test_ufunc_datatree"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11525,
+    "merged": "2026-10-12",
+    "issues": [
+      {
+        "n": 10022,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 4,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/common.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataarray.py",
+      "xarray/tests/test_dataset.py"
+    ],
+    "env": "exclude-newer 2026-10-12T22:37:06+02:00",
+    "envSecs": 4,
+    "selected": [
+      "xarray/tests/test_dataarray.py::test_isin",
+      "xarray/tests/test_dataarray.py::test_raise_no_warning_for_nan_in_binary_ops",
+      "xarray/tests/test_dataset.py::test_isin"
+    ],
+    "counts": {
+      "f2p": 6,
+      "p2p": 7,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataarray::test_isin[numpy-repeating_ints]",
+      "xarray.tests.test_dataarray::test_isin[dask-repeating_ints]",
+      "xarray.tests.test_dataset::test_isin[numpy-set]",
+      "xarray.tests.test_dataset::test_isin[numpy-frozenset]",
+      "xarray.tests.test_dataset::test_isin[dask-set]",
+      "xarray.tests.test_dataset::test_isin[dask-frozenset]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11620,
+    "merged": "2026-10-07",
+    "issues": [
+      {
+        "n": 9490,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/treenode.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_datatree.py"
+    ],
+    "env": "exclude-newer 2026-10-07T07:57:54+02:00",
+    "envSecs": 3,
+    "selected": [
+      "xarray/tests/test_datatree.py::TestNames::test_child_gets_named_on_attach",
+      "xarray/tests/test_datatree.py::TestNames::test_child_names_cannot_contain_slashes",
+      "xarray/tests/test_datatree.py::TestNames::test_dataset_containing_slashes"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 2,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_datatree.TestNames::test_child_names_cannot_contain_slashes"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11628,
+    "merged": "2026-09-28",
+    "issues": [
+      {
+        "n": 7748,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 4,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/dataset.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataarray.py",
+      "xarray/tests/test_dataset.py"
+    ],
+    "env": "exclude-newer 2026-09-28T21:46:04Z",
+    "envSecs": 3,
+    "selected": [
+      "xarray/tests/test_dataarray.py::TestDataArray::test_coordinate_diff",
+      "xarray/tests/test_dataarray.py::TestDataArray::test_dataarray_diff_exception_invalid_dim",
+      "xarray/tests/test_dataarray.py::TestDataArray::test_dataarray_diff_n1",
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_exception_invalid_dim",
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_exception_label_str",
+      "xarray/tests/test_dataset.py::TestDataset::test_shift"
+    ],
+    "counts": {
+      "f2p": 2,
+      "p2p": 7,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataarray.TestDataArray::test_dataarray_diff_exception_invalid_dim",
+      "xarray.tests.test_dataset.TestDataset::test_dataset_diff_exception_invalid_dim"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11638,
+    "merged": "2026-09-29",
+    "issues": [
+      {
+        "n": 10338,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 2,
+    "srcFiles": [
+      "xarray/backends/scipy_.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_backends.py"
+    ],
+    "env": "exclude-newer 2026-09-29T07:47:13Z",
+    "envSecs": 3,
+    "selected": [
+      "xarray/tests/test_backends.py::TestScipyFileObject::test_create_default_indexes",
+      "xarray/tests/test_backends.py::TestScipyFileObject::test_indexing_multiple_non_adjacent_indexers"
+    ],
+    "counts": {
+      "f2p": 1,
+      "p2p": 2,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_backends.TestScipyFileObject::test_indexing_multiple_non_adjacent_indexers"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11655,
+    "merged": "2026-10-01",
+    "issues": [
+      {
+        "n": 11652,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "xarray/plot/utils.py"
+    ],
+    "testFiles": [
+      "xarray/tests/backends/test_zarr.py",
+      "xarray/tests/test_indexes.py"
+    ],
+    "env": "exclude-newer 2026-10-01T18:17:57Z",
+    "envSecs": 2,
+    "selected": [
+      "xarray/tests/backends/test_zarr.py::TestZarrRectilinearChunksRead::test_write_rectilinear_shards_blocked",
+      "xarray/tests/backends/test_zarr.py::TestZarrRectilinearChunksRead::test_write_regular_shards_still_works",
+      "xarray/tests/test_indexes.py::TestPandasMultiIndex::test_join",
+      "xarray/tests/test_indexes.py::TestPandasMultiIndex::test_sel"
+    ],
+    "counts": {
+      "f2p": 0,
+      "p2p": 6,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [],
+    "verdict": "fail:no-fail-to-pass"
+  },
+  {
+    "pr": 11663,
+    "merged": "2026-10-19",
+    "issues": [
+      {
+        "n": 11361,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 4,
+    "srcFiles": [
+      "doc/user-guide/io.md",
+      "doc/whats-new.rst",
+      "xarray/backends/zarr.py"
+    ],
+    "testFiles": [
+      "xarray/tests/backends/test_datatree.py"
+    ],
+    "env": "exclude-newer 2026-10-19T08:40:11+02:00",
+    "envSecs": 3,
+    "selected": [
+      "xarray/tests/backends/test_datatree.py::TestZarrDatatreeIO::test_to_zarr",
+      "xarray/tests/backends/test_datatree.py::TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask"
+    ],
+    "counts": {
+      "f2p": 12,
+      "p2p": 2,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_datatree-zarr_format=2]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_datatree-zarr_format=3]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_groups-zarr_format=2]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_groups-zarr_format=3]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_datatree-zarr_format=2]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_datatree-zarr_format=3]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_groups-zarr_format=2]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_groups-zarr_format=3]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_datatree-zarr_format=2]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_datatree-zarr_format=3]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_groups-zarr_format=2]",
+      "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_groups-zarr_format=3]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11688,
+    "merged": "2026-10-08",
+    "issues": [
+      {
+        "n": 11455,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 7,
+    "srcFiles": [
+      "asv_bench/benchmarks/unstacking.py",
+      "doc/whats-new.rst",
+      "xarray/core/dataset.py",
+      "xarray/core/indexes.py",
+      "xarray/core/variable.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataset.py",
+      "xarray/tests/test_indexes.py"
+    ],
+    "env": "exclude-newer 2026-10-08T20:17:01+02:00",
+    "envSecs": 2,
+    "selected": [
+      "xarray/tests/test_dataset.py::TestDataset::test_stack_unstack_slow",
+      "xarray/tests/test_dataset.py::TestDataset::test_to_stacked_array_invalid_sample_dims",
+      "xarray/tests/test_dataset.py::TestDataset::test_unstack_full_product_is_view",
+      "xarray/tests/test_dataset.py::TestDataset::test_unstack_not_full_product",
+      "xarray/tests/test_indexes.py::test_is_full_ordered_product",
+      "xarray/tests/test_indexes.py::test_set_xindex_factory_method_pattern"
+    ],
+    "counts": {
+      "f2p": 13,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataset.TestDataset::test_stack_unstack_slow",
+      "xarray.tests.test_dataset.TestDataset::test_to_stacked_array_invalid_sample_dims",
+      "xarray.tests.test_dataset.TestDataset::test_unstack_full_product_is_view[stacked-first]",
+      "xarray.tests.test_dataset.TestDataset::test_unstack_full_product_is_view[stacked-last]",
+      "xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[unsorted-levels]",
+      "xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[reversed]",
+      "xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[missing]",
+      "xarray.tests.test_indexes::test_is_full_ordered_product[product]",
+      "xarray.tests.test_indexes::test_is_full_ordered_product[product-unsorted-levels]",
+      "xarray.tests.test_indexes::test_is_full_ordered_product[reversed]",
+      "xarray.tests.test_indexes::test_is_full_ordered_product[missing]",
+      "xarray.tests.test_indexes::test_is_full_ordered_product[nan-label]",
+      "xarray.tests.test_indexes::test_set_xindex_factory_method_pattern"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11673,
+    "merged": "2026-10-11",
+    "issues": [
+      {
+        "n": 11672,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/datatree.py"
+    ],
+    "testFiles": [
+      "xarray/tests/backends/test_datatree.py"
+    ],
+    "env": "exclude-newer 2026-10-11T18:31:39Z",
+    "envSecs": 2,
+    "selected": [
+      "xarray/tests/backends/test_datatree.py"
+    ],
+    "counts": {
+      "f2p": 3,
+      "p2p": 211,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.backends.test_datatree.TestGenericNetCDFIO::test_load_datatree_overwrite_same_named_variable",
+      "xarray.tests.backends.test_datatree.TestNetCDF4DatatreeIO::test_load_datatree_overwrite_same_named_variable",
+      "xarray.tests.backends.test_datatree.TestH5NetCDFDatatreeIO::test_load_datatree_overwrite_same_named_variable"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11741,
+    "merged": "2026-10-15",
+    "issues": [
+      {
+        "n": 10325,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/missing.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_missing.py"
+    ],
+    "env": "exclude-newer 2026-10-15T14:00:07Z",
+    "envSecs": 3,
+    "selected": [
+      "xarray/tests/test_missing.py::test_interpolate_dask_expected_dtype"
+    ],
+    "counts": {
+      "f2p": 3,
+      "p2p": 3,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_missing::test_interpolate_dask_expected_dtype[float32-linear]",
+      "xarray.tests.test_missing::test_interpolate_dask_expected_dtype[float32-slinear]",
+      "xarray.tests.test_missing::test_interpolate_dask_expected_dtype[complex64-linear]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11704,
+    "merged": "2026-10-11",
+    "issues": [
+      {
+        "n": 11702,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/dataset.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataset.py"
+    ],
+    "env": "exclude-newer 2026-10-11T19:10:59Z",
+    "envSecs": 2,
+    "selected": [
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_exception_n_neg",
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_large_n",
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n2",
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n2_label",
+      "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n_larger_than_size"
+    ],
+    "counts": {
+      "f2p": 5,
+      "p2p": 1,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataset.TestDataset::test_dataset_diff_large_n",
+      "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n2",
+      "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n2_label[upper-coords0]",
+      "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n2_label[lower-coords1]",
+      "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n_larger_than_size"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11696,
+    "merged": "2026-10-11",
+    "issues": [
+      {
+        "n": 11336,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/computation/rolling.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_rolling.py"
+    ],
+    "env": "exclude-newer 2026-10-11T20:20:58+02:00",
+    "envSecs": 2,
+    "selected": [
+      "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_argminmax_vs_iter",
+      "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter",
+      "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_repr",
+      "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_wrapped_bottleneck",
+      "xarray/tests/test_rolling.py::test_cumulative",
+      "xarray/tests/test_rolling.py::test_cumulative_argminmax",
+      "xarray/tests/test_rolling.py::test_cumulative_vs_cum"
+    ],
+    "counts": {
+      "f2p": 86,
+      "p2p": 318,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-None-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-None-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-None-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-None-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-None-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-None-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-None-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-None-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-None-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-None-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-True-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-True-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-False-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-False-argmax]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-None-argmin]",
+      "xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-None-argmax]",
+      "xarray.tests.test_rolling::test_cumulative_argminmax[argmin]",
+      "xarray.tests.test_rolling::test_cumulative_argminmax[argmax]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 11798,
+    "merged": "2026-10-24",
+    "issues": [
+      {
+        "n": 6449,
+        "repo": "pydata/xarray"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "doc/whats-new.rst",
+      "xarray/core/dataset.py"
+    ],
+    "testFiles": [
+      "xarray/tests/test_dataset.py"
+    ],
+    "env": "exclude-newer 2026-10-24T01:47:22+02:00",
+    "envSecs": 4,
+    "selected": [
+      "xarray/tests/test_dataset.py::TestDataset::test_astype_attrs",
+      "xarray/tests/test_dataset.py::TestDataset::test_query"
+    ],
+    "counts": {
+      "f2p": 8,
+      "p2p": 9,
+      "flaky": 0,
+      "envBroken": 0,
+      "liveApi": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "xarray.tests.test_dataset.TestDataset::test_query[numpy-python-pandas-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[numpy-python-python-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[numpy-None-pandas-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[numpy-None-python-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[dask-python-pandas-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[dask-python-python-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[dask-None-pandas-True]",
+      "xarray.tests.test_dataset.TestDataset::test_query[dask-None-python-True]"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  }
+]

@@ -1,0 +1,33 @@
+diff --git a/changes/4239.bugfix.md b/changes/4239.bugfix.md
+new file mode 100644
+index 00000000..b5bc92f1
+--- /dev/null
++++ b/changes/4239.bugfix.md
+@@ -0,0 +1 @@
++`FsspecStore.from_mapper` and `FsspecStore.from_url` no longer fail when converting a synchronous instance of an async-capable filesystem whose storage options contain objects that cannot be serialized to JSON (e.g. an `azure.identity.DefaultAzureCredential`). The async instance is now constructed from the original filesystem arguments instead of a JSON round-trip.
+diff --git a/src/zarr/storage/_fsspec.py b/src/zarr/storage/_fsspec.py
+index 37d134dd..b109f809 100644
+--- a/src/zarr/storage/_fsspec.py
++++ b/src/zarr/storage/_fsspec.py
+@@ -1,6 +1,5 @@
+ from __future__ import annotations
+ 
+-import json
+ import warnings
+ from contextlib import suppress
+ from typing import TYPE_CHECKING, Any
+@@ -51,10 +50,10 @@ def _make_async(fs: AbstractFileSystem) -> AsyncFileSystem:
+         # Already an async instance of an async filesystem, nothing to do
+         return fs
+     if fs.async_impl:
+-        # Convert sync instance of an async fs to an async instance
+-        fs_dict = json.loads(fs.to_json())
+-        fs_dict["asynchronous"] = True
+-        return fsspec.AbstractFileSystem.from_json(json.dumps(fs_dict))
++        # Convert sync instance of an async fs to an async instance. Reuse the original
++        # constructor arguments rather than round-tripping through JSON, since storage
++        # options may hold objects that are not JSON-serializable (e.g. credentials).
++        return type(fs)(*fs.storage_args, **{**fs.storage_options, "asynchronous": True})
+ 
+     if fsspec_version < parse_version("2024.12.0"):
+         raise ImportError(

@@ -1,0 +1,54 @@
+diff --git a/changes/4032.bugfix.md b/changes/4032.bugfix.md
+new file mode 100644
+index 00000000..4c9476f5
+--- /dev/null
++++ b/changes/4032.bugfix.md
+@@ -0,0 +1 @@
++Fixed `ObjectStore.list_dir` for object-store listings that include a directory-marker object matching the requested non-root prefix.
+diff --git a/src/zarr/core/array.py b/src/zarr/core/array.py
+index 2bf761bd..f75ef724 100644
+--- a/src/zarr/core/array.py
++++ b/src/zarr/core/array.py
+@@ -4018,7 +4018,11 @@ async def _shards_initialized(
+         x async for x in array.store_path.store.list_prefix(prefix=array.store_path.path)
+     ]
+     store_contents_relative = [
+-        _relativize_path(path=key, prefix=array.store_path.path) for key in store_contents
++        _relativize_path(path=key, prefix=array.store_path.path)
++        for key in store_contents
++        # obstore can include a directory marker whose key matches the listed prefix;
++        # it is not an initialized shard and must be excluded before relativizing.
++        if array.store_path.path == "" or key != array.store_path.path
+     ]
+     return tuple(
+         chunk_key for chunk_key in array._iter_shard_keys() if chunk_key in store_contents_relative
+diff --git a/src/zarr/storage/_memory.py b/src/zarr/storage/_memory.py
+index e8677061..5f5b632d 100644
+--- a/src/zarr/storage/_memory.py
++++ b/src/zarr/storage/_memory.py
+@@ -219,7 +219,7 @@ class MemoryStore(Store):
+             keys_unique = {
+                 key.removeprefix(f"{prefix}/").split("/")[0]
+                 for key in self._store_dict
+-                if key.startswith(f"{prefix}/") and key != prefix
++                if key.startswith(f"{prefix}/") and key not in {prefix, f"{prefix}/"}
+             }
+ 
+         for key in keys_unique:
+diff --git a/src/zarr/storage/_obstore.py b/src/zarr/storage/_obstore.py
+index ffea523f..b34a5f62 100644
+--- a/src/zarr/storage/_obstore.py
++++ b/src/zarr/storage/_obstore.py
+@@ -267,7 +267,11 @@ async def _transform_list_dir(
+     for path in chain(
+         list_result["common_prefixes"], map(itemgetter("path"), list_result["objects"])
+     ):
+-        yield _relativize_path(path=path, prefix=prefix)
++        if prefix != "" and path == prefix:
++            continue
++        relpath = _relativize_path(path=path, prefix=prefix)
++        if relpath:
++            yield relpath
+ 
+ 
+ class _BoundedRequest(TypedDict):

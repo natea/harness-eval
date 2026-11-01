@@ -1,0 +1,222 @@
+[
+  {
+    "n": 10680,
+    "m": "78c171760cfdc10bdbcb640bcff8d4eca16c03e1",
+    "d": "2026-10-11T18:20:58Z",
+    "issues": [
+      {
+        "n": 10112,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11164,
+    "m": "4b5cb3063f6f4e9c56a9fe7da9a135946387b2bc",
+    "d": "2026-10-17T08:59:09Z",
+    "issues": [
+      {
+        "n": 10998,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11292,
+    "m": "ede38e513f648eaf38fc5acf5ad03fba05c35d8d",
+    "d": "2026-09-29T07:47:14Z",
+    "issues": [
+      {
+        "n": 11234,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11338,
+    "m": "219181945320940c9d8a6140b616165df67bee3b",
+    "d": "2026-08-19T20:46:34Z",
+    "issues": [
+      {
+        "n": 10135,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11413,
+    "m": "116c7e6a0cbe8297ece556d579a32d536ec3397d",
+    "d": "2026-10-12T09:17:38Z",
+    "issues": [
+      {
+        "n": 11323,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11476,
+    "m": "63b61d37ab4f77b7804f076c025480dbc791e678",
+    "d": "2026-08-19T20:47:01Z",
+    "issues": [
+      {
+        "n": 11452,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11478,
+    "m": "0c2d2b40c4f1738d417835c35201ea235f8d1f4c",
+    "d": "2026-07-29T15:50:40Z",
+    "issues": [
+      {
+        "n": 11462,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11525,
+    "m": "bdefbed7b655f9a6a7133b469d5f3b43eeab1c4b",
+    "d": "2026-10-12T21:13:18Z",
+    "issues": [
+      {
+        "n": 10022,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11552,
+    "m": "503b262d42877eb5de6c803d520983e364ebdfab",
+    "d": "2026-09-09T16:26:08Z",
+    "issues": [
+      {
+        "n": 9789,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11620,
+    "m": "dae1052bd0d89f9ba4a6fd769d8cadc58e44786d",
+    "d": "2026-10-07T06:49:59Z",
+    "issues": [
+      {
+        "n": 9490,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11628,
+    "m": "ad79ed8ee9d9d5d35cb4aea2dd743f6754f68df4",
+    "d": "2026-09-28T22:37:22Z",
+    "issues": [
+      {
+        "n": 7748,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11638,
+    "m": "5bf7aa271cc4660aa5768af9d2178042cfc03cd4",
+    "d": "2026-09-29T16:36:41Z",
+    "issues": [
+      {
+        "n": 10338,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11655,
+    "m": "569f2fba58e7f1293ba474cc3663e7ba37ba0bbf",
+    "d": "2026-10-01T18:23:31Z",
+    "issues": [
+      {
+        "n": 11652,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11663,
+    "m": "77ba6531aeea1d7840c5cca2c8eeeb03ae82870a",
+    "d": "2026-10-19T07:02:37Z",
+    "issues": [
+      {
+        "n": 11361,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11673,
+    "m": "0cd87a97ae2df360a35fcc6703a65f2c5750a03f",
+    "d": "2026-10-11T18:33:21Z",
+    "issues": [
+      {
+        "n": 11672,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11688,
+    "m": "be662823d9e4323330197a5262b8cc3350e9a8a5",
+    "d": "2026-10-08T18:43:36Z",
+    "issues": [
+      {
+        "n": 11455,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11696,
+    "m": "25ef02edfeb5a8e0480c4485e536646b62b60c97",
+    "d": "2026-10-11T18:31:40Z",
+    "issues": [
+      {
+        "n": 11336,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11704,
+    "m": "219292f5c82dc686a1aa0216621ea525c810ee97",
+    "d": "2026-10-11T19:22:33Z",
+    "issues": [
+      {
+        "n": 11702,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11741,
+    "m": "7cd0f184dc58cf7096a3de82d0e0c8d17a6ecaf0",
+    "d": "2026-10-15T20:07:24Z",
+    "issues": [
+      {
+        "n": 10325,
+        "repo": "pydata/xarray"
+      }
+    ]
+  },
+  {
+    "n": 11798,
+    "m": "89873e115837a2745088067f62d834be2417ca49",
+    "d": "2026-10-24T15:06:09Z",
+    "issues": [
+      {
+        "n": 6449,
+        "repo": "pydata/xarray"
+      }
+    ]
+  }
+]

@@ -67,6 +67,10 @@ paper-qa trial can run as early as possible.
    (fail-to-pass)**. Patch touched `src/paperqa/agents/search.py`; hidden test
    genuinely fails on the candidate tree. Proves the full loop: seed → agent →
    patch → hidden-test grading → report.
+2. `runs/run-2026-11-01T07-14-02-159Z` — codex-baseline × `pr1298-issue1273`,
+   gpt-5-codex (OpenAI), **$0.00**: the account has no credits and no access to
+   `gpt-5-codex`/`gpt-5.1-codex`; every model 404s or reports "no credits".
+   OpenAI half of the pilot is blocked on billing, not on code.
 
 ## Commits
 
@@ -74,7 +78,16 @@ paper-qa trial can run as early as possible.
 - `98d1d78` run config, seeding, prompt + patch capture (4.1/4.2/4.7)
 - `8a2e489` trial isolation + web-tool kill-switch (4.6/4.8)
 - `b39d0d5` hidden-test grading from a pristine base (5.1)
-- (next) brownfield report + test-run env fix
+- `54b9ef1` report, API-key profiles, clean test env (5.4)
+- (next) model gateway + inter-human κ (4.4/2.6)
+
+## Labels (task 2.6)
+
+κ over the 14 reviewed paper-qa tasks (50 item labels): human-vs-LLM
+**κ = 0.34** (quadratic-weighted 0.40, observed 0.52, 24 disagreements).
+Only one task has a second human review, so human-vs-human κ is a single pair
+(n=1, κ = 0). `agreementSummary` now reports both; the read model exposes
+`interHuman` per task.
 
 ## Blockers
 

@@ -64,6 +64,7 @@ import {
 } from "./catalog";
 import { type LoadedDesign, loadDesign } from "./designs";
 import { assertWebToolKillSwitch } from "./driver/toolpolicy";
+import { type Gateway, startGateway } from "./gateway/server";
 import { loadManifest } from "./grading/integration";
 import { loadHarnesses, resolveHarness } from "./harnesses";
 import {
@@ -341,7 +342,6 @@ async function cmdRun(): Promise<void> {
 	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 	const runDir = join("runs", runId);
 	mkdirSync(join(runDir, "trials"), { recursive: true });
-
 	const requestedSnapshot =
 		arg("snapshot") ??
 		(config.harness === "zerocode"
@@ -498,6 +498,39 @@ async function cmdRunBrownfield(): Promise<void> {
 	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 	const runDir = join("runs", runId);
 	mkdirSync(join(runDir, "trials"), { recursive: true });
+	// Model gateway (4.4): the sandbox holds a placeholder key; only this run's
+	// model and non-provider-tool requests are forwarded.
+	let gateway: Gateway | null = null;
+	let workerEnv = rw.env;
+	if (flag("gateway")) {
+		if (config.harness !== "claude-code")
+			throw new Error(
+				`--gateway supports the claude-code harness only (got '${config.harness}'); refusing a protocol mismatch`,
+			);
+		const key = process.env.ANTHROPIC_API_KEY;
+		if (!key)
+			throw new Error(
+				"--gateway needs ANTHROPIC_API_KEY for credential injection",
+			);
+		if (config.provider !== "worktree")
+			console.warn(
+				`[brownfield] gateway: ${config.provider} cannot reach 127.0.0.1; use the worktree provider`,
+			);
+		gateway = startGateway({
+			upstream: "https://api.anthropic.com",
+			apiKey: key,
+			model: workerProfile.modelId,
+			logPath: join(runDir, "gateway.jsonl"),
+		});
+		workerEnv = {
+			...rw.env,
+			ANTHROPIC_BASE_URL: gateway.url,
+			ANTHROPIC_API_KEY: "gateway-placeholder",
+		};
+		console.log(
+			`gateway: ${gateway.url} → api.anthropic.com (model ${workerProfile.modelId})`,
+		);
+	}
 	const provider = createProvider(config.provider, {
 		snapshot: resolveProviderSnapshot(
 			config.provider,
@@ -535,7 +568,7 @@ async function cmdRunBrownfield(): Promise<void> {
 			prdSha256: bundleSetHash,
 			testPlanSha256: null,
 			harnessVersion: arg("harness-version") ?? harness.defaultVersion,
-			workerEnv: rw.env,
+			workerEnv,
 			workerModelFlag: rw.modelFlag,
 			workerModelRef,
 			seedWorkspace: async (sandbox, plan) => {
@@ -572,6 +605,7 @@ async function cmdRunBrownfield(): Promise<void> {
 		},
 	);
 
+	gateway?.stop();
 	// Hidden-test grading (5.1): each trial's captured patch is replayed onto a
 	// pristine sealed base, test infrastructure restored, tests.patch applied.
 	if (!flag("no-grade")) {

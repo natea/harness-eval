@@ -73,6 +73,8 @@ export interface TaskDetail {
 	/** Withheld (null) until the task has a human review. */
 	llm: LeakLabels | null;
 	agreement: ItemAgreement[] | null;
+	/** Human-vs-human κ over every pair of this task's reviews (null below two). */
+	interHuman: Agreement | null;
 }
 
 function summarize(b: Bundle): TaskSummary {
@@ -114,6 +116,24 @@ export function listTasks(root = BROWNFIELD_ROOT): TaskSummary[] {
 			};
 		}
 	});
+}
+
+/** Label pairs from every pair of reviews on the same items (human vs human). */
+function interHumanPairs(reviews: ReviewRecord[]): Pair[] {
+	const pairs: Pair[] = [];
+	for (let i = 0; i < reviews.length; i++) {
+		for (let j = i + 1; j < reviews.length; j++) {
+			const a = reviews[i];
+			const b = reviews[j];
+			if (!a || !b) continue;
+			const byId = new Map(b.items.map((it) => [it.id, it.label]));
+			for (const it of a.items) {
+				const other = byId.get(it.id);
+				if (other) pairs.push([it.label, other]);
+			}
+		}
+	}
+	return pairs;
 }
 
 function itemAgreement(review: ReviewRecord, llm: LeakLabels): ItemAgreement[] {
@@ -159,6 +179,7 @@ export function getTask(
 		reviews,
 		llm,
 		agreement: latest && llm ? itemAgreement(latest, llm) : null,
+		interHuman: reviews.length > 1 ? agreement(interHumanPairs(reviews)) : null,
 	};
 }
 
@@ -184,6 +205,8 @@ export interface Disagreement {
 }
 
 export interface AgreementSummary {
+	/** Human-vs-human κ pooled across all review pairs; null with <2 reviews. */
+	interHuman: Agreement | null;
 	reviewedTasks: number;
 	totalTasks: number;
 	leak: Agreement;
@@ -197,6 +220,7 @@ export function agreementSummary(root = BROWNFIELD_ROOT): AgreementSummary {
 	const disagreements: Disagreement[] = [];
 	const fairness = { yes: 0, no: 0, unsure: 0 };
 	let reviewedTasks = 0;
+	const humanPairs: Pair[] = [];
 	const dirs = listBundleDirs(root);
 	for (const dir of dirs) {
 		let b: Bundle;
@@ -206,7 +230,9 @@ export function agreementSummary(root = BROWNFIELD_ROOT): AgreementSummary {
 			if (e instanceof BundleError) continue;
 			throw e;
 		}
-		const latest = readReviews(b.dir).at(-1);
+		const reviews = readReviews(b.dir);
+		humanPairs.push(...interHumanPairs(reviews));
+		const latest = reviews.at(-1);
 		const llm = readLeaks(b.dir);
 		if (!latest || !llm) continue;
 		reviewedTasks++;
@@ -228,6 +254,7 @@ export function agreementSummary(root = BROWNFIELD_ROOT): AgreementSummary {
 		reviewedTasks,
 		totalTasks: dirs.length,
 		leak: agreement(pairs),
+		interHuman: humanPairs.length ? agreement(humanPairs) : null,
 		fairness,
 		disagreements,
 	};

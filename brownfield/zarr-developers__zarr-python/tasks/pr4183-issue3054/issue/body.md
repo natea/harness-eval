@@ -1,0 +1,7 @@
+# sharding codec use of lru caching fails with numpy void scalars
+
+_Opened by @d-v-b_
+
+numpy void scalars are not hashable, which means that a class with a np.void attribute cannot be hashed by `lru_cache`, which is used by the sharding codec class [here](https://github.com/zarr-developers/zarr-python/blob/7584b96f22b5d517cf61f13b415961d7be99b428/src/zarr/codecs/sharding.py#L358).
+
+I ran into this In #2874. Any ideas for fixing this would be appreciated! IMO the ideal fix would be to resolve the basic performance problems we are solving with this caching layer.

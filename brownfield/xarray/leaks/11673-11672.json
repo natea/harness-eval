@@ -1,0 +1,33 @@
+{
+  "pr": 11673,
+  "issue": 11672,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0142746,
+  "prAuthor": "mokashang",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/datatree.py"
+      ],
+      "evidence": "Its second loop checks `if k not in lazy_data`, but lazy_data is keyed by node path, not by variable name",
+      "rationale": "Identifies the root cause in DataTree.load(): the second loop compares variable name against lazy_data keyed by node path. This is exactly what the fix changes (lazy_data[path]). It doesn't give explicit code, so it stops at diagnosis.",
+      "author": "anpr",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Thanks for opening your first issue here at xarray!",
+      "rationale": "Automated welcome message with no technical content.",
+      "author": "welcome",
+      "role": "bot"
+    }
+  ]
+}

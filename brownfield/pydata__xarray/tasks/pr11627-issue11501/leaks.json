@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "pandas.errors.Pandas4Warning: Series.values returning an ndarray that drops timezone information for DatetimeTZDtype is deprecated.",
+      "rationale": "CI failure log with test failures and warnings. It shows the Series.values deprecation and the min/max NaN mismatches, but it doesn't name the code location or the mechanism that needs changing. The warning message hints at to_numpy, but that is only a symptom-level hint.",
+      "author": "github-actions",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "In addition there seems to be a failure in the documentation building.",
+      "rationale": "It mentions an unrelated doc build failure and cross-references other issues. It has no technical content about the fix.",
+      "author": "dncnmcdougall",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

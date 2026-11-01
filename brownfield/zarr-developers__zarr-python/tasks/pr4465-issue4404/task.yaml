@@ -1,0 +1,45 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4465
+issues:
+  - 4404
+baseSha: e376acebe81f53c915eac2c4327ce8466b788edc
+mergeSha: 9b7b93b8e6ef1b84c0da6b83d987844e57dff7b3
+tStar: 2026-10-02T00:31:40Z
+issueCreatedAt: 2026-09-24T18:26:00Z
+prMergedAt: 2026-10-26T20:13:06Z
+verdict: VALID
+failToPass:
+  - tests.test_config::test_config_defaults_set
+  - tests.test_v2::test_other_dtype_roundtrip[no_fill]
+  - tests.test_v2::test_other_dtype_roundtrip[fill]
+  - tests.test_v2::test_pickle_codec_read_disabled_by_default
+  - tests.test_v2::test_pickle_codec_read_does_not_unpickle
+  - tests.test_v2::test_pickle_opt_in_does_not_affect_other_codecs
+passToPass: []
+envBroken:
+  - tests.test_v2::test_pickle_codec_read_enabled_via_config
+  - tests.test_v2::test_pickle_codec_read_enabled_via_env_var[True-True]
+  - tests.test_v2::test_pickle_codec_read_enabled_via_env_var[false-False]
+  - tests.test_v2::test_pickle_codec_zarr_opt_in_does_not_bypass_numcodecs
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: true
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 79e9fee6b581b90b6697fcfef363d73e5dfb77017748792866c2f03f5691892a
+  issue/body+human.md: 79e9fee6b581b90b6697fcfef363d73e5dfb77017748792866c2f03f5691892a
+  issue/body.md: 79e9fee6b581b90b6697fcfef363d73e5dfb77017748792866c2f03f5691892a
+  leaks.json: a9eca1a0aea02c5c9d429099eeec1497343daba343c2456a3cb077d3b87aba36
+  reference.patch: 77178cc45df40ce65783e471dce690bed9e151d8c4125c399cdc70914b97dcd8
+  snapshot.json: 89b9d903a3847fb5a845880a274f50fa6919d9257ba05476c4c1e38b16b3c4b1
+  tests.patch: abfa2abcbe02a835648b8fb88dbb12b9c4befb813ed1f3850b22c90e0b40950a
+  validation.json: 5a5786026fe4c3621ac75d1c647dc9564936d1c12ec8fdb8cb792fa676b61180

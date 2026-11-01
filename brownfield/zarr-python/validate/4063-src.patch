@@ -1,0 +1,563 @@
+diff --git a/changes/3285.feature.md b/changes/3285.feature.md
+new file mode 100644
+index 00000000..3809c0ab
+--- /dev/null
++++ b/changes/3285.feature.md
+@@ -0,0 +1,13 @@
++JSON metadata validation now delegates to ``msgspec.convert`` for the type
++coercions it supports (``Literal`` membership, ``int`` / ``bool`` strictness,
++list-to-tuple), replacing the per-field hand-written ``parse_*`` logic. A small
++fallback validates the recursive JSON values msgspec cannot, now with an
++explicit nesting-depth limit, and a latent generator-exhaustion bug in
++``parse_storage_transformers`` is fixed. See #3285.
++
++As a result some metadata inputs are now parsed more strictly. The previous
++per-field checks compared values with ``==``, which accepts any numerically
++equal object, so a float such as ``2.0`` was accepted as ``zarr_format``; it is
++now rejected because it is not an ``int``. Booleans are likewise no longer
++accepted where an ``int`` is expected, since ``bool`` is an ``int`` subclass.
++Metadata that conforms to the Zarr specification is unaffected.
+diff --git a/mkdocs.yml b/mkdocs.yml
+index ca8165af..1fde8d9f 100644
+--- a/mkdocs.yml
++++ b/mkdocs.yml
+@@ -199,6 +199,7 @@ plugins:
+             - https://docs.xarray.dev/en/stable/objects.inv
+             - https://numpy.org/doc/stable/objects.inv
+             - https://numcodecs.readthedocs.io/en/stable/objects.inv
++            - https://msgspec.dev/objects.inv
+             - https://developmentseed.org/obstore/latest/objects.inv
+             - https://filesystem-spec.readthedocs.io/en/latest/objects.inv
+             - https://requests.readthedocs.io/en/latest/objects.inv
+diff --git a/pyproject.toml b/pyproject.toml
+index 5e8129a6..f341a488 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -49,6 +49,7 @@ dependencies = [
+     'google-crc32c>=1.5',
+     'typing_extensions>=4.14',
+     'donfig>=0.8',
++    'msgspec>=0.19',
+ ]
+ 
+ dynamic = [
+@@ -281,6 +282,7 @@ extra-dependencies = [
+     'typing_extensions==4.14.*',
+     'donfig==0.8.*',
+     'obstore==0.5.*',
++    'msgspec==0.19.*',
+ ]
+ 
+ [tool.hatch.envs.default]
+diff --git a/src/zarr/codecs/blosc.py b/src/zarr/codecs/blosc.py
+index 087de716..ee456321 100644
+--- a/src/zarr/codecs/blosc.py
++++ b/src/zarr/codecs/blosc.py
+@@ -14,6 +14,7 @@ from zarr.codecs._deprecated_enum import _coerce_enum_input, _DeprecatedStrEnumM
+ from zarr.core.buffer.cpu import as_numpy_array_wrapper
+ from zarr.core.common import JSON, NamedRequiredConfig, parse_named_configuration
+ from zarr.core.dtype.common import HasItemSize
++from zarr.core.json_parse import parse_field
+ 
+ if TYPE_CHECKING:
+     from typing import Self
+@@ -104,27 +105,24 @@ numcodecs.blosc.use_threads = False
+ 
+ 
+ def parse_typesize(data: JSON) -> int:
+-    if isinstance(data, int):
+-        if data > 0:
+-            return data
+-        else:
+-            raise ValueError(
+-                f"Value must be greater than 0. Got {data}, which is less or equal to 0."
+-            )
+-    raise TypeError(f"Value must be an int. Got {type(data)} instead.")
++    parsed: int = parse_field(data, int, "typesize", error=TypeError)
++    if parsed > 0:
++        return parsed
++    else:
++        raise ValueError(
++            f"Value must be greater than 0. Got {parsed}, which is less or equal to 0."
++        )
+ 
+ 
+ # todo: real validation
+ def parse_clevel(data: JSON) -> int:
+-    if isinstance(data, int):
+-        return data
+-    raise TypeError(f"Value should be an int. Got {type(data)} instead.")
++    parsed: int = parse_field(data, int, "clevel", error=TypeError)
++    return parsed
+ 
+ 
+ def parse_blocksize(data: JSON) -> int:
+-    if isinstance(data, int):
+-        return data
+-    raise TypeError(f"Value should be an int. Got {type(data)} instead.")
++    parsed: int = parse_field(data, int, "blocksize", error=TypeError)
++    return parsed
+ 
+ 
+ def _parse_cname(data: object) -> BloscCnameLiteral:
+diff --git a/src/zarr/codecs/gzip.py b/src/zarr/codecs/gzip.py
+index b8591748..7d86a03b 100644
+--- a/src/zarr/codecs/gzip.py
++++ b/src/zarr/codecs/gzip.py
+@@ -10,6 +10,7 @@ from numcodecs.gzip import GZip
+ from zarr.abc.codec import BytesBytesCodec
+ from zarr.core.buffer.cpu import as_numpy_array_wrapper
+ from zarr.core.common import JSON, parse_named_configuration
++from zarr.core.json_parse import parse_field
+ 
+ if TYPE_CHECKING:
+     from typing import Self
+@@ -19,13 +20,12 @@ if TYPE_CHECKING:
+ 
+ 
+ def parse_gzip_level(data: JSON) -> int:
+-    if not isinstance(data, (int)):
+-        raise TypeError(f"Expected int, got {type(data)}")
+-    if data not in range(10):
++    parsed: int = parse_field(data, int, "level", error=TypeError)
++    if parsed not in range(10):
+         raise ValueError(
+-            f"Expected an integer from the inclusive range (0, 9). Got {data} instead."
++            f"Expected an integer from the inclusive range (0, 9). Got {parsed} instead."
+         )
+-    return data
++    return parsed
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/src/zarr/codecs/zstd.py b/src/zarr/codecs/zstd.py
+index f93c25a3..6d9f8910 100644
+--- a/src/zarr/codecs/zstd.py
++++ b/src/zarr/codecs/zstd.py
+@@ -12,6 +12,7 @@ from packaging.version import Version
+ from zarr.abc.codec import BytesBytesCodec
+ from zarr.core.buffer.cpu import as_numpy_array_wrapper
+ from zarr.core.common import JSON, parse_named_configuration
++from zarr.core.json_parse import parse_field
+ 
+ if TYPE_CHECKING:
+     from typing import Self
+@@ -21,17 +22,15 @@ if TYPE_CHECKING:
+ 
+ 
+ def parse_zstd_level(data: JSON) -> int:
+-    if isinstance(data, int):
+-        if data >= 23:
+-            raise ValueError(f"Value must be less than or equal to 22. Got {data} instead.")
+-        return data
+-    raise TypeError(f"Got value with type {type(data)}, but expected an int.")
++    parsed: int = parse_field(data, int, "level", error=TypeError)
++    if parsed >= 23:
++        raise ValueError(f"Value must be less than or equal to 22. Got {parsed} instead.")
++    return parsed
+ 
+ 
+ def parse_checksum(data: JSON) -> bool:
+-    if isinstance(data, bool):
+-        return data
+-    raise TypeError(f"Expected bool. Got {type(data)}.")
++    parsed: bool = parse_field(data, bool, "checksum", error=TypeError)
++    return parsed
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/src/zarr/core/chunk_key_encodings.py b/src/zarr/core/chunk_key_encodings.py
+index fb2fd95d..d871e279 100644
+--- a/src/zarr/core/chunk_key_encodings.py
++++ b/src/zarr/core/chunk_key_encodings.py
+@@ -13,15 +13,14 @@ from zarr.core.common import (
+     NamedConfig,
+     parse_named_configuration,
+ )
++from zarr.core.json_parse import parse_field
+ from zarr.registry import get_chunk_key_encoding_class, register_chunk_key_encoding
+ 
+ SeparatorLiteral = Literal[".", "/"]
+ 
+ 
+ def parse_separator(data: JSON) -> SeparatorLiteral:
+-    if data not in (".", "/"):
+-        raise ValueError(f"Expected an '.' or '/' separator. Got {data} instead.")
+-    return cast("SeparatorLiteral", data)
++    return cast("SeparatorLiteral", parse_field(data, Literal[".", "/"], "separator"))
+ 
+ 
+ class ChunkKeyEncodingParams(TypedDict):
+diff --git a/src/zarr/core/common.py b/src/zarr/core/common.py
+index 1541683b..3da5c108 100644
+--- a/src/zarr/core/common.py
++++ b/src/zarr/core/common.py
+@@ -20,6 +20,7 @@ import numpy as np
+ from typing_extensions import ReadOnly
+ 
+ from zarr.core.config import config as zarr_config
++from zarr.core.json_parse import convert, parse_field
+ from zarr.errors import ZarrRuntimeWarning
+ 
+ if TYPE_CHECKING:
+@@ -147,12 +148,13 @@ def parse_enum[E: Enum](data: object, cls: type[E]) -> E:
+ 
+ 
+ def parse_name(data: JSON, expected: str | None = None) -> str:
+-    if isinstance(data, str):
+-        if expected is None or data == expected:
+-            return data
+-        raise ValueError(f"Expected '{expected}'. Got {data} instead.")
+-    else:
+-        raise TypeError(f"Expected a string, got an instance of {type(data)}.")
++    try:
++        data = cast("str", convert(data, str))
++    except (ValueError, TypeError) as exc:
++        raise TypeError(f"Expected a string, got an instance of {type(data)}.") from exc
++    if expected is None or data == expected:
++        return data
++    raise ValueError(f"Expected '{expected}'. Got {data} instead.")
+ 
+ 
+ def parse_configuration(data: JSON) -> JSON:
+@@ -227,15 +229,11 @@ def parse_fill_value(data: Any) -> Any:
+ 
+ 
+ def parse_order(data: Any) -> Literal["C", "F"]:
+-    if data in ("C", "F"):
+-        return cast("Literal['C', 'F']", data)
+-    raise ValueError(f"Expected one of ('C', 'F'), got {data} instead.")
++    return cast("Literal['C', 'F']", parse_field(data, Literal["C", "F"], "order"))
+ 
+ 
+ def parse_bool(data: Any) -> bool:
+-    if isinstance(data, bool):
+-        return data
+-    raise ValueError(f"Expected bool, got {data} instead.")
++    return cast("bool", convert(data, bool))
+ 
+ 
+ def parse_int(data: Any) -> int:
+diff --git a/src/zarr/core/config.py b/src/zarr/core/config.py
+index 42c5ed3b..c0ebb313 100644
+--- a/src/zarr/core/config.py
++++ b/src/zarr/core/config.py
+@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING, Any, Literal, cast
+ 
+ from donfig import Config as DConfig
+ 
++from zarr.core.json_parse import parse_field
++
+ if TYPE_CHECKING:
+     from donfig.config_obj import ConfigSet
+ 
+@@ -159,7 +161,4 @@ config = Config(
+ 
+ 
+ def parse_indexing_order(data: Any) -> Literal["C", "F"]:
+-    if data in ("C", "F"):
+-        return cast("Literal['C', 'F']", data)
+-    msg = f"Expected one of ('C', 'F'), got {data} instead."
+-    raise ValueError(msg)
++    return cast("Literal['C', 'F']", parse_field(data, Literal["C", "F"], "order"))
+diff --git a/src/zarr/core/group.py b/src/zarr/core/group.py
+index 548f2141..d061e1a5 100644
+--- a/src/zarr/core/group.py
++++ b/src/zarr/core/group.py
+@@ -46,6 +46,7 @@ from zarr.core.common import (
+ )
+ from zarr.core.config import config
+ from zarr.core.dtype import parse_data_type
++from zarr.core.json_parse import parse_field
+ from zarr.core.metadata import ArrayV2Metadata, ArrayV3Metadata
+ from zarr.core.metadata.io import save_metadata
+ from zarr.core.sync import SyncMixin, sync
+@@ -85,18 +86,15 @@ logger = logging.getLogger("zarr.group")
+ 
+ def parse_zarr_format(data: Any) -> ZarrFormat:
+     """Parse the zarr_format field from metadata."""
+-    if data in (2, 3):
+-        return cast("ZarrFormat", data)
+-    msg = f"Invalid zarr_format. Expected one of 2 or 3. Got {data}."
+-    raise ValueError(msg)
++    return cast("ZarrFormat", parse_field(data, Literal[2, 3], "zarr_format"))
+ 
+ 
+ def parse_node_type(data: Any) -> NodeType:
+     """Parse the node_type field from metadata."""
+-    if data in ("array", "group"):
+-        return cast("Literal['array', 'group']", data)
+-    msg = f"Invalid value for 'node_type'. Expected 'array' or 'group'. Got '{data}'."
+-    raise MetadataValidationError(msg)
++    return cast(
++        "Literal['array', 'group']",
++        parse_field(data, Literal["array", "group"], "node_type", error=MetadataValidationError),
++    )
+ 
+ 
+ # todo: convert None to empty dict
+diff --git a/src/zarr/core/json_parse.py b/src/zarr/core/json_parse.py
+new file mode 100644
+index 00000000..09c5ca07
+--- /dev/null
++++ b/src/zarr/core/json_parse.py
+@@ -0,0 +1,103 @@
++"""Helpers for validating JSON-decoded metadata.
++
++Most JSON metadata validation is delegated to
++[`msgspec.convert`][msgspec.convert], which handles the type coercions Zarr
++needs (``Literal`` membership, ``int``/``bool`` strictness, list-to-tuple,
++``TypedDict`` with ``NotRequired``). ``convert`` is a thin wrapper that
++translates [`msgspec.ValidationError`][msgspec.ValidationError] into the
++``TypeError`` the rest of the codebase already raises.
++
++msgspec cannot handle two things in Zarr's metadata types:
++
++* the recursive ``JSON`` / ``JSONValue`` aliases, which it rejects at
++  schema-build time, and
++* PEP 728 ``extra_items=`` extension fields, which it silently drops.
++
++``validate_json_value`` is the small hand-written fallback for the first of
++those. See https://github.com/zarr-developers/zarr-python/issues/3285.
++"""
++
++from __future__ import annotations
++
++from collections.abc import Mapping
++from typing import TYPE_CHECKING, Any, Final, cast, get_origin
++
++import msgspec
++
++if TYPE_CHECKING:
++    from zarr.core.common import JSON
++
++__all__ = ["MAX_JSON_DEPTH", "convert", "parse_field", "validate_json_value"]
++
++MAX_JSON_DEPTH: Final = 64
++"""Maximum nesting depth accepted by ``validate_json_value``."""
++
++
++def _type_name(type_: Any) -> str:
++    """Render ``type_`` for an error message.
++
++    Parameterized types keep their arguments, so a ``Literal`` reports its
++    members (``Literal[2, 3]``) rather than the bare origin name. ``__name__``
++    would drop them, which loses the most useful part of the message.
++    """
++    if get_origin(type_) is not None:
++        return str(type_).replace("typing.", "")
++    return getattr(type_, "__name__", None) or str(type_).replace("typing.", "")
++
++
++def convert(value: object, type_: Any, *, strict: bool = True) -> Any:
++    """Validate and coerce ``value`` against ``type_`` via [`msgspec.convert`][msgspec.convert].
++
++    On a mismatch msgspec raises
++    [`msgspec.ValidationError`][msgspec.ValidationError]; this re-raises
++    a plain, field-agnostic ``ValueError`` naming the expected type, so callers
++    can add their own field context (see ``parse_field``).
++    """
++    try:
++        return msgspec.convert(value, type_, strict=strict)
++    except msgspec.ValidationError as exc:
++        raise ValueError(f"Expected instance of {_type_name(type_)}, got {value!r}.") from exc
++
++
++def parse_field(
++    data: object, type_: Any, field: str, *, error: type[Exception] = ValueError
++) -> Any:
++    """Validate ``data`` for metadata field ``field`` against ``type_``.
++
++    Wraps ``convert`` and, on failure, re-raises ``error`` with field
++    context, chaining the underlying type error. This keeps the
++    ``convert``-then-re-raise pattern in one place rather than repeating it in
++    every per-field parser.
++    """
++    try:
++        return convert(data, type_)
++    except ValueError as exc:
++        raise error(
++            f"Failed to parse input for {field!r}: expected {_type_name(type_)}, got {data!r}."
++        ) from exc
++
++
++def validate_json_value(value: object, *, max_depth: int = MAX_JSON_DEPTH, _depth: int = 0) -> JSON:
++    """Check that ``value`` is a JSON value and return it unchanged.
++
++    msgspec cannot build a schema for Zarr's recursive ``JSON`` / ``JSONValue``
++    aliases, so this covers the fields typed that way (``attributes``,
++    ``fill_value``, extension-field values). Unlike the previous per-field
++    parsers it also enforces ``max_depth``: a pathologically nested document
++    could otherwise exhaust the interpreter stack.
++    """
++    if _depth > max_depth:
++        raise ValueError(f"JSON value nesting exceeds the maximum depth of {max_depth}.")
++    if value is None or isinstance(value, (bool, int, float, str)):
++        return cast("JSON", value)
++    if isinstance(value, (list, tuple)):
++        for item in value:
++            validate_json_value(item, max_depth=max_depth, _depth=_depth + 1)
++        return cast("JSON", value)
++    if isinstance(value, Mapping):
++        for key, item in value.items():
++            if not isinstance(key, str):
++                raise TypeError(f"JSON object keys must be str, got {type(key).__name__}.")
++            validate_json_value(item, max_depth=max_depth, _depth=_depth + 1)
++        return cast("JSON", value)
++    raise TypeError(f"Value {value!r} is not a valid JSON value.")
+diff --git a/src/zarr/core/metadata/v2.py b/src/zarr/core/metadata/v2.py
+index 91515d87..70d4e1e5 100644
+--- a/src/zarr/core/metadata/v2.py
++++ b/src/zarr/core/metadata/v2.py
+@@ -41,6 +41,7 @@ from zarr.core.common import (
+     parse_shapelike,
+ )
+ from zarr.core.config import config, parse_indexing_order
++from zarr.core.json_parse import parse_field
+ from zarr.core.metadata.common import parse_attributes
+ 
+ 
+@@ -278,9 +279,9 @@ def parse_dtype(data: npt.DTypeLike) -> np.dtype[Any]:
+ 
+ 
+ def parse_zarr_format(data: object) -> Literal[2]:
+-    if data == 2:
+-        return 2
+-    raise ValueError(f"Invalid value. Expected 2. Got {data}.")
++    from typing import Literal
++
++    return cast("Literal[2]", parse_field(data, Literal[2], "zarr_format"))
+ 
+ 
+ def parse_filters(data: object) -> tuple[Numcodec, ...] | None:
+diff --git a/src/zarr/core/metadata/v3.py b/src/zarr/core/metadata/v3.py
+index 9eaccc50..fc47f8fc 100644
+--- a/src/zarr/core/metadata/v3.py
++++ b/src/zarr/core/metadata/v3.py
+@@ -34,6 +34,7 @@ from zarr.core.common import (
+ from zarr.core.config import config
+ from zarr.core.dtype import VariableLengthUTF8, ZDType, get_data_type_from_json
+ from zarr.core.dtype.common import check_dtype_spec_v3
++from zarr.core.json_parse import parse_field, validate_json_value
+ from zarr.core.metadata.common import parse_attributes
+ from zarr.errors import MetadataValidationError, NodeTypeValidationError, UnknownCodecError
+ from zarr.registry import get_codec_class
+@@ -47,17 +48,16 @@ if TYPE_CHECKING:
+ 
+ 
+ def parse_zarr_format(data: object) -> Literal[3]:
+-    if data == 3:
+-        return 3
+-    msg = f"Invalid value for 'zarr_format'. Expected '3'. Got '{data}'."
+-    raise MetadataValidationError(msg)
++    return cast(
++        "Literal[3]", parse_field(data, Literal[3], "zarr_format", error=MetadataValidationError)
++    )
+ 
+ 
+ def parse_node_type_array(data: object) -> Literal["array"]:
+-    if data == "array":
+-        return "array"
+-    msg = f"Invalid value for 'node_type'. Expected 'array'. Got '{data}'."
+-    raise NodeTypeValidationError(msg)
++    return cast(
++        'Literal["array"]',
++        parse_field(data, Literal["array"], "node_type", error=NodeTypeValidationError),
++    )
+ 
+ 
+ def parse_codecs(data: object) -> tuple[Codec, ...]:
+@@ -130,11 +130,12 @@ def parse_storage_transformers(data: object) -> tuple[dict[str, JSON], ...]:
+     """
+     if data is None:
+         return ()
+-    if isinstance(data, Iterable):
+-        if len(tuple(data)) >= 1:
+-            return data  # type: ignore[return-value]
+-        else:
+-            return ()
++    if isinstance(data, Iterable) and not isinstance(data, (str, bytes)):
++        # Materialise once. The previous implementation called ``len(tuple(data))``
++        # and then returned ``data`` itself, which exhausted (and discarded) a
++        # one-shot iterable and could return a value typed as a tuple that was not
++        # actually a tuple.
++        return tuple(data)
+     raise TypeError(
+         f"Invalid storage_transformers. Expected an iterable of dicts. Got {type(data)} instead."
+     )
+@@ -656,7 +657,7 @@ class ArrayV3Metadata(Metadata):
+             chunk_grid=_data_typed["chunk_grid"],  # type: ignore[arg-type]
+             chunk_key_encoding=_data_typed["chunk_key_encoding"],  # type: ignore[arg-type]
+             codecs=_data_typed["codecs"],
+-            attributes=_data_typed.get("attributes", {}),  # type: ignore[arg-type]
++            attributes=validate_json_value(_data_typed.get("attributes", {})),  # type: ignore[arg-type]
+             dimension_names=_data_typed.get("dimension_names", None),
+             fill_value=fill_value_parsed,
+             data_type=data_type,
+diff --git a/uv.lock b/uv.lock
+index 120b187e..07710e2c 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -1684,6 +1684,46 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/d2/8a/27e2e57055176e366a46b85d02d68e7a5bcfbdd8474c9706375d965f24d3/msgpack-1.2.1-cp314-cp314t-win_arm64.whl", hash = "sha256:0adcf06ffde0777c0e1a9b771a2b1c4226ba1bbf748c8efcc02fcdeca3299107", size = 71160, upload-time = "2026-06-18T16:13:51.498Z" },
+ ]
+ 
++[[package]]
++name = "msgspec"
++version = "0.21.1"
++source = { registry = "https://pypi.org/simple" }
++sdist = { url = "https://files.pythonhosted.org/packages/e3/60/f79b9b013a16fa3a58350c9295ddc6789f2e335f36ea61ed10a21b215364/msgspec-0.21.1.tar.gz", hash = "sha256:2313508e394b0d208f8f56892ca9b2799e2561329de9763b19619595a6c0f72c", size = 319193, upload-time = "2026-04-12T21:44:50.394Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/6e/cf/317224852c00248c620a9bcf4b26e2e4ab8afd752f18d2a6ef73ebd423b6/msgspec-0.21.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:d4248cf0b6129b7d230eacd493c17cc2d4f3989f3bb7f633a928a85b7dcfa251", size = 196188, upload-time = "2026-04-12T21:44:07.181Z" },
++    { url = "https://files.pythonhosted.org/packages/6d/81/074612945c0666078f7366f40000013de9f6ba687491d450df699bceebc9/msgspec-0.21.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:5102c7e9b3acff82178449b85006d96310e690291bb1ea0142f1b24bcb8aabcb", size = 188473, upload-time = "2026-04-12T21:44:08.736Z" },
++    { url = "https://files.pythonhosted.org/packages/8a/37/655101799590bcc5fddb2bd3fe0e6194e816c2d1da7c361725f5eb89a910/msgspec-0.21.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:846758412e9518252b2ac9bffd6f0e54d9ff614f5f9488df7749f81ff5c80920", size = 218871, upload-time = "2026-04-12T21:44:09.917Z" },
++    { url = "https://files.pythonhosted.org/packages/b5/d1/d4cd9fe89c7d400d7a18f86ccc94daa3f0927f53558846fcb60791dce5d6/msgspec-0.21.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:21995e74b5c598c2e004110ad66ec7f1b8c20bf2bcf3b2de8fd9a3094422d3ff", size = 225025, upload-time = "2026-04-12T21:44:11.191Z" },
++    { url = "https://files.pythonhosted.org/packages/24/bf/e20549e602b9edccadeeff98760345a416f9cce846a657e8b18e3396b212/msgspec-0.21.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:6129f0cca52992e898fd5344187f7c8127b63d810b2fd73e36fca73b4c6475ee", size = 222672, upload-time = "2026-04-12T21:44:12.481Z" },
++    { url = "https://files.pythonhosted.org/packages/b4/68/04d7a8f0f786545cf9b8c280c57aa6befb5977af6e884b8b54191cbe44b3/msgspec-0.21.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:ef3ec2296248d1f8b9231acb051b6d471dfde8f21819e86c9adaaa9f42918521", size = 227303, upload-time = "2026-04-12T21:44:13.709Z" },
++    { url = "https://files.pythonhosted.org/packages/cc/4d/619866af2840875be408047bf9e70ceafbae6ab50660de7134ed1b25eb86/msgspec-0.21.1-cp312-cp312-win_amd64.whl", hash = "sha256:d4ab834a054c6f0cbeef6df9e7e1b33d5f1bc7b86dea1d2fd7cad003873e783d", size = 190017, upload-time = "2026-04-12T21:44:14.977Z" },
++    { url = "https://files.pythonhosted.org/packages/5e/2e/a8f9eca8fd00e097d7a9e99ba8a4685db994494448e3d4f0b7f6e9a3c0f7/msgspec-0.21.1-cp312-cp312-win_arm64.whl", hash = "sha256:628aaa35c74950a8c59da330d7e98917e1c7188f983745782027748ee4ca573e", size = 175345, upload-time = "2026-04-12T21:44:16.431Z" },
++    { url = "https://files.pythonhosted.org/packages/7e/74/f11ede02839b19ff459f88e3145df5d711626ca84da4e23520cebf819367/msgspec-0.21.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:764173717a01743f007e9f74520ed281f24672c604514f7d76c1c3a10e8edb66", size = 196176, upload-time = "2026-04-12T21:44:17.613Z" },
++    { url = "https://files.pythonhosted.org/packages/bb/40/4476c1bd341418a046c4955aff632ec769315d1e3cb94e6acf86d461f9ed/msgspec-0.21.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:344c7cd0eaed1fb81d7959f99100ef71ec9b536881a376f11b9a6c4803365697", size = 188524, upload-time = "2026-04-12T21:44:18.815Z" },
++    { url = "https://files.pythonhosted.org/packages/ca/d9/9e9d7d7e5061b47540d03d640fab9b3965ba7ae49c1b2154861c8f007518/msgspec-0.21.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:48943e278b3854c2f89f955ddc6f9f430d3f0784b16e47d10604ee0463cd21f5", size = 218880, upload-time = "2026-04-12T21:44:20.028Z" },
++    { url = "https://files.pythonhosted.org/packages/74/66/2bb344f34abb4b57e60c7c9c761994e0417b9718ec1460bf00c296f2a7ea/msgspec-0.21.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a9aa659ebb0101b1cbc31461212b87e341d961f0ab0772aaf068a99e001ec4aa", size = 225050, upload-time = "2026-04-12T21:44:21.577Z" },
++    { url = "https://files.pythonhosted.org/packages/1a/84/7c1e412f76092277bf760cef12b7979d03314d259ab5b5cafde5d0c1722d/msgspec-0.21.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:f7b27d1a8ead2b6f5b0c4f2d07b8be1ccfcc041c8a0e704781edebe3ae13c484", size = 222713, upload-time = "2026-04-12T21:44:22.83Z" },
++    { url = "https://files.pythonhosted.org/packages/4e/27/0bba04b2b4ef05f3d068429410bc71d2cea925f1596a8f41152cccd5edb8/msgspec-0.21.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:38fe93e86b61328fe544cb7fd871fad5a27c8734bfda90f65e5dbe288ae50f61", size = 227259, upload-time = "2026-04-12T21:44:24.11Z" },
++    { url = "https://files.pythonhosted.org/packages/b0/2d/09574b0eea02fed2c2c1383dbaae2c7f79dc16dcd6487a886000afb5d7c4/msgspec-0.21.1-cp313-cp313-win_amd64.whl", hash = "sha256:8bc666331c35fcce05a7cd2d6221adbe0f6058f8e750711413d22793c080ac6a", size = 189857, upload-time = "2026-04-12T21:44:25.359Z" },
++    { url = "https://files.pythonhosted.org/packages/46/34/105b1576ad182879914f0c821f17ee1d13abb165cb060448f96fe2aff078/msgspec-0.21.1-cp313-cp313-win_arm64.whl", hash = "sha256:42bb1241e0750c1a4346f2aa84db26c5ffd99a4eb3a954927d9f149ff2f42898", size = 175403, upload-time = "2026-04-12T21:44:26.608Z" },
++    { url = "https://files.pythonhosted.org/packages/5a/ad/86954e987d1d6a5c579e2c2e7832b65e0fff194179fdac4f581536086024/msgspec-0.21.1-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:fab48eb45fdbfbdb2c0edfec00ffc53b6b6085beefc6b50b61e01659f9f8757f", size = 196261, upload-time = "2026-04-12T21:44:27.807Z" },
++    { url = "https://files.pythonhosted.org/packages/d1/a1/c5e46c3e42b866199365e35d11dddfd1fbd8bba4fdb3c52f965b1607ce94/msgspec-0.21.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:3cb779ea0c35bc807ff941d415875c1f69ca0be91a2e907ab99a171811d86a9a", size = 188729, upload-time = "2026-04-12T21:44:28.99Z" },
++    { url = "https://files.pythonhosted.org/packages/85/7d/1e29a319d678d6cb962ae5bdf32a6858ebdf38f73bc654c0e9c742a0c2c8/msgspec-0.21.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:68604db36b3b4dd9bf160e436e12798a4738848144cea1aca1cb984011eb160f", size = 219866, upload-time = "2026-04-12T21:44:31.104Z" },
++    { url = "https://files.pythonhosted.org/packages/25/1f/cca084ca2572810fff12ea9dbdcbe39eac048f40daf4a9077b49fcbe8cee/msgspec-0.21.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3d6b9dc50948eaf65df54d2fd0ff66e6d8c32f116037209ee861810eb9b676cb", size = 224993, upload-time = "2026-04-12T21:44:32.649Z" },
++    { url = "https://files.pythonhosted.org/packages/71/94/d2120fc9d419a89a3a7c13e5b7078798c4b392a96a02a6e2b3ce43a8766c/msgspec-0.21.1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:52c5e21930942302394429c5a582ce7e6b62c7f983b3760834c2ce107e0dd6df", size = 223535, upload-time = "2026-04-12T21:44:33.839Z" },
++    { url = "https://files.pythonhosted.org/packages/75/17/42418b66a3ad972a89bab73dd78b79cc6282bb488a25e73c853cee7443b9/msgspec-0.21.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:abbb39d65681fa24ed394e01af3d59d869068324f900c61d06062b7fb9980f2f", size = 227222, upload-time = "2026-04-12T21:44:35.093Z" },
++    { url = "https://files.pythonhosted.org/packages/c4/33/265c894268cca88ff67b144ca2b4c522fc8b9a6f1966a3640c70516e78e1/msgspec-0.21.1-cp314-cp314-win_amd64.whl", hash = "sha256:5666b1b560b97b6ec2eb3fca8a502298ebac56e13bbca1f88523538ce83d01ea", size = 193810, upload-time = "2026-04-12T21:44:36.612Z" },
++    { url = "https://files.pythonhosted.org/packages/3b/8f/a6d35f25bf1fc63c492fdd88fdce01ba0875ead48c2b91f90f33653b4131/msgspec-0.21.1-cp314-cp314-win_arm64.whl", hash = "sha256:d8b8578e4c83b14ceea4cef0d0b747e31d9330fe4b03b2b2ad4063866a178f93", size = 179125, upload-time = "2026-04-12T21:44:38.198Z" },
++    { url = "https://files.pythonhosted.org/packages/c6/39/74839641e64b99d87da55af0fc472854d42b46e2183b9e2a67fe1bb2a512/msgspec-0.21.1-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:15f523d51c00ebad412213bfe9f06f0a50ec2b93e0c19e824a2d267cabb48ea2", size = 200171, upload-time = "2026-04-12T21:44:39.414Z" },
++    { url = "https://files.pythonhosted.org/packages/70/9b/ce0cca6d2d87fcd4b6ff97600790494e64f26a2c55d61507cd2755c16193/msgspec-0.21.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:4e47390360583ba3d5c6cb44cf0a9f61b0a06a899d3c2c00627cedebb2e2884b", size = 192879, upload-time = "2026-04-12T21:44:40.882Z" },
++    { url = "https://files.pythonhosted.org/packages/a7/08/673a7bb05e5702dc787ddd3011195b509f9867927970da59052211929987/msgspec-0.21.1-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f60800e6299b798142dc40b0644da77ceac5ea0568be58228417eae14135c847", size = 226281, upload-time = "2026-04-12T21:44:42.181Z" },
++    { url = "https://files.pythonhosted.org/packages/7d/45/86508cf57283e9070b3c447e3ab25b792a7a0855a3ea4e0c6d111ac34c97/msgspec-0.21.1-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5f8e9dfcd98419cf7568808470c4317a3fb30bef0e3715b568730a2b272a20d7", size = 229863, upload-time = "2026-04-12T21:44:43.442Z" },
++    { url = "https://files.pythonhosted.org/packages/2c/62/e7c9367cd08d590559faacd711edbae36840342843e669440363f33c7d36/msgspec-0.21.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:92d89dfad13bd1ea640dc3e37e724ed380da1030b272bdf5ecafb983c3ad7c75", size = 230445, upload-time = "2026-04-12T21:44:44.806Z" },
++    { url = "https://files.pythonhosted.org/packages/42/b4/c0f54632103846b658a10930025f4de41c8724b5e4805a5f3b395586cb7e/msgspec-0.21.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:0d03867786e5d7ba25d666df4b11320c27170f4aeafcb8e3a8b0a50a4fb742ca", size = 231822, upload-time = "2026-04-12T21:44:46.343Z" },
++    { url = "https://files.pythonhosted.org/packages/ea/1d/0d85cc79d0ccf5508e9c846cc66552a6a16bf92abd1dbd8362617f7b35cd/msgspec-0.21.1-cp314-cp314t-win_amd64.whl", hash = "sha256:740fbf1c9d59992ca3537d6fbe9ebbf9eaf726a65fbf31448e0ecbc710697a63", size = 206650, upload-time = "2026-04-12T21:44:47.601Z" },
++    { url = "https://files.pythonhosted.org/packages/90/91/56c5d560f20e6c20e9e4f55bd0e458f7f162aa689ee350346c04c48eac0b/msgspec-0.21.1-cp314-cp314t-win_arm64.whl", hash = "sha256:0d2cc73df6058d811a126ac3a8ad63a4dfa210c82f9cf5a004802eaf4712de90", size = 183149, upload-time = "2026-04-12T21:44:48.833Z" },
++]
++
+ [[package]]
+ name = "multidict"
+ version = "6.7.1"
+@@ -3432,6 +3472,7 @@ source = { editable = "." }
+ dependencies = [
+     { name = "donfig" },
+     { name = "google-crc32c" },
++    { name = "msgspec" },
+     { name = "numcodecs" },
+     { name = "numpy" },
+     { name = "packaging" },
+@@ -3552,6 +3593,7 @@ requires-dist = [
+     { name = "donfig", specifier = ">=0.8" },
+     { name = "fsspec", marker = "extra == 'remote'", specifier = ">=2023.10.0" },
+     { name = "google-crc32c", specifier = ">=1.5" },
++    { name = "msgspec", specifier = ">=0.19" },
+     { name = "numcodecs", specifier = ">=0.14" },
+     { name = "numpy", specifier = ">=2" },
+     { name = "obstore", marker = "extra == 'remote'", specifier = ">=0.5.1" },

@@ -1,0 +1,46 @@
+{
+  "pr": 4146,
+  "merged": "2026-07-28",
+  "issues": [
+    {
+      "n": 3352,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "changes/3352.bugfix.md",
+    "src/zarr/api/asynchronous.py",
+    "src/zarr/api/synchronous.py"
+  ],
+  "testFiles": [
+    "tests/test_api.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 1,
+  "selected": [
+    "tests/test_api.py::test_array_like_creation",
+    "tests/test_api.py::test_create_array",
+    "tests/test_api.py::test_open_like_creates_array_by_default",
+    "tests/test_api.py::test_open_like_default_mode_rejects_read_only_store"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 162,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_api::test_open_like_creates_array_by_default[zarr2-mode_kwargs0]",
+    "tests.test_api::test_open_like_creates_array_by_default[zarr2-mode_kwargs1]",
+    "tests.test_api::test_open_like_creates_array_by_default[zarr3-mode_kwargs0]",
+    "tests.test_api::test_open_like_creates_array_by_default[zarr3-mode_kwargs1]",
+    "tests.test_api::test_open_like_default_mode_rejects_read_only_store[zarr2]",
+    "tests.test_api::test_open_like_default_mode_rejects_read_only_store[zarr3]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

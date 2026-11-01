@@ -1,0 +1,21 @@
+{
+  "pr": 370,
+  "merged": "2024-09-11",
+  "issues": [
+    {
+      "n": 366,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    ".gitignore",
+    "paperqa/clients/crossref.py",
+    "paperqa/clients/retractions.py",
+    "paperqa/types.py"
+  ],
+  "testFiles": [
+    "tests/.gitignore"
+  ],
+  "verdict": "skip:no-test-change"
+}

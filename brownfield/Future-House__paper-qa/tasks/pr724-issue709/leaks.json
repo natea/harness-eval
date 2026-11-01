@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The LLM evaluation says:\n\n> The single letter answer is B.",
+      "rationale": "Describes observed behavior with an example where the evaluation LLM picks one letter for an ambiguous answer. It doesn't identify the eval prompt as the cause or propose a change.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

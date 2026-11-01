@@ -1,0 +1,48 @@
+diff --git a/.pre-commit-config.yaml b/.pre-commit-config.yaml
+index 0a5ecca..8337537 100644
+--- a/.pre-commit-config.yaml
++++ b/.pre-commit-config.yaml
+@@ -81,7 +81,7 @@ repos:
+       - id: mypy
+         args: [--pretty, --ignore-missing-imports]
+         additional_dependencies:
+-          - aiohttp
++          - aiohttp>=3.10.6 # Match pyproject.toml
+           - PyMuPDF>=1.24.12
+           - anyio
+           - coredis
+diff --git a/pyproject.toml b/pyproject.toml
+index 5d0363e..ee592c7 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -23,7 +23,7 @@ classifiers = [
+ ]
+ dependencies = [
+     "PyMuPDF>=1.24.12",  # For pymupdf.set_messages addition
+-    "aiohttp",  # TODO: remove in favor of httpx
++    "aiohttp>=3.10.6",  # TODO: remove in favor of httpx, pin for aiohttp.ClientConnectionResetError
+     "anyio",
+     "coredis",
+     "fhaviary[llm]>=0.10.2",  # For tool execution concurrency
+diff --git a/uv.lock b/uv.lock
+index 9d9ee3e..c157949 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -1611,7 +1611,7 @@ wheels = [
+ 
+ [[package]]
+ name = "paper-qa"
+-version = "5.7.1.dev13+g9143b5c.d20241207"
++version = "5.8.1.dev3+ga630d92.d20241212"
+ source = { editable = "." }
+ dependencies = [
+     { name = "aiohttp" },
+@@ -1712,7 +1712,7 @@ dev = [
+ 
+ [package.metadata]
+ requires-dist = [
+-    { name = "aiohttp" },
++    { name = "aiohttp", specifier = ">=3.10.6" },
+     { name = "anyio" },
+     { name = "coredis" },
+     { name = "datasets", marker = "extra == 'datasets'" },

@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11290
+issues:
+  - 11188
+baseSha: b335cea039f0454b2d6fc1024c2bddae6533dad0
+mergeSha: c6c47f3ac4777687f1bd101df5c4e446210ad92b
+tStar: 2026-04-09T20:05:58Z
+issueCreatedAt: 2026-02-20T19:10:00Z
+prMergedAt: 2026-09-28T14:21:26Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestDataArray::test_replace_maybe_drop_dims_keeps_reordered_coords
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_code
+provisional: true
+files:
+  issue/body+all.md: 459fe9e919ed0b5801bd413beaa44a4b526f292ae204ed48b7e1cbe6f0735319
+  issue/body+human.md: a51594bd1a814b0dc785688964472fa39d63f3af3de1fe24f9df6371ca5b53df
+  issue/body.md: 81a4b3c4284f2f07fd958d49ef03095f16579d3b7fc3ad48fffff820884d2715
+  leaks.json: 12380a93b5da43b7c13ff0bc112e3df6ad40eef5a082cc9b26b691a62f80dc2d
+  reference.patch: 9ebce4b17382904f822e5038adf22c4231987831d992efe7b93e04b267a68da3
+  snapshot.json: b6c1e9bf9cb267a5a85db892a85211fb5442ce8ddb78ba5d40a8177b87f48786
+  tests.patch: b6ba83f47212a3bceeade9b6b0b7c05f061f297317f97f6de20073560b4bab35
+  validation.json: 82cb44ebdcb5ad56225306ec9d32ea6a7a99b44dff32768d68f99f8b44e24212

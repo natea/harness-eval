@@ -1,0 +1,47 @@
+diff --git a/changes/4257.bugfix.md b/changes/4257.bugfix.md
+new file mode 100644
+index 00000000..6f2740cc
+--- /dev/null
++++ b/changes/4257.bugfix.md
+@@ -0,0 +1 @@
++Numpy integers are accepted as chunk sizes again. Since 3.3.0 a per-dimension chunk size that was a numpy integer (e.g. `chunks=(np.int64(2), np.int64(2))`, as produced by any computed chunk shape) raised `TypeError: 'numpy.int64' object is not iterable`, because the scalar chunk path narrowed on `int` while its caller dispatched on `numbers.Integral`. Numpy arrays are now also accepted as chunk specifications, and a chunk specification that is neither an integer nor iterable now reports the offending value instead of failing with an opaque iteration error.
+diff --git a/src/zarr/core/chunk_grids.py b/src/zarr/core/chunk_grids.py
+index 2cb97627..584829bc 100644
+--- a/src/zarr/core/chunk_grids.py
++++ b/src/zarr/core/chunk_grids.py
+@@ -729,17 +729,26 @@ def normalize_chunks_1d(
+     overhang the span. The actual data extent of each chunk is determined
+     by the chunk grid at runtime, not by this function.
+     """
+-    if chunks == -1:
+-        return np.array([span], dtype=np.int64)
+-    if isinstance(chunks, int):
+-        if chunks <= 0:
+-            raise ValueError(f"Chunk size must be positive, got {chunks}")
++    # `numbers.Integral` rather than `int` so that numpy integer scalars (which are not
++    # `int` subclasses) take the uniform-chunk path instead of being treated as a sequence.
++    if isinstance(chunks, numbers.Integral):
++        chunk_size = int(chunks)
++        if chunk_size == -1:
++            return np.array([span], dtype=np.int64)
++        if chunk_size <= 0:
++            raise ValueError(f"Chunk size must be positive, got {chunk_size}")
+         if span == 0:
+-            return np.array([chunks], dtype=np.int64)
+-        n = ceildiv(span, chunks)
+-        return np.full(n, chunks, dtype=np.int64)
++            return np.array([chunk_size], dtype=np.int64)
++        n = ceildiv(span, chunk_size)
++        return np.full(n, chunk_size, dtype=np.int64)
+     else:
+-        chunk_list = list(chunks)
++        try:
++            chunk_list = list(chunks)  # type: ignore[arg-type]
++        except TypeError:
++            raise TypeError(
++                f"Chunk specification must be an integer or an iterable of integers; got "
++                f"{chunks!r} of type {type(chunks).__name__}."
++            ) from None
+         if not chunk_list:
+             raise ValueError("Chunk specification must not be empty")
+         non_int = [

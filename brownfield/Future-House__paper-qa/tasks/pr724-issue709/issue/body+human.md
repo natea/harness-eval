@@ -1,0 +1,26 @@
+# Failures to correct evaluate non-single letter answers
+
+_Opened by @jamesbraza_
+
+For the `qa_prompt`:
+
+> Q: What is my office's zip code?
+> 
+> Options:
+> A) 94107
+> B) 94106
+> C) cheesecake
+> D) Insufficient information to answer this question
+> E) -8
+
+And the `qa_answer` (where correct is A):
+
+> the answer is 94106 or 94107
+
+The LLM evaluation says:
+
+> The single letter answer is B.
+
+Which gets converted to `"T"`, and declares it as `LitQAEvaluation.INCORRECT`.
+
+Even though `LitQAEvaluation.INCORRECT` is actually the right output, we got it right here for the wrong reasons.

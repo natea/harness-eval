@@ -1,0 +1,35 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11673
+issues:
+  - 11672
+baseSha: 25ef02edfeb5a8e0480c4485e536646b62b60c97
+mergeSha: 0cd87a97ae2df360a35fcc6703a65f2c5750a03f
+tStar: 2026-10-05T16:46:55Z
+issueCreatedAt: 2026-10-05T15:03:00Z
+prMergedAt: 2026-10-11T18:33:21Z
+verdict: VALID
+failToPass:
+  - xarray.tests.backends.test_datatree.TestGenericNetCDFIO::test_load_datatree_overwrite_same_named_variable
+  - xarray.tests.backends.test_datatree.TestNetCDF4DatatreeIO::test_load_datatree_overwrite_same_named_variable
+  - xarray.tests.backends.test_datatree.TestH5NetCDFDatatreeIO::test_load_datatree_overwrite_same_named_variable
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: d65ad8594e0795a83182bf64ce3293d9d6437dc88bbd6fd5f1642c16bd40ad87
+  issue/body+human.md: fd8d6cef49b211bf8315751d9e466ab73a2c1cade261abdb33aaaf22ab3a258c
+  issue/body.md: fd8d6cef49b211bf8315751d9e466ab73a2c1cade261abdb33aaaf22ab3a258c
+  leaks.json: 9afb77e19a9fc944edf6dd7a008426c230fde7f0416693bed501ebfde23aade1
+  reference.patch: bcbb8a9b395abcce9933beb8ddbd4a64f6259e101ee9b75040672c2157812da5
+  snapshot.json: 39c1fa418ac924bb74460665f67e55a173aa0003635d06e4f7bab91860b07f70
+  tests.patch: 02f1f895ea4dad7e8e3ba31be78f66777cc952e2051b8f85c7c5eaf640f8548e
+  validation.json: a9e35ff5e6c29695fe302a115b395af1d92415d2861a04b175ab12bb7f92050b

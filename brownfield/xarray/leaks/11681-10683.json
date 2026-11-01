@@ -1,0 +1,99 @@
+{
+  "pr": 11681,
+  "issue": 10683,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0695506,
+  "prAuthor": "headtr1ck",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "In the example running on my machine it is a 76x performance regression.",
+      "rationale": "Reports the regression with a repro and timings. It only guesses at PR #9881 and names no code location.",
+      "author": "k-collie",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "cc @dcherian",
+      "rationale": "Only pings someone and has no technical content.",
+      "author": "shoyer",
+      "role": "maintainer"
+    },
+    {
+      "id": "c2",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/missing.py"
+      ],
+      "evidence": "the vectorization is breaking down in this case with the ufunc applying interpnd",
+      "rationale": "Locates the mechanism in missing.py. The interpnd ufunc is called once per (t, r) pair, 7930 times, when the destination coordinate varies along a source dimension. The reference fix and its new benchmark target exactly this vectorized-destination case.",
+      "author": "ianhi",
+      "role": "maintainer"
+    },
+    {
+      "id": "c3",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/missing.py"
+      ],
+      "evidence": "https://github.com/pydata/xarray/pull/9881#discussion_r1883377901 seems relevant",
+      "rationale": "Points to the specific review discussion on the PR that introduced the regression. This identifies the culprit code path, but gives no concrete mechanism in the text.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "`seq`   | 0.8s    | 4.0s",
+      "rationale": "A new repro and timings showing the slowdown in sequential interpolation. It gives no cause.",
+      "author": "leroyvn",
+      "role": "other user"
+    },
+    {
+      "id": "c5",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/missing.py"
+      ],
+      "evidence": "there is a a possibilty of adding another path to that function that would allow for catchigni this slowed down case",
+      "rationale": "Proposes adding a fast path to the interp function for the slow case. This matches the direction of the fix.",
+      "author": "ianhi",
+      "role": "maintainer"
+    },
+    {
+      "id": "c6",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/missing.py"
+      ],
+      "evidence": "I support adding a workaround that is triggered when `.chunks is None`",
+      "rationale": "Proposes a concrete condition for a separate non-dask fast path, which is the likely shape of the fix.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c7",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I wrote [some workaround code]",
+      "rationale": "Describes the commenter's own external workaround using a Numba gufunc and scipy's interpn. It does not point to the xarray fix.",
+      "author": "leroyvn",
+      "role": "other user"
+    }
+  ]
+}

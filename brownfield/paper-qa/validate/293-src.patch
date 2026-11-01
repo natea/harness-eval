@@ -1,0 +1,33 @@
+diff --git a/paperqa/utils.py b/paperqa/utils.py
+index efeb0de..1d54df3 100644
+--- a/paperqa/utils.py
++++ b/paperqa/utils.py
+@@ -184,4 +184,15 @@ def llm_read_json(text: str) -> dict:
+     text = "{" + text.split("{", 1)[-1]
+     # split anything after the last }
+     text = text.rsplit("}", 1)[0] + "}"
++
++    # escape new lines within strings
++    def replace_newlines(match: re.Match) -> str:
++        return match.group(0).replace("\n", "\\n")
++
++    # Match anything between double quotes
++    # including escaped quotes and other escaped characters.
++    # https://regex101.com/r/VFcDmB/1
++    pattern = r'"(?:[^"\\]|\\.)*"'
++    text = re.sub(pattern, replace_newlines, text)
++
+     return json.loads(text)
+diff --git a/pyproject.toml b/pyproject.toml
+index edc6139..64f7d3e 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -40,7 +40,7 @@ name = "paper-qa"
+ readme = "README.md"
+ requires-python = ">=3.8"
+ urls = {repository = "https://github.com/whitead/paper-qa"}
+-version = "4.8.0"
++version = "4.8.1"
+ 
+ [tool.codespell]
+ check-filenames = true

@@ -1,0 +1,274 @@
+# open_mfdataset segfaults when using engine="netcdf4" and Prallel=Tru
+
+_Opened by @ArielDeVora_
+
+### What happened?
+
+When opening a mf_dataset using netcdf4 engine and parallel=True a segmentation fault arises. The whole open_mfdataset and all operations are wrapped in a class inheriting from xr.Dataset. I would like to know whether netcdf4 engine is compatible with parallel=True, or if there are other ways of doing this. Don't mind the preprocess steps, it changes a dimension name. 
+
+PS : Using h5netcdf engine with parallel=True increases the reading time compared to using the serial netcdf4 engine
+
+### What did you expect to happen?
+
+No segmentation fault.
+
+### Minimal Complete Verifiable Example
+
+```Python
+import os
+
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+
+import re
+from typing import List, Optional, Any
+
+import numpy as np
+import xarray as xr
+import dask
+
+mf_dataset = xr.open_mfdataset(
+  self.data_paths, engine="netcdf4", preprocess=preprocess, combine="by_coords", mask_and_scale=False, decode_cf=False, parallel=False,
+)
+```
+
+### Steps to reproduce
+
+_No response_
+
+### MVCE confirmation
+
+- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [ ] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [ ] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.
+- [ ] Recent environment — the issue occurs with the latest version of xarray and its dependencies.
+
+### Relevant log output
+
+```Python
+
+```
+
+### Anything else we need to know?
+
+_No response_
+
+### Environment
+
+<details>
+
+commit: None
+python: 3.13.8 (main, Dec 11 2025, 09:26:20) [GCC 11.5.0 20240719 (Red Hat 11.5.0-5)]
+python-bits: 64
+OS: Linux
+OS-release: 5.14.0-611.13.1.el9_7.x86_64
+machine: x86_64
+processor: x86_64
+byteorder: little
+LC_ALL: None
+LANG: fr_FR.UTF-8
+LOCALE: ('fr_FR', 'UTF-8')
+libhdf5: 1.14.6
+libnetcdf: 4.9.3
+
+xarray: 2025.7.1
+pandas: 2.3.3
+numpy: 2.3.4
+scipy: 1.16.3
+netCDF4: 1.7.2
+pydap: None
+h5netcdf: 1.6.1
+h5py: 3.14.0
+zarr: None
+cftime: 1.6.4
+nc_time_axis: None
+iris: None
+bottleneck: 1.5.0
+dask: 2025.7.0
+distributed: 2025.7.0
+matplotlib: 3.10.7
+cartopy: None
+seaborn: None
+numbagg: None
+fsspec: 2025.9.0
+cupy: None
+pint: None
+sparse: None
+flox: None
+numpy_groupies: None
+setuptools: 80.9.0
+pip: 25.1.1
+conda: None
+pytest: 9.0.2
+mypy: None
+IPython: 9.8.0
+sphinx: 8.1.3
+
+</details>
+
+---
+
+## Discussion
+
+**@jsignell** (2026-01-15):
+
+It's hard to reproduce your exact issue, but it looks like a bug. 
+
+I made something based off of https://docs.xarray.dev/en/stable/user-guide/io.html#netcdf that is hopefully close:
+
+```python
+import numpy as np
+import pandas as pd
+import xarray as xr
+
+xr.Dataset(
+    {"foo": (("x", "y"), np.random.rand(4, 5))},
+    coords={
+        "x": [10, 20, 30, 40],
+        "y": pd.date_range("2000-01-01", periods=5),
+        "z": ("x", list("abcd")),
+    },
+).to_netcdf("a.nc")
+
+xr.Dataset(
+    {"foo": (("x", "y"), np.random.rand(4, 5))},
+    coords={
+        "x": [10, 20, 30, 40],
+        "y": pd.date_range("2000-01-06", periods=5),
+        "z": ("x", list("abcd")),
+    },
+).to_netcdf("b.nc")
+
+ xr.open_mfdataset(["a.nc", "b.nc"], engine="netcdf4", parallel=True)
+```
+
+which resulted in the following error:
+
+
+```python-traceback
+---------------------------------------------------------------------------
+ValueError                                Traceback (most recent call last)
+File ~/xarray/xarray/backends/api.py:1679, in open_mfdataset(paths, chunks, concat_dim, compat, preprocess, engine, data_vars, coords, combine, parallel, join, attrs_file, combine_attrs, errors, **kwargs)
+   1676 elif combine == "by_coords":
+   1677     # Redo ordering from coordinates, ignoring how they were ordered
+   1678     # previously
+-> 1679     combined = combine_by_coords(
+   1680         datasets,
+   1681         compat=compat,
+   1682         data_vars=data_vars,
+   1683         coords=coords,
+   1684         join=join,
+   1685         combine_attrs=combine_attrs,
+   1686     )
+   1687 else:
+
+File ~/xarray/xarray/structure/combine.py:1108, in combine_by_coords(data_objects, compat, data_vars, coords, fill_value, join, combine_attrs)
+   1106     # Perform the multidimensional combine on each group of data variables
+   1107     # before merging back together
+-> 1108     concatenated_grouped_by_data_vars = tuple(
+   1109         _combine_single_variable_hypercube(
+   1110             tuple(datasets_with_same_vars),
+   1111             fill_value=fill_value,
+   1112             data_vars=data_vars,
+   1113             coords=coords,
+   1114             compat=compat,
+   1115             join=join,
+   1116             combine_attrs=combine_attrs,
+   1117         )
+   1118         for vars, datasets_with_same_vars in grouped_by_vars
+   1119     )
+   1121 return merge(
+   1122     concatenated_grouped_by_data_vars,
+   1123     compat=compat,
+   (...)   1126     combine_attrs=combine_attrs,
+   1127 )
+
+File ~/xarray/xarray/structure/combine.py:1109, in <genexpr>(.0)
+   1106     # Perform the multidimensional combine on each group of data variables
+   1107     # before merging back together
+   1108     concatenated_grouped_by_data_vars = tuple(
+-> 1109         _combine_single_variable_hypercube(
+   1110             tuple(datasets_with_same_vars),
+   1111             fill_value=fill_value,
+   1112             data_vars=data_vars,
+   1113             coords=coords,
+   1114             compat=compat,
+   1115             join=join,
+   1116             combine_attrs=combine_attrs,
+   1117         )
+   1118         for vars, datasets_with_same_vars in grouped_by_vars
+   1119     )
+   1121 return merge(
+   1122     concatenated_grouped_by_data_vars,
+   1123     compat=compat,
+   (...)   1126     combine_attrs=combine_attrs,
+   1127 )
+
+File ~/xarray/xarray/structure/combine.py:763, in _combine_single_variable_hypercube(datasets, fill_value, data_vars, coords, compat, join, combine_attrs)
+    758     raise ValueError(
+    759         "At least one Dataset is required to resolve variable names "
+    760         "for combined hypercube."
+    761     )
+--> 763 combined_ids, concat_dims = _infer_concat_order_from_coords(list(datasets))
+    765 if fill_value is None:
+    766     # check that datasets form complete hypercube
+
+File ~/xarray/xarray/structure/combine.py:174, in _infer_concat_order_from_coords(datasets)
+    173     else:
+--> 174         raise ValueError(
+    175             "Could not find any dimension coordinates to use to "
+    176             "order the Dataset objects for concatenation"
+    177         )
+    179 combined_ids = dict(zip(tile_ids, datasets, strict=True))
+
+ValueError: Could not find any dimension coordinates to use to order the Dataset objects for concatenation
+
+During handling of the above exception, another exception occurred:
+
+RuntimeError                              Traceback (most recent call last)
+Cell In[1], line 3
+      1 import xarray as xr
+----> 3 xr.open_mfdataset(["a.nc", "b.nc"], engine="netcdf4", parallel=True)
+
+File ~/xarray/xarray/backends/api.py:1693, in open_mfdataset(paths, chunks, concat_dim, compat, preprocess, engine, data_vars, coords, combine, parallel, join, attrs_file, combine_attrs, errors, **kwargs)
+   1691 except ValueError:
+   1692     for ds in datasets:
+-> 1693         ds.close()
+   1694     raise
+   1696 combined.set_close(partial(_multi_file_closer, closers))
+
+File ~/xarray/xarray/core/common.py:1272, in DataWithCoords.close(self)
+   1270 """Release any resources linked to this object."""
+   1271 if self._close is not None:
+-> 1272     self._close()
+   1273 self._close = None
+
+File ~/xarray/xarray/backends/netCDF4_.py:673, in NetCDF4DataStore.close(self, **kwargs)
+    672 def close(self, **kwargs):
+--> 673     self._manager.close(**kwargs)
+
+File ~/xarray/xarray/backends/file_manager.py:242, in CachingFileManager.close(self, needs_lock)
+    240 file = self._cache.pop(self._key, default)
+    241 if file is not None:
+--> 242     file.close()
+
+File src/netCDF4/_netCDF4.pyx:2676, in netCDF4._netCDF4.Dataset.close()
+
+File src/netCDF4/_netCDF4.pyx:2643, in netCDF4._netCDF4.Dataset._close()
+
+File src/netCDF4/_netCDF4.pyx:2160, in netCDF4._netCDF4._ensure_nc_success()
+
+RuntimeError: NetCDF: Not a valid ID
+
+```
+
+**@ArielDeVora** (2026-01-16):
+
+Indeed, this code also segfaults on my end with the same message as before :
+```bash
+[persee:2308560] *** Process received signal ***
+[persee:2308560] Signal: Segmentation fault (11)
+[persee:2308560] Signal code:  (128)
+[persee:2308560] Failing at address: (nil)
+Erreur de segmentation (core dumped)
+```

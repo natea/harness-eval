@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11659
+issues:
+  - 7916
+baseSha: 09412c1705b5fe8197b75bb2bb676ff4540fc2d2
+mergeSha: b2acc77ab2ca4a0caedce527c8cce2e0d9737c2c
+tStar: 2026-10-02T04:26:30Z
+issueCreatedAt: 2023-06-13T10:51:00Z
+prMergedAt: 2026-10-24T16:01:56Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dask.TestVariable::test_missing_methods
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: 611653db2dc01a4c2ccaec484c334e1904a018a6b6e4dbc62af23dab4019a496
+  issue/body+human.md: 5ae1eba1f2a2bcea6d2ee6717aa2effce7c9be6214dd656ad29649140b8e4c06
+  issue/body.md: e29c2d6727ea29f79a895c1d41d29b140678273c81dbf42b7983102b921005f8
+  leaks.json: ad6d3f2594b0868326619caa58e3e225a8096c2fbb5f7487feea926f9a52e308
+  reference.patch: ca7c9621c29fc45e024370f8afadd3a6d26f224ca9f76fbe53a9a9462fabacff
+  snapshot.json: c0a5f34e3112eeb7a370b4194bf75d549052fcafbdebcbc9d58fc31484668980
+  tests.patch: f2763b5698467ca64fa16cc8a38879e98d9d4f38deefc254b02b7b2d600e7335
+  validation.json: 73a5648e1456bdbee527408c7ea8bcc1b3e1653e5f30fa82498f9abd206d95fb

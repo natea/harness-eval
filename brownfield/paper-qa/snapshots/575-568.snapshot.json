@@ -1,0 +1,33 @@
+{
+  "pr": 575,
+  "issue": 568,
+  "tStar": "2024-10-11T18:22:36Z",
+  "title": "`litellm_get_search_query` does not use a local llm config",
+  "issueAuthor": "migalkin",
+  "body": "In the standard `ask` pipeline, the function `litellm_get_search_query` does not employ custom llm settings config available in `query.settings.llm_config`:\r\n\r\nhttps://github.com/Future-House/paper-qa/blob/e49f1af67e5463ee5188cbe20bdb9747f14db1f9/paperqa/agents/main.py#L178-L180\r\n\r\nThis leads to creating a default LiteLLMModel instance which by default calls some public endpoint (eg, OpenAI one)\r\n\r\nhttps://github.com/Future-House/paper-qa/blob/e49f1af67e5463ee5188cbe20bdb9747f14db1f9/paperqa/agents/helpers.py#L54-L55\r\n\r\nI found this behavior after setting all `llm_config`, `summary_llm_config` and `agent_llm_config` pointing to a custom (local) vLLM endpoint, but PaperQA always calls some hardcoded open endpoint at this step and fails because those endpoints don't recognize custom model names. \r\n\r\nI managed to solve this by patching `litellm_get_search_query` to accept a config dict and using it in the `LiteLLMModel` initialization:\r\n```python\r\nfor search in await litellm_get_search_query(\r\n        question, llm=query.settings.llm, count=3, config=query.settings.llm_config\r\n    ):\r\n```\r\nand \r\n```python\r\nmodel = LiteLLMModel(name=llm, config=config)\r\n```\r\n\r\nIs this a bug (I can submit a PR if you'd like) or a feature of the fake agent? 🤔 ",
+  "comments": [
+    {
+      "at": "2024-10-11T03:56:19Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Greeting -->\nHey @migalkin! I'm here to help you with any bugs, questions, or contributions. Let's tackle this together!\n\n<!-- Answer -->\nThe issue you've identified with `litellm_get_search_query` not utilizing custom LLM settings from `query.settings.llm_config` does seem like a bug. The function defaults to a public endpoint, which can cause problems when custom model names are used. Your proposed patch to allow the function to accept a configuration dictionary and initialize `LiteLLMModel` with it is a valid solution. Submitting a PR to address this would likely be beneficial for users who need custom configurations.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR",
+        "fix language"
+      ]
+    },
+    {
+      "at": "2024-10-11T06:05:00Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "Hi @migalkin thanks for the issue and nice spot, I follow what you're saying. Feel free to open a PR for this 👍 \r\n\r\nLooks like the same thing happens in `AnswerResponse.get_summary`.\r\n\r\nLet's call this a bug because we advertise as working for local LLMs",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    }
+  ]
+}

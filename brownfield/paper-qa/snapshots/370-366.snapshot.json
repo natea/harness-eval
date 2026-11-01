@@ -1,0 +1,9 @@
+{
+  "pr": 370,
+  "issue": 366,
+  "tStar": "2024-09-04T21:36:49Z",
+  "title": "Make sure citations are none in retraction notice",
+  "issueAuthor": "geemi725",
+  "body": "# https://github.com/Future-House/paper-qa/blob/e1a8dadb9cfd2c7a5193734c9f3a9fda7c09e7b7/paperqa/types.py#L552",
+  "comments": []
+}

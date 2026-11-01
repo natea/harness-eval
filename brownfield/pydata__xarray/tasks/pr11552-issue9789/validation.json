@@ -1,0 +1,57 @@
+{
+  "pr": 11552,
+  "merged": "2026-09-09",
+  "issues": [
+    {
+      "n": 9789,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "xarray/computation/apply_ufunc.py",
+    "xarray/ufuncs.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_computation.py",
+    "xarray/tests/test_ufuncs.py"
+  ],
+  "env": "exclude-newer 2026-09-08T10:36:18-06:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_computation.py::test_apply_1d_and_0d",
+    "xarray/tests/test_computation.py::test_apply_dask_parallelized_two_args",
+    "xarray/tests/test_computation.py::test_apply_datatree_two_outputs",
+    "xarray/tests/test_computation.py::test_apply_datatree_with_core_dims_and_scalar",
+    "xarray/tests/test_computation.py::test_apply_groupby_add",
+    "xarray/tests/test_computation.py::test_apply_identity",
+    "xarray/tests/test_computation.py::test_apply_identity_datatree",
+    "xarray/tests/test_computation.py::test_apply_non_isomorphic_datatrees",
+    "xarray/tests/test_computation.py::test_apply_two_datatrees",
+    "xarray/tests/test_computation.py::test_apply_two_inputs",
+    "xarray/tests/test_computation.py::test_dataset_join",
+    "xarray/tests/test_computation.py::test_keep_attrs",
+    "xarray/tests/test_ufuncs.py::TestXarrayUfuncs::test_ufunc_datatree",
+    "xarray/tests/test_ufuncs.py::TestXarrayUfuncs::test_ufunc_pickle",
+    "xarray/tests/test_ufuncs.py::TestXarrayUfuncs::test_ufunc_scalar"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 9,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_computation::test_apply_datatree_two_outputs",
+    "xarray.tests.test_computation::test_apply_datatree_with_core_dims_and_scalar",
+    "xarray.tests.test_computation::test_apply_identity_datatree",
+    "xarray.tests.test_computation::test_apply_non_isomorphic_datatrees",
+    "xarray.tests.test_computation::test_apply_two_datatrees",
+    "xarray.tests.test_ufuncs.TestXarrayUfuncs::test_ufunc_datatree"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

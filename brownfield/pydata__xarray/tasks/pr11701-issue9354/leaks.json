@@ -1,0 +1,19 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/datatree.py"
+      ],
+      "evidence": "To fix this `__contains__` should support path-like syntax.",
+      "rationale": "States the change: make DataTree.__contains__ accept path-like keys so it matches __getitem__. This matches the reference fix in prose, though it doesn't give the implementation details.",
+      "author": "TomNicholas",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise"
+}

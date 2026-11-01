@@ -1,0 +1,104 @@
+# ImportError: cannot import name 'Settings' from 'paperqa'
+
+_Opened by @zhiyiZeng_
+
+Hello, I encountered an ImportError while trying to import the Settings class from the paperqa package. Below are the details of the issue:
+![image](https://github.com/user-attachments/assets/d857c6aa-cf16-47ab-8d79-edd500be6217)
+
+I've tried in both windows and linux. I appreciate any help.
+
+---
+
+## Discussion
+
+**@dosubot** (bot) (2024-09-22):
+
+<!-- Greeting -->
+Hey @zhiyiZeng! I'm here to help you with your Python import issue. I can assist with bug fixes, answer questions, and guide you to become a contributor. Let's tackle this together!
+
+<!-- Answer -->
+To resolve the `ImportError: "cannot import name 'Settings' from 'paperqa'"`, ensure that you are using the correct import statement. The `Settings` class is defined in the `paperqa/settings.py` file. You should import it as follows:
+
+```python
+from paperqa.settings import Settings
+```
+
+If you are still encountering issues, make sure you are using the latest version of the `paperqa` package, which is version 5 (PaperQA2). You can install or upgrade to this version using:
+
+```bash
+pip install --upgrade paper-qa
+```
+
+This should resolve the import error. If the problem persists, double-check that the `paperqa` package is correctly installed and that there are no conflicting packages or files in your environment <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/paperqa/settings.py)</sup><sup>[[2]](https://github.com/Future-House/paper-qa/blob/main/paperqa/__init__.py)</sup><sup>[[3]](https://github.com/Future-House/paper-qa/blob/main/README.md)</sup>.
+
+
+<!-- Dosu Comment Footer -->
+*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*
+
+**@dosubot** (bot) (2024-09-22):
+
+<!-- Answer -->
+To install the `paperqa` package from source, you can use the `uv` tool as described in the `CONTRIBUTING.md` file. Here are the steps:
+
+1. Install `uv` by following the instructions on the [uv website](https://astral.sh/uv/).
+2. Run the following command to install all dependencies and set up the development environment:
+
+   ```bash
+   uv sync
+   ```
+
+Alternatively, if you prefer to use `pip` for installing the package in development mode, you can run:
+
+```bash
+pip install -e .
+```
+
+This should help you set up the `paperqa` package from source <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/CONTRIBUTING.md)</sup>.
+
+
+<!-- Dosu Comment Footer -->
+*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*
+
+**@dosubot** (bot) (2024-09-22):
+
+<!-- Answer -->
+To install the `paperqa` project from source without a setup file, you should refer to the `CONTRIBUTING.md` file for development setup instructions. Here are the specific steps:
+
+1. **Install `uv`**:
+   - Follow the instructions on the [uv website](https://astral.sh/uv/) to install `uv`.
+
+2. **Set up the development environment**:
+   - Run the following command to install all dependencies and set up the development environment:
+     ```bash
+     uv sync
+     ```
+
+3. **Install the package for development**:
+   - If you prefer to use `pip` for installing the package in development mode, you can do so by running:
+     ```bash
+     pip install -e .
+     ```
+
+For more detailed instructions and additional resources, please refer to the `CONTRIBUTING.md` file in the repository <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/CONTRIBUTING.md)</sup>.
+
+
+<!-- Dosu Comment Footer -->
+*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*
+
+**@jamesbraza** (2024-09-22):
+
+Hi @zhiyiZeng I think the issue is you need paper-qa version 5. The `settings` module didn't exist before then in versions such as version 4.
+
+Can you `pip install -U paper-qa` or `pip install paper-qa>=5` to get version 5
+
+**@habema** (2024-09-23):
+
+Hello @zhiyiZeng
+
+I was just running into the same issue and solved it by upgrading python3.10 to 3.11.
+
+There are no installation candidates for `pip install paper-qa>=5` on python3.10.
+
+**@zhiyiZeng** (2024-09-23):
+
+@habema Thanks, it solves my problem. I install the package using the latest `.whl`  file and the error message suggests that I need to use Python 3.11, just like what you said. Also appreciate your help @jamesbraza for building this wondereful package.

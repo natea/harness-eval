@@ -1,0 +1,34 @@
+{
+  "pr": 11556,
+  "issue": 8136,
+  "tStar": "2026-09-01T22:20:58Z",
+  "title": "Type checking fails for DataArrayCoarsen methods",
+  "issueAuthor": "Antyos",
+  "body": "### What happened?\n\nPylance doesn't recognize method calls on `DataArrayCoarsen` such as `.mean()` or `.sum()`\r\n\r\nFor the code:\r\n\r\n```python\r\nda.coarsen().mean()\r\n```\r\n\r\nI get the following error squiggle:\r\n\r\n> Cannot access member \"mean\" for type \"DataArrayCoarsen\"\r\n  Member \"mean\" is unknown _Pylance ([reportGeneralTypeIssues](https://github.com/microsoft/pyright/blob/main/docs/configuration.md#reportGeneralTypeIssues))_\n\n### What did you expect to happen?\n\n_No response_\n\n### Minimal Complete Verifiable Example\n\n```Python\nimport xarray as xr\r\nimport numpy as np\r\nimport pandas as pd\r\n\r\nda = xr.DataArray(\r\n    np.linspace(0, 364, num=364),\r\n    dims=\"time\",\r\n    coords={\"time\": pd.date_range(\"1999-12-15\", periods=364)},\r\n)\r\n\r\nda.coarsen(time=3, boundary=\"trim\").mean()\r\n                                 #  ^^^^ Error squiggles here\r\n                                 # Cannot access member \"mean\" for type \"DataArrayCoarsen\"\n```\n\n\n### MVCE confirmation\n\n- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [X] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [X] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.\n\n### Relevant log output\n\n_No response_\n\n### Anything else we need to know?\n\nPylance version: v2023.8.50\n\n### Environment\n\n<details>\r\n\r\nINSTALLED VERSIONS\r\n------------------\r\ncommit: None\r\npython: 3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]\r\npython-bits: 64\r\nOS: Windows\r\nOS-release: 10\r\nmachine: AMD64\r\nprocessor: Intel64 Family 6 Model 141 Stepping 1, GenuineIntel\r\nbyteorder: little\r\nLC_ALL: None\r\nLANG: en_US.UTF-8\r\nLOCALE: ('English_United States', '1252')\r\nlibhdf5: None\r\nlibnetcdf: None\r\n\r\nxarray: 2023.8.0\r\npandas: 2.1.0\r\nnumpy: 1.25.2\r\nscipy: 1.11.1\r\nnetCDF4: None\r\npydap: None\r\nh5netcdf: None\r\nh5py: None\r\nNio: None\r\nzarr: None\r\ncftime: None\r\nnc_time_axis: None\r\nPseudoNetCDF: None\r\niris: None\r\nbottleneck: None\r\ndask: 2023.8.1\r\ndistributed: None\r\nmatplotlib: None\r\ncartopy: None\r\nseaborn: None\r\nnumbagg: None\r\nfsspec: 2023.6.0\r\ncupy: None\r\npint: None\r\nsparse: None\r\nflox: None\r\nnumpy_groupies: None\r\nsetuptools: 61.0.0\r\npip: 22.0.4\r\nconda: None\r\npytest: None\r\nmypy: 1.5.1\r\nIPython: 8.15.0\r\nsphinx: None\r\n\r\n</details>\r\n",
+  "comments": [
+    {
+      "at": "2023-09-01T15:38:29Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2023-09-13T18:41:30Z",
+      "author": "headtr1ck",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "Also happens with mypy.\r\nReason is that the class `xarray.core.ops.IncludeReduceMethods` injects these methods dynamically from the `duck_array_ops` module.\r\n\r\nThe injections methods are only used in these IncludeXX classes and they are not too easy to follow.\r\nI'm not sure that the saved code repetitions are worth the inconvenience.\r\n\r\nBasically we have to options to fix this:\r\n\r\n1. Add an `ops.pyi` file and only add the functions there\r\n2. Change the injections by \"hardcoded\" function definitions",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    }
+  ]
+}

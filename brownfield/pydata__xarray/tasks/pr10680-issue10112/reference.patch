@@ -1,0 +1,477 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 83640490..d18a0e89 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -13,6 +13,14 @@ v2026.09.1 (unreleased)
+ 
+ New Features
+ ~~~~~~~~~~~~
++- :py:meth:`DataArray.idxmin` and :py:meth:`DataArray.idxmax` accept a sequence
++  of dimensions or ``...``, and return a dict of the coordinate labels along each
++  dimension, like :py:meth:`DataArray.argmin`. Without ``dim``, arrays with more
++  than one dimension now use all dimensions instead of raising an error.
++  :py:meth:`Dataset.idxmin` and :py:meth:`Dataset.idxmax` raise an informative
++  error for multiple dimensions (:issue:`10112`, :pull:`10680`).
++  By `Giacomo Caria <https://github.com/gcaria>`_ and
++  `Michael Niklas <https://github.com/headtr1ck>`_.
+ - :py:class:`~xarray.Variable` is now generic in the type of its dimension
+   names, like :py:class:`~xarray.NamedArray`: it is defined as
+   ``class Variable(NamedArray[Any, Any, DimType_co])``, so static type checkers
+@@ -29,6 +37,11 @@ New Features
+ 
+ Breaking Changes
+ ~~~~~~~~~~~~~~~~
++- The results of :py:meth:`DataArray.idxmin`, :py:meth:`DataArray.idxmax`,
++  :py:meth:`Dataset.idxmin` and :py:meth:`Dataset.idxmax` now keep the
++  attributes of the coordinate whose labels they return, e.g. its units,
++  instead of the attributes of the data (:pull:`10680`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - Support for Python 3.11 has been dropped. The minimum required Python version
+   is now 3.12, in line with xarray's
+   :ref:`minimum dependency policy <mindeps_policy>` (:pull:`11649`).
+diff --git a/xarray/computation/computation.py b/xarray/computation/computation.py
+index 6df8aa53..ffd3d1b8 100644
+--- a/xarray/computation/computation.py
++++ b/xarray/computation/computation.py
+@@ -9,10 +9,8 @@ from __future__ import annotations
+ 
+ import functools
+ from collections import Counter
+-from collections.abc import (
+-    Callable,
+-    Hashable,
+-)
++from collections.abc import Callable, Hashable, Sequence
++from types import EllipsisType
+ from typing import TYPE_CHECKING, Any, Literal, cast, overload
+ 
+ import numpy as np
+@@ -23,10 +21,7 @@ from xarray.core.common import zeros_like
+ from xarray.core.duck_array_ops import datetime_to_numeric
+ from xarray.core.options import OPTIONS, _get_keep_attrs
+ from xarray.core.types import Dims, T_DataArray
+-from xarray.core.utils import (
+-    is_scalar,
+-    parse_dims_as_set,
+-)
++from xarray.core.utils import is_scalar, parse_dims_as_set
+ from xarray.core.variable import Variable
+ from xarray.namedarray.parallelcompat import get_chunked_array_type
+ from xarray.namedarray.pycompat import is_chunked_array
+@@ -959,7 +954,7 @@ def _calc_idxminmax(
+     *,
+     array,
+     func: Callable,
+-    dim: Hashable | None = None,
++    dim: Hashable | Sequence[Hashable] | EllipsisType | None = None,
+     skipna: bool | None = None,
+     fill_value: Any = dtypes.NA,
+     keep_attrs: bool | None = None,
+@@ -969,23 +964,30 @@ def _calc_idxminmax(
+     if not array.ndim:
+         raise ValueError("This function does not apply for scalars")
+ 
+-    if dim is not None:
++    if dim is Ellipsis:
++        dim = array.dims
++    elif dim is not None:
+         pass  # Use the dim if available
+     elif array.ndim == 1:
+         # it is okay to guess the dim if there is only 1
+         dim = array.dims[0]
+     else:
+-        # The dim is not specified and ambiguous.  Don't guess.
+-        raise ValueError("Must supply 'dim' argument for multidimensional arrays")
++        # like the future behavior of argmin/argmax without dim, use all dims
++        dim = array.dims
+ 
+-    if dim not in array.dims:
+-        raise KeyError(
+-            f"Dimension {dim!r} not found in array dimensions {array.dims!r}"
+-        )
+-    if dim not in array.coords:
+-        raise KeyError(
+-            f"Dimension {dim!r} is not one of the coordinates {tuple(array.coords.keys())}"
+-        )
++    # like argmin/argmax, a sequence of dims (other than a str) returns a dict
++    single_dim = not isinstance(dim, Sequence) or isinstance(dim, str)
++    dims = [dim] if single_dim else list(cast(Sequence[Hashable], dim))
++
++    for _dim in dims:
++        if _dim not in array.dims:
++            raise KeyError(
++                f"Dimension {_dim!r} not found in array dimensions {array.dims!r}"
++            )
++        if _dim not in array.coords:
++            raise KeyError(
++                f"Dimension {_dim!r} is not one of the coordinates {tuple(array.coords.keys())}"
++            )
+ 
+     # These are dtypes with NaN values argmin and argmax can handle
+     na_dtypes = "cfO"
+@@ -995,29 +997,39 @@ def _calc_idxminmax(
+         allna = array.isnull().all(dim)
+         array = array.where(~allna, 0)
+ 
+-    # This will run argmin or argmax.
+-    index = func(array, dim=dim, axis=None, keep_attrs=keep_attrs, skipna=skipna)
+-
+-    # Handle chunked arrays (e.g. dask).
+-    coord = array[dim]._variable.to_base_variable()
+-    if is_chunked_array(array.data):
+-        chunkmanager = get_chunked_array_type(array.data)
+-        coord_array = chunkmanager.from_array(
+-            array[dim].data, chunks=((array.sizes[dim],),)
+-        )
+-        coord = coord.copy(data=coord_array)
+-    else:
+-        coord = coord.copy(data=to_like_array(array[dim].data, array.data))
+-
+-    res = index._replace(coord[(index.variable,)]).rename(dim)
+-
+-    if skipna or (skipna is None and array.dtype.kind in na_dtypes):
+-        # Put the NaN values back in after removing them.
+-        # We attempt to preserve dtype where we can.
+-        if is_chunked_array(allna.data) or allna.any():
+-            res = res.where(~allna, fill_value)
+-
+-    # Copy attributes from argmin/argmax, if any
+-    res.attrs = index.attrs
++    if keep_attrs is None:
++        keep_attrs = _get_keep_attrs(default=True)
+ 
++    # This will run argmin or argmax.
++    index = func(array, dim=dim, axis=None, keep_attrs=False, skipna=skipna)
++    # Force dictionary format in case of single dim so that we can iterate over it in for loop below
++    if single_dim:
++        index = {dim: index}
++
++    res = {}
++    for _dim in dims:
++        _da_idx = index[_dim]
++        # Handle chunked arrays (e.g. dask).
++        coord = array[_dim]._variable.to_base_variable()
++        if is_chunked_array(array.data):
++            chunkmanager = get_chunked_array_type(array.data)
++            coord_array = chunkmanager.from_array(
++                array[_dim].data, chunks=((array.sizes[_dim],),)
++            )
++            coord = coord.copy(data=coord_array)
++        else:
++            coord = coord.copy(data=to_like_array(array[_dim].data, array.data))
++
++        _res = _da_idx._replace(coord[(_da_idx.variable,)]).rename(_dim)
++        if skipna or (skipna is None and array.dtype.kind in na_dtypes):
++            # Put the NaN values back in after removing them.
++            # We attempt to preserve dtype where we can.
++            if is_chunked_array(allna.data) or allna.any():
++                _res = _res.where(~allna, fill_value)
++        # the result are labels of the coordinate, so keep its attributes
++        _res.attrs = dict(coord.attrs) if keep_attrs else {}
++        res[_dim] = _res
++
++    if single_dim:
++        return res[dim]
+     return res
+diff --git a/xarray/core/dataarray.py b/xarray/core/dataarray.py
+index b6cb4b8b..61999f3b 100644
+--- a/xarray/core/dataarray.py
++++ b/xarray/core/dataarray.py
+@@ -6137,49 +6137,89 @@ class DataArray(
+         )
+         return self._from_temp_dataset(ds)
+ 
++    @overload
++    def idxmin(  # type: ignore[overload-overlap]
++        self,
++        dim: str,
++        *,
++        skipna: bool | None = None,
++        fill_value: Any = dtypes.NA,
++        keep_attrs: bool | None = None,
++    ) -> Self: ...
++
++    @overload
+     def idxmin(
+         self,
+-        dim: Hashable | None = None,
++        dim: Sequence[Hashable] | EllipsisType,
+         *,
+         skipna: bool | None = None,
+         fill_value: Any = dtypes.NA,
+         keep_attrs: bool | None = None,
+-    ) -> Self:
+-        """Return the coordinate label of the minimum value along a dimension.
++    ) -> dict[Hashable, Self]: ...
++
++    @overload
++    def idxmin(
++        self,
++        dim: None = None,
++        *,
++        skipna: bool | None = None,
++        fill_value: Any = dtypes.NA,
++        keep_attrs: bool | None = None,
++    ) -> Self | dict[Hashable, Self]: ...
++
++    def idxmin(
++        self,
++        dim: Hashable | Sequence[Hashable] | EllipsisType | None = None,
++        *,
++        skipna: bool | None = None,
++        fill_value: Any = dtypes.NA,
++        keep_attrs: bool | None = None,
++    ) -> Self | dict[Hashable, Self]:
++        """Return the coordinate label of the minimum value along one or more dimensions.
+ 
+         Returns a new `DataArray` named after the dimension with the values of
+         the coordinate labels along that dimension corresponding to minimum
+         values along that dimension.
+ 
++        If a sequence of dimensions or ``...`` is passed to ``dim``, the
++        minimum is taken over all of them and a dict of `DataArray` objects,
++        one for each dimension, is returned instead, like
++        :py:meth:`~DataArray.argmin`. The result can be passed to
++        :py:meth:`~DataArray.sel`.
++
+         In comparison to :py:meth:`~DataArray.argmin`, this returns the
+         coordinate label while :py:meth:`~DataArray.argmin` returns the index.
+ 
+         Parameters
+         ----------
+-        dim : str, optional
+-            Dimension over which to apply `idxmin`.  This is optional for 1D
+-            arrays, but required for arrays with 2 or more dimensions.
++        dim : Hashable, sequence of Hashable or ..., optional
++            Dimension(s) over which to apply `idxmin`. ``...`` means all
++            dimensions. If not given, the only dimension of a 1D array is used,
++            and all dimensions of an array with 2 or more dimensions.
+         skipna : bool or None, default: None
+             If True, skip missing values (as marked by NaN). By default, only
+             skips missing values for ``float``, ``complex``, and ``object``
+             dtypes; other dtypes either do not have a sentinel missing value
+             (``int``) or ``skipna=True`` has not been implemented
+             (``datetime64`` or ``timedelta64``).
++            If False, NaN is treated as the minimum like in
++            :py:func:`numpy.argmin`, so the label of the first NaN is returned.
+         fill_value : Any, default: NaN
+             Value to be filled in case all of the values along a dimension are
+             null.  By default this is NaN.  The fill value and result are
+             automatically converted to a compatible dtype if possible.
+             Ignored if ``skipna`` is False.
+         keep_attrs : bool or None, optional
+-            If True, the attributes (``attrs``) will be copied from the
+-            original object to the new one. If False, the new object
+-            will be returned without attributes.
++            If True, the attributes (``attrs``) of the coordinate are copied to
++            the result. If False, the result is returned without attributes.
+ 
+         Returns
+         -------
+-        reduced : DataArray
++        reduced : DataArray or dict of DataArray
+             New `DataArray` object with `idxmin` applied to its data and the
+-            indicated dimension removed.
++            indicated dimension removed, or a dict of them mapping each
++            dimension to its coordinate labels if ``dim`` is a sequence or
++            ``...``.
+ 
+         See Also
+         --------
+@@ -6224,6 +6264,10 @@ class DataArray(
+         array([16.,  0.,  4.])
+         Coordinates:
+           * y        (y) int64 24B -1 0 1
++        >>> array.idxmin(dim=["y", "x"])
++        {'y': <xarray.DataArray 'y' ()> Size: 8B
++        array(0), 'x': <xarray.DataArray 'x' ()> Size: 8B
++        array(0.)}
+         """
+         return computation._calc_idxminmax(
+             array=self,
+@@ -6234,49 +6278,89 @@ class DataArray(
+             keep_attrs=keep_attrs,
+         )
+ 
++    @overload
++    def idxmax(  # type: ignore[overload-overlap]
++        self,
++        dim: str,
++        *,
++        skipna: bool | None = None,
++        fill_value: Any = dtypes.NA,
++        keep_attrs: bool | None = None,
++    ) -> Self: ...
++
++    @overload
+     def idxmax(
+         self,
+-        dim: Hashable = None,
++        dim: Sequence[Hashable] | EllipsisType,
+         *,
+         skipna: bool | None = None,
+         fill_value: Any = dtypes.NA,
+         keep_attrs: bool | None = None,
+-    ) -> Self:
+-        """Return the coordinate label of the maximum value along a dimension.
++    ) -> dict[Hashable, Self]: ...
++
++    @overload
++    def idxmax(
++        self,
++        dim: None = None,
++        *,
++        skipna: bool | None = None,
++        fill_value: Any = dtypes.NA,
++        keep_attrs: bool | None = None,
++    ) -> Self | dict[Hashable, Self]: ...
++
++    def idxmax(
++        self,
++        dim: Hashable | Sequence[Hashable] | EllipsisType | None = None,
++        *,
++        skipna: bool | None = None,
++        fill_value: Any = dtypes.NA,
++        keep_attrs: bool | None = None,
++    ) -> Self | dict[Hashable, Self]:
++        """Return the coordinate label of the maximum value along one or more dimensions.
+ 
+         Returns a new `DataArray` named after the dimension with the values of
+         the coordinate labels along that dimension corresponding to maximum
+         values along that dimension.
+ 
++        If a sequence of dimensions or ``...`` is passed to ``dim``, the
++        maximum is taken over all of them and a dict of `DataArray` objects,
++        one for each dimension, is returned instead, like
++        :py:meth:`~DataArray.argmax`. The result can be passed to
++        :py:meth:`~DataArray.sel`.
++
+         In comparison to :py:meth:`~DataArray.argmax`, this returns the
+         coordinate label while :py:meth:`~DataArray.argmax` returns the index.
+ 
+         Parameters
+         ----------
+-        dim : Hashable, optional
+-            Dimension over which to apply `idxmax`.  This is optional for 1D
+-            arrays, but required for arrays with 2 or more dimensions.
++        dim : Hashable, sequence of Hashable or ..., optional
++            Dimension(s) over which to apply `idxmax`. ``...`` means all
++            dimensions. If not given, the only dimension of a 1D array is used,
++            and all dimensions of an array with 2 or more dimensions.
+         skipna : bool or None, default: None
+             If True, skip missing values (as marked by NaN). By default, only
+             skips missing values for ``float``, ``complex``, and ``object``
+             dtypes; other dtypes either do not have a sentinel missing value
+             (``int``) or ``skipna=True`` has not been implemented
+             (``datetime64`` or ``timedelta64``).
++            If False, NaN is treated as the maximum like in
++            :py:func:`numpy.argmax`, so the label of the first NaN is returned.
+         fill_value : Any, default: NaN
+             Value to be filled in case all of the values along a dimension are
+             null.  By default this is NaN.  The fill value and result are
+             automatically converted to a compatible dtype if possible.
+             Ignored if ``skipna`` is False.
+         keep_attrs : bool or None, optional
+-            If True, the attributes (``attrs``) will be copied from the
+-            original object to the new one. If False, the new object
+-            will be returned without attributes.
++            If True, the attributes (``attrs``) of the coordinate are copied to
++            the result. If False, the result is returned without attributes.
+ 
+         Returns
+         -------
+-        reduced : DataArray
++        reduced : DataArray or dict of DataArray
+             New `DataArray` object with `idxmax` applied to its data and the
+-            indicated dimension removed.
++            indicated dimension removed, or a dict of them mapping each
++            dimension to its coordinate labels if ``dim`` is a sequence or
++            ``...``.
+ 
+         See Also
+         --------
+@@ -6321,6 +6405,10 @@ class DataArray(
+         array([0., 4., 4.])
+         Coordinates:
+           * y        (y) int64 24B -1 0 1
++        >>> array.idxmax(dim=["y", "x"])
++        {'y': <xarray.DataArray 'y' ()> Size: 8B
++        array(-1), 'x': <xarray.DataArray 'x' ()> Size: 8B
++        array(0.)}
+         """
+         return computation._calc_idxminmax(
+             array=self,
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index ce1d751b..d113c520 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -9416,15 +9416,16 @@ class Dataset(
+             dtypes; other dtypes either do not have a sentinel missing value
+             (``int``) or ``skipna=True`` has not been implemented
+             (``datetime64`` or ``timedelta64``).
++            If False, NaN is treated as the minimum like in
++            :py:func:`numpy.argmin`, so the label of the first NaN is returned.
+         fill_value : Any, default: NaN
+             Value to be filled in case all of the values along a dimension are
+             null.  By default this is NaN.  The fill value and result are
+             automatically converted to a compatible dtype if possible.
+             Ignored if ``skipna`` is False.
+         keep_attrs : bool or None, optional
+-            If True, the attributes (``attrs``) will be copied from the
+-            original object to the new one. If False, the new object
+-            will be returned without attributes.
++            If True, the attributes (``attrs``) of the coordinate are copied to
++            the result. If False, the result is returned without attributes.
+ 
+         Returns
+         -------
+@@ -9476,6 +9477,14 @@ class Dataset(
+             int      <U1 4B 'e'
+             float    (y) <U1 12B 'e' 'a' 'c'
+         """
++        if dim is ... or (isinstance(dim, Sequence) and not isinstance(dim, str)):
++            raise ValueError(
++                "When dim is a sequence or ..., DataArray.idxmin() returns a dict. "
++                "dicts cannot be contained in a Dataset, so cannot call "
++                "Dataset.idxmin() with a sequence or ... for dim"
++            )
++        if dim is None and any(var.ndim > 1 for var in self.data_vars.values()):
++            raise ValueError("Must supply 'dim' argument for multidimensional arrays")
+         return self.map(
+             methodcaller(
+                 "idxmin",
+@@ -9514,15 +9523,16 @@ class Dataset(
+             dtypes; other dtypes either do not have a sentinel missing value
+             (``int``) or ``skipna=True`` has not been implemented
+             (``datetime64`` or ``timedelta64``).
++            If False, NaN is treated as the maximum like in
++            :py:func:`numpy.argmax`, so the label of the first NaN is returned.
+         fill_value : Any, default: NaN
+             Value to be filled in case all of the values along a dimension are
+             null.  By default this is NaN.  The fill value and result are
+             automatically converted to a compatible dtype if possible.
+             Ignored if ``skipna`` is False.
+         keep_attrs : bool or None, optional
+-            If True, the attributes (``attrs``) will be copied from the
+-            original object to the new one. If False, the new object
+-            will be returned without attributes.
++            If True, the attributes (``attrs``) of the coordinate are copied to
++            the result. If False, the result is returned without attributes.
+ 
+         Returns
+         -------
+@@ -9574,6 +9584,14 @@ class Dataset(
+             int      <U1 4B 'b'
+             float    (y) <U1 12B 'a' 'c' 'c'
+         """
++        if dim is ... or (isinstance(dim, Sequence) and not isinstance(dim, str)):
++            raise ValueError(
++                "When dim is a sequence or ..., DataArray.idxmax() returns a dict. "
++                "dicts cannot be contained in a Dataset, so cannot call "
++                "Dataset.idxmax() with a sequence or ... for dim"
++            )
++        if dim is None and any(var.ndim > 1 for var in self.data_vars.values()):
++            raise ValueError("Must supply 'dim' argument for multidimensional arrays")
+         return self.map(
+             methodcaller(
+                 "idxmax",

@@ -1,7 +1,23 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import {
+	ALL_APPS,
+	type AppRef,
+	appHasNoScores,
+	appOptions,
+	effectiveApp,
+	matchesApp,
+	NO_SCORES_MESSAGE,
+	useAppParam,
+} from "../app-filter";
 import { composite } from "../grading/scoring";
 import type { CandidateScore, TrialResult, Weights } from "../types";
+import {
+	BrownfieldRunView,
+	BrownfieldTrialView,
+	ThemeToggle,
+	TranscriptSection,
+} from "./brownfield-views";
 
 /* ------------------------------------------------------------------ types */
 
@@ -25,6 +41,9 @@ interface RunSummary {
 		startedAt: string;
 		prdSha256: string;
 		testPlanSha256: string | null;
+		candidates?: string[];
+		brownfieldTasks?: string[];
+		target?: AppRef | null;
 	};
 }
 
@@ -62,7 +81,7 @@ function Th({ label }: { label: string }) {
 				<span
 					className="tip"
 					data-tip={help}
-					style={{ marginLeft: 4, color: "#8b949e" }}
+					style={{ marginLeft: 4, color: "var(--muted)" }}
 				>
 					ⓘ
 				</span>
@@ -168,11 +187,19 @@ function Leaderboard() {
 	const runs = useFetch<RunSummary[]>("/api/runs");
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
+	const [rawApp, setApp] = useAppParam();
 	if (!runs) return <p className="muted">loading…</p>;
+
+	const options = appOptions(runs.map((r) => r.summary?.target));
+	const app = effectiveApp(rawApp, options);
+	const listed = runs.filter((r) => matchesApp(r.summary?.target, app));
+	const noScores = appHasNoScores(runs, app);
 
 	const supported = runs.filter((r) => r.supported && r.summary);
 	const active = supported.filter(
-		(r) => selected.size === 0 || selected.has(r.runId),
+		(r) =>
+			matchesApp(r.summary?.target, app) &&
+			(selected.size === 0 || selected.has(r.runId)),
 	);
 
 	// Aggregate: mean of per-run (re-weighted) composites per candidate/harness/model (design D3).
@@ -223,7 +250,28 @@ function Leaderboard() {
 	return (
 		<>
 			<h1>🏆 Coding-harness leaderboard</h1>
-			<WeightControls weights={weights} onChange={setWeights} />
+			<p>
+				<label>
+					App:{" "}
+					<select
+						className="app-select"
+						value={app}
+						onChange={(e) => setApp(e.currentTarget.value)}
+					>
+						<option value={ALL_APPS}>All</option>
+						{options.map((o) => (
+							<option key={o.value} value={o.value}>
+								{o.label}
+							</option>
+						))}
+					</select>
+				</label>{" "}
+				<span className="muted">
+					{listed.length} run{listed.length === 1 ? "" : "s"}
+				</span>
+			</p>
+			{!noScores && <WeightControls weights={weights} onChange={setWeights} />}
+			{noScores && <p className="muted">{NO_SCORES_MESSAGE}</p>}
 			{mixedSets && (
 				<p>
 					<span className="badge warn">
@@ -232,52 +280,56 @@ function Leaderboard() {
 					</span>
 				</p>
 			)}
-			<table>
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Candidate</th>
-						<th>Harness / model</th>
-						<Th label="Composite" />
-						{Object.values(DIM_LABELS).map((l) => (
-							<Th key={l} label={l} />
-						))}
-						<Th label="Trials" />
-						<th>Flags</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map((r, i) => (
-						<tr key={r.candidate}>
-							<td>{i + 1}</td>
-							<td>
-								<strong>{r.candidate}</strong>
-							</td>
-							<td className="muted mono">
-								{r.harness} / {r.model}
-							</td>
-							<td>
-								<Bar v={r.composite} />
-							</td>
-							{(Object.keys(DIM_LABELS) as (keyof Weights)[]).map((k) => (
-								<td key={k}>
-									<Bar v={r.dims[k]} />
-								</td>
+			{!noScores && (
+				<>
+					<table>
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Candidate</th>
+								<th>Harness / model</th>
+								<Th label="Composite" />
+								{Object.values(DIM_LABELS).map((l) => (
+									<Th key={l} label={l} />
+								))}
+								<Th label="Trials" />
+								<th>Flags</th>
+							</tr>
+						</thead>
+						<tbody>
+							{rows.map((r, i) => (
+								<tr key={`${r.candidate}|${r.harness}|${r.model}`}>
+									<td>{i + 1}</td>
+									<td>
+										<strong>{r.candidate}</strong>
+									</td>
+									<td className="muted mono">
+										{r.harness} / {r.model}
+									</td>
+									<td>
+										<Bar v={r.composite} />
+									</td>
+									{(Object.keys(DIM_LABELS) as (keyof Weights)[]).map((k) => (
+										<td key={k}>
+											<Bar v={r.dims[k]} />
+										</td>
+									))}
+									<td>{r.trials}</td>
+									<td>
+										{r.censored && (
+											<span className="badge flag">right-censored</span>
+										)}
+									</td>
+								</tr>
 							))}
-							<td>{r.trials}</td>
-							<td>
-								{r.censored && (
-									<span className="badge flag">right-censored</span>
-								)}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-			<p className="muted">
-				* speed and token spend are min-max normalized within each run's
-				candidate set.
-			</p>
+						</tbody>
+					</table>
+					<p className="muted">
+						* speed and token spend are min-max normalized within each run's
+						candidate set.
+					</p>
+				</>
+			)}
 
 			<h2>Runs</h2>
 			<table>
@@ -285,13 +337,14 @@ function Leaderboard() {
 					<tr>
 						<th />
 						<th>Run</th>
+						<th>App</th>
 						<th>Provider</th>
 						<th>Candidates</th>
 						<th>Status</th>
 					</tr>
 				</thead>
 				<tbody>
-					{runs.map((r) => (
+					{listed.map((r) => (
 						<tr key={r.runId}>
 							<td>
 								{r.supported && (
@@ -315,11 +368,23 @@ function Leaderboard() {
 							</td>
 							<td>
 								<a href={`/runs/${r.runId}`}>{r.runId}</a>
+								{(r.summary?.brownfieldTasks?.length ?? 0) > 0 && (
+									<span
+										className="badge ok"
+										title={r.summary?.brownfieldTasks?.join(", ")}
+									>
+										brownfield · {r.summary?.brownfieldTasks?.join(", ")}
+									</span>
+								)}
 							</td>
+							<td className="muted">{r.summary?.target?.title ?? "—"}</td>
 							<td className="muted">{r.summary?.config.provider ?? "—"}</td>
 							<td className="muted">
 								{r.summary
-									? r.summary.scores.map((s) => s.candidate).join(", ")
+									? (r.summary.scores.length
+											? r.summary.scores.map((s) => s.candidate)
+											: (r.summary.candidates ?? [])
+										).join(", ") || "—"
 									: "—"}
 							</td>
 							<td>
@@ -370,6 +435,8 @@ function RunView({ runId }: { runId: string }) {
 				<span className="badge flag">unsupported</span> {entry.error}
 			</p>
 		);
+	if (entry.results.trials.some((t) => t.provenance.brownfield))
+		return <BrownfieldRunView runId={runId} results={entry.results} />;
 	const r = entry.results;
 	const rows = reweight(r.scores, weights);
 	const combined = runId.startsWith("combined:");
@@ -596,6 +663,8 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 	const t = useFetch<TrialResult>(`/api/runs/${runId}/trials/${trialId}`);
 	if (!t) return <p className="muted">loading…</p>;
 	if (!t.provenance) return <p className="badge flag">not found</p>;
+	if (t.provenance.brownfield)
+		return <BrownfieldTrialView runId={runId} trialId={trialId} t={t} />;
 	const a = t.grades?.adherence;
 	const q = t.grades?.quality;
 	const integ = t.grades?.integration;
@@ -730,6 +799,7 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 					</table>
 				</>
 			)}
+			<TranscriptSection runId={runId} trialId={trialId} />
 			{t.provenance.notes.length > 0 && (
 				<>
 					<h2>Notes</h2>
@@ -748,7 +818,7 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 
 /* ------------------------------------------------------------------- router */
 
-function App() {
+function Page() {
 	const path = window.location.pathname;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
@@ -756,6 +826,18 @@ function App() {
 	const run = path.match(/^\/runs\/([^/]+)$/);
 	if (run?.[1]) return <RunView runId={run[1]} />;
 	return <Leaderboard />;
+}
+
+function App() {
+	return (
+		<>
+			<div className="topbar">
+				<a href="/">harness-eval dashboard</a>
+				<ThemeToggle />
+			</div>
+			<Page />
+		</>
+	);
 }
 
 const rootEl = document.getElementById("root");

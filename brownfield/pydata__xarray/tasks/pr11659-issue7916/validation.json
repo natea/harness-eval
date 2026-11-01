@@ -1,0 +1,39 @@
+{
+  "pr": 11659,
+  "merged": "2026-10-24",
+  "issues": [
+    {
+      "n": 7916,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/computation/ops.py",
+    "xarray/core/duck_array_ops.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dask.py"
+  ],
+  "env": "exclude-newer 2026-10-24T15:42:43Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_dask.py::TestVariable::test_missing_methods",
+    "xarray/tests/test_dask.py::TestVariable::test_univariate_ufunc"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dask.TestVariable::test_missing_methods"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

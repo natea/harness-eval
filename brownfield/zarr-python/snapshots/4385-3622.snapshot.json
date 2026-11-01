@@ -1,0 +1,44 @@
+{
+  "pr": 4385,
+  "issue": 3622,
+  "tStar": "2026-09-23T07:53:43Z",
+  "title": "Support opening >u1 dtype",
+  "issueAuthor": "dstansby",
+  "body": "### Zarr version\n\nLatest main\n\n### Numcodecs version\n\nLatest\n\n### Python Version\n\n3.12\n\n### Operating System\n\nmacOS\n\n### Installation\n\nuv from source\n\n### Description\n\nTrying to open the array at https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0073A/9798462.zarr/0 errors with\n\n```\nTraceback (most recent call last):\n  File \"/Users/dstansby/software/zarr/zarr-python/test.py\", line 6, in <module>\n    zarr.open_array(\"https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0073A/9798462.zarr/0\")\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/api/synchronous.py\", line 1392, in open_array\n    sync(\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/sync.py\", line 159, in sync\n    raise return_result\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/sync.py\", line 119, in _runner\n    return await coro\n           ^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/api/asynchronous.py\", line 1282, in open_array\n    return await AsyncArray.open(store_path, zarr_format=zarr_format)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/array.py\", line 1009, in open\n    return cls(store_path=store_path, metadata=_metadata_dict)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/array.py\", line 334, in __init__\n    metadata_parsed = parse_array_metadata(metadata)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/array.py\", line 194, in parse_array_metadata\n    return ArrayV2Metadata.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/metadata/v2.py\", line 164, in from_dict\n    dtype = get_data_type_from_json(dtype_spec, zarr_format=2)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/dtype/__init__.py\", line 184, in get_data_type_from_json\n    return data_type_registry.match_json(dtype_spec, zarr_format=zarr_format)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/dstansby/software/zarr/zarr-python/src/zarr/core/dtype/registry.py\", line 208, in match_json\n    raise ValueError(f\"No Zarr data type found that matches {data!r}\")\nValueError: No Zarr data type found that matches {'name': '>u1', 'object_codec_id': None}\n```\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.11\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\nzarr.open_array(\"https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0073A/9798462.zarr/0\")\n```\n\nThis works with tensorstore fine:\n\n```python\nimport tensorstore as ts\narr = ts.open({\"driver\": \"zarr\", \"kvstore\": \"https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0073A/9798462.zarr/0\"}).result()\nprint(arr[0, 0, 0, 0, 0].read().result())\n```\n\n### Additional output\n\n_No response_",
+  "comments": [
+    {
+      "at": "2025-12-16T09:07:46Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "I am guessing this is zarr data created by a non-python client, because `>u1` is not a data type string that numpy will create. I can put together a fix for this.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-12-16T09:17:27Z",
+      "author": "dstansby",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "If it's not valid Zarr v2 data that's fine too, and instead I can ask it to be fixed on the metadata end :)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-12-16T09:20:26Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "the zarr v2 spec isn't very strict about what constitutes a valid data type.  numpy turns `\">u1\"` into `\"|u1\"`, which is what we recognize in zarr-python right now. I think it's fine for us to read `>u1` or `<u1` but the owners of that data should probably use `|u1`",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

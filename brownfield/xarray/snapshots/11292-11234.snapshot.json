@@ -1,0 +1,32 @@
+{
+  "pr": 11292,
+  "issue": 11234,
+  "tStar": "2026-04-09T20:09:38Z",
+  "title": "Request a warning for when coord names are ignored when dims are specified",
+  "issueAuthor": "sol-et-stellae",
+  "body": "### What is your issue?\n\nWhen coords are specified in tuple format, their names are silently ignored when `dims` names are also specified.\n\nThe following expression yields a DataArray that retains no reference to the otherwise specified coords of a, b, and c, in favor of the positionally-associated names of `dims`, x, y, and z.\n\n```\nDataArray(\n    data=[[[1]], [[2]], [[3]]],\n    dims=[\"x\", \"y\", \"z\"],\n    coords=[(\"a\", [5, 6, 7]), (\"b\", [8]), (\"c\", [9])]\n)\n```\n\nThe result is:\n\n```\n<xarray.DataArray (x: 3, y: 1, z: 1)> Size: 24B\narray([[[1]],\n       [[2]],\n       [[3]]])\nCoordinates:\n  * x        (x) int64 24B 5 6 7\n  * y        (y) int64 8B 8\n  * z        (z) int64 8B 9\n```\n\nEven though this behavior is documented, I think the user should be warned that the coordinate names do not match the dimension names and have been overridden.",
+  "comments": [
+    {
+      "at": "2026-03-16T05:49:29Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2026-03-17T15:44:20Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "That is wild. looks like it just treats it as \"`dict.from_items`\"",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

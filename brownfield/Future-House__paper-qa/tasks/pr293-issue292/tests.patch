@@ -1,0 +1,36 @@
+diff --git a/tests/test_paperqa.py b/tests/test_paperqa.py
+index 9b4ecc7..3686bc0 100644
+--- a/tests/test_paperqa.py
++++ b/tests/test_paperqa.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ import os
+ import pickle
+ import tempfile
++import textwrap
+ from io import BytesIO
+ from pathlib import Path
+ 
+@@ -457,6 +458,23 @@ def test_llm_read_json(example: str):
+     assert llm_read_json(example) == {"example": "json"}
+ 
+ 
++def test_llm_read_json_newlines():
++    """Make sure that newlines in json are preserved and escaped."""
++    example = textwrap.dedent(
++        """
++        {
++        "summary": "A line
++
++        Another line",
++        "relevance_score": 7
++        }"""
++    )
++    assert llm_read_json(example) == {
++        "summary": "A line\n\nAnother line",
++        "relevance_score": 7,
++    }
++
++
+ @pytest.mark.asyncio()
+ async def test_chain_completion():
+     client = AsyncOpenAI()

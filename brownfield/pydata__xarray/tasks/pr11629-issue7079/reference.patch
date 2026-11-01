@@ -1,0 +1,370 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index e2d07fc9..122b55d0 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -25,6 +25,15 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Fix errors and crashes (``NetCDF: HDF error``, segfaults, double frees) when
++  opening or writing netCDF4 files from multiple threads, e.g. with
++  :py:func:`open_mfdataset` and ``parallel=True``. The netCDF4 backend now
++  holds the netCDF-C lock while reading or writing metadata, which is possible
++  because xarray's global HDF5 and netCDF-C locks and its per-file write locks
++  for the threaded scheduler are now reentrant. The global locks also no longer
++  turn into separate locks when datasets are sent to another process, e.g. to a
++  dask distributed worker (:issue:`9779`, :issue:`11088`, :pull:`11629`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - :py:meth:`Dataset.copy` now preserves its resource-closing callback, so a
+   copied file-backed dataset can release a file reopened after the original
+   dataset is closed (:issue:`10106`, :pull:`11643`).
+diff --git a/xarray/backends/api.py b/xarray/backends/api.py
+index 74389067..12f0dcf8 100644
+--- a/xarray/backends/api.py
++++ b/xarray/backends/api.py
+@@ -565,6 +565,14 @@ def open_dataset(
+           currently active dask scheduler. Supported by "netcdf4", "h5netcdf",
+           "scipy".
+ 
++          .. warning::
++             A custom lock replaces the default locks, which also protect
++             libraries that are not thread-safe, like netCDF-C and HDF5. It
++             must therefore prevent concurrent access to those libraries as
++             well. Also, "netcdf4" only reads metadata while holding the lock if
++             the lock is reentrant, like the default locks. Opening files from
++             several threads with a non-reentrant lock can therefore crash.
++
+         See engine open function for kwargs accepted by each specific engine.
+ 
+     Returns
+@@ -807,6 +815,14 @@ def open_dataarray(
+           currently active dask scheduler. Supported by "netcdf4", "h5netcdf",
+           "scipy".
+ 
++          .. warning::
++             A custom lock replaces the default locks, which also protect
++             libraries that are not thread-safe, like netCDF-C and HDF5. It
++             must therefore prevent concurrent access to those libraries as
++             well. Also, "netcdf4" only reads metadata while holding the lock if
++             the lock is reentrant, like the default locks. Opening files from
++             several threads with a non-reentrant lock can therefore crash.
++
+         See engine open function for kwargs accepted by each specific engine.
+ 
+     Notes
+@@ -1041,6 +1057,14 @@ def open_datatree(
+           currently active dask scheduler. Supported by "netcdf4", "h5netcdf",
+           "scipy".
+ 
++          .. warning::
++             A custom lock replaces the default locks, which also protect
++             libraries that are not thread-safe, like netCDF-C and HDF5. It
++             must therefore prevent concurrent access to those libraries as
++             well. Also, "netcdf4" only reads metadata while holding the lock if
++             the lock is reentrant, like the default locks. Opening files from
++             several threads with a non-reentrant lock can therefore crash.
++
+         See engine open function for kwargs accepted by each specific engine.
+ 
+     Returns
+@@ -1285,6 +1309,14 @@ def open_groups(
+           currently active dask scheduler. Supported by "netcdf4", "h5netcdf",
+           "scipy".
+ 
++          .. warning::
++             A custom lock replaces the default locks, which also protect
++             libraries that are not thread-safe, like netCDF-C and HDF5. It
++             must therefore prevent concurrent access to those libraries as
++             well. Also, "netcdf4" only reads metadata while holding the lock if
++             the lock is reentrant, like the default locks. Opening files from
++             several threads with a non-reentrant lock can therefore crash.
++
+         See engine open function for kwargs accepted by each specific engine.
+ 
+     Returns
+diff --git a/xarray/backends/locks.py b/xarray/backends/locks.py
+index 52f13b5f..f830e7af 100644
+--- a/xarray/backends/locks.py
++++ b/xarray/backends/locks.py
+@@ -11,6 +11,54 @@ from weakref import WeakValueDictionary
+ from xarray.core.types import Lock
+ 
+ 
++class _ReentrantLock:
++    """Like ``threading.RLock``, but with ``locked()`` on all Python versions.
++
++    The netCDF4 backend holds its lock while reading and writing metadata, and
++    the calls it makes meanwhile acquire the same lock again, so the default
++    locks must be reentrant. ``threading.RLock`` only has ``locked()`` since
++    Python 3.14, but ``SerializableLock.locked()`` and ``CombinedLock.locked()``
++    rely on it.
++    """
++
++    # TODO: replace with threading.RLock once we require Python >= 3.14
++
++    __slots__ = ("__weakref__", "_count", "_lock", "_owner")
++
++    def __init__(self) -> None:
++        self._lock = threading.Lock()
++        self._owner: int | None = None
++        self._count = 0
++
++    def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
++        me = threading.get_ident()
++        if self._owner == me:
++            self._count += 1
++            return True
++        if not self._lock.acquire(blocking, timeout):
++            return False
++        self._owner = me
++        self._count = 1
++        return True
++
++    def release(self) -> None:
++        if self._owner != threading.get_ident():
++            raise RuntimeError("cannot release un-acquired lock")
++        self._count -= 1
++        if not self._count:
++            self._owner = None
++            self._lock.release()
++
++    def __enter__(self) -> bool:
++        return self.acquire()
++
++    def __exit__(self, *args) -> None:
++        self.release()
++
++    def locked(self) -> bool:
++        return self._lock.locked()
++
++
+ # SerializableLock is adapted from Dask:
+ # https://github.com/dask/dask/blob/74e898f0ec712e8317ba86cc3b9d18b6b9922be0/dask/utils.py#L1160-L1224
+ # Used under the terms of Dask's license, see licenses/DASK_LICENSE.
+@@ -39,21 +87,26 @@ class SerializableLock(Lock):
+     This is useful for consistently protecting resources on a per-process
+     level.
+ 
++    With ``reentrant=True`` the lock can be acquired again by the thread that
++    already holds it, like ``threading.RLock``.
++
+     The creation of locks is itself not threadsafe.
+     """
+ 
+-    _locks: ClassVar[WeakValueDictionary[Hashable, threading.Lock]] = (
++    _locks: ClassVar[WeakValueDictionary[Hashable, threading.Lock | _ReentrantLock]] = (
+         WeakValueDictionary()
+     )
+     token: Hashable
+-    lock: threading.Lock
++    reentrant: bool
++    lock: threading.Lock | _ReentrantLock
+ 
+-    def __init__(self, token: Hashable | None = None):
++    def __init__(self, token: Hashable | None = None, reentrant: bool = False):
+         self.token = token or str(uuid.uuid4())
++        self.reentrant = reentrant
+         if self.token in SerializableLock._locks:
+             self.lock = SerializableLock._locks[self.token]
+         else:
+-            self.lock = threading.Lock()
++            self.lock = _ReentrantLock() if reentrant else threading.Lock()
+             SerializableLock._locks[self.token] = self.lock
+ 
+     def acquire(self, *args, **kwargs):
+@@ -72,10 +125,12 @@ class SerializableLock(Lock):
+         return self.lock.locked()
+ 
+     def __getstate__(self):
+-        return self.token
++        # include reentrant, so that a process that does not know the token yet
++        # creates the right kind of lock
++        return (self.token, self.reentrant)
+ 
+-    def __setstate__(self, token):
+-        self.__init__(token)
++    def __setstate__(self, state):
++        self.__init__(*state)
+ 
+     def __str__(self):
+         return f"<{self.__class__.__name__}: {self.token}>"
+@@ -84,19 +139,26 @@ class SerializableLock(Lock):
+ 
+ 
+ # Locks used by multiple backends.
+-# Neither HDF5 nor the netCDF-C library are thread-safe.
+-HDF5_LOCK = SerializableLock()
+-NETCDFC_LOCK = SerializableLock()
++# Neither HDF5 nor the netCDF-C library are thread-safe. The locks are reentrant
++# so that backends can hold them across calls that acquire them again. They
++# have fixed tokens, so that an unpickled lock, e.g. in a dask worker, is the
++# global lock of that process and not a separate lock. This relies on
++# CombinedLock sorting its locks again when unpickled, otherwise processes could
++# acquire the same locks in a different order and deadlock.
++HDF5_LOCK = SerializableLock("xarray-hdf5-lock", reentrant=True)
++NETCDFC_LOCK = SerializableLock("xarray-netcdfc-lock", reentrant=True)
+ 
+ 
+-_FILE_LOCKS: MutableMapping[Any, threading.Lock] = weakref.WeakValueDictionary()
++_FILE_LOCKS: MutableMapping[Any, _ReentrantLock] = weakref.WeakValueDictionary()
+ 
+ 
+-def _get_threaded_lock(key: str) -> threading.Lock:
++def _get_threaded_lock(key: str) -> _ReentrantLock:
++    # reentrant, as it is combined with the global locks into the lock that
++    # netCDF4 holds while writing metadata (see is_reentrant_lock)
+     try:
+         lock = _FILE_LOCKS[key]
+     except KeyError:
+-        lock = _FILE_LOCKS[key] = threading.Lock()
++        lock = _FILE_LOCKS[key] = _ReentrantLock()
+     return lock
+ 
+ 
+@@ -284,6 +346,15 @@ class DummyLock(Lock):
+         return False
+ 
+ 
++def is_reentrant_lock(lock: Lock) -> bool:
++    """Whether the thread holding ``lock`` can safely acquire it again."""
++    if isinstance(lock, CombinedLock):
++        return all(is_reentrant_lock(lock) for lock in lock.locks)
++    if isinstance(lock, SerializableLock):
++        return lock.reentrant
++    return isinstance(lock, _ReentrantLock)
++
++
+ def combine_locks(locks: Sequence[Lock]) -> Lock:
+     """Combine a sequence of locks into a single lock."""
+     all_locks: list[Lock] = []
+diff --git a/xarray/backends/netCDF4_.py b/xarray/backends/netCDF4_.py
+index ef7971f4..b4d37d7d 100644
+--- a/xarray/backends/netCDF4_.py
++++ b/xarray/backends/netCDF4_.py
+@@ -4,7 +4,7 @@ import functools
+ import operator
+ import os
+ from collections.abc import Iterable
+-from contextlib import suppress
++from contextlib import AbstractContextManager, nullcontext, suppress
+ from dataclasses import dataclass
+ from io import IOBase
+ from typing import TYPE_CHECKING, Any, Self
+@@ -35,6 +35,7 @@ from xarray.backends.locks import (
+     combine_locks,
+     ensure_lock,
+     get_write_lock,
++    is_reentrant_lock,
+ )
+ from xarray.backends.netcdf3 import encode_nc3_attr_value, encode_nc3_variable
+ from xarray.backends.store import StoreBackendEntrypoint
+@@ -451,11 +452,12 @@ class NetCDF4DataStore(WritableCFDataStore):
+         self._manager = manager
+         self._group = group
+         self._mode = mode
+-        with manager.acquire_context():
++        self.lock = ensure_lock(lock)
++        # data_model and filepath() are netCDF-C calls too
++        with self._metadata_lock(), manager.acquire_context():
+             self.format = self.ds.data_model
+             self._filename = self.ds.filepath()
+         self.is_remote = is_remote_uri(self._filename)
+-        self.lock = ensure_lock(lock)
+         self.autoclose = autoclose
+ 
+     def get_child_store(self, group: str) -> Self:
+@@ -554,6 +556,41 @@ class NetCDF4DataStore(WritableCFDataStore):
+             )
+         return cls(manager, group=group, mode=mode, lock=lock, autoclose=autoclose)
+ 
++    def _metadata_lock(self) -> AbstractContextManager[Any]:
++        """Lock to hold while reading or writing metadata of the file.
++
++        netCDF-C is not thread-safe, so metadata must not be accessed
++        concurrently with other netCDF-C calls (GH9779). This is not a separate
++        lock: it is ``self.lock`` itself. The only question is whether it can be
++        held around a whole block of metadata access, instead of only around
++        each individual netCDF-C call.
++
++        While the lock is held, metadata access acquires it again, because the
++        file manager and the array wrappers (e.g. through ``self.ds``) use the
++        same lock. With a reentrant lock, like the default locks, that is fine.
++        With a lock that is not reentrant, the second acquire would deadlock.
++        So in that case the lock is not held around the block, and it only
++        protects the individual calls, as before GH9779 was fixed. That is what
++        the ``nullcontext()`` is for.
++
++        Locks that end up there:
++
++        - a custom lock passed by the user, e.g. a plain ``threading.Lock``
++        - ``to_netcdf`` with the distributed or multiprocessing scheduler: their
++          per-file write locks come from other libraries and are not reentrant,
++          so the ``CombinedLock`` of those and the global netCDF-C and HDF5 locks
++          is not reentrant as a whole either
++
++        These cases are not protected against GH9779, but behave as they did
++        before. Only the default locks, i.e. the case from GH9779, get the full
++        protection. ``lock=False`` gives a ``DummyLock``, which does not lock
++        anything either way.
++        """
++        if is_reentrant_lock(self.lock):
++            return self.lock
++        # not reentrant: holding it here would deadlock, see above
++        return nullcontext()
++
+     def _acquire(self, needs_lock=True):
+         with self._manager.acquire_context(needs_lock) as root:
+             ds = _nc4_require_group(root, self._group, self._mode)
+@@ -696,8 +733,25 @@ class NetCDF4DataStore(WritableCFDataStore):
+ 
+         return target, variable.data
+ 
++    # Encoding happens before these without holding the lock, as it may compute
++    # dask arrays whose tasks need the same lock.
++    def set_attributes(self, attributes):
++        with self._metadata_lock():
++            super().set_attributes(attributes)
++
++    def set_dimensions(self, variables, unlimited_dims=None):
++        with self._metadata_lock():
++            super().set_dimensions(variables, unlimited_dims=unlimited_dims)
++
++    def set_variables(self, variables, check_encoding_set, writer, unlimited_dims=None):
++        with self._metadata_lock():
++            super().set_variables(
++                variables, check_encoding_set, writer, unlimited_dims=unlimited_dims
++            )
++
+     def sync(self):
+-        self.ds.sync()
++        with self._metadata_lock():
++            self.ds.sync()
+ 
+     def close(self, **kwargs):
+         self._manager.close(**kwargs)
+@@ -808,7 +862,13 @@ class NetCDF4BackendEntrypoint(BackendEntrypoint):
+         )
+ 
+         store_entrypoint = StoreBackendEntrypoint()
+-        with close_on_error(store), store._manager.acquire_context():
++        # Hold the lock for the whole call, as reading variables and attributes
++        # while decoding goes through netCDF-C.
++        with (
++            close_on_error(store),
++            store._metadata_lock(),
++            store._manager.acquire_context(),
++        ):
+             ds = store_entrypoint.open_dataset(
+                 store,
+                 mask_and_scale=mask_and_scale,
+@@ -909,7 +969,9 @@ class NetCDF4BackendEntrypoint(BackendEntrypoint):
+ 
+         manager = store._manager
+         groups_dict = {}
+-        with manager.acquire_context():
++        # like in open_dataset, walking the groups and reading them goes
++        # through netCDF-C
++        with store._metadata_lock(), manager.acquire_context():
+             for path_group in _iter_nc_groups(store.ds, parent=parent):
+                 group_store = NetCDF4DataStore(manager, group=path_group, **kwargs)
+                 store_entrypoint = StoreBackendEntrypoint()

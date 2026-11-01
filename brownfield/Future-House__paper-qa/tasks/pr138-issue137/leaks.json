@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "AttributeError: 'Docs' object has no attribute 'doc_index'",
+      "rationale": "Gives traceback and repro involving pickle dump/load, but does not identify that __setstate__ fails to set doc_index. The README key remark is a guess pointing elsewhere (the README change is incidental).",
+      "author": "rht",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

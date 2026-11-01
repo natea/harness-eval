@@ -1,0 +1,34 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11526
+issues:
+  - 6510
+baseSha: 466ca4f31c9d3ffa7ef0ed680730447aaf3aaec2
+mergeSha: 2c7db29f9352b1292ea8188e5648aeb7a49b3800
+tStar: 2026-08-15T09:41:13Z
+issueCreatedAt: 2022-04-25T10:22:00Z
+prMergedAt: 2026-10-12T11:23:42Z
+verdict: VALID
+failToPass:
+  - xarray.tests.backends.test_plugins::test_guess_engine_sequence_of_paths[paths0]
+  - xarray.tests.backends.test_plugins::test_guess_engine_sequence_of_paths[paths1]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: diagnosis
+provisional: true
+files:
+  issue/body+all.md: 8a3320e0aa16e15a4b479a68fe30335a240cc438abcfc3bdb4be25555906403a
+  issue/body+human.md: 8a3320e0aa16e15a4b479a68fe30335a240cc438abcfc3bdb4be25555906403a
+  issue/body.md: 664649b9510c3d5084512fb69b9dd4c87299eb3e60ae8d36155c54d7b68f341f
+  leaks.json: 8b08b3eaa389b52a7c17e9c255d6830bbaadf9b3552ce31ea57f44e6a694a2df
+  reference.patch: 11ffce0f12dede38a328b07444bd2b2edac446879c1b9cfc82a2a4078910577a
+  snapshot.json: 640a670642090bd6668586cdaa6e3c2ac47bf50b616fc83983c318322aa2b313
+  tests.patch: ed414b2877639bccb2fdb67262868bea947beecf1508528591e874a00b35e656
+  validation.json: b269f0cc6f55a796ba1f73c9f0cc63005804fd2d822eed8936b99ec19d6dccd6

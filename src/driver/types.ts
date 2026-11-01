@@ -8,6 +8,10 @@ export interface DriverResult {
 	sessionId: string;
 	/** Raw session transcript, usually one JSON object per line. */
 	transcript: string;
+	/** Set on salvaged partial sessions, for the trial notes. */
+	exitCode?: number;
+	/** CLI version the session reported about itself, when it reports one. */
+	harnessVersion?: string;
 }
 
 export interface DriverRunOptions {
@@ -18,6 +22,16 @@ export interface DriverRunOptions {
 	resumeSessionId?: string;
 	timeoutMs: number;
 	env?: Record<string, string>;
+	/**
+	 * Trial isolation (task 4.8): ignore operator MCP configuration and disable
+	 * provider-side web tools (task 4.6). Brownfield trials always set this.
+	 */
+	isolated?: boolean;
+	/**
+	 * Egress lockdown (task 4.4): run the command inside a network namespace with
+	 * only loopback plus a socat relay to the gateway's unix socket.
+	 */
+	netns?: { script: string };
 }
 
 export type RunDriverSession = (

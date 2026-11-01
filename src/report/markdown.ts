@@ -1,3 +1,4 @@
+import { withCorrectedCosts } from "../driver/telemetry";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DimensionStats, RunResults } from "../types";
@@ -167,6 +168,9 @@ export function renderScorecard(r: RunResults): string {
 
 export function writeScorecard(runDir: string, r: RunResults): string {
 	const path = join(runDir, "scorecard.md");
-	writeFileSync(path, renderScorecard(r));
+	writeFileSync(
+		path,
+		renderScorecard({ ...r, trials: r.trials.map(withCorrectedCosts) }),
+	);
 	return path;
 }

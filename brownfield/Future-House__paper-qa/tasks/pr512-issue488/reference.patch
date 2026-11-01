@@ -1,0 +1,193 @@
+diff --git a/paperqa/agents/env.py b/paperqa/agents/env.py
+index da265bd..171ee0b 100644
+--- a/paperqa/agents/env.py
++++ b/paperqa/agents/env.py
+@@ -129,6 +129,9 @@ class PaperQAEnvironment(Environment[EnvironmentState]):
+         return self.state, self.tools
+ 
+     async def reset(self) -> tuple[list[Message], list[Tool]]:
++        # NOTE: don't build the index here, as sometimes we asyncio.gather over this
++        # method, and our current design (as of v5.0.10) could hit race conditions
++        # because index building does not use file locks
+         self._docs.clear_docs()
+         self.state, self.tools = self.make_initial_state_and_tools()
+         return (
+diff --git a/paperqa/agents/main.py b/paperqa/agents/main.py
+index 49d8c54..b24b56e 100644
+--- a/paperqa/agents/main.py
++++ b/paperqa/agents/main.py
+@@ -27,7 +27,7 @@ from paperqa.types import Answer
+ from .env import PaperQAEnvironment
+ from .helpers import litellm_get_search_query, table_formatter
+ from .models import AgentStatus, AnswerResponse, QueryRequest, SimpleProfiler
+-from .search import SearchDocumentStorage, SearchIndex
++from .search import SearchDocumentStorage, SearchIndex, get_directory_index
+ from .tools import EnvironmentState, GatherEvidence, GenerateAnswer, PaperSearch
+ 
+ if TYPE_CHECKING:
+@@ -51,7 +51,7 @@ async def agent_query(
+     if docs is None:
+         docs = Docs()
+ 
+-    search_index = SearchIndex(
++    answers_index = SearchIndex(
+         fields=[*SearchIndex.REQUIRED_FIELDS, "question"],
+         index_name="answers",
+         index_directory=query.settings.agent.index.index_directory,
+@@ -63,7 +63,7 @@ async def agent_query(
+ 
+     agent_logger.info(f"[bold blue]Answer: {response.answer.answer}[/bold blue]")
+ 
+-    await search_index.add_document(
++    await answers_index.add_document(
+         {
+             "file_location": str(response.answer.id),
+             "body": response.answer.answer,
+@@ -71,7 +71,7 @@ async def agent_query(
+         },
+         document=response,
+     )
+-    await search_index.save_index()
++    await answers_index.save_index()
+     return response
+ 
+ 
+@@ -106,6 +106,8 @@ async def run_agent(
+         f" query {query.model_dump()}."
+     )
+ 
++    # Build the index once here, and then all tools won't need to rebuild it
++    await get_directory_index(settings=query.settings)
+     if isinstance(agent_type, str) and agent_type.lower() == FAKE_AGENT_TYPE:
+         answer, agent_status = await run_fake_agent(query, docs, **runner_kwargs)
+     elif tool_selector_or_none := query.settings.make_aviary_tool_selector(agent_type):
+@@ -288,7 +290,7 @@ async def index_search(
+     fields = [*SearchIndex.REQUIRED_FIELDS]
+     if index_name == "answers":
+         fields.append("question")
+-    search_index = SearchIndex(
++    index_to_query = SearchIndex(
+         fields=fields,
+         index_name=index_name,
+         index_directory=index_directory,
+@@ -301,15 +303,14 @@ async def index_search(
+ 
+     results = [
+         (AnswerResponse(**a[0]) if index_name == "answers" else a[0], a[1])
+-        for a in await search_index.query(query=query, keep_filenames=True)
++        for a in await index_to_query.query(query=query, keep_filenames=True)
+     ]
+-
+     if results:
+         console = Console(record=True)
+         # Render the table to a string
+         console.print(table_formatter(results))
+     else:
+-        count = await search_index.count
+-        agent_logger.info(f"No results found. Searched {count} docs")
++        count = await index_to_query.count
++        agent_logger.info(f"No results found. Searched {count} docs.")
+ 
+     return results
+diff --git a/paperqa/agents/search.py b/paperqa/agents/search.py
+index b96ee42..d75c879 100644
+--- a/paperqa/agents/search.py
++++ b/paperqa/agents/search.py
+@@ -423,10 +423,11 @@ async def process_file(
+ WARN_IF_INDEXING_MORE_THAN = 999
+ 
+ 
+-async def get_directory_index(
++async def get_directory_index(  # noqa: PLR0912
+     index_name: str | None = None,
+     sync_index_w_directory: bool = True,
+     settings: MaybeSettings = None,
++    build: bool = True,
+ ) -> SearchIndex:
+     """
+     Create a Tantivy index by reading from a directory of text files.
+@@ -436,15 +437,14 @@ async def get_directory_index(
+     Args:
+         index_name: Deprecated override on the name of the index. If unspecified,
+             the default behavior is to generate the name from the input settings.
+-        sync_index_w_directory: Sync the index (add or delete index files) with the
+-            source paper directory.
++        sync_index_w_directory: Opt-out flag to sync the index (add or delete index
++            files) with the source paper directory.
+         settings: Application settings.
++        build: Opt-out flag (default is True) to read the contents of the source paper
++            directory and if sync_index_w_directory is enabled also update the index.
+     """
+     _settings = get_settings(settings)
+     index_settings = _settings.agent.index
+-    semaphore = anyio.Semaphore(index_settings.concurrency)
+-    paper_directory = await index_settings.finalize_paper_directory()
+-
+     if index_name:
+         warnings.warn(
+             (
+@@ -457,6 +457,17 @@ async def get_directory_index(
+         )
+         index_settings.name = index_name
+     del index_name
++
++    search_index = SearchIndex(
++        fields=[*SearchIndex.REQUIRED_FIELDS, "title", "year"],
++        index_name=index_settings.name or _settings.get_index_name(),
++        index_directory=index_settings.index_directory,
++    )
++    # NOTE: if the index was not previously built, its index_files will be empty.
++    # Otherwise, the index_files will not be empty
++    if not build:
++        return search_index
++
+     if not sync_index_w_directory:
+         warnings.warn(
+             (
+@@ -470,12 +481,7 @@ async def get_directory_index(
+         index_settings.sync_with_paper_directory = sync_index_w_directory
+     del sync_index_w_directory
+ 
+-    search_index = SearchIndex(
+-        fields=[*SearchIndex.REQUIRED_FIELDS, "title", "year"],
+-        index_name=index_settings.name or _settings.get_index_name(),
+-        index_directory=index_settings.index_directory,
+-    )
+-
++    paper_directory = await index_settings.finalize_paper_directory()
+     metadata = await maybe_get_manifest(
+         filename=await index_settings.finalize_manifest_file(paper_directory)
+     )
+@@ -492,10 +498,8 @@ async def get_directory_index(
+         logger.warning(
+             f"Indexing {len(valid_paper_dir_files)} files. This may take a few minutes."
+         )
+-    # NOTE: if the index was not previously built, this will be empty.
+-    # Otherwise, it will not be empty
+-    index_unique_file_paths: set[str] = set((await search_index.index_files).keys())
+ 
++    index_unique_file_paths: set[str] = set((await search_index.index_files).keys())
+     if extra_index_files := (
+         index_unique_file_paths - {str(f) for f in valid_paper_dir_files}
+     ):
+@@ -512,6 +516,7 @@ async def get_directory_index(
+                 f" folder ({paper_directory}).[/bold red]"
+             )
+ 
++    semaphore = anyio.Semaphore(index_settings.concurrency)
+     async with anyio.create_task_group() as tg:
+         for file_path in valid_paper_dir_files:
+             if index_settings.sync_with_paper_directory:
+diff --git a/paperqa/agents/tools.py b/paperqa/agents/tools.py
+index 69e330a..f18b1c2 100644
+--- a/paperqa/agents/tools.py
++++ b/paperqa/agents/tools.py
+@@ -124,7 +124,7 @@ class PaperSearch(NamedTool):
+             offset = self.previous_searches[search_key] = 0
+ 
+         logger.info(f"Starting paper search for {query!r}.")
+-        index = await get_directory_index(settings=self.settings)
++        index = await get_directory_index(settings=self.settings, build=False)
+         results: list[Docs] = await index.query(
+             query,
+             top_n=self.settings.agent.search_count,

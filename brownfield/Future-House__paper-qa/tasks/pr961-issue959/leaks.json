@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "read_doc(\".DS_Store\", ...)",
+      "rationale": "Only reports a crash on a .DS_Store file; no cause or location of the fix.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "We also choke on `py.typed` and/or `.python-version`",
+      "rationale": "Lists more failing files; no mechanism or fix location.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

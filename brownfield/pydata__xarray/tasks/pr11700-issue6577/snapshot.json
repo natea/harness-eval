@@ -1,0 +1,46 @@
+{
+  "pr": 11700,
+  "issue": 6577,
+  "tStar": "2026-10-09T12:37:30Z",
+  "title": "ENH: list_engines function",
+  "issueAuthor": "snowman2",
+  "body": "### Is your feature request related to a problem?\n\nIt can be difficult to know what engines are available and where they come from. This could help with that.\n\n### Describe the solution you'd like\n\n```python\r\nimport xarray\r\nxarray.list_engines()\r\n```\r\nOutput:\r\n```\r\nName | Description | Documentation\r\n------------------------------------------------\r\nrasterio | Open geospatial files (GeoTiff) | https://corteva.github.io/rioxarray\r\n```\r\n\n\n### Describe alternatives you've considered\n\n_No response_\n\n### Additional context\n\n_No response_",
+  "comments": [
+    {
+      "at": "2022-09-01T20:26:37Z",
+      "author": "snowman2",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "Looks like something already exists:\r\n```python\r\nfrom xarray.backends.plugins import list_engines\r\n```\r\nIt would be nice to add the `description` & `documentation` properties to `xarray.backends.common.BackendEntrypoint` that can be implemented by external libraries (and internally) and a more official `list_engines` function with the above metadata could be added.\r\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2022-09-01T20:28:22Z",
+      "author": "JessicaS11",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "I'm happy to work on this!",
+      "source": "no-edits"
+    },
+    {
+      "at": "2022-10-17T15:35:27Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "@pydata/xarray  in #7000 we update the docstrings and output for `xr.backends.list_engines` to be more user-friendly.\r\n\r\nShall we also add a top-level import: `xr.show_backends` like `xr.show_versions`. This would be a lot more discoverable.",
+      "source": "no-edits"
+    },
+    {
+      "at": "2023-01-13T17:30:08Z",
+      "author": "TomNicholas",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "role": "maintainer",
+      "text": "(I'm looking for issues to tag as beginner-friendly)\r\n\r\n> Shall we also add a top-level import: xr.show_backends like xr.show_versions. This would be a lot more discoverable.\r\n\r\nThis is easy right? You could just add an `xr.show_backends` that points to the same function as `xr.backends.list_engines`? And point out in the docstring that they are actually the same function?",
+      "source": "no-edits"
+    }
+  ]
+}

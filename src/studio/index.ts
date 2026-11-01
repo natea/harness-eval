@@ -9,26 +9,33 @@
  *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getRun, loadRunIndex } from "../dashboard/data";
 import { buildBrackets } from "../bracket/bracket";
-import { buildInverseScaling } from "../report/inverse-scaling";
-import { loadTarget } from "../targets";
-import index from "./index.html";
-import { cancelRun, getQueue, launchRun, regradeRun } from "./launcher";
 import {
-	type StudioRunRequest,
-	studioOptions,
-	validateRunRequest,
-} from "./options";
+	agreementSummary,
+	getTask,
+	listTasks,
+	submitReview,
+} from "../brownfield/review";
+import { getRun, loadRunIndex } from "../dashboard/data";
 import {
 	previewManager,
 	startTrialPreview,
 	stopTrialPreview,
 	trialInventory,
 } from "../preview/studio";
+import { buildInverseScaling } from "../report/inverse-scaling";
+import { runApp, targetBySha } from "../run-app";
+import { loadTarget } from "../targets";
+import index from "./index.html";
+import { cancelRun, getQueue, launchRun, regradeRun } from "./launcher";
 import { liveStreamResponse } from "./live-stream";
+import {
+	type StudioRunRequest,
+	studioOptions,
+	validateRunRequest,
+} from "./options";
 import { reconcileRunStates, runNeedsGrading } from "./run-state";
 import { trialTranscript } from "./transcript";
 
@@ -50,27 +57,6 @@ interface RunTarget {
 	title: string;
 	/** Step id → description + concrete check (drill-down tooltips). */
 	steps: Record<string, string>;
-}
-
-/** PRD content hash → { name, title } for every target, built once. Lets any
- *  run be labelled with the app it built by matching its prdSha256 — the run
- *  itself doesn't record the target name. */
-let targetByShaCache: Map<string, { name: string; title: string }> | null = null;
-function targetBySha(): Map<string, { name: string; title: string }> {
-	if (targetByShaCache) return targetByShaCache;
-	const m = new Map<string, { name: string; title: string }>();
-	for (const dir of readdirSync("targets")) {
-		if (!existsSync(join("targets", dir, "target.yaml"))) continue;
-		try {
-			const t = loadTarget(dir);
-			const title = t.prdContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? dir;
-			m.set(t.prdSha256, { name: dir, title });
-		} catch {
-			// skip unloadable target
-		}
-	}
-	targetByShaCache = m;
-	return m;
 }
 
 /** Full target detail (incl. per-step checks) for a run, by prdSha256 match. */
@@ -132,7 +118,14 @@ function resolveRunPrd(runId: string): {
 			currentMatch: true,
 		};
 	} catch {
-		return { name: hit.name, title: hit.title, prd: null, testPlan: null, sha, currentMatch: false };
+		return {
+			name: hit.name,
+			title: hit.title,
+			prd: null,
+			testPlan: null,
+			sha,
+			currentMatch: false,
+		};
 	}
 }
 
@@ -152,6 +145,9 @@ const server = Bun.serve({
 		"/runs": index,
 		"/runs/:id": index,
 		"/runs/:id/trials/:trialId": index,
+		"/review": index,
+		"/review/agreement": index,
+		"/review/:repo/:id": index,
 
 		// Registry-driven option sources for the Configure view.
 		"/api/options": { GET: () => Response.json(studioOptions()) },
@@ -198,6 +194,43 @@ const server = Bun.serve({
 
 		// Live status of studio-launched runs.
 		"/api/queue": { GET: () => Response.json(getQueue()) },
+
+		// Brownfield task review (add-brownfield-track D15). Reads are blind:
+		// classifier labels are withheld server-side until a task is reviewed.
+		"/api/brownfield/tasks": { GET: () => Response.json(listTasks()) },
+		"/api/brownfield/agreement": {
+			GET: () => Response.json(agreementSummary()),
+		},
+		"/api/brownfield/tasks/:repo/:id": {
+			GET: (req) => {
+				try {
+					return Response.json(getTask(req.params.repo, req.params.id));
+				} catch (e) {
+					return Response.json(
+						{ error: (e as Error).message },
+						{ status: 404 },
+					);
+				}
+			},
+		},
+		// The studio's ONE non-run write (eval-studio "Scoped writes only"
+		// exception): append a human review record to the bundle's
+		// review/labels.jsonl. Never modifies existing records or bundle files.
+		"/api/brownfield/tasks/:repo/:id/labels": {
+			POST: async (req) => {
+				const body = await req.json().catch(() => null);
+				try {
+					return Response.json(
+						submitReview(req.params.repo, req.params.id, body),
+					);
+				} catch (e) {
+					return Response.json(
+						{ error: (e as Error).message },
+						{ status: 400 },
+					);
+				}
+			},
+		},
 
 		// Inverse-scaling view (explore-inverse-scaling-report): marginal harness
 		// gain over the no-framework baseline vs. baseline strength, on the two
@@ -252,7 +285,14 @@ const server = Bun.serve({
 								prdSha256: e.results.prdSha256,
 								// Which app/PRD this run built (resolved by content hash) so
 								// the runs listing isn't ambiguous about the target.
-								target: targetBySha().get(e.results.prdSha256) ?? null,
+								target: runApp(e.results),
+								// Brownfield runs have no PRD scores; list who ran from the trials.
+								candidates: [
+									...new Set(
+										e.results.trials.map((t) => t.provenance.candidate),
+									),
+								],
+								trialCount: e.results.trials.length,
 								testPlanSha256: e.results.testPlanSha256,
 								workerModel: e.results.workerModel,
 								judgeModelRef: e.results.judgeModel,
@@ -358,7 +398,10 @@ const server = Bun.serve({
 					router?: "port" | "portless";
 				};
 				if (!b.runId || !b.trialId)
-					return Response.json({ error: "runId + trialId required" }, { status: 400 });
+					return Response.json(
+						{ error: "runId + trialId required" },
+						{ status: 400 },
+					);
 				const out = await startTrialPreview(b.runId, b.trialId, {
 					unsafeHost: b.unsafeHost,
 					router: b.router,
@@ -374,7 +417,10 @@ const server = Bun.serve({
 					trialId?: string;
 				};
 				if (!b.runId || !b.trialId)
-					return Response.json({ error: "runId + trialId required" }, { status: 400 });
+					return Response.json(
+						{ error: "runId + trialId required" },
+						{ status: 400 },
+					);
 				return Response.json(await stopTrialPreview(b.runId, b.trialId));
 			},
 		},

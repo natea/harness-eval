@@ -1,0 +1,42 @@
+{
+  "pr": 11626,
+  "issue": 9075,
+  "tStar": "2026-09-28T10:15:32Z",
+  "title": "explicit_indexing_adapter fails for empty list as key",
+  "issueAuthor": "Berndone",
+  "body": "### What happened?\n\nI am implementing my own lazy loadable backend based on https://docs.xarray.dev/en/latest/internals/how-to-add-new-backend.html#how-to-support-lazy-loading using the xr.core.indexing.explicit_indexing_adapter. \r\n\r\nI noticed that when you use `data[[]]` the method crashes, whilst a \"normal\" data array just returns an empty list.\r\n\n\n### What did you expect to happen?\n\nSame result when using a normal data array, not an exception.\n\n### Minimal Complete Verifiable Example\n\n```Python\nimport xarray as xr\r\nimport numpy as np\r\n\r\n\r\ndef raw_indexing_method(key):\r\n    assert False\r\n\r\n\r\nclass MyBackend(xr.backends.BackendArray):\r\n    def __init__(self, array):\r\n        self.shape = array.shape\r\n        self.dtype = array.dtype\r\n\r\n    def __getitem__(self, key):\r\n        return xr.core.indexing.explicit_indexing_adapter(\r\n            key,\r\n            self.shape,\r\n            xr.core.indexing.IndexingSupport.BASIC,\r\n            raw_indexing_method,\r\n        )\r\n\r\n\r\ndata1 = xr.DataArray(np.random.randn(2, 3), dims=(\"x\", \"y\"), coords={\"x\": [10, 20]})\r\nbackend_array = MyBackend(np.random.randn(2, 3))\r\ndata = xr.core.indexing.LazilyIndexedArray(backend_array)\r\n\r\ndata2 = xr.DataArray(\r\n    data,\r\n    dims=(\"x\", \"y\"),\r\n    coords={\"x\": [10, 20]},\r\n)\r\n\r\nidx = []\r\n\r\nprint(data1[idx].values) # Works\r\nprint(data2[idx].values) # Crashes somewhere in numpy\n```\n\n\n### MVCE confirmation\n\n- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [X] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [X] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [X] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\nTraceback (most recent call last):\r\n  File \"/tmp/test123.py\", line 36, in <module>\r\n    print(data2[idx].values)\r\n          ^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/dataarray.py\", line 785, in values\r\n    return self.variable.values\r\n           ^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/variable.py\", line 540, in values\r\n    return _as_array_or_item(self._data)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/variable.py\", line 338, in _as_array_or_item\r\n    data = np.asarray(data)\r\n           ^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/indexing.py\", line 524, in __array__\r\n    return np.asarray(self.get_duck_array(), dtype=dtype)\r\n                      ^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/indexing.py\", line 647, in get_duck_array\r\n    array = self.array[self.key]\r\n            ~~~~~~~~~~^^^^^^^^^^\r\n  File \"/tmp/test123.py\", line 15, in __getitem__\r\n    return xr.core.indexing.explicit_indexing_adapter(\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/indexing.py\", line 1010, in explicit_indexing_adapter\r\n    raw_key, numpy_indices = decompose_indexer(key, shape, indexing_support)\r\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/indexing.py\", line 1045, in decompose_indexer\r\n    return _decompose_outer_indexer(indexer, shape, indexing_support)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/xarray/core/indexing.py\", line 1290, in _decompose_outer_indexer\r\n    backend_indexer.append(slice(np.min(k), np.max(k) + 1))\r\n                                 ^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/numpy/core/fromnumeric.py\", line 2953, in min\r\n    return _wrapreduction(a, np.minimum, 'min', axis, None, out,\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/.../.pyenv/lib/python3.11/site-packages/numpy/core/fromnumeric.py\", line 88, in _wrapreduction\r\n    return ufunc.reduce(obj, axis, dtype, out, **passkwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nValueError: zero-size array to reduction operation minimum which has no identity\n```\n\n\n### Anything else we need to know?\n\n_No response_\n\n### Environment\n\n<details>\r\nINSTALLED VERSIONS\r\n------------------\r\ncommit: None\r\npython: 3.11.9 (main, May 10 2024, 17:39:01) [GCC 13.2.1 20240210]\r\npython-bits: 64\r\nOS: Linux\r\nOS-release: 6.6.30-gentoo-dist\r\nmachine: x86_64\r\nprocessor: Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz\r\nbyteorder: little\r\nLC_ALL: None\r\nLANG: de_DE.utf8\r\nLOCALE: ('de_DE', 'UTF-8')\r\nlibhdf5: 1.12.2\r\nlibnetcdf: 4.9.3-development\r\n\r\nxarray: 2024.5.0\r\npandas: 2.2.0\r\nnumpy: 1.26.4\r\nscipy: 1.12.0\r\nnetCDF4: 1.6.5\r\npydap: None\r\nh5netcdf: None\r\nh5py: None\r\nzarr: None\r\ncftime: 1.6.3\r\nnc_time_axis: None\r\niris: None\r\nbottleneck: None\r\ndask: 2024.2.0\r\ndistributed: None\r\nmatplotlib: 3.8.2\r\ncartopy: None\r\nseaborn: None\r\nnumbagg: None\r\nfsspec: 2024.2.0\r\ncupy: None\r\npint: None\r\nsparse: None\r\nflox: None\r\nnumpy_groupies: None\r\nsetuptools: 69.0.3\r\npip: 24.0\r\nconda: None\r\npytest: 7.4.4\r\nmypy: None\r\nIPython: 8.20.0\r\nsphinx: None\r\n</details>\r\n",
+  "comments": [
+    {
+      "at": "2024-06-07T13:35:49Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2024-06-08T08:51:04Z",
+      "author": "Illviljan",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "You've chosen to support BASIC indexing so I wouldn't expect `[]` to work: https://docs.xarray.dev/en/latest/internals/how-to-add-new-backend.html#indexing-examples",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-06-10T09:18:29Z",
+      "author": "Berndone",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "It fails at least with `OUTER_1VECTOR` too. Also, I might have a misunderstanding here, but isn't the purpose of the `explicit_indexing_adapter` that the array will support outer indexing even if my `raw_indexing_method` only supports basic indexing? E.g. when I use `[1, 4]` as index `raw_indexing_method` gets called with the index `slice(1,4)` and the result is stripped of the additional values with index 2 and 3. Similar, I would expect the index `[]` converted to a corresponding basic index.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

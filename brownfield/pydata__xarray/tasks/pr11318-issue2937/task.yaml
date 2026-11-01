@@ -1,0 +1,42 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11318
+issues:
+  - 2937
+baseSha: f7b887776ac69a9f31f28855a938b58592b2ff58
+mergeSha: e902fe89698be3061ba161c5894826985e45e147
+tStar: 2026-04-30T17:31:40Z
+issueCreatedAt: 2019-05-03T03:53:00Z
+prMergedAt: 2026-08-12T14:53:37Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_backends.TestZarrDictStore::test_roundtrip_boolean_dtype[2]
+  - xarray.tests.test_backends.TestZarrNoConsolidatedMetadataSupport::test_roundtrip_boolean_dtype[2]
+  - xarray.tests.test_backends.TestZarrDirectoryStore::test_roundtrip_boolean_dtype[2]
+  - xarray.tests.test_backends.TestZarrWriteEmpty::test_roundtrip_boolean_dtype[2]
+  - xarray.tests.test_backends.TestZarrDictStore::test_roundtrip_boolean_dtype[3]
+  - xarray.tests.test_backends.TestZarrNoConsolidatedMetadataSupport::test_roundtrip_boolean_dtype[3]
+  - xarray.tests.test_backends.TestZarrDirectoryStore::test_roundtrip_boolean_dtype[3]
+  - xarray.tests.test_backends.TestZarrWriteEmpty::test_roundtrip_boolean_dtype[3]
+  - xarray.tests.test_conventions.TestEncodeCfVariableCoders::test_custom_coders_excludes_boolean_coder
+  - xarray.tests.test_conventions.TestEncodeCfVariableCoders::test_empty_coders_is_identity
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: eb470dc92f08d1557debab929588c14b3d0c52d750389acddce1431977ea760a
+  issue/body+human.md: eb470dc92f08d1557debab929588c14b3d0c52d750389acddce1431977ea760a
+  issue/body.md: 5990ae8b5b839ceeb09249ec46ef7603b3a9c0cb669a24b713fb3500dc36a0e6
+  leaks.json: 20b134401a8cfce43af40bd61c868eb165c9d2867297c9ba53208be538d70662
+  reference.patch: 82911ed9d6d2141a81019ca284448d0463e81995a14c90ad7514af634e3f30d7
+  snapshot.json: beea29b03c749f305ca0ca28377d002d07c728f79b793077a9ef3f3809b9b295
+  tests.patch: 1590d0097f204181b05a8b3be2602b12532ed5d0005ed7ac9aacca8c84fde7df
+  validation.json: dd7ec7a389716169123ad1a18b70df6fe9dc196a379c105852d0d95ff5f0774f

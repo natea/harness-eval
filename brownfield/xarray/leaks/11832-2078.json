@@ -1,0 +1,61 @@
+{
+  "pr": 11832,
+  "issue": 2078,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0146506,
+  "prAuthor": "A2ELAOUDI",
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "A better error message would be: `ValueError: operand to apply_ufunc has required core dimensions ['time', 'lat', 'lon'], but some of these are missing on input variable 'status':  ['lat', 'lon']`",
+      "rationale": "Describes desired behavior (variable name in error) without pointing to code location or mechanism.",
+      "author": "shoyer",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The error listed here is thrown by the \"broadcast_compat_data\" function, which is called by \"apply_variable_ufunc\"",
+      "rationale": "Points to functions the reference fix did not change; the fix is in apply_dict_of_variables_vfunc.",
+      "author": "rdrussotto",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Including the variable name in the error message would require separately specifying the variable name as an input argument to \"broadcast_compat_data\" and \"apply_variable_ufunc\"",
+      "rationale": "Proposes threading the name through functions, which differs from the reference's try/except add_note approach.",
+      "author": "rdrussotto",
+      "role": "other user"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I agree that this is more complex, but it still might be worth doing. Good error messages are important!",
+      "rationale": "Encouragement with no concrete mechanism.",
+      "author": "shoyer",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Status update about a wording change; no technical pointer to the fix.",
+      "author": "rdrussotto",
+      "role": "other user"
+    }
+  ]
+}

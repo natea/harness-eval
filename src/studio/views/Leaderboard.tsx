@@ -1,5 +1,15 @@
 import { ChevronRight, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import {
+	ALL_APPS,
+	appHasNoScores,
+	appOptions,
+	effectiveApp,
+	matchesApp,
+	NO_SCORES_MESSAGE,
+	useAppParam,
+	withAppParam,
+} from "../../app-filter";
 import type { CandidateScore, Weights } from "../../types";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
@@ -41,7 +51,6 @@ import {
 } from "./shared";
 
 const RECENT = 6;
-const ALL = "__all__";
 
 type Row = {
 	key: string;
@@ -61,42 +70,27 @@ type Row = {
 export function Leaderboard() {
 	const runs = useFetch<RunSummary[]>("/api/runs");
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
-	const [target, setTarget] = useState<string | null>(null);
-
-	const supported = useMemo(
-		() =>
-			(runs ?? [])
-				.filter((r) => r.supported && r.summary)
-				.sort((a, b) => (runTs(b.runId) ?? 0) - (runTs(a.runId) ?? 0)),
-		[runs],
-	);
-	const targets = useMemo(() => {
-		const m = new Map<string, string>();
-		for (const r of supported) {
-			const t = r.summary?.target;
-			if (t) m.set(t.name, t.title);
-		}
-		return [...m.entries()];
-	}, [supported]);
+	const [rawApp, setApp] = useAppParam();
 
 	if (!runs)
 		return (
 			<p className="text-[13px] text-muted-foreground">Loading results…</p>
 		);
 
-	// Default to the target of the most recent graded run: a ranking only means
-	// something within one spec.
-	const activeTarget =
-		target ??
-		supported.find((r) => r.summary?.target)?.summary?.target?.name ??
-		ALL;
-	const active = supported.filter(
-		(r) => activeTarget === ALL || r.summary?.target?.name === activeTarget,
+	// The app filter lives in the URL (?app=) and is shared with the Runs page
+	// and the Dashboard; an unknown value falls back to All.
+	const options = appOptions(runs.map((r) => r.summary?.target));
+	const app = effectiveApp(rawApp, options);
+	const listed = runs.filter((r) => matchesApp(r.summary?.target, app));
+	// Brownfield-only apps have runs but no leaderboard scores.
+	const noScores = appHasNoScores(runs, app);
+	const active = runs.filter(
+		(r) => r.supported && r.summary && matchesApp(r.summary.target, app),
 	);
 	const targetTitle =
-		activeTarget === ALL
-			? "All targets"
-			: (targets.find(([n]) => n === activeTarget)?.[1] ?? activeTarget);
+		app === ALL_APPS
+			? "All apps"
+			: (options.find((o) => o.value === app)?.label ?? app);
 
 	// Aggregate per candidate/harness/model: mean of per-run re-weighted composites.
 	const byKey = new Map<
@@ -174,7 +168,7 @@ export function Leaderboard() {
 		? "n=1 per framework"
 		: `n=${Math.min(...rows.map((r) => r.trials))}+ per framework`;
 	const best = (k: keyof Weights) => Math.max(...rows.map((r) => r.dims[k]));
-	const recent = [...runs]
+	const recent = [...listed]
 		.sort((a, b) => (runTs(b.runId) ?? 0) - (runTs(a.runId) ?? 0))
 		.slice(0, RECENT);
 	const models = [
@@ -192,21 +186,21 @@ export function Leaderboard() {
 				description="Who builds each spec best, with harness and model held fixed. Every score links back to its evidence."
 				actions={
 					<>
-						<Select value={activeTarget} onValueChange={(v) => setTarget(v)}>
+						<Select value={app} onValueChange={setApp}>
 							<SelectTrigger
-								aria-label="Target"
+								aria-label="App"
 								className="h-8 w-auto min-w-[200px] gap-2 text-[13px]"
 							>
-								<span className="text-muted-foreground">Target</span>
+								<span className="text-muted-foreground">App</span>
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								{targets.map(([name, title]) => (
-									<SelectItem key={name} value={name}>
-										{title}
+								<SelectItem value={ALL_APPS}>All</SelectItem>
+								{options.map((o) => (
+									<SelectItem key={o.value} value={o.value}>
+										{o.label}
 									</SelectItem>
 								))}
-								<SelectItem value={ALL}>All targets</SelectItem>
 							</SelectContent>
 						</Select>
 						<a href="/configure" className={btn.primary}>
@@ -217,7 +211,16 @@ export function Leaderboard() {
 				}
 			/>
 
-			{rows.length === 0 ? (
+			{noScores ? (
+				<Card className="grid place-items-center gap-2 px-6 py-12 text-center">
+					<h2 className="m-0 text-[15px] font-semibold">
+						No leaderboard scores
+					</h2>
+					<p className="m-0 max-w-[56ch] text-[13.5px] text-muted-foreground">
+						{NO_SCORES_MESSAGE}
+					</p>
+				</Card>
+			) : rows.length === 0 ? (
 				<Card className="grid place-items-center gap-2 px-6 py-16 text-center">
 					<h2 className="m-0 text-[15px] font-semibold">No graded runs yet</h2>
 					<p className="m-0 max-w-[48ch] text-[13.5px] text-muted-foreground">
@@ -329,77 +332,79 @@ export function Leaderboard() {
 							</Table>
 							<WeightControls inline weights={weights} onChange={setWeights} />
 						</Card>
-
-						<section>
-							<SectionTitle
-								aside={
-									<a
-										href="/runs"
-										className="inline-flex items-center gap-0.5 text-muted-foreground no-underline hover:text-foreground"
-									>
-										All {runs.length} run{runs.length === 1 ? "" : "s"}
-										<ChevronRight aria-hidden="true" className="size-3.5" />
-									</a>
-								}
-							>
-								Recent runs
-							</SectionTitle>
-							<Card className="overflow-hidden">
-								<Table>
-									<TableBody>
-										{recent.map((r) => (
-											<TableRow
-												key={r.runId}
-												className="cursor-pointer"
-												onClick={() => {
-													window.location.href = `/runs/${r.runId}`;
-												}}
-											>
-												<TableCell className="pl-5">
-													<a
-														href={`/runs/${r.runId}`}
-														className="font-medium text-foreground no-underline hover:underline"
-													>
-														{r.summary?.target?.title ?? (
-															<span className="font-mono text-[12.5px]">
-																{r.runId}
-															</span>
-														)}
-													</a>
-												</TableCell>
-												<TableCell className="text-[13px] text-muted-foreground">
-													{r.summary
-														? r.summary.scores
-																.map((s) => s.candidate)
-																.join(", ")
-														: (r.error ?? "—")}
-												</TableCell>
-												<TableCell className="whitespace-nowrap font-mono text-[12.5px] text-muted-foreground">
-													{r.summary?.config.provider ?? "—"}
-												</TableCell>
-												<TableCell className="whitespace-nowrap text-right font-mono text-[12.5px]">
-													{fmtUsd(r.summary?.costUsd)}
-												</TableCell>
-												<TableCell className="whitespace-nowrap text-right text-[12.5px] text-muted-foreground">
-													{fmtRunDate(runTs(r.runId))}
-												</TableCell>
-												<TableCell className="pr-5 text-right">
-													{!r.supported ? (
-														<Badge variant="danger">unsupported</Badge>
-													) : r.summary?.inconclusive ? (
-														<Badge variant="warn">inconclusive</Badge>
-													) : (
-														<Badge variant="ok">graded</Badge>
-													)}
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</Card>
-						</section>
 					</div>
 				</div>
+			)}
+			{recent.length > 0 && (
+				<section className="mt-6">
+					<SectionTitle
+						aside={
+							<a
+								href={`/runs${withAppParam("", app)}`}
+								className="inline-flex items-center gap-0.5 text-muted-foreground no-underline hover:text-foreground"
+							>
+								All {listed.length} run{listed.length === 1 ? "" : "s"}
+								<ChevronRight aria-hidden="true" className="size-3.5" />
+							</a>
+						}
+					>
+						Recent runs
+					</SectionTitle>
+					<Card className="overflow-hidden">
+						<Table>
+							<TableBody>
+								{recent.map((r) => (
+									<TableRow
+										key={r.runId}
+										className="cursor-pointer"
+										onClick={() => {
+											window.location.href = `/runs/${r.runId}`;
+										}}
+									>
+										<TableCell className="pl-5">
+											<a
+												href={`/runs/${r.runId}`}
+												className="font-medium text-foreground no-underline hover:underline"
+											>
+												{r.summary?.target?.title ?? (
+													<span className="font-mono text-[12.5px]">
+														{r.runId}
+													</span>
+												)}
+											</a>
+										</TableCell>
+										<TableCell className="text-[13px] text-muted-foreground">
+											{r.summary
+												? (r.summary.scores.length
+														? r.summary.scores.map((s) => s.candidate)
+														: (r.summary.candidates ?? [])
+													).join(", ") || "—"
+												: (r.error ?? "—")}
+										</TableCell>
+										<TableCell className="whitespace-nowrap font-mono text-[12.5px] text-muted-foreground">
+											{r.summary?.config.provider ?? "—"}
+										</TableCell>
+										<TableCell className="whitespace-nowrap text-right font-mono text-[12.5px]">
+											{fmtUsd(r.summary?.costUsd)}
+										</TableCell>
+										<TableCell className="whitespace-nowrap text-right text-[12.5px] text-muted-foreground">
+											{fmtRunDate(runTs(r.runId))}
+										</TableCell>
+										<TableCell className="pr-5 text-right">
+											{!r.supported ? (
+												<Badge variant="danger">unsupported</Badge>
+											) : r.summary?.inconclusive ? (
+												<Badge variant="warn">inconclusive</Badge>
+											) : (
+												<Badge variant="ok">graded</Badge>
+											)}
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</Card>
+				</section>
 			)}
 		</>
 	);

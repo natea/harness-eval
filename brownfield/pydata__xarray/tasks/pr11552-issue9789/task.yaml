@@ -1,0 +1,38 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11552
+issues:
+  - 9789
+baseSha: 8f212148ab47e647f8cf52c7d9749da9789e0b19
+mergeSha: 503b262d42877eb5de6c803d520983e364ebdfab
+tStar: 2026-08-31T15:40:55Z
+issueCreatedAt: 2024-11-16T21:41:00Z
+prMergedAt: 2026-09-09T16:26:08Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_computation::test_apply_datatree_two_outputs
+  - xarray.tests.test_computation::test_apply_datatree_with_core_dims_and_scalar
+  - xarray.tests.test_computation::test_apply_identity_datatree
+  - xarray.tests.test_computation::test_apply_non_isomorphic_datatrees
+  - xarray.tests.test_computation::test_apply_two_datatrees
+  - xarray.tests.test_ufuncs.TestXarrayUfuncs::test_ufunc_datatree
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 8a00c3c74b5435b22960cbce85b56f41499f6a763a2b65e6a3f14045fd4f99d5
+  issue/body+human.md: 8a00c3c74b5435b22960cbce85b56f41499f6a763a2b65e6a3f14045fd4f99d5
+  issue/body.md: 8a00c3c74b5435b22960cbce85b56f41499f6a763a2b65e6a3f14045fd4f99d5
+  leaks.json: ce566b3a4a2eada1f18ebae4a246995f42d3e1940377e409ad92cc368e961ec5
+  reference.patch: 7cd306950d29d78207e95fc095cdaa491de8c4684da76f6a9d819bdc015c1a4c
+  snapshot.json: 3caf537210d5a53b225cd35b3fea5a654821b83fe36897b52dcd7b0762744d06
+  tests.patch: e2c13b40351581abf8eb7b3315b2014d94718a2a94d93e5225c46c4627c9ca30
+  validation.json: 185b2f1500e76ae542c4aee12fc06a40dce892bcf584162cb59cdddb50abaefc

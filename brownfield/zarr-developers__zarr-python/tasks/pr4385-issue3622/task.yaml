@@ -1,0 +1,1182 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4385
+issues:
+  - 3622
+baseSha: f3c661c4cb97c311c351aa6d127983851d96d713
+mergeSha: 5b8ff1e1a424df8117d78835418d0c3e89ac6ebf
+tStar: 2026-09-23T07:53:43Z
+issueCreatedAt: 2025-12-16T09:05:00Z
+prMergedAt: 2026-09-23T14:04:20Z
+verdict: VALID
+failToPass:
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': '|u1', 'object_codec_id': None}-True]"
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': [['a', '&lt;f8']], 'object_codec_id': None}-True]"
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': '|O', 'object_codec_id': 'vlen-utf8'}-False]"
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': '|u1', 'object_codec_id': 'vlen-utf8'}-False]"
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': '|u1'}-False]"
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': '|u1', 'object_codec_id': None, 'extra': 1}-False]"
+  - "tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[{'n\
+    ame': 1, 'object_codec_id': None}-False]"
+  - tests.test_dtype.test_common::test_check_dtype_spec_no_object_codec_v2[|u1-False]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_check_dtype_valid[bool]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_from_dtype_roundtrip[bool]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_check_dtype_invalid[uint16]
+  - "tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_roundtrip_v2[\
+    {'name': '|b1', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_roundtrip_v3[bool]
+  - "tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_invalid_v2[{'\
+    name': '|b1', 'object_codec_id': 'vlen-utf8'}]"
+  - "tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_invalid_v2[{'\
+    name': 'bool', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_invalid_v2[{'\
+    name': '|f8', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_invalid_v3[|b1]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_invalid_v3[|f8]
+  - "tests.test_dtype.test_npy.test_bool.TestBool::test_from_json_invalid_v3[{'\
+    name': 'bool', 'configuration': {'endianness': 'little'}}]"
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_scalar_roundtrip_v2[(Bool(),
+    True)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_scalar_roundtrip_v2[(Bool(),
+    False)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_scalar_roundtrip_v3[(Bool(),
+    True)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_scalar_roundtrip_v3[(Bool(),
+    False)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_cast_value[(Bool(),
+    'true', np.True_)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_cast_value[(Bool(), True,
+    np.True_)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_cast_value[(Bool(),
+    False, np.False_)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_cast_value[(Bool(),
+    np.True_, np.True_)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_cast_value[(Bool(),
+    np.False_, np.False_)]
+  - tests.test_dtype.test_npy.test_bool.TestBool::test_item_size[Bool()]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_check_dtype_valid[|S10]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_dtype_roundtrip[|S10]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_check_dtype_valid[|S4]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_dtype_roundtrip[|S4]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_check_dtype_invalid[&lt;U10]
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_roundtrip_v2[{'name': '|S1', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_roundtrip_v2[{'name': '|S2', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_roundtrip_v2[{'name': '|S4', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_roundtrip_v3[{'name': 'null_terminated_bytes', 'configuration':
+    {'length_bytes': 10}}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_invalid_v2[{'name': '|S', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_invalid_v2[{'name': '|U10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_invalid_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_invalid_v2[{'name': '|S4', 'object_codec_id': 'vlen-bytes'}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_invalid_v3[{'name': 'fixed_length_ascii', 'configuration':
+    {'length_bits': 0}}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_from_js\
+    on_invalid_v3[{'name': 'numpy.fixed_length_ascii', 'configuration':
+    {'length_bits': 'invalid'}}]"
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_scalar_roundtrip_v2[(NullTerminatedBytes(length=1),
+    'MA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_scalar_roundtrip_v2[(NullTerminatedBytes(length=2),
+    'YWI=')]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_scalar_roundtrip_v2[(NullTerminatedBytes(length=4),
+    'YWJjZA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_scalar_roundtrip_v3[(NullTerminatedBytes(length=1),
+    'MA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_scalar_roundtrip_v3[(NullTerminatedBytes(length=2),
+    'YWI=')]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_scalar_roundtrip_v3[(NullTerminatedBytes(length=4),
+    'YWJjZA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_cast_value[(NullTerminatedBytes(length=1),
+    '', np.bytes_(b''))]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_cast_value[(NullTerminatedBytes(length=2),
+    'ab', np.bytes_(b'ab'))]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_cast_value[(NullTerminatedBytes(length=4),
+    'abcdefg', np.bytes_(b'abcd'))]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_invalid_scalar[(NullTerminatedBytes(length=1),
+    1.0)]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_item_size[NullTerminatedBytes(length=1)]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_item_size[NullTerminatedBytes(length=4)]
+  - tests.test_dtype.test_npy.test_bytes.TestNullTerminatedBytes::test_item_size[NullTerminatedBytes(length=10)]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_check_dtype_valid[|V10]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_dtype_roundtrip[|V10]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_check_dtype_invalid[|S10]
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_roundtri\
+    p_v2[{'name': '|V10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_roundtri\
+    p_v3[{'name': 'raw_bytes', 'configuration': {'length_bytes': 1}}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_roundtri\
+    p_v3[{'name': 'raw_bytes', 'configuration': {'length_bytes': 8}}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_invalid_\
+    v2[{'name': '|V', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_invalid_\
+    v2[{'name': '|S10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_invalid_\
+    v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_invalid_\
+    v3[{'name': 'r10'}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_from_json_invalid_\
+    v3[{'name': 'r-80'}]"
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_scalar_roundtrip_v2[(RawBytes(length=1),
+    'AA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_scalar_roundtrip_v2[(RawBytes(length=2),
+    'YWI=')]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_scalar_roundtrip_v2[(RawBytes(length=4),
+    'YWJjZA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_scalar_roundtrip_v3[(RawBytes(length=1),
+    'AA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_scalar_roundtrip_v3[(RawBytes(length=2),
+    'YWI=')]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_scalar_roundtrip_v3[(RawBytes(length=4),
+    'YWJjZA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_cast_value[(RawBytes(length=1),
+    b'\\x00', np.void(b'\\x00'))]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_cast_value[(RawBytes(length=2),
+    b'ab', np.void(b'\\x61\\x62'))]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_cast_value[(RawBytes(length=4),
+    b'abcd', np.void(b'\\x61\\x62\\x63\\x64'))]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_invalid_scalar[(RawBytes(length=1),
+    1.0)]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_item_size[RawBytes(length=1)]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_item_size[RawBytes(length=4)]
+  - tests.test_dtype.test_npy.test_bytes.TestRawBytes::test_item_size[RawBytes(length=10)]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_check_dtype_valid[object]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_dtype_roundtrip[object]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_check_dtype_invalid[&lt;U10]
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_roundtrip_v2[{'name': '|O', 'object_codec_id': 'vlen-bytes'}]"
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_json_roundtrip_v3[variable_length_bytes]
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_invalid_v2[{'name': '|S', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_invalid_v2[{'name': '|U10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_invalid_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_invalid_v2[{'name': '|O', 'object_codec_id': 'vlen-utf8'}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_invalid_v3[{'name': 'fixed_length_ascii', 'configuration':
+    {'length_bits': 0}}]"
+  - "tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_from_js\
+    on_invalid_v3[{'name': 'numpy.fixed_length_ascii', 'configuration':
+    {'length_bits': 'invalid'}}]"
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_scalar_roundtrip_v2[(VariableLengthBytes(),
+    '')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_scalar_roundtrip_v2[(VariableLengthBytes(),
+    'YWI=')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_scalar_roundtrip_v2[(VariableLengthBytes(),
+    'YWJjZA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_scalar_roundtrip_v3[(VariableLengthBytes(),
+    '')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_scalar_roundtrip_v3[(VariableLengthBytes(),
+    'YWI=')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_scalar_roundtrip_v3[(VariableLengthBytes(),
+    'YWJjZA==')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_cast_value[(VariableLengthBytes(),
+    '', b'')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_cast_value[(VariableLengthBytes(),
+    'ab', b'ab')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_cast_value[(VariableLengthBytes(),
+    'abcdefg', b'abcdefg')]
+  - tests.test_dtype.test_npy.test_bytes.TestVariableLengthBytes::test_invalid_scalar[(VariableLengthBytes(),
+    1.0)]
+  - tests.test_dtype.test_npy.test_bytes::test_vlen_bytes_alias
+  - tests.test_dtype.test_npy.test_bytes::test_unstable_dtype_warning[zdtype0]
+  - tests.test_dtype.test_npy.test_bytes::test_unstable_dtype_warning[zdtype1]
+  - tests.test_dtype.test_npy.test_bytes::test_unstable_dtype_warning[zdtype2]
+  - tests.test_dtype.test_npy.test_bytes::test_invalid_size[NullTerminatedBytes]
+  - tests.test_dtype.test_npy.test_bytes::test_invalid_size[RawBytes]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_check_dtype_valid[&gt;c8]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_dtype_roundtrip[&gt;c8]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_check_dtype_valid[complex64]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_dtype_roundtrip[complex64]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_check_dtype_invalid[complex128]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_round\
+    trip_v2[{'name': '&gt;c8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_round\
+    trip_v2[{'name': '&lt;c8', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_roundtrip_v3[complex64]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_inval\
+    id_v2[{'name': '|c8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_inval\
+    id_v2[{'name': 'complex64', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_inval\
+    id_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_inval\
+    id_v2[{'name': '&lt;c8', 'object_codec_id': 'vlen-utf8'}]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_invalid_v3[|c8]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_invalid_v3[|f8]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_from_json_inval\
+    id_v3[{'name': 'complex64', 'configuration': {'endianness': 'little'}}]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_scalar_roundtrip_v2[(Complex64(endianness='little'),
+    (1.0, 1.0))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_scalar_roundtrip_v2[(Complex64(endianness='little'),
+    (-1.0, 'Infinity'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_scalar_roundtrip_v2[(Complex64(endianness='little'),
+    (0, 'NaN'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_scalar_roundtrip_v3[(Complex64(endianness='little'),
+    (1.0, 1.0))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_scalar_roundtrip_v3[(Complex64(endianness='little'),
+    (-1.0, 'Infinity'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_scalar_roundtrip_v3[(Complex64(endianness='little'),
+    (0, 'NaN'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_cast_value[(Complex64(endianness='little'),
+    (1+1j), np.complex64(1+1j))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_cast_value[(Complex64(endianness='little'),
+    (-1+infj), np.complex64(-1+infj))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_cast_value[(Complex64(endianness='little'),
+    nanj, np.complex64(nanj))]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex64::test_invalid_scalar[\
+    (Complex64(endianness='little'), {'type': 'dict'})]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex64::test_item_size[Complex64(endianness='little')]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_check_dtype_valid[&gt;c16]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_dtype_roundtrip[&gt;c16]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_check_dtype_valid[complex128]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_dtype_roundtrip[complex128]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_check_dtype_invalid[complex64]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_roun\
+    dtrip_v2[{'name': '&gt;c16', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_roun\
+    dtrip_v2[{'name': '&lt;c16', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_roundtrip_v3[complex128]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_inva\
+    lid_v2[{'name': '|c16', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_inva\
+    lid_v2[{'name': 'complex128', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_inva\
+    lid_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_inva\
+    lid_v2[{'name': '&lt;c16', 'object_codec_id': 'vlen-utf8'}]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_invalid_v3[|c16]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_invalid_v3[|f8]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_from_json_inva\
+    lid_v3[{'name': 'complex128', 'configuration': {'endianness': 'little'}}]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_scalar_roundtrip_v2[(Complex128(endianness='little'),
+    (1.0, 1.0))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_scalar_roundtrip_v2[(Complex128(endianness='little'),
+    (-1.0, 'Infinity'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_scalar_roundtrip_v2[(Complex128(endianness='little'),
+    (0, 'NaN'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_scalar_roundtrip_v3[(Complex128(endianness='little'),
+    (1.0, 1.0))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_scalar_roundtrip_v3[(Complex128(endianness='little'),
+    (-1.0, 'Infinity'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_scalar_roundtrip_v3[(Complex128(endianness='little'),
+    (0, 'NaN'))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_cast_value[(Complex128(endianness='little'),
+    (1+1j), np.complex128(1+1j))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_cast_value[(Complex128(endianness='little'),
+    (-1+infj), np.complex128(-1+infj))]
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_cast_value[(Complex128(endianness='little'),
+    nanj, np.complex128(nanj))]
+  - "tests.test_dtype.test_npy.test_complex.TestComplex128::test_invalid_scalar\
+    [(Complex128(endianness='little'), {'type': 'dict'})]"
+  - tests.test_dtype.test_npy.test_complex.TestComplex128::test_item_size[Complex128(endianness='little')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_check_dtype_valid[&gt;f2]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_from_dtype_roundtrip[&gt;f2]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_check_dtype_valid[float16]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_from_dtype_roundtrip[float16]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_check_dtype_invalid[uint16]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_check_dtype_invalid[float32]
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_roundtrip\
+    _v2[{'name': '&gt;f2', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_roundtrip\
+    _v2[{'name': '&lt;f2', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_roundtrip_v3[float16]
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v\
+    2[{'name': '|f2', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v\
+    2[{'name': 'float16', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v\
+    2[{'name': '|i1', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v\
+    2[{'name': '&lt;f2', 'object_codec_id': 'vlen-utf8'}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v3[|f2]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v3[|i1]
+  - "tests.test_dtype.test_npy.test_float.TestFloat16::test_from_json_invalid_v\
+    3[{'name': 'float16', 'configuration': {'endianness': 'little'}}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v2[(Float16(endianness='little'),
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v2[(Float16(endianness='little'),
+    -1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v2[(Float16(endianness='little'),
+    'NaN')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v2[(Float16(endianness='little'),
+    'Infinity')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v3[(Float16(endianness='little'),
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v3[(Float16(endianness='little'),
+    -1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v3[(Float16(endianness='little'),
+    'NaN')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_scalar_roundtrip_v3[(Float16(endianness='little'),
+    'Infinity')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_cast_value[(Float16(endianness='little'),
+    1.0, np.float16(1.0))]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_cast_value[(Float16(endianness='little'),
+    -1.0, np.float16(-1.0))]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_cast_value[(Float16(endianness='little'),
+    'NaN', np.float16(nan))]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_invalid_scalar[(Float16(endianness='little'),
+    {'set!'})]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_invalid_scalar[(Float16(endianness='little'),
+    'not_a_float')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_item_size[Float16(endianness='little')]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_hex_encoding[('0x7fc0',
+    nan)]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_hex_encoding[('0x7fc1',
+    nan)]
+  - tests.test_dtype.test_npy.test_float.TestFloat16::test_hex_encoding[('0x3c00',
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_check_dtype_valid[&gt;f4]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_from_dtype_roundtrip[&gt;f4]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_check_dtype_valid[float32]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_from_dtype_roundtrip[float32]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_check_dtype_invalid[uint16]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_check_dtype_invalid[float64]
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_roundtrip\
+    _v2[{'name': '&gt;f4', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_roundtrip\
+    _v2[{'name': '&lt;f4', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_roundtrip_v3[float32]
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v\
+    2[{'name': '|f4', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v\
+    2[{'name': 'float32', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v\
+    2[{'name': '|i1', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v\
+    2[{'name': '&lt;f4', 'object_codec_id': 'vlen-utf8'}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v3[|f4]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v3[|i1]
+  - "tests.test_dtype.test_npy.test_float.TestFloat32::test_from_json_invalid_v\
+    3[{'name': 'float32', 'configuration': {'endianness': 'little'}}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v2[(Float32(endianness='little'),
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v2[(Float32(endianness='little'),
+    -1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v2[(Float32(endianness='little'),
+    'NaN')]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v2[(Float32(endianness='little'),
+    'Infinity')]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v3[(Float32(endianness='little'),
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v3[(Float32(endianness='little'),
+    -1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v3[(Float32(endianness='little'),
+    'NaN')]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_scalar_roundtrip_v3[(Float32(endianness='little'),
+    'Infinity')]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_cast_value[(Float32(endianness='little'),
+    1.0, np.float32(1.0))]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_cast_value[(Float32(endianness='little'),
+    -1.0, np.float32(-1.0))]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_cast_value[(Float32(endianness='little'),
+    'NaN', np.float32(nan))]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_invalid_scalar[(Float32(endianness='little'),
+    {'set!'})]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_invalid_scalar[(Float32(endianness='little'),
+    'not_a_float')]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_item_size[Float32(endianness='little')]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_hex_encoding[('0x7fc00000',
+    nan)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_hex_encoding[('0x7fc00001',
+    nan)]
+  - tests.test_dtype.test_npy.test_float.TestFloat32::test_hex_encoding[('0x3f800000',
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_check_dtype_valid[&gt;f8]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_from_dtype_roundtrip[&gt;f8]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_check_dtype_valid[float64]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_from_dtype_roundtrip[float64]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_check_dtype_invalid[uint16]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_check_dtype_invalid[float32]
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_roundtrip\
+    _v2[{'name': '&gt;f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_roundtrip\
+    _v2[{'name': '&lt;f8', 'object_codec_id': None}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_roundtrip_v3[float64]
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v\
+    2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v\
+    2[{'name': 'float64', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v\
+    2[{'name': '|i1', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v\
+    2[{'name': '&lt;f8', 'object_codec_id': 'vlen-utf8'}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v3[|f8]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v3[|i1]
+  - "tests.test_dtype.test_npy.test_float.TestFloat64::test_from_json_invalid_v\
+    3[{'name': 'float64', 'configuration': {'endianness': 'little'}}]"
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v2[(Float64(endianness='little'),
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v2[(Float64(endianness='little'),
+    -1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v2[(Float64(endianness='little'),
+    'NaN')]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v2[(Float64(endianness='little'),
+    'Infinity')]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v3[(Float64(endianness='little'),
+    1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v3[(Float64(endianness='little'),
+    -1.0)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v3[(Float64(endianness='little'),
+    'NaN')]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_scalar_roundtrip_v3[(Float64(endianness='little'),
+    'Infinity')]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_cast_value[(Float64(endianness='little'),
+    1.0, np.float64(1.0))]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_cast_value[(Float64(endianness='little'),
+    -1.0, np.float64(-1.0))]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_cast_value[(Float64(endianness='little'),
+    'NaN', np.float64(nan))]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_invalid_scalar[(Float64(endianness='little'),
+    {'set!'})]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_invalid_scalar[(Float64(endianness='little'),
+    'not_a_float')]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_item_size[Float64(endianness='little')]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_hex_encoding[('0x7ff8000000000000',
+    nan)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_hex_encoding[('0x7ff8000000000001',
+    nan)]
+  - tests.test_dtype.test_npy.test_float.TestFloat64::test_hex_encoding[('0x3ff0000000000000',
+    1.0)]
+  - tests.test_dtype.test_npy.test_float::test_check_json_floatish_str
+  - tests.test_dtype.test_npy.test_float::test_string_float_from_json_scalar
+  - tests.test_dtype.test_npy.test_int::test_string_integer_from_json_scalar
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_check_dtype_valid[StringDType()]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_dtype_roundtrip[StringDType()]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_check_dtype_invalid[|S10]
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_roundtrip_v2[{'name': '|O', 'object_codec_id': 'vlen-utf8'}]"
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_json_roundtrip_v3[string]
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_invalid_v2[{'name': '|S10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_invalid_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_invalid_v2[{'name': 'invalid', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_invalid_v2[{'name': '|O', 'object_codec_id': 'vlen-bytes'}]"
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_invalid_v3[{'name': 'variable_length_utf8', 'configuration':
+    {'invalid_key': 'value'}}]"
+  - "tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_from_\
+    json_invalid_v3[{'name': 'invalid_name'}]"
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_scalar_roundtrip_v2[(VariableLengthUTF8(),
+    '')]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_scalar_roundtrip_v2[(VariableLengthUTF8(),
+    'hi')]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_scalar_roundtrip_v3[(VariableLengthUTF8(),
+    '')]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_scalar_roundtrip_v3[(VariableLengthUTF8(),
+    'hi')]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_cast_value[(VariableLengthUTF8(),
+    '', np.str_(''))]
+  - tests.test_dtype.test_npy.test_string.TestVariableLengthString::test_cast_value[(VariableLengthUTF8(),
+    'hi', np.str_('hi'))]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_check_dtype_valid[&gt;U10]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_dtype_roundtrip[&gt;U10]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_check_dtype_valid[&lt;U10]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_dtype_roundtrip[&lt;U10]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_check_dtype_invalid[|S10]
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _roundtrip_v2[{'name': '&gt;U10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _roundtrip_v2[{'name': '&lt;U10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _roundtrip_v3[{'name': 'fixed_length_utf32', 'configuration':
+    {'length_bytes': 320}}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _invalid_v2[{'name': '|U', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _invalid_v2[{'name': '|S10', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _invalid_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _invalid_v2[{'name': '&lt;U10', 'object_codec_id': 'vlen-utf8'}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _invalid_v3[{'name': 'fixed_length_utf32', 'configuration': {'length_bits':
+    0}}]"
+  - "tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_from_json\
+    _invalid_v3[{'name': 'numpy.fixed_length_utf32', 'configuration':
+    {'length_bits': 'invalid'}}]"
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_scalar_roundtrip_v2[(FixedLengthUTF32(length=1,
+    endianness='little'), '')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_scalar_roundtrip_v2[(FixedLengthUTF32(length=2,
+    endianness='little'), 'hi')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_scalar_roundtrip_v3[(FixedLengthUTF32(length=1,
+    endianness='little'), '')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_scalar_roundtrip_v3[(FixedLengthUTF32(length=2,
+    endianness='little'), 'hi')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_scalar_roundtrip_v3[(FixedLengthUTF32(length=4,
+    endianness='little'), 'hihi')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_cast_value[(FixedLengthUTF32(length=1,
+    endianness='little'), '', np.str_(''))]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_cast_value[(FixedLengthUTF32(length=2,
+    endianness='little'), 'hi', np.str_('hi'))]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_cast_value[(FixedLengthUTF32(length=4,
+    endianness='little'), 'hihi', np.str_('hihi'))]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_item_size[FixedLengthUTF32(length=1,
+    endianness='little')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_item_size[FixedLengthUTF32(length=4,
+    endianness='little')]
+  - tests.test_dtype.test_npy.test_string.TestFixedLengthUTF32::test_item_size[FixedLengthUTF32(length=10,
+    endianness='little')]
+  - tests.test_dtype.test_npy.test_string::test_invalid_size
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_check_dtype_valid[[('field1',
+    '&lt;i4'), ('field2', '&lt;f8')]]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_from_dtype_roundtrip[[('field1',
+    '&lt;i4'), ('field2', '&lt;f8')]]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_check_dtype_valid[[('field1',
+    '&lt;i8'), ('field2', '&lt;i4')]]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_from_dtype_roundtrip[[('field1',
+    '&lt;i8'), ('field2', '&lt;i4')]]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_check_dtype_invalid[|S10]
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_round\
+    trip_v2[{'name': [['field1', '&gt;i4'], ['field2', '&gt;f8']],
+    'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_round\
+    trip_v2[{'name': [['field1', '&gt;i8'], ['field2', '&gt;i4']],
+    'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_round\
+    trip_v3[{'name': 'struct', 'configuration': {'fields': [{'name': 'field1',
+    'data_type': 'int32'}, {'name': 'field2', 'data_type': 'float64'}]}}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_round\
+    trip_v3[{'name': 'struct', 'configuration': {'fields': [{'name': 'field1',
+    'data_type': {'name': 'numpy.datetime64', 'configuration': {'unit': 's',
+    'scale_factor': 1}}}, {'name': 'field2', 'data_type': {'name':
+    'fixed_length_utf32', 'configuration': {'length_bytes': 32}}}]}}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_inval\
+    id_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_inval\
+    id_v2[{'name': [['field1', '|i9'], ['field2', '&lt;f8']], 'object_codec_id':
+    None}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_inval\
+    id_v2[{'name': [['field1', '|i1'], ['field2', '&lt;f8']], 'object_codec_id':
+    'vlen-utf8'}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_inval\
+    id_v3[{'name': 'struct', 'configuration': {'fields': [('field1', {'name':
+    'int32', 'configuration': {'endianness': 'invalid'}}), ('field2', {'name':
+    'float64', 'configuration': {'endianness': 'big'}})]}}]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_from_json_inval\
+    id_v3[{'name': 'invalid_name'}]"
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_scalar_roundtrip_v2[(Struct(fields=(('field1',
+    Int32(endianness='little')), ('field2', Float64(endianness='little')))),
+    'AQAAAAAAAAAAAPA/')]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_scalar_roundtrip_v2[(Struct(fields=(('field1',
+    Float16(endianness='little')), ('field2', Int32(endianness='little')))),
+    'AQAAAAAA')]
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_scalar_roundtri\
+    p_v3[(Struct(fields=(('field1', Int32(endianness='little')), ('field2',
+    Float64(endianness='little')))), {'field1': 1, 'field2': 1.0})]"
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_scalar_roundtri\
+    p_v3[(Struct(fields=(('field1', Int64(endianness='little')), ('field2',
+    Int32(endianness='little')))), {'field1': 1, 'field2': 1})]"
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_cast_value[(Struct(fields=(('field1',
+    Int32(endianness='little')), ('field2', Float64(endianness='little')))), (1,
+    2.0), array((1, 2.), dtype=[('field1', '&lt;i4'), ('field2', '&lt;f8')]))]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_cast_value[(Struct(fields=(('field1',
+    Int64(endianness='little')), ('field2', Int32(endianness='little')))), (3,
+    4.5), array((3, 4), dtype=[('field1', '&lt;i8'), ('field2', '&lt;i4')]))]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_invalid_scalar[(Struct(fields=(('field1',
+    Int32(endianness='little')), ('field2', Float64(endianness='little')))), 'i
+    am a string')]
+  - "tests.test_dtype.test_npy.test_structured.TestStruct::test_invalid_scalar[\
+    (Struct(fields=(('field1', Int32(endianness='little')), ('field2',
+    Float64(endianness='little')))), {'type': 'dict'})]"
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_item_size[Struct(fields=(('field1',
+    Int32(endianness='little')), ('field2', Float64(endianness='little'))))]
+  - tests.test_dtype.test_npy.test_structured.TestStruct::test_item_size[Struct(fields=(('field1',
+    Int64(endianness='little')), ('field2', Int32(endianness='little'))))]
+  - tests.test_dtype.test_npy.test_structured.TestStructured::test_invalid_size
+  - tests.test_dtype.test_npy.test_structured.TestStructured::test_structured_legacy_name_with_tuple_format
+  - tests.test_dtype.test_npy.test_structured.TestStructured::test_structured_writes_tuple_format
+  - tests.test_dtype.test_npy.test_structured::test_invalid_size
+  - tests.test_dtype.test_npy.test_structured::test_struct_name_is_primary
+  - tests.test_dtype.test_npy.test_structured::test_struct_reads_legacy_tuple_format
+  - tests.test_dtype.test_npy.test_structured::test_struct_reads_canonical_object_format
+  - tests.test_dtype.test_npy.test_structured::test_fill_value_dict_form
+  - tests.test_dtype.test_npy.test_structured::test_fill_value_dict_form_missing_fields
+  - tests.test_dtype.test_npy.test_structured::test_fill_value_legacy_base64
+  - tests.test_dtype.test_npy.test_structured::test_fill_value_to_json_dict_form
+  - tests.test_dtype.test_npy.test_structured::test_has_multi_byte_fields_true
+  - tests.test_dtype.test_npy.test_structured::test_has_multi_byte_fields_false
+  - tests.test_dtype.test_npy.test_structured::test_struct_from_native_dtype
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_check_dtype_valid[datetime64[10ns]]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_dtype_roundtrip[datetime64[10ns]]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_check_dtype_valid[datetime64[us]]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_dtype_roundtrip[datetime64[us]]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_check_dtype_valid[datetime64]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_dtype_roundtrip[datetime64]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_check_dtype_invalid[timedelta64[ns]]
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_roundtr\
+    ip_v2[{'name': '&gt;M8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_roundtr\
+    ip_v2[{'name': '&gt;M8[s]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_roundtr\
+    ip_v2[{'name': '&lt;M8[10s]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_roundtr\
+    ip_v2[{'name': '&lt;M8[10us]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_roundtr\
+    ip_v3[{'name': 'numpy.datetime64', 'configuration': {'unit': 'ns',
+    'scale_factor': 10}}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_roundtr\
+    ip_v3[{'name': 'numpy.datetime64', 'configuration': {'unit': 'us',
+    'scale_factor': 1}}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v2[{'name': 'datetime64', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v2[{'name': 'timedelta64[ns]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v2[{'name': '&lt;m8[ns]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v2[{'name': '&lt;M8[ns]', 'object_codec_id': 'vlen-utf8'}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v3[{'name': 'datetime64', 'configuration': {'unit': 'invalid'}}]"
+  - "tests.test_dtype.test_npy.test_time.TestDateTime64::test_from_json_invalid\
+    _v3[{'name': 'datetime64', 'configuration': {'unit': 123}}]"
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_scalar_roundtrip_v2[(DateTime64(endianness='little',
+    scale_factor=1, unit='ns'), 1)]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_scalar_roundtrip_v2[(DateTime64(endianness='little',
+    scale_factor=1, unit='ns'), 'NaT')]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_scalar_roundtrip_v3[(DateTime64(endianness='little',
+    scale_factor=1, unit='ns'), 1)]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_scalar_roundtrip_v3[(DateTime64(endianness='little',
+    scale_factor=1, unit='ns'), 'NaT')]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_cast_value[(DateTime64(endianness='little',
+    scale_factor=1, unit='Y'), '1', np.datetime64('0001'))]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_cast_value[(DateTime64(endianness='little',
+    scale_factor=1, unit='s'), '2005-02-25',
+    np.datetime64('2005-02-25T00:00:00'))]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_cast_value[(DateTime64(endianness='little',
+    scale_factor=1, unit='ns'), 'NaT', np.datetime64('NaT','ns'))]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_invalid_scalar[(DateTime64(endianness='little',
+    scale_factor=1, unit='Y'), 1.3)]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_invalid_scalar[(DateTime64(endianness='little',
+    scale_factor=1, unit='Y'), [1.3])]
+  - tests.test_dtype.test_npy.test_time.TestDateTime64::test_item_size[DateTime64(endianness='little',
+    scale_factor=1, unit='ns')]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_check_dtype_valid[timedelta64[ns]]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_dtype_roundtrip[timedelta64[ns]]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_check_dtype_valid[timedelta64[us]]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_dtype_roundtrip[timedelta64[us]]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_check_dtype_invalid[int8]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_check_dtype_invalid[float64]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_check_dtype_invalid[datetime64[ns]]
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_roundt\
+    rip_v2[{'name': '&gt;m8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_roundt\
+    rip_v2[{'name': '&gt;m8[s]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_roundt\
+    rip_v2[{'name': '&lt;m8[10s]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_roundt\
+    rip_v2[{'name': '&lt;m8[10us]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_roundt\
+    rip_v3[{'name': 'numpy.timedelta64', 'configuration': {'unit': 'ns',
+    'scale_factor': 10}}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_roundt\
+    rip_v3[{'name': 'numpy.timedelta64', 'configuration': {'unit': 'us',
+    'scale_factor': 1}}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v2[{'name': 'timedelta64', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v2[{'name': '|f8', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v2[{'name': 'datetime64[ns]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v2[{'name': '&lt;M8[ns]', 'object_codec_id': None}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v2[{'name': '&lt;m8[ns]', 'object_codec_id': 'vlen-utf8'}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v3[{'name': 'timedelta64', 'configuration': {'unit': 1, 'scale_factor':
+    10}}]"
+  - "tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_from_json_invali\
+    d_v3[{'name': 'timedelta64', 'configuration': {'unit': 123}}]"
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_scalar_roundtrip_v2[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns'), 1)]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_scalar_roundtrip_v2[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns'), 'NaT')]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_scalar_roundtrip_v3[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns'), 1)]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_scalar_roundtrip_v3[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns'), 'NaT')]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_cast_value[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns'), '1', np.timedelta64(1,'ns'))]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_cast_value[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns'), 'NaT', np.timedelta64('NaT','ns'))]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_invalid_scalar[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='Y'), 1.3)]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_invalid_scalar[(TimeDelta64(endianness='little',
+    scale_factor=1, unit='Y'), [1.3])]
+  - tests.test_dtype.test_npy.test_time.TestTimeDelta64::test_item_size[TimeDelta64(endianness='little',
+    scale_factor=1, unit='ns')]
+  - tests.test_dtype.test_npy.test_time::test_time_invalid_unit
+  - tests.test_dtype.test_npy.test_time::test_time_scale_factor_too_low
+  - tests.test_dtype.test_npy.test_time::test_default_is_NaT
+  - tests.test_dtype.test_npy.test_time::test_time_scale_factor_too_high
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-Y]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-M]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-W]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-D]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-h]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-m]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-s]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-ms]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-us]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-\u03bcs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-ns]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-ps]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-fs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-as]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-1-generic]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-Y]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-M]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-W]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-D]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-h]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-m]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-s]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-ms]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-us]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-\u03bcs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-ns]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-ps]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-fs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-as]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[0-10-generic]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-Y]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-M]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-W]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-D]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-h]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-m]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-s]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-ms]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-us]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-\u03bcs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-ns]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-ps]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-fs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-as]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-1-generic]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-Y]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-M]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-W]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-D]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-h]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-m]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-s]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-ms]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-us]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-\u03bcs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-ns]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-ps]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-fs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-as]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[1-10-generic]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-Y]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-M]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-W]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-D]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-h]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-m]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-s]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-ms]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-us]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-\u03bcs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-ns]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-ps]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-fs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-as]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-1-generic]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-Y]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-M]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-W]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-D]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-h]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-m]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-s]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-ms]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-us]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-\u03bcs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-ns]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-ps]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-fs]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-as]
+  - tests.test_dtype.test_npy.test_time::test_datetime_from_int[10-10-generic]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[|b1-Bool()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&lt;b1-Bool()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&gt;b1-Bool()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[|i1-Int8()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&lt;i1-Int8()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&gt;i1-Int8()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[|u1-UInt8()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&lt;u1-UInt8()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&gt;u1-UInt8()]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[|V4-RawBytes(length=4)]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&lt;V4-RawBytes(length=4)]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&gt;V4-RawBytes(length=4)]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&lt;i2-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[&gt;i2-Int16(endianness='big')]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order[[['a', '&lt;i1'],
+    ['b', '&gt;b1']]-Struct(fields=(('a', Int8()), ('b', Bool())))]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_alias_malformed_length[&lt;V]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_alias_malformed_length[&gt;V]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_alias_malformed_length[&lt;V-1]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_alias_malformed_length[&lt;V4x]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_alias_malformed_length[&lt;V\u0664]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_alias_object_codec
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_relevant[|i2]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_relevant[|f4]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_relevant[|U1]
+  - tests.test_dtype_registry::test_match_json_v2_byte_order_relevant[|M8[ns]]
+  - tests.test_dtype_registry::test_match_json_v2_declared_spelling_takes_precedence
+  - tests.test_dtype_registry::test_match_json_v2_native_byte_order[=u1]
+  - tests.test_dtype_registry::test_match_json_v2_native_byte_order[=i2]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Bool()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Int8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Int32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Int64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-UInt8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-UInt16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-UInt32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-UInt64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Float16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Float32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Float64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Complex64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Complex128(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-FixedLengthUTF32(length=1, endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-VariableLengthUTF8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-RawBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-NullTerminatedBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-VariableLengthBytes()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-Struct(fields=(('a', Float64(endianness='little')), ('b',
+    Int8())))]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-DateTime64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'internal')-TimeDelta64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Bool()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Int8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Int32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Int64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-UInt8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-UInt16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-UInt32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-UInt64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Float16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Float32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Float64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Complex64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Complex128(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-FixedLengthUTF32(length=1, endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-VariableLengthUTF8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-RawBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-NullTerminatedBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-VariableLengthBytes()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-Struct(fields=(('a', Float64(endianness='little')), ('b',
+    Int8())))]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-DateTime64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(2,
+    'metadata')-TimeDelta64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3, None)-Bool()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3, None)-Int8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Int32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Int64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-UInt8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-UInt16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-UInt32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-UInt64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Float16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Float32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Float64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Complex64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Complex128(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-FixedLengthUTF32(length=1, endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-VariableLengthUTF8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-RawBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-NullTerminatedBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-VariableLengthBytes()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-Struct(fields=(('a', Float64(endianness='little')), ('b', Int8())))]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-DateTime64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_dtype-(3,
+    None)-TimeDelta64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Bool()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Int8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Int32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Int64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-UInt8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-UInt16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-UInt32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-UInt64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Float16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Float32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Float64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Complex64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Complex128(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-FixedLengthUTF32(length=1, endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-VariableLengthUTF8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-RawBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-NullTerminatedBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-VariableLengthBytes()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-Struct(fields=(('a', Float64(endianness='little')), ('b',
+    Int8())))]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-DateTime64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'internal')-TimeDelta64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Bool()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Int8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Int32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Int64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-UInt8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-UInt16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-UInt32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-UInt64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Float16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Float32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Float64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Complex64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Complex128(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-FixedLengthUTF32(length=1, endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-VariableLengthUTF8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-RawBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-NullTerminatedBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-VariableLengthBytes()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-Struct(fields=(('a', Float64(endianness='little')), ('b',
+    Int8())))]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-DateTime64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(2,
+    'metadata')-TimeDelta64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Bool()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Int8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Int16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Int32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Int64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-UInt8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-UInt16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-UInt32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-UInt64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Float16(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Float32(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Float64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Complex64(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Complex128(endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-FixedLengthUTF32(length=1, endianness='little')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-VariableLengthUTF8()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-RawBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-NullTerminatedBytes(length=1)]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-VariableLengthBytes()]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-Struct(fields=(('a', Float64(endianness='little')), ('b', Int8())))]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-DateTime64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_dtype_registry::test_parse_data_type[parse_data_type-(3,
+    None)-TimeDelta64(endianness='little', scale_factor=10, unit='s')]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[&lt;b1-|b1-[
+    True False  True]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[&gt;b1-|b1-[
+    True False  True]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[|b1-|b1-[
+    True False  True]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[&lt;i1-|i1-[-128    0  127]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[&gt;i1-|i1-[-128    0  127]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[|i1-|i1-[-128    0  127]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[&lt;u1-|u1-[  0
+    128 255]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[&gt;u1-|u1-[  0
+    128 255]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[|u1-|u1-[  0
+    128 255]]
+  - tests.test_metadata.test_v2::test_open_v2_byte_order_irrelevant_dtype[[['a',
+    '&lt;i1'], ['b', '&gt;u1']]-[['a', '|i1'], ['b', '|u1']]-[(-1,   1) ( 0,
+    128) ( 1, 255)]]
+  - tests.test_metadata.test_v2::test_parse_zarr_format_valid
+  - tests.test_metadata.test_v2::test_structured_dtype_fill_value_serialization[fill_value0]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: efe599a2313a8f9ca839bc7b396b239ed4bac829b3ae139fcefd775ef9216688
+  issue/body+human.md: efe599a2313a8f9ca839bc7b396b239ed4bac829b3ae139fcefd775ef9216688
+  issue/body.md: 6cb40ee27128d9991bd3ab489b0fa32a53f3538ec30386633e78f210b4beff57
+  leaks.json: 5f14ddf2c304aaa2ab6223b7beab52414611bc639d6512dd6e1aa4d5ac235f91
+  reference.patch: 3b6aec44be0b34422a6ba98d560e5a5816942f3d4072481c921822336ea84998
+  snapshot.json: 3c0a898b16f66ec1085b040b37e85c6fce1a8e5f998aa714d0a99a199a2cfa3b
+  tests.patch: 48a29f3d3b6c4278524896a1730212bf5fc7cbd09999e63660ead6bcae721007
+  validation.json: 7981ebc8a4c42dc1bb30c72488292d38c79c63f5adc7870652dd34480f2eeebc

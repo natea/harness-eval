@@ -1,0 +1,57 @@
+{
+  "pr": 11526,
+  "issue": 6510,
+  "tStar": "2026-08-15T09:41:13Z",
+  "title": "Feature request: raise more informative error message for `xr.open_dataset(list_of_paths)`",
+  "issueAuthor": "aaronspring",
+  "body": "### Is your feature request related to a problem?\n\nI sometimes use `xr.open_dataset` instead of `xr.open_mfdataset` on multiple paths. I propose to raise a more informative error message than `ValueError: did not find a match in any of xarray's currently installed IO backends ['netcdf4', 'h5netcdf', 'scipy', 'cfgrib']. Consider explicitly selecting one of the installed engines via the ``engine`` parameter, or installing additional IO dependencies, see:\r\nhttps://docs.xarray.dev/en/stable/getting-started-guide/installing.html\r\nhttps://docs.xarray.dev/en/stable/user-guide/io.html`.\r\n\r\n```python\r\nimport xarray as xr\r\n\r\nxr.__version__ # '2022.3.0'\r\n\r\nds = xr.tutorial.load_dataset(\"air_temperature\")\r\n\r\nds.isel(time=slice(None,1500)).to_netcdf(\"file1.nc\")\r\nds.isel(time=slice(1500,None)).to_netcdf(\"file2.nc\")\r\n\r\nxr.open_mfdataset([\"file1.nc\",\"file2.nc\"]) # works\r\nxr.open_mfdataset(\"file?.nc\") # works\r\n\r\n# I understand what I need to do here\r\nxr.open_dataset(\"file?.nc\") # fails FileNotFoundError: No such file or directory: b'/dir/file?.nc'\r\n\r\n# I dont here; I also first try to check whether one of these files is corrupt\r\nxr.open_dataset([\"file1.nc\",\"file2.nc\"]) # fails ValueError: did not find a match in any of xarray's currently installed IO backends ['netcdf4', 'h5netcdf', 'scipy', 'cfgrib']. Consider explicitly selecting one of the installed engines via the ``engine`` parameter, or installing additional IO dependencies, see: links\r\n```\n\n### Describe the solution you'd like\n\ndirecting the user towards the solution, i.e. \"found path as list, please use open_mfdataset\"\n\n### Describe alternatives you've considered\n\n_No response_\n\n### Additional context\n\n_No response_",
+  "comments": [
+    {
+      "at": "2022-04-25T15:31:46Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Sounds good to me. PR welcome!",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2022-04-26T21:06:04Z",
+      "author": "aaronspring",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "To be implemented here https://github.com/pydata/xarray/blob/d479009d79374dc4a56c9f4346b1af38f5ac182c/xarray/backends/plugins.py#L102",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2022-04-29T14:03:04Z",
+      "author": "smartlixx",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "More generally, when the specified file(s) can't be found (e.g., a wrong file name is given), a more precise error message like 'file(s) specified can't be found' instead of currently 'ValueError: did not find a match in any of xarray's currently installed IO backends'.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2022-04-29T14:54:45Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "For wrong file name, we have this issue: https://github.com/pydata/xarray/issues/5329 and this PR: #5351",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions #N",
+        "mentions PR"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+diff --git a/xarray/tests/test_concat.py b/xarray/tests/test_concat.py
+index 3f07143c..8be376c6 100644
+--- a/xarray/tests/test_concat.py
++++ b/xarray/tests/test_concat.py
+@@ -32,6 +32,7 @@ from xarray.tests import (
+     assert_equal,
+     assert_identical,
+     requires_dask,
++    requires_pandas_3,
+     requires_pyarrow,
+     requires_scipy_or_netCDF4,
+ )
+@@ -1521,6 +1522,20 @@ def test_concat_index_not_same_dim() -> None:
+         concat([ds1, ds2], dim="x")
+ 
+ 
++@requires_pandas_3
++@pytest.mark.parametrize("dtype", [None, pd.StringDtype()])
++@pytest.mark.parametrize("pandas_first", [False, True])
++def test_concat_pandas_index_string_dtype(dtype, pandas_first) -> None:
++    # GH11317
++    da = DataArray([0], dims=["dim_a"], coords={"dim_a": ["a"]})
++    db = DataArray([0], dims=["dim_b"], coords={"dim_b": ["b"]})
++    db2 = concat([db], pd.Index(["b"], name="dim_a", dtype=dtype))
++    objs = [db2, da] if pandas_first else [da, db2]
++    expected = ["b", "a"] if pandas_first else ["a", "b"]
++    result = concat(objs, dim="dim_a")
++    assert list(result["dim_a"].values) == expected
++
++
+ class TestNewDefaults:
+     def test_concat_second_empty_with_scalar_data_var_only_on_first(self) -> None:
+         ds1 = Dataset(data_vars={"a": ("y", [0.1]), "b": 0.1}, coords={"x": 0.1})

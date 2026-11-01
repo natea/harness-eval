@@ -1,0 +1,68 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index d7da8698..5077b17b 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -397,6 +397,12 @@ Bug Fixes
+ 
+ Documentation
+ ~~~~~~~~~~~~~
++- Clarified that :py:meth:`DataArray.item` and :py:meth:`Variable.item` are not
++  implemented for lazy (e.g. dask) arrays, both in the method docstring and in the
++  raised error message, which now suggests loading the data into memory first
++  (:issue:`7916`).
++  By `imam <https://github.com/imam2004i>`_.
++
+ - Add hidden intersphinx inventory entries for methods, properties and
+   attributes at the path where they are defined, e.g.
+   ``xarray.core.dataarray.DataArray.sel``. This lets tools such as
+diff --git a/xarray/computation/ops.py b/xarray/computation/ops.py
+index a351e2a6..379f936b 100644
+--- a/xarray/computation/ops.py
++++ b/xarray/computation/ops.py
+@@ -126,12 +126,29 @@ def _call_possibly_missing_method(arg, name, args, kwargs):
+         return method(*args, **kwargs)
+ 
+ 
++# Note appended to the inherited NumPy docstring of ``item``, which is not
++# implemented for lazy (e.g. dask) arrays, see
++# duck_array_ops.fail_on_dask_array_input. Inserted before the "Parameters"
++# section so it renders near the top of the method documentation.
++_ITEM_DASK_NOTE = (
++    "\n.. note::\n"
++    "    For xarray objects wrapping a lazy array such as a dask array,\n"
++    "    ``item`` is not implemented and raises ``NotImplementedError``.\n"
++    "    Load the data into memory first, for example with\n"
++    "    ``obj.compute().item()`` or ``obj.as_numpy().item()``.\n"
++)
++
++
+ def _values_method_wrapper(name):
+     def func(self, *args, **kwargs):
+         return _call_possibly_missing_method(self.data, name, args, kwargs)
+ 
+     func.__name__ = name
+-    func.__doc__ = getattr(np.ndarray, name).__doc__
++    doc = getattr(np.ndarray, name).__doc__
++    if name == "item" and doc is not None:
++        anchor = "\nParameters\n"
++        doc = doc.replace(anchor, _ITEM_DASK_NOTE + anchor, 1)
++    func.__doc__ = doc
+     return func
+ 
+ 
+diff --git a/xarray/core/duck_array_ops.py b/xarray/core/duck_array_ops.py
+index d69d8c8c..3c819ab8 100644
+--- a/xarray/core/duck_array_ops.py
++++ b/xarray/core/duck_array_ops.py
+@@ -110,7 +110,10 @@ def _dask_or_eager_func(
+ def fail_on_dask_array_input(values, msg=None, func_name=None):
+     if is_duck_dask_array(values):
+         if msg is None:
+-            msg = "%r is not yet a valid method on dask arrays"
++            msg = (
++                "%r is not yet a valid method on dask arrays. Load the data into "
++                "memory first, e.g. with '.compute()' or '.load()'."
++            )
+         if func_name is None:
+             func_name = inspect.stack()[1][3]
+         raise NotImplementedError(msg % func_name)

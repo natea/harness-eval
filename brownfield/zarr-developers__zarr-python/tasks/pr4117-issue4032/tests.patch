@@ -1,0 +1,84 @@
+diff --git a/tests/test_array.py b/tests/test_array.py
+index d2f32443..b1a7a3c0 100644
+--- a/tests/test_array.py
++++ b/tests/test_array.py
+@@ -45,7 +45,7 @@ from zarr.core.array import (
+     default_serializer_v3,
+ )
+ from zarr.core.array_spec import ArrayConfig, ArrayConfigParams
+-from zarr.core.buffer import NDArrayLike, NDArrayLikeOrScalar, default_buffer_prototype
++from zarr.core.buffer import NDArrayLike, NDArrayLikeOrScalar, cpu, default_buffer_prototype
+ from zarr.core.chunk_grids import (
+     SHARDED_INNER_CHUNK_MAX_BYTES,
+     guess_chunks,
+@@ -447,6 +447,8 @@ async def test_chunks_initialized(
+     arr = zarr.create_array(
+         store, name=path, shape=shape, shards=shard_shape, chunks=chunk_shape, dtype="i1"
+     )
++    if path:
++        await store.set(path, cpu.Buffer.from_bytes(b""))
+ 
+     chunks_accumulated = tuple(
+         accumulate(tuple(tuple(v.split(" ")) for v in arr._iter_shard_keys()))
+diff --git a/tests/test_store/test_object.py b/tests/test_store/test_object.py
+index 6a4b7966..cd85a48e 100644
+--- a/tests/test_store/test_object.py
++++ b/tests/test_store/test_object.py
+@@ -1,4 +1,5 @@
+ # ruff: noqa: E402
++import re
+ from pathlib import Path
+ from typing import TypedDict
+ 
+@@ -9,9 +10,10 @@ obstore = pytest.importorskip("obstore")
+ from hypothesis.stateful import (
+     run_state_machine_as_test,
+ )
+-from obstore.store import LocalStore, MemoryStore
++from obstore.store import LocalStore, MemoryStore, S3Store
+ 
+ from zarr.core.buffer import Buffer, cpu
++from zarr.core.sync import _collect_aiterator
+ from zarr.storage import ObjectStore
+ from zarr.testing.stateful import ZarrHierarchyStateMachine
+ from zarr.testing.store import StoreTests
+@@ -97,6 +99,39 @@ class TestObjectStore(StoreTests[ObjectStore[LocalStore], cpu.Buffer]):
+         assert total_size == len(buf) * 2
+ 
+ 
++@pytest.mark.filterwarnings(
++    re.escape("ignore:datetime.datetime.utcnow() is deprecated:DeprecationWarning")
++)
++async def test_list_dir_ignores_s3_prefix_marker(moto_server: str) -> None:
++    """Ensure obstore's exact-prefix S3 directory marker is not listed as a child."""
++    boto3 = pytest.importorskip("boto3")
++    bucket = "object-store-prefix-marker"
++    client = boto3.client(
++        "s3",
++        endpoint_url=moto_server,
++        region_name="us-east-1",
++        aws_access_key_id="x",
++        aws_secret_access_key="x",
++    )
++    client.create_bucket(Bucket=bucket)
++    client.put_object(Bucket=bucket, Key="g/", Body=b"")
++
++    store = ObjectStore(
++        S3Store(
++            bucket=bucket,
++            endpoint=moto_server,
++            region="us-east-1",
++            access_key_id="x",
++            secret_access_key="x",
++            client_options={"allow_http": True},
++            virtual_hosted_style_request=False,
++        )
++    )
++
++    assert await _collect_aiterator(store.list_dir("g")) == ()
++    assert await _collect_aiterator(store.list_dir("g/")) == ()
++
++
+ @pytest.mark.slow_hypothesis
+ def test_zarr_hierarchy() -> None:
+     sync_store = ObjectStore(MemoryStore())

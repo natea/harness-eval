@@ -1,0 +1,27 @@
+{
+  "verdict": "VALID",
+  "failToPass": [
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[cmyk_converts_to_rgb]"
+  ],
+  "passToPass": [
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[non_png_re_encodes]",
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[png_passthrough]",
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[grayscale_preserves_mode]"
+  ],
+  "flaky": [],
+  "envBroken": [],
+  "liveApi": [],
+  "goldRegress": [],
+  "gpuSkipped": [],
+  "selection": "touched",
+  "targets": [
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_individual_mode_outputs_png"
+  ],
+  "env": {
+    "ok": true,
+    "method": "uv.lock",
+    "digest": "ea632e1a5d2780f548c8a43e317bbc85682d6dc75c2396cc5881202896c71ae5",
+    "seconds": 6
+  },
+  "sealProblems": []
+}

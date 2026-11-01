@@ -1,0 +1,9 @@
+{
+  "pr": 4146,
+  "issue": 3352,
+  "tStar": "2026-07-15T00:22:35Z",
+  "title": "`zarr.api.asynchronous.open_like` is broken",
+  "issueAuthor": "d-v-b",
+  "body": "[this function](https://github.com/zarr-developers/zarr-python/blob/1264a4d190a0f22a3612e302d41f4413f06edf35/src/zarr/api/asynchronous.py#L1273-L1295) is intended for creating new arrays similar to existing arrays, but it has a few problems, the most significant being that it attempts to invoke `open_array` without passing a `mode` keyword argument, which errors. It's actually hard to tell what `mode=None` does in this context? I think the ultimate behavior might be store-specific, but I suspect it defaults to `r` for memory storage. This means `open_like` can only read existing arrays, which defeats its entire purpose.\n\nWe should either fix this function or remove it.",
+  "comments": []
+}

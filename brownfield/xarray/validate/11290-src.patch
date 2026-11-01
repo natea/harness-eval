@@ -1,0 +1,28 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 5878b356..bfbff532 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -396,6 +396,10 @@ Bug Fixes
+   By `Emmanuel Ferdman <https://github.com/emmanuel-ferdman>`_.
+ - :func:`combine_by_coords` no longer returns an empty dataset when a generator is passed as ``data_objects`` (:issue:`10114`, :pull:`11265`).
+   By `Amartya Anand <https://github.com/SurfyPenguin>`_.
++- Preserve non-grouped coordinates in fallback ``groupby`` reductions when grouping
++  by a non-leading dimension reorders the underlying variable dimensions
++  (:issue:`11188`, :pull:`11290`).
++  By `Sarthak <https://github.com/Sarthak160>`_.
+ - Fix h5netcdf backend module detection and ros3 tests (:issue:`11243`, :pull:`11274`).
+   By `Kai Mühlbauer <https://github.com/kmuehlbauer>`_.
+ 
+diff --git a/xarray/core/dataarray.py b/xarray/core/dataarray.py
+index 5c576ff9..8d201ae1 100644
+--- a/xarray/core/dataarray.py
++++ b/xarray/core/dataarray.py
+@@ -634,7 +634,7 @@ class DataArray(
+             indexes = self._indexes
+         elif set(self.dims) == set(variable.dims):
+             # Shape has changed (e.g. from reduce(..., keepdims=True)
+-            new_sizes = dict(zip(self.dims, variable.shape, strict=True))
++            new_sizes = dict(variable.sizes)
+             coords = {
+                 k: v
+                 for k, v in self._coords.items()

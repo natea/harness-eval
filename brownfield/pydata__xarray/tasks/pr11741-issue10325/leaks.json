@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "print(da.dtype, da.compute().dtype, da.astype(np.float32).compute().dtype)",
+      "rationale": "Reproduction showing dtype mismatch between lazy dtype and computed dtype; no cause or fix identified.",
+      "author": "bbabenko",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Bot welcome message with no technical content.",
+      "author": "welcome",
+      "role": "bot"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

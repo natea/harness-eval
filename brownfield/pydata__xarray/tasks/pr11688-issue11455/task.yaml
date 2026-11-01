@@ -1,0 +1,45 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11688
+issues:
+  - 11455
+baseSha: a1c8083816a78618d83aa6df4bc519c2d60bf6cc
+mergeSha: be662823d9e4323330197a5262b8cc3350e9a8a5
+tStar: 2026-10-07T07:39:59Z
+issueCreatedAt: 2026-07-17T16:24:00Z
+prMergedAt: 2026-10-08T18:43:36Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataset.TestDataset::test_stack_unstack_slow
+  - xarray.tests.test_dataset.TestDataset::test_to_stacked_array_invalid_sample_dims
+  - xarray.tests.test_dataset.TestDataset::test_unstack_full_product_is_view[stacked-first]
+  - xarray.tests.test_dataset.TestDataset::test_unstack_full_product_is_view[stacked-last]
+  - xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[unsorted-levels]
+  - xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[reversed]
+  - xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[missing]
+  - xarray.tests.test_indexes::test_is_full_ordered_product[product]
+  - xarray.tests.test_indexes::test_is_full_ordered_product[product-unsorted-levels]
+  - xarray.tests.test_indexes::test_is_full_ordered_product[reversed]
+  - xarray.tests.test_indexes::test_is_full_ordered_product[missing]
+  - xarray.tests.test_indexes::test_is_full_ordered_product[nan-label]
+  - xarray.tests.test_indexes::test_set_xindex_factory_method_pattern
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_code
+provisional: true
+files:
+  issue/body+all.md: 207af12d34afdb0633ef4018d491e477acef8b6c86905d20d53ba4bb2208da73
+  issue/body+human.md: 85cf7c77ae72835bcff845462bca1d97bfdd7506c61030b84f67b9f9511875dd
+  issue/body.md: ba7f72141a811f9791e1c24c5188d5064e2eab13eb330ba8e7ed0caebd553fd4
+  leaks.json: 432fc8afbdbeaa4c3d99f9b5f68bc96645ed96b0e9071705f04d093c13af27b9
+  reference.patch: 171f1e2c838cd838e95db539b2f402bb85a5d30361228b3e96dd2993999cc40d
+  snapshot.json: 374f75ba3f33edbd4443fa325e745805808c89af371c2c75a990f67f7387d4ba
+  tests.patch: 7e5b2e13c9ffcc85ee6b578178822272336b9c9057eec905d77040e79aba61dc
+  validation.json: e6a326ad78a7b0d6fdecca1d06f5bca7667efc02e581112f23f843f1b65a1944

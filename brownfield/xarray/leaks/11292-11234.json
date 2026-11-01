@@ -1,0 +1,43 @@
+{
+  "pr": 11292,
+  "issue": 11234,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0114306,
+  "prAuthor": "officialasishkumar",
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataarray.py"
+      ],
+      "evidence": "I think the user should be warned that the coordinate names do not match the dimension names and have been overridden.",
+      "rationale": "Describes the symptom and requests a warning when tuple coord names differ from dims, which is what the fix does. It doesn't name the location, but the proposed behavior matches the fix.",
+      "author": "sol-et-stellae",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Bot welcome message.",
+      "author": "welcome",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "looks like it just treats it as \"`dict.from_items`\"",
+      "rationale": "Informal comment about the behavior, with no concrete location or change.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ]
+}

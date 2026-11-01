@@ -1,0 +1,9 @@
+{
+  "pr": 768,
+  "issue": 761,
+  "tStar": "2024-12-17T23:34:48Z",
+  "title": "Reactor: Overly Complicated Question Eval",
+  "issueAuthor": "whitead",
+  "body": "The litqa evaluations have become overly complex. We should simplify the logic to use as much `aviary` code as possible and not overload the StrEnum so much.\r\n\r\nContext:\r\n1. https://github.com/Future-House/aviary/pull/148\r\n2. https://github.com/Future-House/paper-qa/pull/760\r\n3. https://github.com/Future-House/paper-qa/pull/760#discussion_r1880756716",
+  "comments": []
+}

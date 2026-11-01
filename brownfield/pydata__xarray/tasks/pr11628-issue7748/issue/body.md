@@ -1,0 +1,90 @@
+# diff('non existing dimension') does not raise exception
+
+_Opened by @LunarLanding_
+
+### What happened?
+
+Calling xr.DataArray.diff with a non-existing dimension does not raise an exception.
+
+### What did you expect to happen?
+
+An exception to be raised.
+
+### Minimal Complete Verifiable Example
+
+```Python
+import xarray as xr; import numpy as np; xr.DataArray(np.arange(10),dims=('a',)).diff('b')
+```
+
+
+### MVCE confirmation
+
+- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [X] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [X] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.
+
+### Relevant log output
+
+_No response_
+
+### Anything else we need to know?
+
+_No response_
+
+### Environment
+
+<details>
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.10.9 | packaged by conda-forge | (main, Feb  2 2023, 20:20:04) [GCC 11.3.0]
+python-bits: 64
+OS: Linux
+OS-release: 5.10.0-21-amd64
+machine: x86_64
+processor:
+byteorder: little
+LC_ALL: None
+LANG: en_US.UTF-8
+LOCALE: ('en_US', 'UTF-8')
+libhdf5: 1.12.2
+libnetcdf: 4.8.1
+
+xarray: 2023.3.0
+pandas: 1.5.3
+numpy: 1.23.5
+scipy: 1.10.1
+netCDF4: 1.6.2
+pydap: None
+h5netcdf: 1.1.0
+h5py: 3.8.0
+Nio: None
+zarr: 2.14.2
+cftime: 1.6.2
+nc_time_axis: None
+PseudoNetCDF: None
+rasterio: None
+cfgrib: None
+iris: None
+bottleneck: None
+dask: 2023.3.1
+distributed: 2023.3.1
+matplotlib: 3.7.1
+cartopy: None
+seaborn: 0.12.2
+numbagg: None
+fsspec: 2023.3.0
+cupy: None
+pint: None
+sparse: 0.14.0
+flox: 0.6.9
+numpy_groupies: 0.9.20
+setuptools: 67.6.0
+pip: 23.0.1
+conda: 23.1.0
+pytest: 7.2.2
+mypy: 1.1.1
+IPython: 8.11.0
+sphinx: 6.1.3
+</details>

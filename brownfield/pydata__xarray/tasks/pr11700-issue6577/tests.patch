@@ -1,0 +1,193 @@
+diff --git a/xarray/tests/backends/test_plugins.py b/xarray/tests/backends/test_plugins.py
+index 6ad8379e..8cdbc443 100644
+--- a/xarray/tests/backends/test_plugins.py
++++ b/xarray/tests/backends/test_plugins.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import io
+ import subprocess
+ import sys
+ from importlib.metadata import EntryPoint, EntryPoints
+@@ -8,6 +9,7 @@ from unittest import mock
+ 
+ import pytest
+ 
++import xarray as xr
+ from xarray.backends import common, plugins
+ from xarray.core.options import OPTIONS
+ from xarray.tests import (
+@@ -372,6 +374,61 @@ def test_refresh_engines() -> None:
+     refresh_engines()
+ 
+ 
++class DummyDescribedBackend(common.BackendEntrypoint):
++    description = "Open dummy files"
++    url = "https://example.com/dummy"
++    supports_groups = True
++
++    def open_dataset(self, filename_or_obj, *, decoder):  # type: ignore[override]
++        pass
++
++
++def test_show_backends() -> None:
++    from xarray.backends import list_engines, refresh_engines
++
++    dist = mock.MagicMock()
++    dist.name = "dummy-pkg"
++    dist.version = "1.2.3"
++    ep = mock.MagicMock()
++    ep.name = "dummy"
++    ep.dist = dist
++    ep.load.return_value = DummyDescribedBackend
++
++    text = io.StringIO()
++    md = io.StringIO()
++    with mock.patch(
++        "xarray.backends.plugins.entry_points", return_value=EntryPoints([ep])
++    ):
++        list_engines.cache_clear()
++        xr.show_backends(file=text)
++        xr.show_backends(file=md, markdown=True)
++    refresh_engines()
++
++    out = text.getvalue()
++    assert out.startswith("AVAILABLE BACKENDS\n------------------\n")
++    expected_dummy = (
++        "dummy: DummyDescribedBackend from dummy-pkg 1.2.3 (supports groups)\n"
++        "    Open dummy files\n"
++        "    https://example.com/dummy\n"
++    )
++    assert expected_dummy in out
++    assert "store: StoreBackendEntrypoint from xarray\n" in out
++    # backends that are not installed are not listed
++    assert ("\nscipy: " in out) == has_scipy
++    if has_scipy:
++        assert "scipy: ScipyBackendEntrypoint from xarray (using scipy " in out
++
++    out = md.getvalue()
++    assert out.startswith("<details><summary>AVAILABLE BACKENDS</summary>\n\n")
++    expected_dummy = (
++        "- **dummy**: `DummyDescribedBackend` from dummy-pkg 1.2.3 (supports groups)\n"
++        "  - Open dummy files\n"
++        "  - https://example.com/dummy\n"
++    )
++    assert expected_dummy in out
++    assert "- **store**: `StoreBackendEntrypoint` from xarray\n" in out
++
++
+ @requires_h5netcdf
+ @requires_netCDF4
+ @requires_zarr
+diff --git a/xarray/tests/test_print_versions.py b/xarray/tests/test_print_versions.py
+index 23b6350f..a026072a 100644
+--- a/xarray/tests/test_print_versions.py
++++ b/xarray/tests/test_print_versions.py
+@@ -1,10 +1,16 @@
+ from __future__ import annotations
+ 
++import importlib.metadata
+ import io
++import sys
++import types
++from html import escape
++from unittest import mock
+ 
+ import pytest
+ 
+ import xarray
++from xarray.util import _report
+ 
+ 
+ # importing setuptools after distutils (done by some dependencies) warns
+@@ -12,4 +18,89 @@ import xarray
+ def test_show_versions() -> None:
+     f = io.StringIO()
+     xarray.show_versions(file=f)
+-    assert "INSTALLED VERSIONS" in f.getvalue()
++    out = f.getvalue()
++    assert out.startswith("INSTALLED VERSIONS\n------------------\n")
++    assert f"\nxarray: {importlib.metadata.version('xarray')}\n" in out
++    assert "Not installed: " in out
++
++
++@pytest.mark.filterwarnings("ignore:Setuptools is replacing distutils:UserWarning")
++def test_show_versions_markdown() -> None:
++    f = io.StringIO()
++    xarray.show_versions(file=f, markdown=True)
++    out = f.getvalue()
++    assert out.startswith("<details><summary>INSTALLED VERSIONS</summary>\n\n")
++    assert out.endswith("\n</details>\n")
++    assert "| package " in out
++    assert "| xarray " in out
++
++
++def test_package_version() -> None:
++    assert _report.package_version("xarray") == importlib.metadata.version("xarray")
++    assert _report.package_version("not_a_real_package_xyz") is None
++
++
++def test_package_version_dist_name_differs() -> None:
++    with mock.patch.object(
++        _report, "_packages_distributions", return_value={"fake_mod": ["pytest"]}
++    ):
++        assert _report.package_version("fake_mod") == pytest.__version__
++
++
++def test_markdown_table() -> None:
++    actual = _report.markdown_table(("a", "bb"), [("x", "1 | 2"), ("long", None)])
++    expected = (
++        "| a    | bb     |\n| ---- | ------ |\n| x    | 1 \\| 2 |\n| long | None   |"
++    )
++    assert actual == expected
++
++
++def test_show_report(monkeypatch) -> None:
++    displayed: list[dict[str, str]] = []
++
++    def display(bundle, raw=False):
++        assert raw
++        displayed.append(bundle)
++
++    display_mod = types.ModuleType("IPython.display")
++    display_mod.display = display  # type: ignore[attr-defined]
++    monkeypatch.setitem(sys.modules, "IPython.display", display_mod)
++
++    md = "<details><summary>TITLE</summary>\n\n*md*\n\n</details>"
++
++    def show(**kwargs) -> str:
++        f = io.StringIO()
++        _report.show_report("TITLE", "text", "*md*", "<p>x</p>", file=f, **kwargs)
++        return f.getvalue()
++
++    assert show() == "TITLE\n-----\ntext\n"
++    assert show(as_markdown=True) == md + "\n"
++
++    # in notebooks the html is displayed, unless printing is requested
++    monkeypatch.setattr(_report, "_in_rich_frontend", lambda: True)
++    _report.show_report("TITLE", "text", "*md*", "<p>x</p>")
++    (bundle,) = displayed
++    assert bundle["text/plain"] == "TITLE\n-----\ntext"
++    # copying the output copies the markdown
++    assert bundle["text/html"].startswith(f'<div data-md="{escape(md)}" oncopy="')
++    assert bundle["text/html"].endswith("><h4>TITLE</h4><p>x</p></div>")
++
++    assert show() == "TITLE\n-----\ntext\n"
++    stdout = io.StringIO()
++    monkeypatch.setattr(sys, "stdout", stdout)
++    _report.show_report("TITLE", "text", "*md*", "<p>x</p>", as_markdown=True)
++    assert stdout.getvalue() == md + "\n"
++    assert len(displayed) == 1
++
++
++def test_in_rich_frontend_without_ipython(monkeypatch) -> None:
++    monkeypatch.delitem(sys.modules, "IPython", raising=False)
++    assert not _report._in_rich_frontend()
++
++
++def test_html_table() -> None:
++    actual = _report.html_table("T<", [("a", "<b>")])
++    assert actual == (
++        '<div><strong>T&lt;</strong><table><tr><td style="text-align: left">a</td>'
++        '<td style="text-align: left">&lt;b&gt;</td></tr></table></div>'
++    )

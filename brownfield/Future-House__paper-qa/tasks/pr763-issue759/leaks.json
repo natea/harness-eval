@@ -1,0 +1,29 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "pyproject.toml"
+      ],
+      "evidence": "AttributeError: module aiohttp has no attribute ClientConnectionResetError. Did you mean: 'ClientConnectionError'?",
+      "rationale": "The traceback plus the stated version aiohttp==3.9.5 shows the installed aiohttp is too old for ClientConnectionResetError. That points to the version pin the fix adds, but the issue doesn't state the root cause explicitly. It is mostly symptom with a strong hint.",
+      "author": "meefen",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "you should update the `is_retryable` function in `paperqa/utils.py` to use `aiohttp.ClientConnectionError` instead of `aiohttp.ClientConnectionResetError`",
+      "rationale": "It proposes replacing the exception class in utils.py. The reference fix instead pins aiohttp>=3.10.6 in the dependency files and leaves the code unchanged, so this points somewhere the fix did not go.",
+      "author": "dosubot",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "symptom"
+}

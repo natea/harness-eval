@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/core/indexing.py"
+      ],
+      "evidence": "Cause is the `np.bincount` call which will allocate a very large array even if we only set a handful of indices",
+      "rationale": "Identifies the root cause: np.bincount with minlength=nchunks in CoordinateIndexer, which the reference replaces with sorted run ends. No fix described.",
+      "author": "sehoffmann",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "i'm sure there's something more efficient than bincount here. I'll look into getting a fix up shortly",
+      "rationale": "Vague, no concrete technical content beyond restating bincount; mostly a scheduling remark.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "`arr.get_coordinate_selection((rows, cols))` is also affected and results in the same issue.",
+      "rationale": "Reports another affected call path; observed behavior only.",
+      "author": "sehoffmann",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "symptom"
+}

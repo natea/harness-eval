@@ -1,0 +1,19 @@
+{
+  "pr": 4257,
+  "issue": 4255,
+  "tStar": "2026-08-12T19:34:51Z",
+  "title": "Regression in 3.3.0: numpy integer chunk sizes raise TypeError: 'numpy.int64' object is not iterable",
+  "issueAuthor": "ieivanov",
+  "body": "## Description\n\nSince 3.3.0, passing a chunk size as a numpy integer raises a `TypeError`. This worked in 3.2.1 and earlier.\n\nThe cause is a disagreement between two functions in `src/zarr/core/chunk_grids.py` about what counts as an integer:\n\n- `normalize_chunks_nd` (line 790) tests `isinstance(chunks, numbers.Integral)`\n- `normalize_chunks_1d` (line 734) tests `isinstance(chunks, int)`\n\n`np.int64` registers as `numbers.Integral` but is **not** a subclass of `int`. So a per-dimension numpy integer passes the outer dispatch, reaches `normalize_chunks_1d`, fails the `isinstance(chunks, int)` narrowing, and falls into the `else` branch intended for explicit per-dimension chunk sequences — where `list(chunks)` is called on a scalar.\n\nBoth lines are still present on `main` (bd3e3986).\n\n## Reproduction\n\n```python\nimport numpy as np\nimport zarr\n\nzarr.zeros((4, 4), dtype=\"f4\", chunks=(np.int64(2), np.int64(2)))\n```\n\n```\nFile \"zarr/core/chunk_grids.py\", line 742, in normalize_chunks_1d\n    chunk_list = list(chunks)\n                 ^^^^^^^^^^^^\nTypeError: 'numpy.int64' object is not iterable\n```\n\nMixed tuples fail the same way, and only on the numpy-typed entries — `(1, 3, np.int64(16), np.int64(16))` raises, `(1, 3, 16, 16)` does not.\n\n## Version info\n\n- zarr 3.3.0 (fails); 3.2.1 (works)\n- numpy 2.5.2\n- Python 3.12, Linux\n\nIntroduced by #3899 (`refactor: simplify internal chunk representation`), which landed in 3.3.0.\n\n## Why this matters in practice\n\nNumpy integers arise naturally whenever a chunk shape is *computed* rather than written as a literal, since any numpy reduction or elementwise op yields numpy scalars. For example, a downstream library sizing chunks from the array shape:\n\n```python\nplane_shape = np.minimum(shape[-2:], 32768)   # numpy array\nchunks = (1, depth, *plane_shape)             # trailing entries are np.int64\n```\n\nThis is what we hit: [ultrack](https://github.com/royerlab/ultrack)'s `large_chunk_size` builds its chunk tuple this way and passes it to `zarr.zeros`, so every array-creation call through it broke on 3.3.0. We are currently pinned to `zarr<3.3` as a workaround.\n\nBecause the failure is a `TypeError` about iteration deep inside chunk-grid code, it is quite hard to trace back to \"your chunk sizes are numpy integers\" — the error names neither chunks nor the offending value.\n\n## Suggested fix\n\nWiden the narrowing in `normalize_chunks_1d` to match its caller:\n\n```diff\n-    if isinstance(chunks, int):\n+    if isinstance(chunks, numbers.Integral):\n+        chunks = int(chunks)\n```\n\nThis is consistent with the rest of the module: `guess_chunks` already ends with `return tuple(int(x) for x in chunks)`, and the `else` branch already accepts `numbers.Integral` elements and coerces them with `int(c)`. Only the scalar path is strict.\n\nHappy to open a PR with the fix plus a regression test covering numpy scalar chunk sizes, if that would be useful.",
+  "comments": [
+    {
+      "at": "2026-08-12T19:26:19Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "future fixer (author of the reference PR)",
+      "text": "thanks for the report and sorry for the breakage. I'll get a fix up soon, and we will release in a few days at the minimum ",
+      "source": "no-edits"
+    }
+  ]
+}

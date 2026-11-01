@@ -1,0 +1,59 @@
+diff --git a/README.md b/README.md
+index 6134843..fe8a852 100644
+--- a/README.md
++++ b/README.md
+@@ -172,7 +172,7 @@ source_files = glob.glob('**/*.js')
+ docs = Docs()
+ for f in source_files:
+     # this assumes the file names are unique in code
+-    docs.add(f, citation='File ' + os.path.name(f), key=os.path.name(f))
++    docs.add(f, citation='File ' + os.path.name(f), docname=os.path.name(f))
+ answer = docs.query("Where is the search bar in the header defined?")
+ print(answer)
+ ```
+@@ -278,7 +278,7 @@ zotero = ZoteroDB(library_type="user")  # "group" if group library
+ for item in zotero.iterate(limit=20):
+     if item.num_pages > 30:
+         continue  # skip long papers
+-    docs.add(item.pdf, key=item.key)
++    docs.add(item.pdf, docname=item.key)
+ ```
+ 
+ which will download the first 20 papers in your Zotero database and add
+@@ -295,7 +295,7 @@ for item in zotero.iterate(
+         limit=100,
+ ):
+     print("Adding", item.title)
+-    docs.add(item.pdf, key=item.key)
++    docs.add(item.pdf, docname=item.key)
+ ```
+ 
+ You can read more about the search syntax by typing `zotero.iterate?` in IPython.
+diff --git a/paperqa/docs.py b/paperqa/docs.py
+index 5c93fe5..83f26b3 100644
+--- a/paperqa/docs.py
++++ b/paperqa/docs.py
+@@ -272,7 +272,7 @@ class Docs(BaseModel, arbitrary_types_allowed=True, smart_union=True):
+ 
+     def __getstate__(self):
+         state = self.__dict__.copy()
+-        if self.texts_index is not None:
++        if self.texts_index is not None and self.index_path is not None:
+             state["texts_index"].save_local(self.index_path)
+         del state["texts_index"]
+         del state["doc_index"]
+@@ -286,6 +286,7 @@ class Docs(BaseModel, arbitrary_types_allowed=True, smart_union=True):
+         except Exception:
+             # they use some special exception type, but I don't want to import it
+             self.texts_index = None
++        self.doc_index = None
+ 
+     def _build_texts_index(self):
+         if self.texts_index is None:
+diff --git a/paperqa/version.py b/paperqa/version.py
+index e05c531..cfa8101 100644
+--- a/paperqa/version.py
++++ b/paperqa/version.py
+@@ -1 +1 @@
+-__version__ = "3.0.0.dev0"
++__version__ = "3.0.0.dev1"

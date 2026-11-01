@@ -1,0 +1,9 @@
+{
+  "pr": 834,
+  "issue": 832,
+  "tStar": "2025-01-27T16:10:42Z",
+  "title": "incorrect package name for zotero",
+  "issueAuthor": "rbpasker",
+  "body": "https://github.com/Future-House/paper-qa/blob/71665c48cab966dab7354b5f8178aef409e390b7/README.md?plain=1#L864\n\n\nmissing hyphen. \nshould be: `pip install paper-qa[zotero]`",
+  "comments": []
+}

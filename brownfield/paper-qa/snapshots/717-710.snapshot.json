@@ -1,0 +1,21 @@
+{
+  "pr": 717,
+  "issue": 710,
+  "tStar": "2024-11-21T08:33:11Z",
+  "title": "maybe_is_text() discards valid text due to spaces from titles and tables",
+  "issueAuthor": "loesinghaus",
+  "body": "I noticed that the maybe_is_text() check discards quite a few perfectly valid and well-parsed publications. The issue is that it checks the entropy of the first text chunk of a document. Document parsing by pymupdf can introduce a lot of spaces, especially if the first few pages contain a title page, tables, or something similar (which they very often do, especially for books). Might be better to average across text chunks in the middle of the document.\r\n\r\nAlternatively, checking the entropy of the text without spaces fixed it for my pdfs:\r\n\r\n```\r\ndef maybe_is_text(s: str, thresh: float = 2.5) -> bool:\r\n    if not s:\r\n        return False\r\n    # Calculate the entropy of the string\r\n    entropy = 0.0\r\n    s_wo_spaces = s.replace(\" \", \"\")\r\n    for c in string.printable:\r\n        p = s_wo_spaces.count(c) / len(s_wo_spaces)\r\n        if p > 0:\r\n            entropy += -p * math.log2(p)\r\n\r\n    return entropy > thresh\r\n```",
+  "comments": [
+    {
+      "at": "2024-11-19T23:47:17Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "I like what you're thinking, feel free to make a PR and expand the `test_maybe_is_text` in `tests/test_paperqa.py`",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    }
+  ]
+}

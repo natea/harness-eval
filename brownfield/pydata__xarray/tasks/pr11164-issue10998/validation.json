@@ -1,0 +1,52 @@
+{
+  "pr": 11164,
+  "merged": "2026-10-17",
+  "issues": [
+    {
+      "n": 10998,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/plot/dataarray_plot.py",
+    "xarray/plot/facetgrid.py",
+    "xarray/plot/utils.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_plot.py"
+  ],
+  "env": "exclude-newer 2026-10-17T10:58:12+02:00",
+  "envSecs": 17,
+  "selected": [
+    "xarray/tests/test_plot.py::TestFacetGrid::test_colorbar_scatter",
+    "xarray/tests/test_plot.py::TestFacetGrid::test_empty_cell",
+    "xarray/tests/test_plot.py::TestFacetGrid::test_legend_deduplicates_line_hue",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_coords_line_plot",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_line_accepts_hue_kw",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_line_duplicate_hue_respects_user_color",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_line_duplicate_hue_shares_color",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_line_duplicate_hue_shares_cycled_style",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_line_missing_hue_values",
+    "xarray/tests/test_plot.py::TestPlot::test_2d_line_unique_hue_palette_unchanged"
+  ],
+  "counts": {
+    "f2p": 5,
+    "p2p": 7,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_plot.TestFacetGrid::test_legend_deduplicates_line_hue",
+    "xarray.tests.test_plot.TestPlot::test_2d_line_duplicate_hue_shares_color",
+    "xarray.tests.test_plot.TestPlot::test_2d_line_duplicate_hue_shares_cycled_style",
+    "xarray.tests.test_plot.TestPlot::test_2d_line_missing_hue_values[category0]",
+    "xarray.tests.test_plot.TestPlot::test_2d_line_missing_hue_values[category2]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

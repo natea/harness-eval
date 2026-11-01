@@ -1,0 +1,23 @@
+{
+  "pr": 4277,
+  "issue": 4271,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.03827,
+  "prAuthor": "arcusbuilds",
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/registry.py"
+      ],
+      "evidence": "we need a little internal mapping that relates codec names to sets of package names. this mapping would be used to generate an error message like `An implementation for codec <codec name> is not available.",
+      "rationale": "Describes the change: an internal codec-name-to-package mapping and an error message listing known packages, matching the reference's tables and _missing_codec_message in registry.py.",
+      "author": "d-v-b",
+      "role": "issue author"
+    }
+  ]
+}

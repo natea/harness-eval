@@ -1,0 +1,70 @@
+{
+  "pr": 438,
+  "issue": 402,
+  "tStar": "2024-09-18T21:45:11Z",
+  "title": "CLI functionality in Python module",
+  "issueAuthor": "ivanhigueram",
+  "body": "I am loving this library! The README is very through showing the library functions on the CLI. For instance, it shows clearly how to name an index and save it using `pqa -i nanomaterials index`, then we can execute full-text search using `pqa -i nanomaterials search thermoelectrics`. But is not clear to me how to execute the same functionality with the Python module. Can I recreate this by doing something like: \r\n\r\n```python\r\nfrom paperqa import Settings, ask, search_query\r\n\r\nsearch_query(query=\"test query\", index_name=\"pqa_index_3cd017b0934549ec2602837942e27025\",  index_directory=\"~/.pqa/indexes/\", settings=Settings())\r\n```\r\n\r\nI would like some hints on how to name the index and how to execute a search over the index. I would really appreciate your help. ",
+  "comments": [
+    {
+      "at": "2024-09-13T23:33:44Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Greeting -->\nHi @ivanhigueram! I'm here to help you with any questions or issues you have. Let's tackle this together!\n\n<!-- Answer -->\nTo name an index and execute a search over the index using the Python module in the `paperqa` library, you can use the `SearchIndex` class. Here is an example of how to do this:\n\n1. **Create and name the index:**\n\n```python\nfrom paperqa.agents.search import SearchIndex\nfrom paperqa.settings import Settings\n\n# Create a SearchIndex instance with a custom name\nindex_name = \"nanomaterials\"\nsettings = Settings()  # Load or configure your settings as needed\nsearch_index = SearchIndex(index_name=index_name, settings=settings)\n\n# Initialize the directory for the index\nawait search_index.init_directory()\n```\n\n2. **Add documents to the index:**\n\n```python\n# Example document to add\nindex_doc = {\n    \"file_location\": \"path/to/document\",\n    \"body\": \"This is the content of the document.\"\n}\n\n# Add the document to the index\nawait search_index.add_document(index_doc)\n```\n\n3. **Execute a search over the index:**\n\n```python\n# Perform a search query\nquery = \"thermoelectrics\"\nresults = await search_index.query(query, top_n=10)\n\n# Print the search results\nfor result in results:\n    print(result)\n```\n\nThis code snippet demonstrates how to name an index, add documents to it, and execute a search query using the `paperqa` library's Python module. The `Settings` class is used to configure the settings for the `SearchIndex` <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/paperqa/agents/search.py)</sup><sup>[[2]](https://github.com/Future-House/paper-qa/blob/main/paperqa/agents/__init__.py)</sup>.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2024-09-14T00:00:37Z",
+      "author": "ivanhigueram",
+      "isBot": false,
+      "text": "This is good, but how can I use a previous `ask` object index to execute a search? that is the part that is not clear in the documentation. \r\n\r\nIn the example you provide, I'd have to add each document individually, but I just want to use the ones used in a previous query (i.e. using `agent_query`) and do everything in Python.",
+      "source": "edit@2024-09-14T00:04:20Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-09-14T00:01:57Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nTo use a previous `ask` object index to execute a search without adding each document individually, you can use the `search` command with the `--index` option set to `answers`. This allows you to search the index of previous answers.\n\nHere is how you can do it:\n\n```sh\npaperqa search --index answers \"your search query\"\n```\n\nThis command will search the index of previous answers for the specified query <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/paperqa/agents/__init__.py)</sup>.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2024-09-14T00:05:58Z",
+      "author": "ivanhigueram",
+      "isBot": false,
+      "text": "I guess I can get that from the documentation, but again, this is using the CLI, I want to execute this search in Python. ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-09-14T00:07:19Z",
+      "author": "dosubot",
+      "isBot": true,
+      "text": "<!-- Answer -->\nTo execute a search using a previous `ask` object index in Python, you can use the `ask` function with the `Settings` object to reference the existing index. Here is an example:\n\n```python\nfrom paperqa import Settings, ask\n\n# Define your query and settings\nquery = \"What manufacturing challenges are unique to bispecific antibodies?\"\nsettings = Settings(paper_directory=\"path/to/your/index_directory\")\n\n# Execute the search\nanswer = ask(query, settings=settings)\n\n# Print the answer\nprint(answer)\n```\n\nIn this example, the `paper_directory` parameter in the `Settings` object is set to the directory where your index is stored. This allows the `ask` function to reference the existing index and execute the search <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/README.md)</sup><sup>[[2]](https://github.com/Future-House/paper-qa/blob/main/paperqa/agents/__init__.py)</sup>.\n\n\n<!-- Dosu Comment Footer -->\n*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2024-09-14T01:02:30Z",
+      "author": "mskarlin",
+      "isBot": false,
+      "text": "hey @ivanhigueram -- you should be able to find all your indexes in the `PQA_HOME` directory (defaults to `~/.pqa/indexes/`), you can see the names for each of them there. All answers (no matter from where they originated) will go into the `answers` index, which you can also search via the `search_query ` function. In that case, it'll return `Answer` objects with relevant details for each answer. \r\n\r\nIf you have several paper indexes, and you're trying to work out which goes with your settings of interest, just make a new `Settings` object with the paper directory and settings that you previously used and then do: `settings.get_index_name()` -- it'll tell you the name of the index.",
+      "source": "edit@2024-09-14T01:03:13Z",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

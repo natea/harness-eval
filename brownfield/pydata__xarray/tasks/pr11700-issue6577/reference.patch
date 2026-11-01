@@ -1,0 +1,502 @@
+diff --git a/.github/ISSUE_TEMPLATE/bugreport.yml b/.github/ISSUE_TEMPLATE/bugreport.yml
+index f5276925..40313ea8 100644
+--- a/.github/ISSUE_TEMPLATE/bugreport.yml
++++ b/.github/ISSUE_TEMPLATE/bugreport.yml
+@@ -92,7 +92,8 @@ body:
+     attributes:
+       label: Environment
+       description: |
+-        Paste the output of `xr.show_versions()` between the `<details>` tags, leaving an empty line following the opening tag.
++        Replace the `<details>` block below with the output of `xr.show_versions(markdown=True)`, which already includes the `<details>` tags.
++        Older versions of xarray do not support `markdown=True`; then paste the output of `xr.show_versions()` between the `<details>` tags, leaving an empty line following the opening tag.
+       value: |
+         <details>
+ 
+diff --git a/doc/api/top-level.rst b/doc/api/top-level.rst
+index c6f45c18..3494ca8a 100644
+--- a/doc/api/top-level.rst
++++ b/doc/api/top-level.rst
+@@ -58,6 +58,7 @@ Miscellaneous
+ 
+    decode_cf
+    infer_freq
++   show_backends
+    show_versions
+    set_options
+    get_options
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 0ebce396..cb0f2d68 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -42,6 +42,16 @@ New Features
+   type defaults to ``Hashable``, so a bare ``Variable`` annotation means
+   ``Variable[Hashable]`` and keeps its previous meaning (:pull:`11677`).
+   By `Michael Niklas <https://github.com/headtr1ck>`_.
++- Add :py:func:`~xarray.show_backends` to print the available IO backends,
++  including those of other packages, and in which order they are tried
++  (:issue:`6577`, :pull:`11700`).
++  By `Nick Hodgskin <https://github.com/VeckoTheGecko>`_ and
++  `Michael Niklas <https://github.com/headtr1ck>`_.
++- :py:func:`~xarray.show_versions` displays formatted tables in Jupyter
++  notebooks and gained a ``markdown`` option to print markdown that can be pasted
++  as is into GitHub issues. Package versions are read from the
++  package metadata, so the packages are no longer imported (:pull:`11700`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - The ``in`` operator on :py:class:`DataTree` now accepts the same unix-like
+   paths as indexing, so ``key in tree`` is ``True`` exactly when ``tree[key]``
+   succeeds, e.g. ``"group/subgroup" in tree`` or ``"/group/var" in tree``.
+diff --git a/pyproject.toml b/pyproject.toml
+index ac03a2e2..98f522bd 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -151,6 +151,7 @@ module = [
+   "fsspec.*",
+   "h5netcdf.*",
+   "h5py.*",
++  "IPython.*",
+   "iris.*",
+   "mpl_toolkits.*",
+   "nc_time_axis.*",
+diff --git a/xarray/__init__.py b/xarray/__init__.py
+index 7d56816c..b646f00d 100644
+--- a/xarray/__init__.py
++++ b/xarray/__init__.py
+@@ -11,6 +11,7 @@ from xarray.backends.api import (
+     open_groups,
+     open_mfdataset,
+ )
++from xarray.backends.plugins import show_backends
+ from xarray.backends.writers import save_mfdataset
+ from xarray.backends.zarr import open_zarr
+ from xarray.coding.cftime_offsets import cftime_range, date_range, date_range_like
+@@ -114,6 +115,7 @@ __all__ = (  # noqa: RUF022
+     "register_datatree_accessor",
+     "save_mfdataset",
+     "set_options",
++    "show_backends",
+     "show_versions",
+     "unify_chunks",
+     "where",
+diff --git a/xarray/backends/plugins.py b/xarray/backends/plugins.py
+index 62c79c88..d36a5732 100644
+--- a/xarray/backends/plugins.py
++++ b/xarray/backends/plugins.py
+@@ -6,12 +6,14 @@ import itertools
+ import os
+ import warnings
+ from collections.abc import Callable
++from html import escape
+ from importlib.metadata import entry_points
+-from typing import TYPE_CHECKING, Any
++from typing import TYPE_CHECKING, Any, TextIO
+ 
+ from xarray.backends.common import BACKEND_ENTRYPOINTS, BackendEntrypoint
+ from xarray.core.options import OPTIONS
+ from xarray.core.utils import is_remote_uri, module_available
++from xarray.util._report import package_version, show_report
+ 
+ if TYPE_CHECKING:
+     from importlib.metadata import EntryPoint, EntryPoints
+@@ -135,6 +137,83 @@ def refresh_engines() -> None:
+     list_engines.cache_clear()
+ 
+ 
++def _engine_sources() -> dict[str, tuple[str, str | None]]:
++    """Map each engine name to its providing package and version."""
++    sources: dict[str, tuple[str, str | None]] = dict.fromkeys(
++        BACKEND_ENTRYPOINTS, ("xarray", None)
++    )
++    for ep in entry_points(group="xarray.backends"):
++        if ep.dist is not None:
++            sources[ep.name] = (ep.dist.name, ep.dist.version)
++        else:
++            sources[ep.name] = (ep.module.partition(".")[0], None)
++    return sources
++
++
++def show_backends(file: TextIO | None = None, markdown: bool = False) -> None:
++    """Print the available backends (engines) and information about them.
++
++    The backends are listed in the order in which they are tried when opening
++    a file without specifying the ``engine``.
++    Use :py:func:`xarray.backends.list_engines` to get the backend objects.
++    In Jupyter notebooks the backends are displayed formatted.
++
++    Parameters
++    ----------
++    file : file-like, optional
++        print to the given file-like object. Defaults to sys.stdout.
++    markdown : bool, default: False
++        print a markdown list wrapped in a ``<details>`` block, which can be
++        pasted as is into a GitHub issue.
++    """
++    engines = list_engines()
++    sources = _engine_sources()
++
++    text_lines = []
++    md_lines = []
++    html_items = []
++    for name, backend in engines.items():
++        package, version = sources.get(name, ("unknown", None))
++        summary = f"from {package}"
++        if version is not None:
++            summary += f" {version}"
++        details = []
++        if package == "xarray" and name in BACKEND_ENTRYPOINTS:
++            dependency = BACKEND_ENTRYPOINTS[name][0]
++            if dependency is not None:
++                details.append(f"using {dependency} {package_version(dependency)}")
++        if backend.supports_groups:
++            details.append("supports groups")
++        if details:
++            summary += f" ({', '.join(details)})"
++        cls_name = type(backend).__name__
++        text_lines.append(f"{name}: {cls_name} {summary}")
++        md_lines.append(f"- **{name}**: `{cls_name}` {summary}")
++
++        extra = []
++        html_extra = []
++        if backend.description:
++            description = " ".join(backend.description.split())
++            extra.append(description)
++            html_extra.append(escape(description))
++        if backend.url:
++            extra.append(backend.url)
++            url = escape(backend.url)
++            html_extra.append(f'<a href="{url}" target="_blank">{url}</a>')
++        text_lines.extend(f"    {line}" for line in extra)
++        md_lines.extend(f"  - {line}" for line in extra)
++        html_items.append(
++            f"<li><strong>{escape(name)}</strong>: <code>{escape(cls_name)}</code> "
++            f"{escape(summary)}<ul>{''.join(f'<li>{x}</li>' for x in html_extra)}</ul></li>"
++        )
++
++    empty = "No backends available."
++    text = "\n".join(text_lines) or empty
++    md = "\n".join(md_lines) or empty
++    html = f"<ul>{''.join(html_items)}</ul>" if html_items else f"<p>{empty}</p>"
++    show_report("AVAILABLE BACKENDS", text, md, html, file=file, as_markdown=markdown)
++
++
+ def guess_engine(
+     store_spec: str
+     | os.PathLike[Any]
+diff --git a/xarray/util/_report.py b/xarray/util/_report.py
+new file mode 100644
+index 00000000..897aaa77
+--- /dev/null
++++ b/xarray/util/_report.py
+@@ -0,0 +1,124 @@
++"""Helpers to render diagnostic reports (show_versions, show_backends).
++
++Reports are printed as plain text in terminals, displayed as formatted markdown
++in notebooks and can be printed as markdown to paste them into GitHub issues.
++"""
++
++from __future__ import annotations
++
++import functools
++import importlib.metadata
++import sys
++from collections.abc import Iterable, Mapping, Sequence
++from html import escape
++from typing import TextIO
++
++
++@functools.cache
++def _packages_distributions() -> Mapping[str, list[str]]:
++    return importlib.metadata.packages_distributions()
++
++
++def package_version(module_name: str) -> str | None:
++    """Return the installed version of the package providing ``module_name``.
++
++    Uses the package metadata, so the module is not imported.
++    Returns None if the package is not installed.
++    """
++    try:
++        return importlib.metadata.version(module_name)
++    except importlib.metadata.PackageNotFoundError:
++        pass
++    # the distribution name differs from the module name, e.g. scitools-iris
++    for dist_name in _packages_distributions().get(module_name, []):
++        try:
++            return importlib.metadata.version(dist_name)
++        except importlib.metadata.PackageNotFoundError:
++            continue
++    return None
++
++
++def _escape_cell(value: object) -> str:
++    return " ".join(str(value).split()).replace("|", r"\|")
++
++
++def markdown_table(header: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
++    """Render an aligned markdown table that is also readable as plain text."""
++    cells = [[_escape_cell(v) for v in row] for row in [header, *rows]]
++    widths = [max(len(row[i]) for row in cells) for i in range(len(header))]
++    widths = [max(w, 3) for w in widths]
++
++    def fmt(row: Sequence[str]) -> str:
++        return (
++            "| "
++            + " | ".join(c.ljust(w) for c, w in zip(row, widths, strict=True))
++            + " |"
++        )
++
++    lines = [fmt(cells[0]), fmt(["-" * w for w in widths])]
++    lines.extend(fmt(row) for row in cells[1:])
++    return "\n".join(lines)
++
++
++def html_table(title: str, rows: Iterable[Sequence[object]]) -> str:
++    """Render a titled HTML table for the notebook display."""
++    body = "".join(
++        "<tr>"
++        + "".join(f'<td style="text-align: left">{escape(str(c))}</td>' for c in row)
++        + "</tr>"
++        for row in rows
++    )
++    return f"<div><strong>{escape(title)}</strong><table>{body}</table></div>"
++
++
++def html_columns(*blocks: str) -> str:
++    """Lay out HTML blocks side by side, wrapping when there is not enough space."""
++    style = "display: flex; flex-wrap: wrap; gap: 0 3em; align-items: flex-start"
++    return f'<div style="{style}">{"".join(blocks)}</div>'
++
++
++def _in_rich_frontend() -> bool:
++    """Whether we run in a frontend that can display markdown, e.g. Jupyter."""
++    ipython = sys.modules.get("IPython")
++    if ipython is None:
++        return False
++    shell = ipython.get_ipython()
++    return shell is not None and type(shell).__name__ == "ZMQInteractiveShell"
++
++
++# replace the copied content of a report with its markdown, so that copying the
++# notebook output gives something to paste into a GitHub issue
++_ON_COPY = (
++    "event.clipboardData.setData('text/plain', this.dataset.md); event.preventDefault()"
++)
++
++
++def show_report(
++    title: str,
++    text: str,
++    markdown: str,
++    html: str,
++    file: TextIO | None = None,
++    as_markdown: bool = False,
++) -> None:
++    """Print a report as plain text or markdown, or display it in notebooks.
++
++    In Jupyter notebooks the ``html`` is displayed, unless a ``file`` is given or
++    ``as_markdown`` is requested. Copying the displayed report copies the
++    markdown instead. The markdown is wrapped in a ``<details>`` block, so it
++    can be pasted as is into a GitHub issue.
++    """
++    md = f"<details><summary>{title}</summary>\n\n{markdown}\n\n</details>"
++    plain = f"{title}\n{'-' * len(title)}\n{text}"
++
++    if file is None and not as_markdown and _in_rich_frontend():
++        from IPython.display import display
++
++        out = (
++            f'<div data-md="{escape(md)}" oncopy="{_ON_COPY}">'
++            f"<h4>{escape(title)}</h4>{html}</div>"
++        )
++        display({"text/html": out, "text/plain": plain}, raw=True)
++        return
++
++    print(md if as_markdown else plain, file=sys.stdout if file is None else file)
+diff --git a/xarray/util/print_versions.py b/xarray/util/print_versions.py
+index 0226956d..59bc4edf 100644
+--- a/xarray/util/print_versions.py
++++ b/xarray/util/print_versions.py
+@@ -1,13 +1,22 @@
+ """Utility functions for printing version information."""
+ 
+ import contextlib
+-import importlib
+ import locale
+ import os
+ import platform
+ import struct
+ import subprocess
+ import sys
++from html import escape
++from typing import TextIO
++
++from xarray.util._report import (
++    html_columns,
++    html_table,
++    markdown_table,
++    package_version,
++    show_report,
++)
+ 
+ 
+ def get_sys_info():
+@@ -76,85 +85,93 @@ def netcdf_and_hdf5_versions():
+     return [("libhdf5", libhdf5_version), ("libnetcdf", libnetcdf_version)]
+ 
+ 
+-def show_versions(file=sys.stdout):
++DEPENDENCIES = [
++    "xarray",
++    "pandas",
++    "numpy",
++    "scipy",
++    # xarray optionals
++    "netCDF4",
++    "pydap",
++    "h5netcdf",
++    "h5py",
++    "zarr",
++    "cftime",
++    "nc_time_axis",
++    "iris",
++    "bottleneck",
++    "dask",
++    "distributed",
++    "matplotlib",
++    "cartopy",
++    "seaborn",
++    "numbagg",
++    "fsspec",
++    "cupy",
++    "pint",
++    "sparse",
++    "flox",
++    "numpy_groupies",
++    # xarray setup/test
++    "setuptools",
++    "pip",
++    "conda",
++    "pytest",
++    "mypy",
++    # Misc.
++    "IPython",
++    "sphinx",
++]
++
++
++def show_versions(file: TextIO | None = None, markdown: bool = False) -> None:
+     """Print the versions of xarray and its dependencies.
+ 
++    In Jupyter notebooks the versions are displayed as formatted tables.
++
+     Parameters
+     ----------
+     file : file-like, optional
+         print to the given file-like object. Defaults to sys.stdout.
++    markdown : bool, default: False
++        print markdown tables wrapped in a ``<details>`` block, which can be
++        pasted as is into a GitHub issue.
+     """
+     sys_info = get_sys_info()
+ 
+     try:
+         sys_info.extend(netcdf_and_hdf5_versions())
+     except Exception as e:
+-        print(f"Error collecting netcdf / hdf5 version: {e}")
+-
+-    deps = [
+-        # (MODULE_NAME, f(mod) -> mod version)
+-        ("xarray", lambda mod: mod.__version__),
+-        ("pandas", lambda mod: mod.__version__),
+-        ("numpy", lambda mod: mod.__version__),
+-        ("scipy", lambda mod: mod.__version__),
+-        # xarray optionals
+-        ("netCDF4", lambda mod: mod.__version__),
+-        ("pydap", lambda mod: mod.__version__),
+-        ("h5netcdf", lambda mod: mod.__version__),
+-        ("h5py", lambda mod: mod.__version__),
+-        ("zarr", lambda mod: mod.__version__),
+-        ("cftime", lambda mod: mod.__version__),
+-        ("nc_time_axis", lambda mod: mod.__version__),
+-        ("iris", lambda mod: mod.__version__),
+-        ("bottleneck", lambda mod: mod.__version__),
+-        ("dask", lambda mod: mod.__version__),
+-        ("distributed", lambda mod: mod.__version__),
+-        ("matplotlib", lambda mod: mod.__version__),
+-        ("cartopy", lambda mod: mod.__version__),
+-        ("seaborn", lambda mod: mod.__version__),
+-        ("numbagg", lambda mod: mod.__version__),
+-        ("fsspec", lambda mod: mod.__version__),
+-        ("cupy", lambda mod: mod.__version__),
+-        ("pint", lambda mod: mod.__version__),
+-        ("sparse", lambda mod: mod.__version__),
+-        ("flox", lambda mod: mod.__version__),
+-        ("numpy_groupies", lambda mod: mod.__version__),
+-        # xarray setup/test
+-        ("setuptools", lambda mod: mod.__version__),
+-        ("pip", lambda mod: mod.__version__),
+-        ("conda", lambda mod: mod.__version__),
+-        ("pytest", lambda mod: mod.__version__),
+-        ("mypy", lambda mod: importlib.metadata.version(mod.__name__)),
+-        # Misc.
+-        ("IPython", lambda mod: mod.__version__),
+-        ("sphinx", lambda mod: mod.__version__),
+-    ]
+-
+-    deps_blob = []
+-    for modname, ver_f in deps:
+-        try:
+-            if modname in sys.modules:
+-                mod = sys.modules[modname]
+-            else:
+-                mod = importlib.import_module(modname)
+-        except Exception:
+-            deps_blob.append((modname, None))
+-        else:
+-            try:
+-                ver = ver_f(mod)
+-                deps_blob.append((modname, ver))
+-            except Exception:
+-                deps_blob.append((modname, "installed"))
+-
+-    print("\nINSTALLED VERSIONS", file=file)
+-    print("------------------", file=file)
+-
+-    for k, stat in sys_info:
+-        print(f"{k}: {stat}", file=file)
+-
+-    print("", file=file)
+-    for k, stat in deps_blob:
+-        print(f"{k}: {stat}", file=file)
++        sys_info.append(("libhdf5 / libnetcdf", f"error: {e}"))
++
++    sys_info = [(k, v) for k, v in sys_info if v not in (None, "")]
++    versions = {name: package_version(name) for name in DEPENDENCIES}
++    installed = [(name, ver) for name, ver in versions.items() if ver is not None]
++    missing = ", ".join(name for name, ver in versions.items() if ver is None)
++    not_installed = f"Not installed: {missing or 'none'}"
++
++    text = "\n\n".join(
++        [
++            "\n".join(f"{k}: {v}" for k, v in sys_info),
++            "\n".join(f"{k}: {v}" for k, v in installed),
++            not_installed,
++        ]
++    )
++    md = "\n\n".join(
++        [
++            markdown_table(("system", "info"), sys_info),
++            markdown_table(("package", "version"), installed),
++            not_installed,
++        ]
++    )
++    html = (
++        html_columns(
++            html_table("System", sys_info),
++            html_table("Packages", installed),
++        )
++        + f"<p>{escape(not_installed)}</p>"
++    )
++    show_report("INSTALLED VERSIONS", text, md, html, file=file, as_markdown=markdown)
+ 
+ 
+ if __name__ == "__main__":

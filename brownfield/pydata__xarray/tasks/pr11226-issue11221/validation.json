@@ -1,0 +1,57 @@
+{
+  "pr": 11226,
+  "merged": "2026-10-29",
+  "issues": [
+    {
+      "n": 11221,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 11,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/backends/api.py",
+    "xarray/backends/common.py",
+    "xarray/backends/h5netcdf_.py",
+    "xarray/backends/netCDF4_.py",
+    "xarray/backends/plugins.py",
+    "xarray/backends/pydap_.py",
+    "xarray/backends/scipy_.py",
+    "xarray/backends/zarr.py"
+  ],
+  "testFiles": [
+    "xarray/tests/backends/test_common.py",
+    "xarray/tests/test_backends_typing.yml"
+  ],
+  "env": "exclude-newer 2026-10-28T09:21:57+01:00",
+  "envSecs": 16,
+  "selected": [
+    "xarray/tests/backends/test_common.py::TestCommon::test_robust_getitem",
+    "xarray/tests/backends/test_common.py::test_open_zarr_store_with_other_engine"
+  ],
+  "counts": {
+    "f2p": 12,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-netcdf4]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-h5netcdf]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-scipy]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-pydap]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-netcdf4]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-h5netcdf]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-scipy]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-pydap]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-netcdf4]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-h5netcdf]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-scipy]",
+    "xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-pydap]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

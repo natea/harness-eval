@@ -1,0 +1,47 @@
+{
+  "pr": 4117,
+  "merged": "2026-07-14",
+  "issues": [
+    {
+      "n": 4032,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    "changes/4032.bugfix.md",
+    "src/zarr/core/array.py",
+    "src/zarr/storage/_memory.py",
+    "src/zarr/storage/_obstore.py"
+  ],
+  "testFiles": [
+    "tests/test_array.py",
+    "tests/test_store/test_object.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 8,
+  "selected": [
+    "tests/test_array.py::test_chunks_initialized",
+    "tests/test_store/test_object.py::TestObjectStore::test_store_getsize_prefix",
+    "tests/test_store/test_object.py::test_list_dir_ignores_s3_prefix_marker",
+    "tests/test_store/test_object.py::test_zarr_hierarchy"
+  ],
+  "counts": {
+    "f2p": 3,
+    "p2p": 4,
+    "flaky": 0,
+    "envBroken": 1,
+    "liveApi": 1,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_array::test_chunks_initialized[shape0-None-chunk_shape0-foo]",
+    "tests.test_array::test_chunks_initialized[shape1-shard_shape1-chunk_shape1-foo]",
+    "tests.test_array::test_chunks_initialized[shape2-shard_shape2-chunk_shape2-foo]"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_store.test_object::test_list_dir_ignores_s3_prefix_marker"
+  ],
+  "verdict": "VALID"
+}

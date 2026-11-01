@@ -1,0 +1,29 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "evidence": "The extracted text contains orphaned UTF-16 surrogate characters (e.g., `\\udc63`, `\\udc65`, `\\udc66`) which are invalid in UTF-8.",
+      "rationale": "Identifies root cause: pypdf extracted text has orphaned surrogates (the same cause the reference fix addresses), and gives the repro PDF. Its suggested fix targets hexdigest, which the reference did not change, but the diagnosis of the mechanism matches. It doesn't name the reader or the sanitize-at-extraction approach.",
+      "author": "hummat",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Your suggested fix—encoding with errors=\"replace\" in hexdigest—is safe and effective.",
+      "rationale": "Endorses patching hexdigest in utils.py, whereas the reference cleans text at the pypdf and pymupdf readers and adds a helper. This points the wrong way, so it isn't a leak.",
+      "author": "dosubot",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "symptom"
+}

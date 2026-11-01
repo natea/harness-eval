@@ -1,0 +1,100 @@
+{
+  "pr": 11525,
+  "issue": 10022,
+  "tStar": "2026-08-15T09:36:58Z",
+  "title": "DataArray.isin does not accept sets intuitively",
+  "issueAuthor": "mark-boer",
+  "body": "### What is your issue?\n\nThis is halfway between an feature request and a bug report. I do not find the way that DataArray.isin handles sets is very intuitive:\n\nExample:\n```python\nnp_arr = np.arange(5)\ndask_arr = da.arange(5)\nxr_arr = xr.DataArray(np_arr)\npd_series = pd.Series(np_arr)\n\ns = {1, 2}\nprint(\"numpy\", np.isin(np_arr, s))\nprint(\"dask\", da.isin(dask_arr, s).compute())\nprint(\"xarray\", xr_arr.isin(s))\nprint(\"pandas\", pd_series.isin(s))\n```\n\nWhich results in:\n```txt\nnumpy [False False False False False]\ndask [False False False False False]\nxarray <xarray.DataArray (dim_0: 5)> Size: 5B\narray([False, False, False, False, False])\nDimensions without coordinates: dim_0\npandas 0    False\n1     True\n2     True\n3    False\n4    False\ndtype: bool\n```\n\nPersonally, I find only pandas handles this in an intuitive way. But I also understand, that you might want to stay consistent with numpy and dask.\n\nI'd be interested to see what you think!",
+  "comments": [
+    {
+      "at": "2025-02-04T16:41:19Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "I agree with you. \n\nThis is the issue really:\n```python\n>>> import numpy as np\n>>> np.array({1, 2, 3})\narray({1, 2, 3}, dtype=object)\n```\n\nIMO special-casing a set makes sense to me.",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-04T17:46:32Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "role": "maintainer",
+      "text": "Agree! We would take a PR...",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-05T23:27:20Z",
+      "author": "mark-boer",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "Sure thing, I can make a PR!",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-08T16:33:42Z",
+      "author": "mark-boer",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "Can we make breaking changes? Pandas performs an `is_list_like` check, raising an error when that fails:\n\nhttps://github.com/pandas-dev/pandas/blob/3da2c1c14e8ad55d8cd22efee75e8477e4403997/pandas/_libs/lib.pyx#L1238\n\nPersonally, I really like this.",
+      "source": "edit@2025-02-08T16:35:13Z"
+    },
+    {
+      "at": "2025-02-08T21:15:01Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "role": "maintainer",
+      "text": "> Can we make breaking changes?\n\nIf worthwhile! But with a fairly high bar.\n\nTo the extent you're proposing the pandas approach: what's the difference between \"special-case a set\" and that?",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-09T14:42:42Z",
+      "author": "mark-boer",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "Maybe breaking change is not the correct term, but currently the xarray isin works as follows:\n\n```python\nints = xr.DataArray([1,2,3,4])\nstrs = xr.DataArray([\"a\", \"ab\", \"abc\"])\n\nints.isin(1)\n# array([ True, False, False, False])\nints.isin(np.array(1))\n# array([ True, False, False, False])\nints.isin({1,2})\n# array([ False, False, False, False])\nints.isin(xr.DataArray([1, 2]))\n# array([ True, True, False, False])\nints.isin(xr.DataArray([1, 2]).to_dataset(name=\"hello\"))\n# TypeError\nints.isin(xr.DataArray(1))\n# array([ True, False, False, False])\n\nstrs.isin(\"abc\")\n# array([ False, False, True])\nstrs.isin([\"abc\"])\n# array([ False, False, True])\nstrs.isin({\"a\", \"b\"})\n# array([ False, False, False])\n```\n\nand we could consider following the pandas implementation:\n\n```python\nints = xr.DataArray([1,2,3,4])\nstrs = xr.DataArray([\"a\", \"ab\", \"abc\"])\n\nints.isin(1)\n# TypeError / ValueError\nints.isin(np.array(1))\n# ValueError, it is a scalar\nints.isin({1,2})\n# array([ True, True, False, False])\nints.isin(xr.DataArray([1, 2]))\n# array([ True, True, False, False])\nints.isin(xr.DataArray([1, 2]).to_dataset(name=\"hello\"))\n# TypeError\nints.isin(xr.DataArray(1))\n# ValueError (also a scalar)\n\nstrs.isin(\"abc\")\n# ValueError / TypeError\nstrs.isin([\"abc\"])\n# array([ False, False, True])\nstrs.isin({\"a\", \"b\"})\n# array([ True, True, False])\n```\n\nSo the main difference between special casing a set and following the pandas approach is a much stricter validation is the value passed is list-like. Anything that is not list-like (or set-like) will result in a ValueError.",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-09T20:02:38Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "role": "maintainer",
+      "text": "OK, so aside from sets, the difference is in the first few IIUC — if pandas is passed something like a scalar or array, it'll raise an error.\n\nI somewhat understand scalars. I don't immediately see why refusing arrays is better. \n\nSo in answer to your question above, I don't see adding strictness for an abstract reason is sufficient for a breaking change; we'd need to show if it was actively confusing or causing pain in some way — and only the sets case seems to pass that test...",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-09T20:33:00Z",
+      "author": "mark-boer",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "> I somewhat understand scalars. I don't immediately see why refusing arrays is better.\n\nIt will accept regular arrays. It will just not accept numpy scalars. I believe it checks that `ndim > 0`. \n\n> So in answer to your question above, I don't see adding strictness for an abstract reason is sufficient for a breaking change; we'd need to show if it was actively confusing or causing pain in some way — and only the sets case seems to pass that test...\n\nThe only other one that I find actively confusing is the string one\n\n```python\nstrs.isin(\"abc\")\n# is not the same as\nstrs.isin(list(\"abc\"))\n```\n\nAnyhow, thanks for the input, it should just be a small change then :-)",
+      "source": "edit@2025-02-09T20:34:32Z"
+    },
+    {
+      "at": "2025-02-10T05:13:29Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "role": "maintainer",
+      "text": "> It will accept regular arrays. It will just not accept numpy scalars. I believe it checks that `ndim > 0`.\n\nAh great, thanks, I missed that. That weighs me a bit towards disallowing it. But probably not enough, unless others have views...\n\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-10T19:53:11Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "I like the idea of raising for a string, just like the other scalars. We can do a short deprecation cycle for that one specifically. ",
+      "source": "no-edits"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "pr": 11643,
+  "merged": "2026-09-30",
+  "issues": [
+    {
+      "n": 10106,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/dataset.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataset.py"
+  ],
+  "env": "exclude-newer 2026-09-29T17:47:58-04:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_dataset.py::TestDataset::test_copy",
+    "xarray/tests/test_dataset.py::TestDataset::test_copy_preserves_close",
+    "xarray/tests/test_dataset.py::TestDataset::test_copy_with_data"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataset.TestDataset::test_copy_preserves_close"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

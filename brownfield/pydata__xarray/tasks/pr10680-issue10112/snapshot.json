@@ -1,0 +1,19 @@
+{
+  "pr": 10680,
+  "issue": 10112,
+  "tStar": "2025-08-31T16:33:16Z",
+  "title": "idxmax with multiple dimensions",
+  "issueAuthor": "max-sixty",
+  "body": "### Is your feature request related to a problem?\n\n(I thought we had an issue for this, but can't find it after five minutes of looking, so either we don't or I've done a very bad job searching...)\n\n`idxmax` (+ `idxmin`) doesn't accept multiple dimensions, but `argmax` does.\n\n### Describe the solution you'd like\n\nCould we implement `idxmax` as a wrapper of `argmax`?\n\n### Describe alternatives you've considered\n\n_No response_\n\n### Additional context\n\nPossibly it's just me, but fwiw I find the `idxmax` & `argmax` terms very confusing, constantly have to look up which is which... I guess it doesn't help that the description of `argmax` is \"Index or indices of the maximum\"...! But I'm not sure there's a good way of making these much better — maybe in a vacuum we could have started with names like `label_max` & `index_max`, or `argmax` & `iargmax`, but tough to change now.",
+  "comments": [
+    {
+      "at": "2025-03-13T19:32:48Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "`arg*` is standard for array apis. I think we copied the `idx*` naming from pandas.\n\n> Could we implement idxmax as a wrapper of argmax?\n\n:+1: At present, it seems like it calls the `arg*` duck array op.",
+      "source": "no-edits"
+    }
+  ]
+}

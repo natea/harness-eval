@@ -1,0 +1,39 @@
+{
+  "pr": 11348,
+  "merged": "2026-08-19",
+  "issues": [
+    {
+      "n": 11341,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/indexes.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py"
+  ],
+  "env": "exclude-newer 2026-08-19T14:46:33-06:00",
+  "envSecs": 5,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestDataArray::test_selection_multiindex",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_selection_multiindex_nested_tuple_level_value",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_selection_multiindex_remove_unused"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray.TestDataArray::test_selection_multiindex_nested_tuple_level_value"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

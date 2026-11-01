@@ -1,0 +1,268 @@
+diff --git a/changes/4391.bugfix.md b/changes/4391.bugfix.md
+new file mode 100644
+index 00000000..7d4c00a0
+--- /dev/null
++++ b/changes/4391.bugfix.md
+@@ -0,0 +1 @@
++Zarr format 3 group metadata now accepts extra fields that are objects with `"must_understand": false`, as the specification requires, and writes them back unchanged; previously opening such a group raised `TypeError`. Extra fields of any other shape raise `MetadataValidationError`, both when reading a metadata document and when constructing `GroupMetadata` or `ArrayV3Metadata` directly. `GroupMetadata` exposes these fields as `extra_fields`, like `ArrayV3Metadata`.
+diff --git a/src/zarr/core/group.py b/src/zarr/core/group.py
+index aaca4084..952c750f 100644
+--- a/src/zarr/core/group.py
++++ b/src/zarr/core/group.py
+@@ -5,9 +5,9 @@ import logging
+ import unicodedata
+ import warnings
+ from collections import defaultdict
+-from dataclasses import asdict, dataclass, field, fields, replace
++from dataclasses import asdict, dataclass, field, replace
+ from itertools import accumulate
+-from typing import TYPE_CHECKING, Literal, assert_never, cast, overload
++from typing import TYPE_CHECKING, Final, Literal, assert_never, cast, overload
+ 
+ import numpy as np
+ 
+@@ -50,6 +50,7 @@ from zarr.core.dtype import parse_data_type
+ from zarr.core.json_parse import parse_field
+ from zarr.core.metadata import ArrayV2Metadata, ArrayV3Metadata
+ from zarr.core.metadata.io import save_metadata
++from zarr.core.metadata.v3 import AllowedExtraField, parse_extra_fields
+ from zarr.core.sync import SyncMixin, sync
+ from zarr.errors import (
+     ArrayNotFoundError,
+@@ -312,9 +313,9 @@ class ConsolidatedMetadata:
+                 "group-1": GroupMetadata(),
+             }
+         )
+-        # {'group-0': GroupMetadata(attributes={}, zarr_format=3, consolidated_metadata=None, node_type='group'),
+-        #  'group-0/group-0-0': GroupMetadata(attributes={}, zarr_format=3, consolidated_metadata=None, node_type='group'),
+-        #  'group-1': GroupMetadata(attributes={}, zarr_format=3, consolidated_metadata=None, node_type='group')}
++        # {'group-0': GroupMetadata(attributes={}, zarr_format=3, consolidated_metadata=None, node_type='group', extra_fields={}),
++        #  'group-0/group-0-0': GroupMetadata(attributes={}, zarr_format=3, consolidated_metadata=None, node_type='group', extra_fields={}),
++        #  'group-1': GroupMetadata(attributes={}, zarr_format=3, consolidated_metadata=None, node_type='group', extra_fields={})}
+         ```
+         """
+         metadata = {}
+@@ -346,6 +347,18 @@ class ConsolidatedMetadata:
+         return metadata
+ 
+ 
++GROUP_METADATA_KEYS: Final[set[str]] = {
++    "zarr_format",
++    "node_type",
++    "attributes",
++    "consolidated_metadata",
++}
++"""
++The names of the fields of the group metadata document. `consolidated_metadata` is not in the
++Zarr V3 spec; Zarr-Python writes it.
++"""
++
++
+ @dataclass(frozen=True)
+ class GroupMetadata(Metadata):
+     """
+@@ -356,6 +369,7 @@ class GroupMetadata(Metadata):
+     zarr_format: ZarrFormat = 3
+     consolidated_metadata: ConsolidatedMetadata | None = None
+     node_type: Literal["group"] = field(default="group", init=False)
++    extra_fields: dict[str, AllowedExtraField] = field(default_factory=dict)
+ 
+     def to_buffer_dict(self, prototype: BufferPrototype) -> dict[str, Buffer]:
+         indent = config.get("json_indent")
+@@ -407,13 +421,22 @@ class GroupMetadata(Metadata):
+         attributes: dict[str, Any] | None = None,
+         zarr_format: ZarrFormat = 3,
+         consolidated_metadata: ConsolidatedMetadata | None = None,
++        extra_fields: Mapping[str, AllowedExtraField] | None = None,
+     ) -> None:
+         attributes_parsed = parse_attributes(attributes)
+         zarr_format_parsed = parse_zarr_format(zarr_format)
++        if zarr_format_parsed == 2 and extra_fields:
++            raise ValueError(
++                "Invalid extra fields. Zarr format 2 group metadata does not support extra fields."
++            )
++        extra_fields_parsed = parse_extra_fields(
++            extra_fields, reserved_keys=GROUP_METADATA_KEYS, node_type="group"
++        )
+ 
+         object.__setattr__(self, "attributes", attributes_parsed)
+         object.__setattr__(self, "zarr_format", zarr_format_parsed)
+         object.__setattr__(self, "consolidated_metadata", consolidated_metadata)
++        object.__setattr__(self, "extra_fields", extra_fields_parsed)
+ 
+     @classmethod
+     def from_dict(cls, data: dict[str, Any]) -> GroupMetadata:
+@@ -428,17 +451,22 @@ class GroupMetadata(Metadata):
+             data["consolidated_metadata"] = ConsolidatedMetadata.from_dict(consolidated_metadata)
+ 
+         zarr_format = data.get("zarr_format")
+-        if zarr_format == 2 or zarr_format is None:
+-            # zarr v2 allowed arbitrary keys here.
+-            # We don't want the GroupMetadata constructor to fail just because someone put an
+-            # extra key in the metadata.
+-            expected = {x.name for x in fields(cls)}
+-            data = {k: v for k, v in data.items() if k in expected}
+-
+-        return cls(**data)
++        if zarr_format == 3:
++            # Zarr v3 allows an extra key only if it is an object with "must_understand": false.
++            extra_fields = parse_extra_fields(
++                {k: v for k, v in data.items() if k not in GROUP_METADATA_KEYS},
++                reserved_keys=GROUP_METADATA_KEYS,
++                node_type="group",
++            )
++        else:
++            # Zarr v2 allowed arbitrary keys; they are dropped rather than kept.
++            extra_fields = {}
++        data = {k: v for k, v in data.items() if k in GROUP_METADATA_KEYS}
++        return cls(**data, extra_fields=extra_fields)
+ 
+     def to_dict(self) -> dict[str, Any]:
+         result = asdict(replace(self, consolidated_metadata=None))
++        result.update(result.pop("extra_fields"))
+         if self.consolidated_metadata is not None:
+             result["consolidated_metadata"] = self.consolidated_metadata.to_dict()
+         else:
+diff --git a/src/zarr/core/metadata/v3.py b/src/zarr/core/metadata/v3.py
+index 11f3eb59..2959cadd 100644
+--- a/src/zarr/core/metadata/v3.py
++++ b/src/zarr/core/metadata/v3.py
+@@ -2,6 +2,7 @@ from __future__ import annotations
+ 
+ import json
+ from collections.abc import Iterable, Mapping, Sequence
++from collections.abc import Set as AbstractSet
+ from dataclasses import dataclass, field, replace
+ from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypeGuard, cast
+ 
+@@ -24,6 +25,7 @@ from zarr.core.common import (
+     DimensionNamesLike,
+     NamedConfig,
+     NamedRequiredConfig,
++    NodeType,
+     compress_rle,
+     expand_rle,
+     parse_named_configuration,
+@@ -155,8 +157,8 @@ def parse_storage_transformers(data: object) -> tuple[dict[str, JSON], ...]:
+ 
+ class AllowedExtraField(TypedDict, extra_items=JSON):  # type: ignore[call-arg]
+     """
+-    This class models allowed extra fields in array metadata.
+-    They must have ``must_understand`` set to ``False``, and may contain
++    This class models allowed extra fields in array or group metadata.
++    They must have `must_understand` set to `False`, and may contain
+     arbitrary additional JSON data.
+     """
+ 
+@@ -172,22 +174,45 @@ def check_allowed_extra_field(data: object) -> TypeGuard[AllowedExtraField]:
+ 
+ 
+ def parse_extra_fields(
+-    data: Mapping[str, AllowedExtraField] | None,
++    data: Mapping[str, object] | None,
++    *,
++    reserved_keys: AbstractSet[str],
++    node_type: NodeType,
+ ) -> dict[str, AllowedExtraField]:
++    """
++    Check the extra fields of a Zarr V3 metadata document.
++
++    Raises `ValueError` if a key collides with a key in `reserved_keys`, and
++    `MetadataValidationError` if a value is not an object with `"must_understand": false`.
++    """
+     if data is None:
+         return {}
+-    else:
+-        conflict_keys = ARRAY_METADATA_KEYS & set(data.keys())
+-        if len(conflict_keys) > 0:
+-            msg = (
+-                "Invalid extra fields. "
+-                "The following keys: "
+-                f"{sorted(conflict_keys)} "
+-                "are invalid because they collide with keys reserved for use by the "
+-                "array metadata document."
+-            )
+-            raise ValueError(msg)
+-        return dict(data)
++    conflict_keys = reserved_keys & set(data.keys())
++    if len(conflict_keys) > 0:
++        msg = (
++            "Invalid extra fields. "
++            "The following keys: "
++            f"{sorted(conflict_keys)} "
++            "are invalid because they collide with keys reserved for use by the "
++            f"{node_type} metadata document."
++        )
++        raise ValueError(msg)
++    allowed_extra_fields: dict[str, AllowedExtraField] = {}
++    invalid_extra_fields: list[str] = []
++    for key, val in data.items():
++        if check_allowed_extra_field(val):
++            allowed_extra_fields[key] = val
++        else:
++            invalid_extra_fields.append(key)
++    if len(invalid_extra_fields) > 0:
++        msg = (
++            f"Got Zarr V3 {node_type} metadata with the following disallowed extra "
++            f"fields: {sorted(invalid_extra_fields)}. "
++            'Extra fields are not allowed unless they are an object with a "must_understand" '
++            "key which is assigned the value `false`."
++        )
++        raise MetadataValidationError(msg)
++    return allowed_extra_fields
+ 
+ 
+ # JSON type for a single dimension's rectilinear spec:
+@@ -518,7 +543,9 @@ class ArrayV3Metadata(Metadata):
+         attributes_parsed = parse_attributes(attributes)
+         codecs_parsed_partial = parse_codecs(codecs)
+         storage_transformers_parsed = parse_storage_transformers(storage_transformers)
+-        extra_fields_parsed = parse_extra_fields(extra_fields)
++        extra_fields_parsed = parse_extra_fields(
++            extra_fields, reserved_keys=ARRAY_METADATA_KEYS, node_type="array"
++        )
+         array_spec = ArraySpec(
+             shape=shape_parsed,
+             dtype=data_type,
+@@ -652,23 +679,11 @@ class ArrayV3Metadata(Metadata):
+             raise TypeError(f"Invalid fill_value: {fill!r}") from e
+ 
+         # check if there are extra keys
+-        extra_keys = set(_data.keys()) - ARRAY_METADATA_KEYS
+-        allowed_extra_fields: dict[str, AllowedExtraField] = {}
+-        invalid_extra_fields = {}
+-        for key in extra_keys:
+-            val = _data[key]
+-            if check_allowed_extra_field(val):
+-                allowed_extra_fields[key] = val
+-            else:
+-                invalid_extra_fields[key] = val
+-        if len(invalid_extra_fields) > 0:
+-            msg = (
+-                "Got a Zarr V3 metadata document with the following disallowed extra fields:"
+-                f"{sorted(invalid_extra_fields.keys())}."
+-                'Extra fields are not allowed unless they are a dict with a "must_understand" key'
+-                "which is assigned the value `False`."
+-            )
+-            raise MetadataValidationError(msg)
++        allowed_extra_fields = parse_extra_fields(
++            {k: v for k, v in _data.items() if k not in ARRAY_METADATA_KEYS},
++            reserved_keys=ARRAY_METADATA_KEYS,
++            node_type="array",
++        )
+         # TODO: replace this with a real type check!
+         _data_typed = cast(ArrayMetadataJSON_V3, _data)
+ 
+diff --git a/src/zarr/core/sync_group.py b/src/zarr/core/sync_group.py
+index 8af514e9..6dcd5b32 100644
+--- a/src/zarr/core/sync_group.py
++++ b/src/zarr/core/sync_group.py
+@@ -103,7 +103,7 @@ def create_hierarchy(
+     nodes = {'a': GroupMetadata(attributes={'name': 'leaf'})}
+     nodes_created = dict(create_hierarchy(store=store, nodes=nodes))
+     print(nodes)
+-    # {'a': GroupMetadata(attributes={'name': 'leaf'}, zarr_format=3, consolidated_metadata=None, node_type='group')}
++    # {'a': GroupMetadata(attributes={'name': 'leaf'}, zarr_format=3, consolidated_metadata=None, node_type='group', extra_fields={})}
+     ```
+     """
+     coro = create_hierarchy_async(store=store, nodes=nodes, overwrite=overwrite)

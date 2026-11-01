@@ -1,0 +1,22 @@
+{
+  "pr": 11704,
+  "issue": 11702,
+  "tStar": "2026-10-09T20:55:02Z",
+  "title": "diff raises RecursionError when n is around 1000 or more",
+  "issueAuthor": "jbrown9513",
+  "body": "### What happened?\n\nWhile testing an experimental version of [Perch](https://github.com/lakeday-org/perch), we found the following and figured it was worth a report.\n\n`DataArray.diff` and `Dataset.diff` raise `RecursionError` once `n` gets near Python's recursion limit (1000 by default). `n=900` works and `n=1000` fails.\n\n### What did you expect to happen?\n\nThe same result `numpy.diff` gives. For 3,000 values and `n=1200`, that is 1,800 values.\n\n### Minimal Complete Verifiable Example\n\n```Python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"xarray[complete]@git+https://github.com/pydata/xarray.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of xarray to check for issues.\n# Please delete this header if you have _not_ tested this script with `uv run`!\n\nimport numpy as np\nimport xarray as xr\n\nxr.show_versions()\n\nvalues = np.arange(3000.0) ** 2\nda = xr.DataArray(values, dims=\"x\")\n\nprint(np.diff(values, n=1200).shape)  # (1800,)\nprint(da.diff(\"x\", n=900).shape)      # (2100,)\nda.diff(\"x\", n=1200)                  # RecursionError\n```\n\n### Steps to reproduce\n\nSave the example as `issue.py` and run `uv run issue.py`.\n\n### MVCE confirmation\n\n- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [X] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [X] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [X] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\nTraceback (most recent call last):\n  File \"issue.py\", line 21, in <module>\n    da.diff(\"x\", n=1200)                  # RecursionError\n    ~~~~~~~^^^^^^^^^^^^^\n  File \".../site-packages/xarray/core/dataarray.py\", line 5167, in diff\n    ds = self._to_temp_dataset().diff(n=n, dim=dim, label=label)\n  File \".../site-packages/xarray/core/dataset.py\", line 8103, in diff\n    return difference.diff(dim, n - 1)\n           ~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \".../site-packages/xarray/core/dataset.py\", line 8103, in diff\n    return difference.diff(dim, n - 1)\n           ~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  [Previous line repeated many more times]\n  ...\n  File \".../site-packages/xarray/core/indexing.py\", line 501, in __init__\n    k = as_integer_slice(k)\n  File \".../site-packages/xarray/core/indexing.py\", line 454, in as_integer_slice\n    start = as_integer_or_none(value.start)\nRecursionError: maximum recursion depth exceeded\n```\n\n### Anything else we need to know?\n\n`Dataset.diff` handles `n > 1` by calling itself with `n - 1`, so each order of difference adds a stack frame:\n\n```python\nif n > 1:\n    return difference.diff(dim, n - 1)\n```\n\nA loop doing the same thing `n` times would avoid the limit.\n\n### Environment\n\n<details>\n\n```\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.14.2 (main, Dec  9 2025, 19:29:30) [Clang 21.1.4 ]\npython-bits: 64\nOS: Darwin\nOS-release: 25.2.0\nmachine: arm64\nprocessor: arm\nbyteorder: little\nLC_ALL: None\nLANG: None\nLOCALE: ('C', 'UTF-8')\nlibhdf5: 1.14.6\nlibnetcdf: 4.9.3\n\nxarray: 2026.9.1.dev52+g07f7270ee\npandas: 3.0.6\nnumpy: 2.5.3\nscipy: 1.18.1\nnetCDF4: 1.7.4\npydap: 3.5.11\nh5netcdf: 1.8.1\nh5py: 3.16.0\nzarr: 3.4.1\ncftime: 1.6.6\nnc_time_axis: 1.4.1\niris: None\nbottleneck: 1.6.0\ndask: 2026.8.0\ndistributed: 2026.8.0\nmatplotlib: 3.11.2\ncartopy: 0.26.0\nseaborn: 0.13.2\nnumbagg: 0.9.6\nfsspec: 2026.9.0\ncupy: None\npint: None\nsparse: 0.19.2\nflox: 0.11.2\nnumpy_groupies: 0.13.0\nsetuptools: None\npip: None\nconda: None\npytest: None\nmypy: None\nIPython: None\nsphinx: None\n```\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2026-10-09T20:50:50Z",
+      "author": "headtr1ck",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "Thanks for the clear issue. I'll cook up a PR :)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    }
+  ]
+}

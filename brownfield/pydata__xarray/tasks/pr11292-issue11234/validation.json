@@ -1,0 +1,40 @@
+{
+  "pr": 11292,
+  "merged": "2026-09-29",
+  "issues": [
+    {
+      "n": 11234,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/dataarray.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py"
+  ],
+  "env": "exclude-newer 2026-09-29T07:40:10Z",
+  "envSecs": 12,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestDataArray::test_constructor",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_invalid",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_tuple_coords_no_warning_when_names_match_dims",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_tuple_coords_warn_when_dims_override_names"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray.TestDataArray::test_constructor_tuple_coords_warn_when_dims_override_names"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

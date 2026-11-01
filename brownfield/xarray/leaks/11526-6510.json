@@ -1,0 +1,65 @@
+{
+  "pr": 11526,
+  "issue": 6510,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0158926,
+  "prAuthor": "NoiceHax",
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "diagnosis",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/backends/plugins.py"
+      ],
+      "evidence": "directing the user towards the solution, i.e. \"found path as list, please use open_mfdataset\"",
+      "rationale": "Proposes raising an error when a list of paths is given, telling the user to use open_mfdataset. This matches the reference fix's behavior. It doesn't name the file.",
+      "author": "aaronspring",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Sounds good to me. PR welcome!",
+      "rationale": "Agreement only, no technical content.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/backends/plugins.py"
+      ],
+      "evidence": "To be implemented here https://github.com/pydata/xarray/blob/d479009d79374dc4a56c9f4346b1af38f5ac182c/xarray/backends/plugins.py#L102",
+      "rationale": "Points to the location in plugins.py (guess_engine) where the reference fix adds the error.",
+      "author": "aaronspring",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "a more precise error message like 'file(s) specified can't be found'",
+      "rationale": "Concerns a different case (missing files), which the reference fix doesn't address.",
+      "author": "smartlixx",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "For wrong file name, we have this issue: https://github.com/pydata/xarray/issues/5329 and this PR: #5351",
+      "rationale": "Refers to other issues and has no technical content for this fix.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ]
+}

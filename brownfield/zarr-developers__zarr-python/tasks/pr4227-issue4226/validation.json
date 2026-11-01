@@ -1,0 +1,40 @@
+{
+  "pr": 4227,
+  "merged": "2026-08-02",
+  "issues": [
+    {
+      "n": 4226,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "changes/4227.bugfix.md",
+    "src/zarr/core/group.py"
+  ],
+  "testFiles": [
+    "tests/test_metadata/test_consolidated.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 4,
+  "selected": [
+    "tests/test_metadata/test_consolidated.py::test_consolidated_metadata_case_differing_siblings",
+    "tests/test_metadata/test_consolidated.py::test_flat_to_nested_is_order_independent",
+    "tests/test_metadata/test_consolidated.py::test_open_group_in_non_consolidating_stores"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_metadata.test_consolidated::test_consolidated_metadata_case_differing_siblings",
+    "tests.test_metadata.test_consolidated::test_flat_to_nested_is_order_independent[order1]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

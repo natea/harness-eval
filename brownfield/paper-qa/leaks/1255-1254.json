@@ -1,0 +1,31 @@
+{
+  "pr": 1255,
+  "issue": 1254,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.042056600000000006,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "evidence_detailed_citations\n  Extra inputs are not permitted [type=extra_forbidden, input_value=True, input_type=bool]",
+      "rationale": "Reports the validation error from using a removed field in docs-style config. No root cause or fix is given.",
+      "author": "kirillkoncha",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "`evidence_detailed_citations` is a valid field in the current `AnswerSettings` model",
+      "rationale": "Wrongly claims the field is valid and blames version drift or positional args. The reference fix removes the field from the docs, so this points the wrong way.",
+      "author": "dosubot",
+      "role": "other user"
+    }
+  ]
+}

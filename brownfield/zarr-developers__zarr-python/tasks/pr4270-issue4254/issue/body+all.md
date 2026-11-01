@@ -1,0 +1,13 @@
+# avoid comparing exact output of gzip encoding in codec pipeline tests
+
+_Opened by @d-v-b_
+
+https://github.com/zarr-developers/zarr-python/actions/runs/31607404847/job/94150195454?pr=4253 shows a test failure caused by two gzip-encoded bytestreams differ. from what an llm told me, this is due to gzip including timestamp info in compressed payloads, which makes two gzip streams differ even if they decode to the exact same bytes. so tests for exact byte consistency should be avoided here in favor of round-trip fidelity.
+
+---
+
+## Discussion
+
+**@sheikhayaan** (2026-08-18):
+
+"Hi, I'd like to work on this. I'll find the test that compares exact gzip bytes and change it to compare decoded output instead. Does this approach sound right?"

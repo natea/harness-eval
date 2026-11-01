@@ -1,0 +1,43 @@
+{
+  "pr": 11290,
+  "merged": "2026-09-28",
+  "issues": [
+    {
+      "n": 11188,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/dataarray.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py",
+    "xarray/tests/test_groupby.py"
+  ],
+  "env": "exclude-newer 2026-09-28T14:07:18Z",
+  "envSecs": 20,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestDataArray::test_constructor_extra_dim_index_coord",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_replace_maybe_drop_dims_keeps_reordered_coords",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_replace_maybe_drop_dims_preserves_multi_coord_index",
+    "xarray/tests/test_groupby.py::test_groupby_non_leading_dim_preserves_coords",
+    "xarray/tests/test_groupby.py::test_groupby_transpose",
+    "xarray/tests/test_groupby.py::test_lazy_grouping"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 7,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray.TestDataArray::test_replace_maybe_drop_dims_keeps_reordered_coords"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

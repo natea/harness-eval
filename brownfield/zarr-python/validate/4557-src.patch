@@ -1,0 +1,30 @@
+diff --git a/changes/4557.bugfix.md b/changes/4557.bugfix.md
+new file mode 100644
+index 00000000..b2c76744
+--- /dev/null
++++ b/changes/4557.bugfix.md
+@@ -0,0 +1 @@
++The `zarr.storage` module can now be serialized with `pickle` and `cloudpickle`. Previously, code that referenced the module (for example a Dask task that used `zarr.storage.ObjectStore`) failed with `TypeError: cannot pickle 'VerboseModule' object`.
+diff --git a/src/zarr/storage/__init__.py b/src/zarr/storage/__init__.py
+index f1bd1724..9a2580c0 100644
+--- a/src/zarr/storage/__init__.py
++++ b/src/zarr/storage/__init__.py
+@@ -1,5 +1,7 @@
++import importlib
+ import sys
+ import warnings
++from collections.abc import Callable
+ from types import ModuleType
+ from typing import Any
+ 
+@@ -41,5 +43,10 @@ class VerboseModule(ModuleType):
+         else:
+             super().__setattr__(attr, value)
+ 
++    def __reduce__(self) -> tuple[Callable[[str], ModuleType], tuple[str]]:
++        # Serializers such as cloudpickle dispatch on the exact type, so they have no
++        # reduce for this subclass. Pickle the module by name instead.
++        return importlib.import_module, (self.__name__,)
++
+ 
+ sys.modules[__name__].__class__ = VerboseModule

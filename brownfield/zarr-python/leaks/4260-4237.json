@@ -1,0 +1,43 @@
+{
+  "pr": 4260,
+  "issue": 4237,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.059576,
+  "prAuthor": "d-v-b",
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it should be the responsibility of **every** codec to ensure it makes it contiguous, if needed.",
+      "rationale": "Describes the failure and repro; proposes making arrays contiguous in the codec, but the reference fix bumps the minimum cast-value-rs version and enforces it, so this guess goes elsewhere.",
+      "author": "raphaeljolivet",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [
+        "src/zarr/codecs/cast_value.py"
+      ],
+      "evidence": "it should be changed to handle non-contiguous arrays.",
+      "rationale": "Vague guidance to handle non-contiguous arrays in cast_value; the reference instead requires a fixed backend version, so it's not matching the actual fix.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The \"lint\" CI fails while prek works fine locally.",
+      "rationale": "Only a PR link and CI complaint; no technical content on the fix.",
+      "author": "raphaeljolivet",
+      "role": "issue author"
+    }
+  ]
+}

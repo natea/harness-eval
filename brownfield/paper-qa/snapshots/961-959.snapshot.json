@@ -1,0 +1,19 @@
+{
+  "pr": 961,
+  "issue": 959,
+  "tStar": "2025-06-11T04:32:01Z",
+  "title": "Binaries such as `.DS_Store` will break `read_doc`",
+  "issueAuthor": "jamesbraza",
+  "body": "As of `paper-qa==5.21.0`, this crashes us:\n\n```python\nfrom paperqa.readers import read_doc\n\nread_doc(\".DS_Store\", ...)\n```",
+  "comments": [
+    {
+      "at": "2025-06-10T23:51:24Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "text": "We also choke on `py.typed` and/or `.python-version`",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

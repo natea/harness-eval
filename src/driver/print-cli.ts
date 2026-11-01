@@ -3,6 +3,7 @@ import {
 	trialIdFromSandbox,
 	unregisterLiveSource,
 } from "../live/registry";
+import { EXIT_TIMED_OUT } from "../providers/cli-container";
 import type { Sandbox } from "../providers/types";
 import type { DriverResult, DriverRunOptions, RunDriverSession } from "./types";
 
@@ -18,6 +19,19 @@ export interface PrintCliDriverOptions {
 		stepIndex: number,
 		exitCode: number,
 	) => DriverResult;
+	/**
+	 * Salvage a session that ended without its final message (usually the wall
+	 * clock), so its transcript and spend aren't lost. Null when the CLI produced
+	 * no work; the parse error then propagates (e.g. harness never started).
+	 */
+	parsePartial?: (
+		output: string,
+		stepIndex: number,
+		exitCode: number,
+		elapsedMs: number,
+	) => DriverResult | null;
+	/** Stops the CLI inside a container after a timeout: the exec client dying doesn't. */
+	stopCommand?: string;
 }
 
 /**
@@ -38,8 +52,18 @@ export function createPrintCliSessionRunner(
 		const slot = `${sandbox.id.replace(/[^a-zA-Z0-9_.-]/g, "_")}-${run.stepIndex}`;
 		const promptFile = `/tmp/he-prompt-${slot}.txt`;
 		const outFile = `/tmp/he-out-${slot}.jsonl`;
+		// Shared /tmp on worktree-style providers: a stale file from an earlier
+		// run with the same trial id would otherwise be read back as this
+		// session's transcript if the CLI exits without writing.
+		await sandbox.exec(`rm -f ${promptFile} ${outFile}`, { timeoutMs: 30_000 });
 		await sandbox.writeFile(promptFile, run.prompt);
-		const command = opts.buildCommand({ ...run, promptFile, outFile });
+		let command = opts.buildCommand({ ...run, promptFile, outFile });
+		if (run.netns) {
+			// File-based to avoid nested quoting between zsh and the wrapper.
+			const cmdFile = `/tmp/he-cmd-${slot}.sh`;
+			await sandbox.writeFile(cmdFile, command);
+			command = `unshare -rn sh ${run.netns.script} zsh ${cmdFile}`;
+		}
 		// Best-effort live tap: drop a disk pointer to this session's output file so
 		// the studio's (separate) process can tail it while the build runs. Never
 		// affects the build; the post-exit read below is unchanged (byte-identical
@@ -51,12 +75,33 @@ export function createPrintCliSessionRunner(
 			sandboxId: sandbox.id,
 		});
 		try {
+			const startedAt = Date.now();
 			const res = await sandbox.exec(command, {
 				timeoutMs: run.timeoutMs,
 				env: run.env,
 			});
+			const elapsedMs = Date.now() - startedAt;
+			// Otherwise the agent keeps editing while the patch is being captured.
+			// Never on worktree: that pattern would match the operator's own sessions.
+			if (
+				res.exitCode === EXIT_TIMED_OUT &&
+				opts.stopCommand &&
+				!sandbox.id.startsWith("worktree:")
+			)
+				await sandbox.exec(opts.stopCommand, { timeoutMs: 30_000 });
 			const read = await sandbox.exec(`cat ${outFile}`, { timeoutMs: 120_000 });
-			return opts.parseOutput(read.stdout, run.stepIndex, res.exitCode);
+			try {
+				return opts.parseOutput(read.stdout, run.stepIndex, res.exitCode);
+			} catch (err) {
+				const partial = opts.parsePartial?.(
+					read.stdout,
+					run.stepIndex,
+					res.exitCode,
+					elapsedMs,
+				);
+				if (partial) return partial;
+				throw err;
+			}
 		} finally {
 			unregisterLiveSource(trialId);
 		}

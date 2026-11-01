@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "It would be nice if the `PaperQAEnvironment` itself directly supported timeouts and max steps.",
+      "rationale": "Describes current state and a desire to move timeout/max steps into PaperQAEnvironment. The reference fix instead added max_timesteps in agents.main run_aviary_agent and settings, not in the environment. Mentions agents.main but doesn't specify the actual change.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

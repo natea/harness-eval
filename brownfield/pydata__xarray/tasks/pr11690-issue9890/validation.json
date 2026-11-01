@@ -1,0 +1,42 @@
+{
+  "pr": 11690,
+  "merged": "2026-10-07",
+  "issues": [
+    {
+      "n": 9890,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    "asv_bench/benchmarks/dataset_io.py",
+    "asv_bench/benchmarks/unstacking.py",
+    "doc/whats-new.rst",
+    "pixi.toml",
+    "xarray/core/groupby.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_groupby.py"
+  ],
+  "env": "exclude-newer 2026-10-07T22:23:41+02:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_groupby.py::test_groupby_dataset_by_data_variable_does_not_warn",
+    "xarray/tests/test_groupby.py::test_groupby_dataset_math",
+    "xarray/tests/test_groupby.py::test_groupby_dataset_reduce_ellipsis"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 10,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_groupby::test_groupby_dataset_by_data_variable_does_not_warn[False]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "We need a little blurb in `CONTRIBUTING.md` that:",
+      "rationale": "The issue requests documentation. The reference fix has no non-test changes, so the text doesn't reveal any code change. It is a request, not a diagnosis or fix for the reference.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

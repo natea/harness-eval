@@ -1,0 +1,66 @@
+{
+  "pr": 11627,
+  "merged": "2026-09-28",
+  "issues": [
+    {
+      "n": 11501,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 10,
+  "srcFiles": [
+    ".pre-commit-config.yaml",
+    "ci/nightly/pixi.toml",
+    "doc/whats-new.rst",
+    "xarray/core/duck_array_ops.py",
+    "xarray/core/variable.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_backends.py",
+    "xarray/tests/test_dataarray.py",
+    "xarray/tests/test_duck_array_ops.py",
+    "xarray/tests/test_plot.py",
+    "xarray/tests/test_variable.py"
+  ],
+  "env": "exclude-newer 2026-09-28T22:37:21Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_backends.py::TestDask::test_roundtrip_coordinates_with_space",
+    "xarray/tests/test_backends.py::TestDask::test_roundtrip_numpy_datetime_data",
+    "xarray/tests/test_backends.py::TestDask::test_roundtrip_stringdtype_nulls",
+    "xarray/tests/test_dataarray.py::TestReduce1D::test_max",
+    "xarray/tests/test_dataarray.py::TestReduce1D::test_min",
+    "xarray/tests/test_dataarray.py::TestReduce2D::test_max",
+    "xarray/tests/test_dataarray.py::TestReduce2D::test_min",
+    "xarray/tests/test_duck_array_ops.py::test_empty_axis_dtype",
+    "xarray/tests/test_duck_array_ops.py::test_min_max_object_propagates_nan",
+    "xarray/tests/test_duck_array_ops.py::test_reduce",
+    "xarray/tests/test_plot.py::TestContour::test_colors",
+    "xarray/tests/test_plot.py::TestContour::test_colors_np_levels",
+    "xarray/tests/test_variable.py::TestAsCompatibleData::test_full_like",
+    "xarray/tests/test_variable.py::TestAsCompatibleData::test_tz_datetime"
+  ],
+  "counts": {
+    "f2p": 10,
+    "p2p": 335,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray.TestReduce1D::test_max[obj]",
+    "xarray.tests.test_dataarray.TestReduce1D::test_min[obj]",
+    "xarray.tests.test_dataarray.TestReduce2D::test_max[obj]",
+    "xarray.tests.test_dataarray.TestReduce2D::test_min[obj]",
+    "xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values0-min]",
+    "xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values0-max]",
+    "xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values1-min]",
+    "xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values1-max]",
+    "xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values2-min]",
+    "xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values2-max]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

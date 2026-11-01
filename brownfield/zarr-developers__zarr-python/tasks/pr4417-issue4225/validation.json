@@ -1,0 +1,53 @@
+{
+  "pr": 4417,
+  "merged": "2026-09-30",
+  "issues": [
+    {
+      "n": 4225,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    "changes/4417.misc.md",
+    "src/zarr/api/asynchronous.py",
+    "src/zarr/api/synchronous.py",
+    "src/zarr/core/array.py",
+    "src/zarr/core/group.py"
+  ],
+  "testFiles": [
+    "tests/test_api/test_synchronous.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_api/test_synchronous.py::test_docstring_consistent_parameters",
+    "tests/test_api/test_synchronous.py::test_docstrings_match"
+  ],
+  "counts": {
+    "f2p": 13,
+    "p2p": 39,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-chunk_key_encoding]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-chunks]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-compressors]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-config]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-data]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-dtype]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-filters]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-order]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-overwrite]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-serializer]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-shape]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-shards]",
+    "tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-write_data]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

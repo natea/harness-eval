@@ -1,6 +1,7 @@
 import {
 	ChartNoAxesColumn,
 	ChevronRight,
+	ClipboardCheck,
 	History,
 	Monitor,
 	Moon,
@@ -18,6 +19,7 @@ import { BracketView } from "./views/BracketView";
 import { Configure } from "./views/Configure";
 import { InverseScaling } from "./views/InverseScaling";
 import { Leaderboard } from "./views/Leaderboard";
+import { AgreementView, ReviewList, TaskReview } from "./views/ReviewView";
 import { Runs } from "./views/Runs";
 import { RunView } from "./views/RunView";
 import { TrialView } from "./views/TrialView";
@@ -34,6 +36,9 @@ function pageTitle(path: string): string {
 	if (path === "/inverse-scaling") return "Trends";
 	if (path === "/bracket") return "Tournament";
 	if (path === "/runs") return "Runs";
+	if (path === "/review/agreement") return "Review agreement";
+	if (path.startsWith("/review/")) return "Review task";
+	if (path === "/review") return "Review";
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[2]) return `Trial ${trial[2]}`;
 	const run = path.match(/^\/runs\/([^/]+)$/);
@@ -49,6 +54,11 @@ function Routed() {
 	if (path === "/inverse-scaling") return <InverseScaling />;
 	if (path === "/bracket") return <BracketView />;
 	if (path === "/runs") return <Runs />;
+	if (path === "/review") return <ReviewList />;
+	if (path === "/review/agreement") return <AgreementView />;
+	const review = path.match(/^\/review\/([^/]+)\/([^/]+)$/);
+	if (review?.[1] && review[2])
+		return <TaskReview repoDir={review[1]} id={review[2]} />;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
 		return <TrialView runId={trial[1]} trialId={trial[2]} />;
@@ -202,6 +212,11 @@ const NAV: { href: string; label: string; icon: ReactNode; group?: string }[] =
 		{ href: "/runs", label: "Runs", icon: <History className="size-4" /> },
 		{ href: "/configure", label: "New run", icon: <Plus className="size-4" /> },
 		{
+			href: "/review",
+			label: "Review",
+			icon: <ClipboardCheck className="size-4" />,
+		},
+		{
 			href: "/inverse-scaling",
 			label: "Trends",
 			icon: <TrendingUp className="size-4" />,
@@ -218,6 +233,7 @@ const NAV: { href: string; label: string; icon: ReactNode; group?: string }[] =
 function isActive(href: string, path: string): boolean {
 	if (href === "/") return path === "/";
 	if (href === "/runs") return path === "/runs" || path.startsWith("/runs/");
+	if (href === "/review") return path.startsWith("/review");
 	return path === href;
 }
 

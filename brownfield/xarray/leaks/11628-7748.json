@@ -1,0 +1,63 @@
+{
+  "pr": 11628,
+  "issue": 7748,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0196766,
+  "prAuthor": "Emam2006",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Calling xr.DataArray.diff with a non-existing dimension does not raise an exception.",
+      "rationale": "Describes observed behavior and expected exception; no mechanism or location.",
+      "author": "LunarLanding",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "maybe all zeros could be considered correct as well.",
+      "rationale": "Unsure musings, suggests alternative behavior contrary to the fix; no location.",
+      "author": "headtr1ck",
+      "role": "maintainer"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "See also somewhat related discussion here https://github.com/pydata/xarray/issues/6749",
+      "rationale": "Just a link to related discussion.",
+      "author": "headtr1ck",
+      "role": "maintainer"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataset.py"
+      ],
+      "evidence": "the operation on a DataArray should error if the dimension is not there",
+      "rationale": "Proposes raising an error when the dimension is absent, matching the fix in spirit, though no location is given and Dataset semantics differ somewhat.",
+      "author": "LunarLanding",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "raising a KeyError when diff('X') is called on a DataSet where none of the contained DataArrays have 'X' as a valid dimension",
+      "rationale": "Describes a different implementation (KeyError, deprecation warning, per-variable) than the reference ValueError; no code location.",
+      "author": "nathanredmond",
+      "role": "other user"
+    }
+  ]
+}

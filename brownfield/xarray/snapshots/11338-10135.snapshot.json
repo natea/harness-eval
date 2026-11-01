@@ -1,0 +1,454 @@
+{
+  "pr": 11338,
+  "issue": 10135,
+  "tStar": "2026-05-13T18:07:16Z",
+  "title": "Add a `.to_polars_df()` method (very similar to `.to_dataframe()`, which implicitly uses pandas)",
+  "issueAuthor": "DeflateAwning",
+  "body": "### Is your feature request related to a problem?\n\nPandas is much less performant, and is decreasingly used in new projects. It would be awesome to be able to move data out of xarray and into Polars directly, without jumping through Pandas. \n\n### Describe the solution you'd like\n\nAdd a `.to_polars_df()` method (very similar to `.to_dataframe()`, which implicitly uses pandas)\n\n### Describe alternatives you've considered\n\nYou currently have to do:\n\n```python\nimport polars as pl\n\npl.from_pandas(da.to_dataframe())`\n```\n\nThis is slower than it could be if there was a directly-to-polars method.\n\n### Additional context\n\nI'd even consider renaming the `.to_dataframe()` method to `.to_pandas_df()`. Suggesting that the main/default dataframe is Pandas seems a little strange in the 2025 data analysis ecosystem. ",
+  "comments": [
+    {
+      "at": "2025-03-16T21:50:48Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2025-03-16T22:57:09Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "What would the method do internally which would be faster than going through pandas? No objection per se, but there would need to be some benefit from adding the method...",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-17T16:19:39Z",
+      "author": "DeflateAwning",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I'm not too certain _exactly_ what the current mechanisms look like, but I do know there is an opportunity for improvement as converting to ~~Python~~ _Pandas_ is not a zero-cost operation. \n\nOther cross-compatible libraries (e.g., DuckDB) have separate methods for to-pandas vs to-polars, suggesting that there are benefits (_i.e., performance benefits). \n\nI believe there is a sort of dataframe-library-agnostic dataframe specification (something about `__dataframe__` maybe) which may be effective for this.",
+      "source": "edit@2025-03-17T23:35:34Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-17T19:22:02Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "OK, feel free to post more details when you / someone else has them. We can leave this open for a while; eventually would suggest closing until we have some legible benefit",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-17T23:21:18Z",
+      "author": "DocOtak",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "@DeflateAwning Here is the dataframe interchange protocol spec: https://data-apis.org/dataframe-protocol/latest/index.html\n\nI'm also interested in polars dataframe support in xarray.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-17T23:38:01Z",
+      "author": "DeflateAwning",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "> OK, feel free to post more details when you / someone else has them. We can leave this open for a while; eventually would suggest closing until we have some legible benefit\n\nOh, sorry that wasn't clear. The obvious benefit is performance. The secondary benefit is avoiding Pandas; it is rightfully deamed legacy tech in all organizations I work with. \n\nThanks @DocOtak - that's exactly what I was talking about.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-18T03:13:46Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "> The obvious benefit is performance.\n\nOK, I'm not saying this isn't valid, but I am asking how it would be meaningfully more performant. An example showing the improvement would be great...\n\nThe spec looks interesting, thanks for posting. I don't see it covering _creating_ a dataframe though...",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-18T19:07:25Z",
+      "author": "TomNicholas",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "I have to agree with @max-sixty - the question is not whether polars is faster / better than pandas in general (I believe you), but whether an `xarray.DataArray().to_polars_df()` method can ever be faster than `pl.from_pandas(da.to_dataframe())`, and if it actually is faster today.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-25T02:08:31Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "please feel free to reopen with some empirics on performance improvements (on this specific method; we def believe polars is generally faster than pandas...)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-25T19:47:53Z",
+      "author": "DeflateAwning",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Sorry, you want me to implement this and then do a performance test? Then, you'll decide if it's worth implementing? ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-25T19:55:34Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "anything that gives us some empirical data that this is worth a new method. that could be a full implementation, it could be something as simple as a comparison of creating a dataframe from an numpy array\n\nis that reasonable?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-25T20:00:29Z",
+      "author": "TomNicholas",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": ">  you want me to implement this [...] Then, you'll decide if it's worth implementing?\n\nFor context, the reason @max-sixty is asking is because adding the method to xarray incurs a longer-term maintenance cost (borne by us, the maintainers), not just the one-time cost of implementation. Sorry if that seems annoying, but we have to be judicious about adding more API surface otherwise eventually the result is a sprawling unmaintainable mess.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-25T21:08:07Z",
+      "author": "DeflateAwning",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Here's a preliminary benchmark I did. You'll see that it is actually slower. Then I realized it's because a numpy array, as created, is a row-based store and not a columnar store:  https://gist.github.com/DeflateAwning/2751ffa05bc74bad8e19d4a76c6ef8c5 [tl;dr: this benchmark is not representative; don't look at it]\n\nSo I redid the benchmarks and created this columnar benchmark version: https://gist.github.com/DeflateAwning/dd19fd9089e7529b6d26322c4aed042d\n\nAs you can see, the columnar benchmark version (which I assume more closely mimics how xarray stores the data, roughly) has significantly better performance (380 ms vs. 0.7ms, in the most extreme case).",
+      "source": "edit@2025-03-25T21:25:57Z",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like"
+      ]
+    },
+    {
+      "at": "2025-03-25T23:14:06Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "nice! thanks for doing that.\n\none question: if we turn `rechunk=False`, then the effect seems to go away:\n\n<details>\n\n```python\n\n[ins] In [5]: import numpy as np\n         ...: import pandas as pd\n         ...: import polars as pl\n         ...: import timeit\n         ...:\n         ...: # Array shapes to test\n         ...: shapes = [\n         ...:     (10_000, 10),\n         ...:     (10_000, 200),\n         ...:     (100_000, 10),\n         ...:     (100_000, 200),\n         ...:     (1_000_000, 10),\n         ...:     (1_000_000, 200),\n         ...:     (10_000_000, 10),\n         ...: ]\n         ...:\n         ...: REPEATS = 5\n         ...:\n         ...:\n         ...: def time_numpy_to_polars(arr):\n         ...:     def fn():\n         ...:         df_pl = pl.from_numpy(arr, schema=[f\"col{i}\" for i in range(arr.shape[1])])\n         ...:         assert df_pl.height > 1000\n         ...:         assert len(df_pl.columns) in (10, 200)\n         ...:         return df_pl\n         ...:\n         ...:     return timeit.timeit(fn, number=REPEATS) / REPEATS\n         ...:\n         ...:\n         ...: def time_numpy_to_pandas_to_polars(arr):\n         ...:     def fn():\n         ...:         df = pd.DataFrame(arr, columns=[f\"col{i}\" for i in range(arr.shape[1])])\n         ...:         df_pl = pl.from_pandas(df, rechunk=False)\n         ...:         assert df_pl.height > 1000\n         ...:         assert len(df_pl.columns) in (10, 200)\n         ...:         del df\n         ...:         return df_pl\n         ...:\n         ...:     return timeit.timeit(fn, number=REPEATS) / REPEATS\n         ...:\n         ...:\n         ...: def benchmark():\n         ...:     print(f\"{'Shape':>15} | {'NumPy → Polars':>18} | {'NumPy → Pandas → Polars':>26}\")\n         ...:     print(\"-\" * 65)\n         ...:\n         ...:     for shape in shapes:\n         ...:         arr1 = np.random.rand(*shape)\n         ...:         t_np_pd_polars = time_numpy_to_pandas_to_polars(arr1)\n         ...:         del arr1\n         ...:\n         ...:         arr2 = np.random.rand(*shape)\n         ...:         t_np_polars = time_numpy_to_polars(arr2)\n         ...:         del arr2\n         ...:\n         ...:         print(f\"{str(shape):>15} | {t_np_polars:>18.6f} s | {t_np_pd_polars:>26.6f} s\")\n         ...:\n         ...:\n         ...: for _ in range(5):\n         ...:     benchmark()\n          Shape |     NumPy → Polars |    NumPy → Pandas → Polars\n-----------------------------------------------------------------\n    (10000, 10) |           0.000210 s |                   0.002136 s\n   (10000, 200) |           0.004562 s |                   0.017994 s\n   (100000, 10) |           0.002282 s |                   0.004272 s\n  (100000, 200) |           0.056629 s |                   0.043034 s\n  (1000000, 10) |           0.019926 s |                   0.012140 s\n (1000000, 200) |           1.040867 s |                   0.352806 s\n (10000000, 10) |           0.203197 s |                   0.127347 s\n          Shape |     NumPy → Polars |    NumPy → Pandas → Polars\n-----------------------------------------------------------------\n    (10000, 10) |           0.000214 s |                   0.002998 s\n   (10000, 200) |           0.005002 s |                   0.020305 s\n   (100000, 10) |           0.002292 s |                   0.004627 s\n  (100000, 200) |           0.053998 s |                   0.042060 s\n  (1000000, 10) |           0.022816 s |                   0.011790 s\n (1000000, 200) |           1.042097 s |                   0.346280 s\n (10000000, 10) |           0.208075 s |                   0.127311 s\n          Shape |     NumPy → Polars |    NumPy → Pandas → Polars\n-----------------------------------------------------------------\n    (10000, 10) |           0.000466 s |                   0.004395 s\n   (10000, 200) |           0.004703 s |                   0.020835 s\n   (100000, 10) |           0.001563 s |                   0.004102 s\n  (100000, 200) |           0.052693 s |                   0.046256 s\n  (1000000, 10) |           0.021292 s |                   0.013224 s\n (1000000, 200) |           1.052150 s |                   0.345346 s\n (10000000, 10) |           0.204095 s |                   0.129334 s\n          Shape |     NumPy → Polars |    NumPy → Pandas → Polars\n-----------------------------------------------------------------\n    (10000, 10) |           0.000628 s |                   0.003400 s\n   (10000, 200) |           0.003552 s |                   0.020649 s\n   (100000, 10) |           0.001446 s |                   0.003422 s\n  (100000, 200) |           0.056508 s |                   0.045235 s\n  (1000000, 10) |           0.023728 s |                   0.012902 s\n (1000000, 200) |           1.062767 s |                   0.341092 s\n (10000000, 10) |           0.219106 s |                   0.149330 s\n          Shape |     NumPy → Polars |    NumPy → Pandas → Polars\n-----------------------------------------------------------------\n    (10000, 10) |           0.000442 s |                   0.003436 s\n   (10000, 200) |           0.004077 s |                   0.017220 s\n   (100000, 10) |           0.001618 s |                   0.003177 s\n  (100000, 200) |           0.059910 s |                   0.045847 s\n  (1000000, 10) |           0.020943 s |                   0.015437 s\n (1000000, 200) |           1.066620 s |                   0.361707 s\n (10000000, 10) |           0.208172 s |                   0.131291 s\n```\n\n</details>\n\nare we confident that the resulting polars arrays are identically laid out between each comparison? can we add a check for that?\n\nfor context: I really don't want to seem overly skeptical — I'm a big fan of polars, and xarray would be keen to add modest features to allow better support. but I don't have a good theory for how pandas is adding overhead for array construction assuming it's laid out the same between pandas and polars (which might not be the case, hence the difference, in particular if polars supports row-major storage?)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like",
+        "code block"
+      ]
+    },
+    {
+      "at": "2025-03-25T23:24:42Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "I believe the key difference here (at least theoretically) is the index creation? That MultiIndex can be quite large, and slow to build IME.\n\nSo for API perhaps we can accept `create_index: bool, dataframe_constructor: Callable`? Assuming the constructors are compatible, looks like we just pass in a dict to `pd.DataFrame`",
+      "source": "edit@2025-03-25T23:26:15Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-26T12:36:32Z",
+      "author": "DocOtak",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "@max-sixty \n> The spec looks interesting, thanks for posting. I don't see it covering creating a dataframe though...\n\nI think the intent is the the producing libraries (e.g. xarray) don't make the dataframe themselves, but provide an interface for dataframe libraries like pandas and polars to consume.\n\nIn pandas it would be this: https://pandas.pydata.org/docs/reference/api/pandas.api.interchange.from_dataframe.html\nIn polars it is this: https://docs.pola.rs/api/python/stable/reference/api/polars.from_dataframe.html\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-26T14:44:02Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "ok interesting, is the suggestion that xarray should implement the dataframe interface?\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-26T18:57:07Z",
+      "author": "DeflateAwning",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I'd say yes - the likely-best way to implement this is with the [Dataframe Interchange Protocol](https://data-apis.org/dataframe-protocol/latest/index.html).\n\nThen, when the next hot dataframe library that uses quantum computing instead of _lame 2025-era multithreading_ comes around, it'll be able to efficiently consume that. \n\nAdding the `.to_polars()` method is a 1-liner once the Dataframe Interchange Protocol is implemented.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-26T21:50:32Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "does that mean that a dataset / dataarray would be advertising itself as a dataframe, though?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-26T22:39:17Z",
+      "author": "keewis",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "What if instead we added a method that returned an intermediate object defining only the dataframe protocol? With that, the explicit conversion would be something like `pd.DataFrame(ds.to_df())` or `pl.DataFrame(ds.to_df())` (not sure if that's actually how you'd feed dataframe-like objects to `pandas` / `polars`)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-27T02:36:17Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "that sounds ideal @keewis !",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-27T11:41:56Z",
+      "author": "MarcoGorelli",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Definitely interested in going from XArray to Polars without needing pandas as a dependency, but I'd suggest not using the dataframe interchange protocol. pandas core dev Will Ayd wrote about his experiences with it [here](https://willayd.com/leveraging-the-arrow-c-data-interface.html)\n\n> While initially promising, this soon became problematic. [...] After many unexpected segfaults, I started to grow weary of this solution.\n> it only talks about how to consume data, but offers no guidance on how to produce it. If starting from your extension, you have no tools or library to manually build buffers. Much like the [status quo](https://willayd.com/leveraging-the-arrow-c-data-interface.html#status-quo), this meant reading from a Hyper database to a pandas DataFrame would likely be going through Python objects.\n\nFurthermore, based on [my own experience trying to fixup the interchange protocol implementation in pandas](https://github.com/pandas-dev/pandas/issues/57643), my suggestion is to never use it for anything.\n\nInstead, you may want to look at the [PyCapsule Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html). Continuing on from Will's blog post:\n\n> After stumbling around the DataFrame Protocol Interface for a few weeks, [Joris Van den Bossche](https://jorisvandenbossche.github.io/pages/about.html) [another pandas core dev] asked me why I didn’t look at the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html). [...]. Almost immediately my issues went away. I felt more confident in the implementation and had to deal with less memory corruption / crashes than before. And, perhaps most importantly, I saved a lot of time.\n\n@kylebarron is one of the leading advocates for PyCapsule Interface (https://github.com/apache/arrow/issues/39195) and expert in geospatial data science, and so might be good loop in here. Reckon XArray is a good candidate to export a PyCapsule object which dataframe libraries could consume?",
+      "source": "edit@2025-03-27T11:44:10Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-27T17:08:41Z",
+      "author": "kylebarron",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I agree that I would dissuade you from trying to implement the dataframe interchange protocol and would encourage adoption of the Arrow PyCapsule Interface.\n\n> What would the method do internally which would be faster than going through pandas? No objection per se, but there would need to be some benefit from adding the method...\n\nThis is also not clear to me. I don't know xarray internals that well; I thought xarray uses pandas as a required dependency, and so I figure that most xarray data is stored in a pandas `DataFrame` or `Series`? Then I figure the fastest (and simplest to implement) way to convert xarray to polars would be to reuse pandas' implementation of the PyCapsule Interface.\n\nPandas has implemented PyCapsule Interface export for a little while. https://github.com/pandas-dev/pandas/pull/56587, https://github.com/pandas-dev/pandas/issues/59518",
+      "source": "edit@2025-03-27T17:09:21Z",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2025-03-27T17:30:55Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "> I thought xarray uses pandas as a required dependency, and so I figure that most xarray data is stored in a pandas `DataFrame` or `Series`?\n\nxarray currently has a required pandas dependency for its indexing. the standard backend is a numpy array",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-27T19:35:51Z",
+      "author": "kylebarron",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Seems like your options are either:\n\n- implement a specific numpy -> polars implementation for `to_polars_df`\n- implement a generic DataFrame Interchange Protocol backend on top of how you store numpy data.\n- implement a generic Arrow PyCapsule Interface integration. This would require some Arrow backend, such as pandas' default pyarrow backend. However pyarrow is a massive dependency, which has some downsides. I wrote https://github.com/kylebarron/arro3 as a much smaller Arrow implementation, which you might be able to use to convert numpy data to Arrow.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "diff block"
+      ]
+    },
+    {
+      "at": "2025-03-27T22:45:22Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "> implement a generic Arrow PyCapsule Interface integration. This would require some Arrow backend, such as pandas' default pyarrow backend. However pyarrow is a massive dependency...\n\nif someone wants to take this on, we could have `pyarrow` as an optional dependency, that could work. it's optional for polars & pandas\n\nbut pandas itself seem like a satisfactory interchange format! whether or not the initially encouraging results are driven by alignment vs. real determines whether there's a perf improvement",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-28T03:13:13Z",
+      "author": "DeflateAwning",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Pandas uses \"nan\" to represent nulls in string columns. It is a prime example of hacking things together. It is an awful interchange format. \n\nWhy not make Polars the interchange format. ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-28T17:07:25Z",
+      "author": "kylebarron",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Arrow makes more sense than Polars to be an interchange format. It's explicitly designed as such, and is already used under the hood in Polars.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-07-31T13:49:56Z",
+      "author": "vladidobro",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Hi!\n\nI too think that in the long run, the best solution would be to implement `Dataset.to_arrow() -> arro3-backed object implementing PyCapsule`. However, given the tight integration of xarray with pandas, I think the best solution for now would be to allow `Dataset.to_dataframe()` to return an pyarrow-backed `pandas.DataFrame` in the most optimal way possible for further processing in polars/duckdb.\n\nTaking this for an example to understand how `.to_dataframe()` works:\n```py\nimport xarray as xr\nfrom pprint import pp\n\nds = xr.tutorial.load_dataset('air_temperature')\nprint('-'*20+'\\nDataset:\\n')\npp(ds)\n\ndf = ds.to_dataframe()\nprint('-'*20+'\\nDataframe:\\n')\npp(df)\n\nprint('-'*20+'\\nDataframe index:\\n')\npp(df.index)\n\nprint('-'*20+'\\nDataframe index levels:\\n')\npp(df.index.levels)\n\nprint('-'*20+'\\nDataframe index codes:\\n')\npp(df.index.codes)\n```\n\nResults in\n```\n--------------------\nDataset:\n\n<xarray.Dataset> Size: 31MB\nDimensions:  (lat: 25, time: 2920, lon: 53)\nCoordinates:\n  * lat      (lat) float32 100B 75.0 72.5 70.0 67.5 65.0 ... 22.5 20.0 17.5 15.0\n  * lon      (lon) float32 212B 200.0 202.5 205.0 207.5 ... 325.0 327.5 330.0\n  * time     (time) datetime64[ns] 23kB 2013-01-01 ... 2014-12-31T18:00:00\nData variables:\n    air      (time, lat, lon) float64 31MB 241.2 242.5 243.5 ... 296.2 295.7\nAttributes:\n    Conventions:  COARDS\n    title:        4x daily NMC reanalysis (1948)\n    description:  Data is from NMC initialized reanalysis\\n(4x/day).  These a...\n    platform:     Model\n    references:   http://www.esrl.noaa.gov/psd/data/gridded/data.ncep.reanaly...\n--------------------\nDataframe:\n\n                                   air\nlat  time                lon\n75.0 2013-01-01 00:00:00 200.0  241.20\n                         202.5  242.50\n                         205.0  243.50\n                         207.5  244.00\n                         210.0  244.10\n...                                ...\n15.0 2014-12-31 18:00:00 320.0  297.39\n                         322.5  297.19\n                         325.0  296.49\n                         327.5  296.19\n                         330.0  295.69\n\n[3869000 rows x 1 columns]\n--------------------\nDataframe index:\n\nMultiIndex([(75.0, '2013-01-01 00:00:00', 200.0),\n            (75.0, '2013-01-01 00:00:00', 202.5),\n            (75.0, '2013-01-01 00:00:00', 205.0),\n            (75.0, '2013-01-01 00:00:00', 207.5),\n            (75.0, '2013-01-01 00:00:00', 210.0),\n            (75.0, '2013-01-01 00:00:00', 212.5),\n            (75.0, '2013-01-01 00:00:00', 215.0),\n            (75.0, '2013-01-01 00:00:00', 217.5),\n            (75.0, '2013-01-01 00:00:00', 220.0),\n            (75.0, '2013-01-01 00:00:00', 222.5),\n            ...\n            (15.0, '2014-12-31 18:00:00', 307.5),\n            (15.0, '2014-12-31 18:00:00', 310.0),\n            (15.0, '2014-12-31 18:00:00', 312.5),\n            (15.0, '2014-12-31 18:00:00', 315.0),\n            (15.0, '2014-12-31 18:00:00', 317.5),\n            (15.0, '2014-12-31 18:00:00', 320.0),\n            (15.0, '2014-12-31 18:00:00', 322.5),\n            (15.0, '2014-12-31 18:00:00', 325.0),\n            (15.0, '2014-12-31 18:00:00', 327.5),\n            (15.0, '2014-12-31 18:00:00', 330.0)],\n           names=['lat', 'time', 'lon'], length=3869000)\n--------------------\nDataframe index levels:\n\nFrozenList([[75.0, 72.5, 70.0, 67.5, 65.0, 62.5, 60.0, 57.5, 55.0, 52.5, 50.0, 47.5, 45.0, 42.5, 40.0, 37.5, 35.0, 32.5, 30.0, 27.5, 25.0, 22.5, 20.0, 17.5, 15.0], [2013-01-01 00:00:00, 2013-01-01 06:00:00, 2013-01-01 12:00:00, 2013-01-01 18:00:00, 2013-01-02 00:00:00, 2013-01-02 06:00:00, 2013-01-02 12:00:00, 2013-01-02 18:00:00, 2013-01-03 00:00:00, 2013-01-03 06:00:00, 2013-01-03 12:00:00, 2013-01-03 18:00:00, 2013-01-04 00:00:00, 2013-01-04 06:00:00, 2013-01-04 12:00:00, 2013-01-04 18:00:00, 2013-01-05 00:00:00, 2013-01-05 06:00:00, 2013-01-05 12:00:00, 2013-01-05 18:00:00, 2013-01-06 00:00:00, 2013-01-06 06:00:00, 2013-01-06 12:00:00, 2013-01-06 18:00:00, 2013-01-07 00:00:00, 2013-01-07 06:00:00, 2013-01-07 12:00:00, 2013-01-07 18:00:00, 2013-01-08 00:00:00, 2013-01-08 06:00:00, 2013-01-08 12:00:00, 2013-01-08 18:00:00, 2013-01-09 00:00:00, 2013-01-09 06:00:00, 2013-01-09 12:00:00, 2013-01-09 18:00:00, 2013-01-10 00:00:00, 2013-01-10 06:00:00, 2013-01-10 12:00:00, 2013-01-10 18:00:00, 2013-01-11 00:00:00, 2013-01-11 06:00:00, 2013-01-11 12:00:00, 2013-01-11 18:00:00, 2013-01-12 00:00:00, 2013-01-12 06:00:00, 2013-01-12 12:00:00, 2013-01-12 18:00:00, 2013-01-13 00:00:00, 2013-01-13 06:00:00, 2013-01-13 12:00:00, 2013-01-13 18:00:00, 2013-01-14 00:00:00, 2013-01-14 06:00:00, 2013-01-14 12:00:00, 2013-01-14 18:00:00, 2013-01-15 00:00:00, 2013-01-15 06:00:00, 2013-01-15 12:00:00, 2013-01-15 18:00:00, 2013-01-16 00:00:00, 2013-01-16 06:00:00, 2013-01-16 12:00:00, 2013-01-16 18:00:00, 2013-01-17 00:00:00, 2013-01-17 06:00:00, 2013-01-17 12:00:00, 2013-01-17 18:00:00, 2013-01-18 00:00:00, 2013-01-18 06:00:00, 2013-01-18 12:00:00, 2013-01-18 18:00:00, 2013-01-19 00:00:00, 2013-01-19 06:00:00, 2013-01-19 12:00:00, 2013-01-19 18:00:00, 2013-01-20 00:00:00, 2013-01-20 06:00:00, 2013-01-20 12:00:00, 2013-01-20 18:00:00, 2013-01-21 00:00:00, 2013-01-21 06:00:00, 2013-01-21 12:00:00, 2013-01-21 18:00:00, 2013-01-22 00:00:00, 2013-01-22 06:00:00, 2013-01-22 12:00:00, 2013-01-22 18:00:00, 2013-01-23 00:00:00, 2013-01-23 06:00:00, 2013-01-23 12:00:00, 2013-01-23 18:00:00, 2013-01-24 00:00:00, 2013-01-24 06:00:00, 2013-01-24 12:00:00, 2013-01-24 18:00:00, 2013-01-25 00:00:00, 2013-01-25 06:00:00, 2013-01-25 12:00:00, 2013-01-25 18:00:00, ...], [200.0, 202.5, 205.0, 207.5, 210.0, 212.5, 215.0, 217.5, 220.0, 222.5, 225.0, 227.5, 230.0, 232.5, 235.0, 237.5, 240.0, 242.5, 245.0, 247.5, 250.0, 252.5, 255.0, 257.5, 260.0, 262.5, 265.0, 267.5, 270.0, 272.5, 275.0, 277.5, 280.0, 282.5, 285.0, 287.5, 290.0, 292.5, 295.0, 297.5, 300.0, 302.5, 305.0, 307.5, 310.0, 312.5, 315.0, 317.5, 320.0, 322.5, 325.0, 327.5, 330.0]])\n--------------------\nDataframe index codes:\n\nFrozenList([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, ...]])\n```\n\nIn short the way I understand the current implementation (I may be wrong):\n- the dataset holds both data variables and coordinates as multidimensional numpy arrays\n- string data in xarray are stored as numpy 'S*' and 'U*' dtypes, but can be optionally stored as pandas extension dtypes\n- during .to_dataframe(), the data variables are flattened into 1-D numpy arrays (I am not sure what exactly happens to extension arrays)\n- the dimension arrays need to be repeated/tiled in the result, because each row needs to hold it's dimension values. This is achieved by creating a pandas.MultiIndex, which doesn't repeat the data, but instead stores the original dimension arrays in `index.levels` without repeating, and a meshgrid of indices in `index.codes` (see above), which is akin to dictionary encoding. Obviously it also creates some Index on top of these.\n- If the dimension arrays are needed as actual columns, `df.reset_index()` must be called, which does the heavy work of tiling the arrays into a contiguous array\n\n\nAll in all I think the inefficiencies of the current approach (xr.Dataset -> pd.DataFrame (numpy-backed) -> anything arrow-backed)) boil down to\n1. Creating the MultiIndex even if we don't care about it\n2. Numpy string types ('<U10' et al) are unnecessarilly converted to object-dtype, only to be then again converted to arrow strings.\n3. Tiling the dimension arrays may be done better (by leveraging arrow's Dictionary?)\n\nI will stress that the current implementation of `Dataset.to_dataframe()` already has ready\n`data: dict[str, np.ndarray]` for the variables, suitable for passing into `pd.DataFrame(**data)`, and a tuple of np.ndarray levels and codes (indices) for the coordinates, so almost all of the work is done. The only missing piece of creating the pyarrow-backed dataframe in an optimal way is converting these flat 1-D arrays into pyarrow, and creating dictionaries from the levels+indices.\n\nUnfortunately, pandas doesn't seem to have any utility function, like `pd.Series(array, dtype_backend='pyarrow')` that would infer the correct arrow dtype, there is only `pd.Series(array, dtype='string[pyarrow]')`, but that would mean we would have to maintain our own mapping from numpy to arrow dtypes. But surely there is already some ready solution to this.\n\nWhat would you suggest @kylebarron, for a solution that would require minimal maintenance of the numpy->arrow convertion on xarray's side?",
+      "source": "edit@2025-07-31T13:51:26Z",
+      "editedAfter": 0,
+      "flags": [
+        "sha-like",
+        "diff block",
+        "code block"
+      ]
+    },
+    {
+      "at": "2025-07-31T14:06:40Z",
+      "author": "MarcoGorelli",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "> Unfortunately, pandas doesn't seem to have any utility function, like pd.Series(array, dtype_backend='pyarrow') that would infer the correct arrow dtype\n\nas far as I can tell, it can only done after the fact (`pd.Series(array).convert_dtypes(dtype_backend='pyarrow')`)\n\n> I will stress that the current implementation of Dataset.to_dataframe() already has ready\ndata: dict[str, np.ndarray] for the variables, suitable for passing into pd.DataFrame(**data)\n\nData in such a format is also accepted by the PyArrow constructor, right? Using that directly would be an improvement over having to go via pandas (even pyarrow-backed)\n\n```python\nIn [60]: data = {'a': np.array([1,2,3]), 'b': np.array(['foo', 'bar', 'baz'])}\n\nIn [61]: pd.DataFrame(data)\nOut[61]:\n   a    b\n0  1  foo\n1  2  bar\n2  3  baz\n\nIn [62]: pa.table(data)\nOut[62]:\npyarrow.Table\na: int64\nb: string\n----\na: [[1,2,3]]\nb: [[\"foo\",\"bar\",\"baz\"]]\n```",
+      "source": "edit@2025-07-31T14:12:18Z",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2025-12-08T21:57:10Z",
+      "author": "jules-ch",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Integrating with the Apache Arrow ecosystem would be the best course of action to be able to interoperate with Parquet, Polar, DuckDB.\nAlthough leveraging the current Numpy, Multi index way of encoding Dataset and DataArray and converting back to pyarrow backed dtype feels clunky.\n\nPyarrow does have Fixed shaped Tensor which could be the perfect ExtensionType for DataArray no ?\nhttps://arrow.apache.org/docs/python/generated/pyarrow.FixedShapeTensorArray.html\n\nDimensions, coordinates, attributes could be encoded in the metadata of the pyarrow Table so that we can map, columns shape with dimensions.\n\nGoing even further, DataArray could be an Extension type of its own with its own metadata serialized using `__arrow_ext_serialize__` `__arrow_ext_deserialize__`, pyarrow allow this.\nDimensions would be serialized, along `attrs` and other xarray internals.\n\nhttps://arrow.apache.org/docs/python/generated/pyarrow.ExtensionType.html",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-12-09T05:35:07Z",
+      "author": "TomNicholas",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "> Pyarrow does have Fixed shaped Tensor which could be the perfect ExtensionType for DataArray no ?\n\nIs this widely used? Is it consumable by libraries like Polars?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-12-10T04:50:04Z",
+      "author": "alippai",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "@TomNicholas AFAIK DuckDB, Parquet and Polars supports it. The parquet reading performance is less then perfect, but it works reliably.\n\nWhat I did in one of the projects is creating the meshgrid / tile / repeat in numpy and then call pyarrow.array(numpy_array). It's by far the most performant method. By doing the Cartesian product on numpy side, the Coordinates and values are converted to numpy, which can have overhead or lose type information compared to pandas, pyarrow types (extension arrays).\n\nThe issue for creating convenient pyarrow methods:\nhttps://github.com/apache/arrow/issues/47382\n\nMy little experiment to support more data types in the numpy->pyarrow conversion (efficiently):\nhttps://github.com/apache/arrow/pull/48391",
+      "source": "edit@2025-12-10T04:50:35Z",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2025-12-10T16:52:07Z",
+      "author": "kylebarron",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Polars supports fixed-size lists (they call it Array I think), and they now support extension types, so you can maintain the metadata required by the [Fixed-shape tensor canonical extension type](https://arrow.apache.org/docs/format/CanonicalExtensions.html#fixed-shape-tensor).\n\n(Last I checked, DuckDB does _not_ support a fixed-size list type)",
+      "source": "edit@2025-12-10T16:52:50Z",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-12-10T18:42:18Z",
+      "author": "alippai",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "@kylebarron DuckDB has fixed-size list under the name Array: https://duckdb.org/docs/stable/sql/data_types/array and it round-trips with Arrow and Polars",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2025-12-10T21:33:51Z",
+      "author": "jules-ch",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "With a naive implementation of arrow array protocol on `xr.DataArray`\n\n```python\n\n    def __arrow_array__(self, type=None):\n        import pyarrow as pa\n\n        values = self._variable.data\n        dims = self._variable.dims\n        tensor_type = pa.fixed_shape_tensor(\n            value_type=pa.from_numpy_dtype(values.dtype),\n            shape=values.shape,\n            dim_names=dims,\n        )\n        total_size = values.size\n        flat_values = values.ravel()\n\n        value_array = pa.array(flat_values)\n        storage = pa.FixedSizeListArray.from_arrays(value_array, total_size)\n        return pa.ExtensionArray.from_storage(tensor_type, storage)\n```\n\n```python\nimport os\n\nimport polars as pl\nimport pyarrow as pa\n\nimport xarray as xr\n\nos.environ[\"POLARS_UNKNOWN_EXTENSION_TYPE_BEHAVIOR\"] = \"load_as_extension\"\nds = xr.tutorial.load_dataset(\"air_temperature\")\n\n\narrow_array = pa.array(ds.air)\npl.from_arrow(arrow_array)\n\n\nextension<arrow.fixed_shape_tensor[value_type=double, shape=[2920,25,53], dim_names=[time,lat,lon]]>\n```\n\nThough there isn't much support in polars to explode it to a `pl.Dataframe` but it works 😅 ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    },
+    {
+      "at": "2025-12-12T03:42:41Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "nice! we'd take a PR for that if you're up for it :)",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2025-12-12T11:42:26Z",
+      "author": "jules-ch",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "> nice! we'd take a PR for that if you're up for it :)\n\nMaybe a bit early though, I think we can create an issue to discuss how to better integrate better with apache arrow ecosystem. We can leverage the experience of the community members with the format and protocols.\n\nThere a lot of use cases that can be discussed there:\n- Enabling back and forth processing with zero copy from and to `xarray` core data structure -> think transform with polars, duckdb etc and go back to xarray.\n- Support pyarrow array storage support like (dask, numpy at the moment)\n- Maybe a Iceberg storage backend, it would be quite similar to Zarr with parquet for file format (They have similar structure)\n",
+      "source": "edit@2025-12-12T11:44:23Z",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR",
+        "diff block"
+      ]
+    },
+    {
+      "at": "2025-12-12T13:04:12Z",
+      "author": "TomNicholas",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "> Maybe a Iceberg storage backend, it would be quite similar to Zarr with parquet for file format (They have similar structure)\n\nCan you say more about this? I'm also interested in whether we can \"virtualize\" parquet/iceberg as Zarr (see https://github.com/zarr-developers/VirtualiZarr/issues/441 - might make more sense to discuss over there). ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-12-17T06:31:42Z",
+      "author": "jules-ch",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "I feel like a Iceberg backend could be a nice addition to the ecosystem.\nCatalogs can handle and store the partition + metadata stuff with parquet files as the data layer.\n\nZarr is pretty similar in that regard.\n\nImplementing arrow protocols for Data arrays will also ease serialization to parquet files. We can discuss what's is the best way to serialize data from the parquet later, there are several options between compactness and query-ability.\n\nWe could get better integrations with tools that uses parquet files, querying, chunking would be eased quite a lot when offloading / pushing down filters using native libraries that handle this with parquet. I'm not too familiar with how it's done regarding Zarr or dask.\n\n> > Maybe a Iceberg storage backend, it would be quite similar to Zarr with parquet for file format (They have similar structure)\n> \n> Can you say more about this? I'm also interested in whether we can \"virtualize\" parquet/iceberg as Zarr (see https://github.com/zarr-developers/VirtualiZarr/issues/441 - might make more sense to discuss over there). \n\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2026-05-05T14:37:03Z",
+      "author": "jenchen95",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "Hi, is there any new progress in  implementing xarray to polars natively?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

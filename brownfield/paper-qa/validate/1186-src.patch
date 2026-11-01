@@ -1,0 +1,55 @@
+diff --git a/src/paperqa/docs.py b/src/paperqa/docs.py
+index 10e11e9..4c54b67 100644
+--- a/src/paperqa/docs.py
++++ b/src/paperqa/docs.py
+@@ -731,8 +731,15 @@ class Docs(BaseModel):  # noqa: PLW1641  # TODO: add __hash__
+             for r in llm_results:
+                 session.add_tokens(r)
+ 
+-        # Filter out failed context creations or irrelevant contexts
+-        session.contexts += [c for c, _ in results if c is not None and c.score > 0]
++        # Filter out failed context creations or irrelevant contexts,
++        # and don't add duplicate contexts
++        session.contexts += list(
++            {
++                c
++                for c, _ in results
++                if c is not None and c.score > 0 and c not in session.contexts
++            }
++        )
+         return session
+ 
+     def query(
+diff --git a/src/paperqa/types.py b/src/paperqa/types.py
+index 601614c..83e6b94 100644
+--- a/src/paperqa/types.py
++++ b/src/paperqa/types.py
+@@ -258,14 +258,24 @@ class Context(BaseModel):
+         """Return the context as a string."""
+         return self.context
+ 
++    def __hash__(self) -> int:
++        # Account for extras, but order of extras doesn't matter
++        extras = (
++            tuple(sorted(self.__pydantic_extra__.items()))
++            if self.__pydantic_extra__
++            else ()
++        )
++        return hash(
++            (self.id, self.question, self.context, self.text, self.score, extras)
++        )
++
+     @model_validator(mode="before")
+     @classmethod
+     def populate_id(cls, data: dict[str, Any]) -> dict[str, Any]:
+         if not data.get("id"):  # NOTE: this includes missing or empty strings
+-            content = (
+-                data.get("question", "")
+-                + data.get("context", "")[: cls.CONTEXT_ENCODING_LENGTH]
+-            )
++            content = (data.get("question") or "") + data.get("context", "")[
++                : cls.CONTEXT_ENCODING_LENGTH
++            ]
+             return data | {  # Avoid mutating input data
+                 "id": cls.REFERENCE_TEMPLATE.format(
+                     id=encode_id(content or str(uuid4()), maxsize=cls.ID_HASH_LENGTH)

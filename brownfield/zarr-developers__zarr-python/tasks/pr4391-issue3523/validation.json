@@ -1,0 +1,75 @@
+{
+  "pr": 4391,
+  "merged": "2026-09-30",
+  "issues": [
+    {
+      "n": 3523,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    "changes/4391.bugfix.md",
+    "src/zarr/core/group.py",
+    "src/zarr/core/metadata/v3.py",
+    "src/zarr/core/sync_group.py"
+  ],
+  "testFiles": [
+    "tests/test_group.py",
+    "tests/test_metadata/test_v3.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 3,
+  "selected": [
+    "tests/test_group.py::TestGroupMetadata::test_extra_fields_survive_rewrite",
+    "tests/test_group.py::TestGroupMetadata::test_from_dict_extra_fields",
+    "tests/test_group.py::TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields",
+    "tests/test_group.py::TestGroupMetadata::test_init_disallowed_extra_fields",
+    "tests/test_group.py::TestGroupMetadata::test_init_extra_fields_collision",
+    "tests/test_group.py::TestGroupMetadata::test_init_extra_fields_v2",
+    "tests/test_group.py::TestGroupMetadata::test_v3_extra_fields_round_trip",
+    "tests/test_group.py::TestInfo::test_info",
+    "tests/test_metadata/test_v3.py::test_array_metadata_extra_fields_rejected",
+    "tests/test_metadata/test_v3.py::test_init_extra_fields_collision",
+    "tests/test_metadata/test_v3.py::test_init_extra_fields_disallowed"
+  ],
+  "counts": {
+    "f2p": 26,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_group.TestGroupMetadata::test_extra_fields_survive_rewrite",
+    "tests.test_group.TestGroupMetadata::test_from_dict_extra_fields",
+    "tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[value0]",
+    "tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[value1]",
+    "tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[not an object]",
+    "tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[1]",
+    "tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[value0]",
+    "tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[value1]",
+    "tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[not an object]",
+    "tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[1]",
+    "tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[attributes]",
+    "tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[consolidated_metadata]",
+    "tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[node_type]",
+    "tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[zarr_format]",
+    "tests.test_group.TestGroupMetadata::test_init_extra_fields_v2",
+    "tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields0]",
+    "tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields1]",
+    "tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields2]",
+    "tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields3]",
+    "tests.test_group.TestInfo::test_info",
+    "tests.test_metadata.test_v3::test_array_metadata_extra_fields_rejected[must_understand_true]",
+    "tests.test_metadata.test_v3::test_array_metadata_extra_fields_rejected[non_dict_extra_field]",
+    "tests.test_metadata.test_v3::test_init_extra_fields_collision",
+    "tests.test_metadata.test_v3::test_init_extra_fields_disallowed[value0]",
+    "tests.test_metadata.test_v3::test_init_extra_fields_disallowed[value1]",
+    "tests.test_metadata.test_v3::test_init_extra_fields_disallowed[42]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

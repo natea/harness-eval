@@ -1,0 +1,21 @@
+{
+  "pr": 610,
+  "issue": 484,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0043046000000000004,
+  "prAuthor": "jamesbraza",
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "We should allow for `pqa --paper_directory=~/foo`",
+      "rationale": "States desired behavior only; no cause or change described. The reference fix has no non-test changes, so nothing is revealed.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ]
+}

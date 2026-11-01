@@ -1,0 +1,28 @@
+{
+  "pr": 4391,
+  "issue": 3523,
+  "tStar": "2026-09-24T01:52:24Z",
+  "title": "metadata parsing rejects zarr metadata with unknown fields",
+  "issueAuthor": "d-v-b",
+  "body": "We must accept unknown fields that are JSON objects with `\"must_understand\": false`, per [the spec](https://github.com/zarr-developers/zarr-specs/blob/main/docs/v3/core/index.rst#must_understand)",
+  "comments": [
+    {
+      "at": "2025-11-03T10:11:24Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "closed by https://github.com/zarr-developers/zarr-python/pull/3530",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-11-03T10:11:58Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "oops, that PR only fixed this problem for arrays. this is still open for groups/",
+      "source": "no-edits"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "we do not parse it correctly. We should be able to handle that.",
+      "rationale": "Shows a model response with literal newlines inside a JSON string that fails to parse. It does not identify the parsing function or the mechanism, and it proposes no fix. A developer would still need to find llm_read_json and decide to escape the newlines.",
+      "author": "whitead",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

@@ -1,0 +1,46 @@
+{
+  "pr": 11523,
+  "merged": "2026-08-18",
+  "issues": [
+    {
+      "n": 10194,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "pyproject.toml",
+    "xarray/core/variable.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_coordinates.py",
+    "xarray/tests/test_dataset.py",
+    "xarray/tests/test_variable.py"
+  ],
+  "env": "exclude-newer 2026-08-14T08:30:15-06:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_coordinates.py::TestCoordinates::test_coordinates_as_coord_value",
+    "xarray/tests/test_coordinates.py::TestCoordinates::test_operator_merge",
+    "xarray/tests/test_coordinates.py::TestCoordinates::test_rename_vars",
+    "xarray/tests/test_dataset.py::TestDataset::test_drop_attrs",
+    "xarray/tests/test_variable.py::TestVariable::test_as_variable",
+    "xarray/tests/test_variable.py::TestVariable::test_repr"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 4,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_coordinates.TestCoordinates::test_coordinates_as_coord_value",
+    "xarray.tests.test_variable.TestVariable::test_as_variable"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

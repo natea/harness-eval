@@ -1,0 +1,33 @@
+# apply_ufunc should include variable names in error messages
+
+_Opened by @shoyer_
+
+This would make it easier to debug issues with dimensions.
+
+For example, in [this example](https://stackoverflow.com/questions/49959449/how-to-use-xr-apply-ufunc-with-changing-dimensions) from StackOverflow, the error message was `ValueError: operand to apply_ufunc has required core dimensions ['time', 'lat', 'lon'], but some of these are missing on the input variable:  ['lat', 'lon']`.
+
+A better error message would be: `ValueError: operand to apply_ufunc has required core dimensions ['time', 'lat', 'lon'], but some of these are missing on input variable 'status':  ['lat', 'lon']`
+
+---
+
+## Discussion
+
+**@rdrussotto** (2019-07-13):
+
+I am working on this. The error listed here is thrown by the "broadcast_compat_data" function, which is called by "apply_variable_ufunc", which is in turn called by "apply_ufunc". There are other similar error messages that can happen where a variable name would also be helpful.
+
+**@rdrussotto** (2019-07-13):
+
+This is much harder than I thought. The function that throws this error doesn't have access to the variable name data, since it takes Variable objects as input which don't contain name information. apply_ufunc and its dependent functions are designed to take in a Dataset, DataArray, Variable, GroupBy or other object that might contain one or many variables, strip out the individual variable objects and run the computation on each of them. Including the variable name in the error message would require separately specifying the variable name as an input argument to "broadcast_compat_data" and "apply_variable_ufunc" and refactoring the code that calls these functions, which seems like adding too much complexity just for an error message. For now I think I'm going to change "the input variable" to "an input variable", which is at least a more accurate.
+
+**@shoyer** (2019-07-14):
+
+> Including the variable name in the error message would require separately specifying the variable name as an input argument to "broadcast_compat_data" and "apply_variable_ufunc" and refactoring the code that calls these functions, which seems like adding too much complexity just for an error message.
+
+I agree that this is more complex, but it still might be worth doing. Good error messages are important!
+
+We do internally in a few other places already.
+
+**@rdrussotto** (2019-08-26):
+
+The clarification I mentioned has now been committed, with other edits to the error message suggested by @dcherian. Obviously it doesn't make sense to close the issue yet, in case someone wants to take on the tougher task of adding the variable name to the message.

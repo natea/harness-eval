@@ -1,0 +1,1068 @@
+[
+  {
+    "pr": 1311,
+    "issue": 1310,
+    "issueCreated": "2026-03-03T09:11",
+    "tStar": "2026-03-03T21:08",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "mentions #N|sha-like|mentions PR|fix language|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "fix language",
+      "diff block",
+      "code block"
+    ]
+  },
+  {
+    "pr": 1298,
+    "issue": 1273,
+    "issueCreated": "2026-01-22T22:14",
+    "tStar": "2026-02-20T22:30",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 11,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "sha-like|mentions PR|fix language|code block",
+      "code block",
+      "sha-like|code block",
+      "code block",
+      "fix language|diff block",
+      "code block",
+      "fix language",
+      "mentions #N"
+    ],
+    "labelsAtT": [
+      "question"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 1296,
+    "issue": 1274,
+    "issueCreated": "2026-01-25T00:52",
+    "tStar": "2026-02-20T07:39",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 3,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "sha-like"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 1262,
+    "issue": 1257,
+    "issueCreated": "2025-12-26T11:44",
+    "tStar": "2026-01-03T18:24",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "sha-like|diff block",
+      "fix language"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 1260,
+    "issue": 1258,
+    "issueCreated": "2025-12-30T10:03",
+    "tStar": "2025-12-31T06:08",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "sha-like|fix language|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "fix language",
+      "diff block",
+      "code block"
+    ]
+  },
+  {
+    "pr": 1255,
+    "issue": 1254,
+    "issueCreated": "2025-12-23T13:58",
+    "tStar": "2025-12-23T15:13",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 2,
+    "keptCommentFlags": [
+      "mentions #N|sha-like|mentions PR|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like",
+      "mentions PR",
+      "fix language",
+      "code block"
+    ]
+  },
+  {
+    "pr": 1251,
+    "issue": 1250,
+    "issueCreated": "2025-12-22T14:05",
+    "tStar": "2025-12-22T14:39",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 3,
+    "commentsDropped": 3,
+    "keptCommentFlags": [
+      "sha-like|fix language",
+      "sha-like|fix language"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like",
+      "code block"
+    ]
+  },
+  {
+    "pr": 1186,
+    "issue": 1165,
+    "issueCreated": "2025-11-01T14:45",
+    "tStar": "2025-11-08T01:56",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 3,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "mentions #N|sha-like|mentions PR",
+      "diff block"
+    ],
+    "labelsAtT": [
+      "enhancement"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 1174,
+    "issue": 1172,
+    "issueCreated": "2025-11-02T13:31",
+    "tStar": "2025-11-03T22:48",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "sha-like",
+      "fix language|code block"
+    ],
+    "labelsAtT": [
+      "question"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 1029,
+    "issue": 1005,
+    "issueCreated": "2025-07-14T16:18",
+    "tStar": "2025-07-24T18:53",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 11,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "sha-like",
+      "code block",
+      "sha-like",
+      "sha-like",
+      "diff block",
+      "sha-like|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 1027,
+    "issue": 1026,
+    "issueCreated": "2025-07-24T14:32",
+    "tStar": "2025-07-24T16:34",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 3,
+    "keptCommentFlags": [
+      "sha-like|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 974,
+    "issue": 958,
+    "issueCreated": "2025-06-10T10:07",
+    "tStar": "2025-06-14T18:54",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "sha-like"
+    ],
+    "labelsAtT": [
+      "question"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 961,
+    "issue": 959,
+    "issueCreated": "2025-06-10T23:37",
+    "tStar": "2025-06-11T04:32",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 2,
+    "bodyEditsAfter": 0,
+    "bodySource": "edit@2025-06-10T23:37:41Z",
+    "editModelOk": true,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 894,
+    "issue": 889,
+    "issueCreated": "2025-02-25T02:40",
+    "tStar": "2025-02-28T07:25",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 5,
+    "bodyEditsAfter": 0,
+    "bodySource": "edit@2025-02-25T05:31:25Z",
+    "editModelOk": true,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "sha-like|fix language|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 871,
+    "issue": 796,
+    "issueCreated": "2025-01-08T18:59",
+    "tStar": "2025-02-17T17:45",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 4,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "code block",
+      "mentions PR|fix language"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 834,
+    "issue": 832,
+    "issueCreated": "2025-01-25T18:00",
+    "tStar": "2025-01-27T16:10",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 3,
+    "bodyEditsAfter": 0,
+    "bodySource": "edit@2025-01-25T18:02:34Z",
+    "editModelOk": true,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "documentation"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Connected",
+      "Assigned",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like"
+    ]
+  },
+  {
+    "pr": 768,
+    "issue": 761,
+    "issueCreated": "2024-12-11T20:26",
+    "tStar": "2024-12-17T23:34",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "enhancement"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed",
+      "Reopened"
+    ],
+    "bodyFlags": [
+      "mentions PR"
+    ]
+  },
+  {
+    "pr": 763,
+    "issue": 759,
+    "issueCreated": "2024-12-11T14:50",
+    "tStar": "2024-12-12T00:06",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 2,
+    "bodyEditsAfter": 0,
+    "bodySource": "edit@2024-12-11T14:52:33Z",
+    "editModelOk": true,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "sha-like|fix language|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like",
+      "code block"
+    ]
+  },
+  {
+    "pr": 724,
+    "issue": 709,
+    "issueCreated": "2024-11-19T23:16",
+    "tStar": "2024-11-26T18:37",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 717,
+    "issue": 710,
+    "issueCreated": "2024-11-19T23:42",
+    "tStar": "2024-11-21T08:33",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 2,
+    "bodyEditsAfter": 0,
+    "bodySource": "edit@2024-11-19T23:43:23Z",
+    "editModelOk": true,
+    "bodyChangedVsLive": false,
+    "commentsKept": 1,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "mentions PR"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "fix language",
+      "code block"
+    ]
+  },
+  {
+    "pr": 708,
+    "issue": 693,
+    "issueCreated": "2024-11-15T18:58",
+    "tStar": "2024-11-19T18:47",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 1,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 610,
+    "issue": 484,
+    "issueCreated": "2024-09-26T00:02",
+    "tStar": "2024-10-18T19:28",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 575,
+    "issue": 568,
+    "issueCreated": "2024-10-11T03:53",
+    "tStar": "2024-10-11T18:22",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "mentions PR|fix language",
+      "mentions PR"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like",
+      "mentions PR",
+      "code block"
+    ]
+  },
+  {
+    "pr": 551,
+    "issue": 546,
+    "issueCreated": "2024-10-09T06:47",
+    "tStar": "2024-10-09T16:59",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 5,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "code block",
+      "fix language|code block"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Referenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 515,
+    "issue": 478,
+    "issueCreated": "2024-09-24T22:09",
+    "tStar": "2024-10-02T01:21",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "enhancement"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced"
+    ],
+    "bodyFlags": [
+      "diff block"
+    ]
+  },
+  {
+    "pr": 512,
+    "issue": 488,
+    "issueCreated": "2024-09-26T23:02",
+    "tStar": "2024-10-01T19:10",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "enhancement"
+    ],
+    "liveEventsAfterT": [
+      "Assigned",
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 512,
+    "issue": 499,
+    "issueCreated": "2024-09-27T18:47",
+    "tStar": "2024-10-01T19:10",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "enhancement"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 491,
+    "issue": 490,
+    "issueCreated": "2024-09-27T01:45",
+    "tStar": "2024-09-27T01:51",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "fix language|code block",
+      "mentions PR"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 467,
+    "issue": 417,
+    "issueCreated": "2024-09-16T08:15",
+    "tStar": "2024-09-23T21:07",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "code block"
+    ],
+    "labelsAtT": [
+      "question"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 467,
+    "issue": 455,
+    "issueCreated": "2024-09-22T05:47",
+    "tStar": "2024-09-23T21:07",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 6,
+    "commentsDropped": 0,
+    "keptCommentFlags": [
+      "fix language|code block",
+      "code block",
+      "code block",
+      "fix language"
+    ],
+    "labelsAtT": [
+      "bug"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced"
+    ],
+    "bodyFlags": [
+      "sha-like"
+    ]
+  },
+  {
+    "pr": 438,
+    "issue": 402,
+    "issueCreated": "2024-09-13T23:32",
+    "tStar": "2024-09-18T21:45",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 6,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "code block",
+      "code block",
+      "code block"
+    ],
+    "labelsAtT": [
+      "question"
+    ],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 410,
+    "issue": 409,
+    "issueCreated": "2024-09-14T04:02",
+    "tStar": "2024-09-14T04:08",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [
+      "documentation"
+    ],
+    "liveEventsAfterT": [
+      "Referenced",
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "diff block"
+    ]
+  },
+  {
+    "pr": 404,
+    "issue": 396,
+    "issueCreated": "2024-09-13T19:29",
+    "tStar": "2024-09-13T23:53",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 2,
+    "commentsDropped": 1,
+    "keptCommentFlags": [
+      "code block"
+    ],
+    "labelsAtT": [
+      "documentation"
+    ],
+    "liveEventsAfterT": [
+      "Referenced",
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 370,
+    "issue": 366,
+    "issueCreated": "2024-09-11T15:36",
+    "tStar": "2024-09-04T21:36",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": false,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [],
+    "liveEventsAfterT": [
+      "Assigned",
+      "CrossReferenced",
+      "Labeled",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like"
+    ]
+  },
+  {
+    "pr": 314,
+    "issue": 313,
+    "issueCreated": "2024-09-05T20:23",
+    "tStar": "2024-09-04T21:36",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": false,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 1,
+    "keptCommentFlags": [],
+    "labelsAtT": [],
+    "liveEventsAfterT": [
+      "Assigned",
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": []
+  },
+  {
+    "pr": 293,
+    "issue": 292,
+    "issueCreated": "2024-06-25T15:25",
+    "tStar": "2024-06-25T15:33",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 0,
+    "keptCommentFlags": [],
+    "labelsAtT": [],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "code block"
+    ]
+  },
+  {
+    "pr": 138,
+    "issue": 137,
+    "issueCreated": "2023-06-10T10:51",
+    "tStar": "2023-06-10T11:10",
+    "cutBy": "firstPrCommit",
+    "issueBeforeFix": true,
+    "titleChanged": false,
+    "bodyEdits": 0,
+    "bodyEditsAfter": 0,
+    "bodySource": "no-edits",
+    "editModelOk": null,
+    "bodyChangedVsLive": false,
+    "commentsKept": 0,
+    "commentsDropped": 2,
+    "keptCommentFlags": [],
+    "labelsAtT": [],
+    "liveEventsAfterT": [
+      "CrossReferenced",
+      "Closed"
+    ],
+    "bodyFlags": [
+      "sha-like",
+      "code block"
+    ]
+  }
+]

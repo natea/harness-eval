@@ -1,0 +1,44 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11663
+issues:
+  - 11361
+baseSha: f1234b60ac2f2dfa5a856dfb315770eb4c0c0aea
+mergeSha: 77ba6531aeea1d7840c5cca2c8eeeb03ae82870a
+tStar: 2026-10-03T11:15:18Z
+issueCreatedAt: 2026-05-27T09:03:00Z
+prMergedAt: 2026-10-19T07:02:37Z
+verdict: VALID
+failToPass:
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_datatree-zarr_format=2]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_datatree-zarr_format=3]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_groups-zarr_format=2]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_groups-zarr_format=3]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_datatree-zarr_format=2]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_datatree-zarr_format=3]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_groups-zarr_format=2]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_groups-zarr_format=3]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_datatree-zarr_format=2]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_datatree-zarr_format=3]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_groups-zarr_format=2]
+  - xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_groups-zarr_format=3]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 4d333e596d2048b86fe9d91d7369dcf8044ffa277b4850850febba201519258e
+  issue/body+human.md: 4d333e596d2048b86fe9d91d7369dcf8044ffa277b4850850febba201519258e
+  issue/body.md: 4d333e596d2048b86fe9d91d7369dcf8044ffa277b4850850febba201519258e
+  leaks.json: 680904e1c109ac9ceb9b24296907ae153a09dd8cbc94526c58edbda6e9c0acc6
+  reference.patch: ba075b7b73ab3002ff233f427353522040b9fdc8b7ecff84fc5223d9e6912047
+  snapshot.json: e488b693637cb154475bdb303ab0b90ae3a302ea685ba10c8c0d74c9c6e02537
+  tests.patch: c23c7da1c343752325a20c6ff29de7efb64928aaf89a8ea0abf44b4d7d0535ee
+  validation.json: 9a9848fae9e248841bc21560f81ed225136e1578adf3dffba8d8e1590b1f1f9c

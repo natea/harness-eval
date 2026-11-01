@@ -1,0 +1,65 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11798
+issues:
+  - 6449
+baseSha: 410d6592d44451fcfceff040bcd8e51dfba9e0cf
+mergeSha: 89873e115837a2745088067f62d834be2417ca49
+tStar: 2026-10-23T14:14:48Z
+issueCreatedAt: 2022-04-06T19:46:12Z
+prMergedAt: 2026-10-24T15:06:09Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-python-pandas-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-python-python-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-None-pandas-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-None-python-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-python-pandas-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-python-python-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-None-pandas-True]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-None-python-True]
+passToPass:
+  - xarray.tests.test_dataset.TestDataset::test_astype_attrs
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-python-pandas-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-python-python-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-None-pandas-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[numpy-None-python-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-python-pandas-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-python-python-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-None-pandas-False]
+  - xarray.tests.test_dataset.TestDataset::test_query[dask-None-python-False]
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: symptom
+cutBy: firstPrCommit
+env:
+  method: exclude-newer
+  digest: a41cba24c2d4ff0be2a43cbcddbea6c88db8076ce20431c98332f134811ff13f
+  python: "3.12"
+validationSelection: touched
+humanBaseline:
+  codingWindowMinutes: 0
+  reviewMinutes: 1406
+  reviewRounds: 2
+  commitsAfterFirstReview: 1
+  issueLifetimeMinutes: 2393000
+  humanDiff:
+    linesAdded: 8
+    linesRemoved: 2
+    filesTouched: 2
+provisional: false
+files:
+  issue/body+all.md: 4265f8b9887cd68968b0b83d92d22f515994a37e63bffc4821123b7d29243dc7
+  issue/body+human.md: 4265f8b9887cd68968b0b83d92d22f515994a37e63bffc4821123b7d29243dc7
+  issue/body.md: d15728120140a0e16a2fff25342430811f53846bd946cd9d9388c00ba1806a9a
+  leaks.json: 8e7130f2a648a0bf9b487661a75b8ba6ed33ba4a3f7c10ce2a10e411eddb0c71
+  reference.patch: f6f948aa30a1d58a2a4c5fe849bd57ed10fded309373b4d4f7e03b90e42407fe
+  snapshot.json: 994a0e6038ad31abbd5f67070c17bc5be566f92904026b73c40d0314ee775a4f
+  tests.patch: b4bdb78767215aff306f35eb34fea483bc1958ff9f70c251b131cfe4c0367321
+  validation.json: d20cf23149834e9a9f5248d10aa3dfb2efa71df72d9a4db5b78b609fa9849508

@@ -1,0 +1,135 @@
+# `chunks` argument is typed incorrected in `open_zarr`
+
+_Opened by @C-Loftus_
+
+### What happened?
+
+If you try to type check a project that is using xarray there will be a failure when checking `open_zarr`. It is a best practice not to ignore this since if you do you generally have to ignore all type checking info on the open call which is otherwise useful.
+
+This error I believe is since the default argument is of type `Default` which is a dummy type and thus causes issues when checking it. This essentially narrows the type more strict than just `Unknown` to my understanding.
+
+Log message:
+```
+error: Argument of type "Literal['auto']" cannot be assigned to parameter "chunks" of type "Default" in function "open_zarr"
+```
+
+### What did you expect to happen?
+
+Open zarr should be typed in such a way that match the input arguments or not have any type information and be specified as the `Unknown` type
+
+### Minimal Complete Verifiable Example
+
+```Python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "xarray[complete]@git+https://github.com/pydata/xarray.git@main",
+# ]
+# ///
+#
+# This script automatically imports the development branch of xarray to check for issues.
+# Please delete this header if you have _not_ tested this script with `uv run`!
+
+import inspect
+import xarray as xr
+
+xr.show_versions()
+
+from xarray import open_zarr
+
+sig = inspect.signature(open_zarr)
+store_argument = sig.parameters["store"]
+
+# should show no type information; different type checkers will narrow 
+# this differently but many including pyright / pylance will fail on it
+print(store_argument.annotation)
+```
+
+### Steps to reproduce
+
+Type check any xarray project with pyright that uses `open_zarr` and passes in `"auto"` for the chunks arg.
+
+### MVCE confirmation
+
+- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [x] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.
+- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.
+
+### Relevant log output
+
+```Python
+error: Argument of type "Literal['auto']" cannot be assigned to parameter "chunks" of type "Default" in function "open_zarr"
+```
+
+### Anything else we need to know?
+
+From the type info in the docstring it seems like the type should be
+
+`Literal["auto"] | None | Literal[-1] | dict`
+
+I can create a PR for this if needed.
+
+
+I was using pyright
+```
+pyright 1.1.402
+```
+but I don't think this is specific to pyright
+
+### Environment
+
+<details>
+
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.12.8 (main, Dec  6 2024, 19:42:06) [Clang 18.1.8 ]
+python-bits: 64
+OS: Darwin
+OS-release: 25.2.0
+machine: arm64
+processor: arm
+byteorder: little
+LC_ALL: None
+LANG: en_US.UTF-8
+LOCALE: ('en_US', 'UTF-8')
+libhdf5: 1.14.6
+libnetcdf: 4.9.3
+
+xarray: 2026.2.0
+pandas: 3.0.1
+numpy: 2.4.3
+scipy: None
+netCDF4: 1.7.4
+pydap: None
+h5netcdf: None
+h5py: None
+zarr: 3.1.5
+cftime: 1.6.5
+nc_time_axis: None
+iris: None
+bottleneck: None
+dask: None
+distributed: None
+matplotlib: None
+cartopy: None
+seaborn: None
+numbagg: None
+fsspec: 2026.2.0
+cupy: None
+pint: None
+sparse: None
+flox: None
+numpy_groupies: None
+setuptools: None
+pip: None
+conda: None
+pytest: 9.0.2
+mypy: None
+IPython: None
+sphinx: None
+
+
+</details>

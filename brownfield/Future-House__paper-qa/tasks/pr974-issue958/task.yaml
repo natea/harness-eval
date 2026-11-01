@@ -1,0 +1,32 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 974
+issues:
+  - 958
+baseSha: efa41d4a6792f684b519b75411c3a61217b9f32c
+mergeSha: 0407d0a1667ad6ca8867fa2b6697065eb1c06822
+tStar: 2025-06-14T18:54:33Z
+issueCreatedAt: 2025-06-10T10:07:00Z
+prMergedAt: 2025-06-16T20:19:10Z
+verdict: skip:no-src-code-change
+failToPass: []
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: dae6bdf4cabc398ea69f7bdf14afa3699a5da6a77bb8e595c350f3236d4536c7
+  issue/body+human.md: 0a69288e67f2a665631376667a96e8499ffb49c360a3c7eebc1e4ba8a7146366
+  issue/body.md: 91e1eed942a780c612ab6640368bee470ab834e466e81ab6f1df7e8ccbcab6a3
+  leaks.json: 288948b9439852da6bcb5e931a7288e5a11cc5bd2ec1fa893510a1025e168d56
+  reference.patch: ca1e713388131a4692aee7056b1e99f5e18d0a004eaaf7fe56abba4a845ef6a6
+  snapshot.json: a9b06a903ec9fce241d5ca3652849517909641c6196d6afb27216f3c24cbb70f
+  tests.patch: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  validation.json: 8fdb9b846689eb759f69aefdd098f95f79dad73b9a843a8eac1fbe3be980450a

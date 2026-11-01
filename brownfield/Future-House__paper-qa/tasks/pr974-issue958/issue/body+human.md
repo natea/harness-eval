@@ -1,0 +1,38 @@
+# What parameter determines top k sources?
+
+_Opened by @jacknguyen0810_
+
+Hi, 
+
+In the Language Agents Achieve Superhuman Synthesis of Scientific Knowledge paper, the top-k sources can be varied, although set to 30 in the paper. 
+
+I want to vary this parameter. However, it is unclear which parameter this is. 
+
+I believe the 
+
+```python
+AnswerSettings(evidence_k=30)
+```
+
+is the appropriate parameter. 
+
+However, in the README is says the way to vary this parameter is 
+```python
+settings = Settings()
+settings.answer.k = 30
+```
+
+And the paper says that the parameter is:
+```python
+consider_sources = 30
+```
+
+Please could someone confirm which is the correct way to vary the top-k parameter?
+
+---
+
+## Discussion
+
+**@jacknguyen0810** (2025-06-10):
+
+Thank you.

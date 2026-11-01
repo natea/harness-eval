@@ -1,0 +1,36 @@
+diff --git a/xarray/tests/test_coarsen.py b/xarray/tests/test_coarsen.py
+index d303b859..fb737d73 100644
+--- a/xarray/tests/test_coarsen.py
++++ b/xarray/tests/test_coarsen.py
+@@ -63,14 +63,14 @@ def test_coarsen_coords(ds, dask):
+         dims="time",
+         coords={"time": pd.date_range("1999-12-15", periods=364)},
+     )
+-    actual = da.coarsen(time=2).mean()  # type: ignore[attr-defined]
++    actual = da.coarsen(time=2).mean()
+ 
+ 
+ @requires_cftime
+ def test_coarsen_coords_cftime():
+     times = xr.date_range("2000", periods=6, use_cftime=True)
+     da = xr.DataArray(range(6), [("time", times)])
+-    actual = da.coarsen(time=3).mean()  # type: ignore[attr-defined]
++    actual = da.coarsen(time=3).mean()
+     expected_times = xr.date_range("2000-01-02", freq="3D", periods=2, use_cftime=True)
+     np.testing.assert_array_equal(actual.time, expected_times)
+ 
+diff --git a/xarray/tests/test_sparse.py b/xarray/tests/test_sparse.py
+index 0acf3916..4f819a9a 100644
+--- a/xarray/tests/test_sparse.py
++++ b/xarray/tests/test_sparse.py
+@@ -784,8 +784,8 @@ class TestSparseDataArrayAndDataset:
+     def test_coarsen(self):
+         a1 = self.ds_xr
+         a2 = self.sp_xr
+-        m1 = a1.coarsen(x=2, boundary="trim").mean()  # type: ignore[attr-defined]
+-        m2 = a2.coarsen(x=2, boundary="trim").mean()  # type: ignore[attr-defined]
++        m1 = a1.coarsen(x=2, boundary="trim").mean()
++        m2 = a2.coarsen(x=2, boundary="trim").mean()
+ 
+         assert isinstance(m2.data, sparse.SparseArray)
+         assert np.allclose(m1.data, m2.data.todense())

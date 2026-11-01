@@ -1,0 +1,11 @@
+# Log `This may take a few minutes` less
+
+_Opened by @jamesbraza_
+
+This log line shows up a lot at inference time:
+
+```
+2024-09-27 11:44:57,184 - paperqa.agents.search - WARNING - Indexing 5497 files. This may take a few minutes.
+```
+
+We need to make this happen less. https://github.com/Future-House/paper-qa/issues/488 will probably alleviate this too

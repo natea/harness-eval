@@ -1,0 +1,21 @@
+{
+  "pr": 11322,
+  "issue": 11317,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0137506,
+  "prAuthor": "SAY-5",
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the pd.Index apparently introduces a `StringDtype` coord, while the coord of da has dtype `<U1`.",
+      "rationale": "Reports the error and repro, and speculates on the cause (StringDtype vs <U1) and possible solutions without naming the code location or the fix. It does not point to _calc_concat_dim_index or the dtype mapping, so it stays at symptom.",
+      "author": "vincentschut",
+      "role": "issue author"
+    }
+  ]
+}

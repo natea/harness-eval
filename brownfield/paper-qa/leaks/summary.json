@@ -1,0 +1,335 @@
+[
+  {
+    "pr": 1311,
+    "issue": 1310,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.022166599999999998,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "fix_code",
+    "commentsLevel": "fix_code"
+  },
+  {
+    "pr": 1298,
+    "issue": 1273,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.05412,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "diagnosis"
+  },
+  {
+    "pr": 1296,
+    "issue": 1274,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.022028600000000002,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "diagnosis"
+  },
+  {
+    "pr": 1262,
+    "issue": 1257,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0266066,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "diagnosis"
+  },
+  {
+    "pr": 1260,
+    "issue": 1258,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.035002599999999995,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "symptom"
+  },
+  {
+    "pr": 1255,
+    "issue": 1254,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.042056600000000006,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "symptom"
+  },
+  {
+    "pr": 1251,
+    "issue": 1250,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0417986,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "symptom"
+  },
+  {
+    "pr": 1186,
+    "issue": 1165,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0191186,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 1174,
+    "issue": 1172,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.014812599999999999,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_code"
+  },
+  {
+    "pr": 1029,
+    "issue": 1005,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0602506,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 1027,
+    "issue": 1026,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0185486,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "diagnosis"
+  },
+  {
+    "pr": 974,
+    "issue": 958,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0118866,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 961,
+    "issue": 959,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0116286,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "symptom"
+  },
+  {
+    "pr": 894,
+    "issue": 889,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0190206,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "diagnosis"
+  },
+  {
+    "pr": 871,
+    "issue": 796,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0252026,
+    "prAuthor": "JoaquinPolonuer",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 834,
+    "issue": 832,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0054146,
+    "prAuthor": "maykcaldas",
+    "bodyLevel": "fix_code",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 768,
+    "issue": 761,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0392326,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "fix_sketch",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 763,
+    "issue": 759,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.025368599999999998,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "symptom"
+  },
+  {
+    "pr": 724,
+    "issue": 709,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0067486,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 717,
+    "issue": 710,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0099926,
+    "prAuthor": "loesinghaus",
+    "bodyLevel": "fix_code",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 708,
+    "issue": 693,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0234986,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 610,
+    "issue": 484,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0043046000000000004,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 575,
+    "issue": 568,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0195806,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "fix_sketch",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 551,
+    "issue": 546,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.018204599999999998,
+    "prAuthor": "whitead",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 515,
+    "issue": 478,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0128066,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 512,
+    "issue": 499,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0172726,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 512,
+    "issue": 488,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0178106,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "fix_sketch",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 491,
+    "issue": 490,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0139666,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 467,
+    "issue": 455,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0171306,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "diagnosis"
+  },
+  {
+    "pr": 467,
+    "issue": 417,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0111106,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 438,
+    "issue": 402,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0507846,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 410,
+    "issue": 409,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0050546,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 404,
+    "issue": 396,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0129546,
+    "prAuthor": "jamesbraza",
+    "bodyLevel": "symptom",
+    "commentsLevel": "fix_sketch"
+  },
+  {
+    "pr": 370,
+    "issue": 366,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.017958599999999998,
+    "prAuthor": "geemi725",
+    "bodyLevel": "diagnosis",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 314,
+    "issue": 313,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.015522600000000001,
+    "prAuthor": "geemi725",
+    "bodyLevel": "noise",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 293,
+    "issue": 292,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0079126,
+    "prAuthor": "whitead",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  },
+  {
+    "pr": 138,
+    "issue": 137,
+    "model": "claude-sonnet-5-5",
+    "cost": 0.0112406,
+    "prAuthor": "whitead",
+    "bodyLevel": "symptom",
+    "commentsLevel": "noise"
+  }
+]

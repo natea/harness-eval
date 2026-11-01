@@ -1,0 +1,16 @@
+{
+  "pr": 974,
+  "merged": "2025-06-16",
+  "issues": [
+    {
+      "n": 958,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 1,
+  "srcFiles": [
+    "README.md"
+  ],
+  "testFiles": [],
+  "verdict": "skip:no-src-code-change"
+}

@@ -1,0 +1,44 @@
+diff --git a/changes/4483.bugfix.md b/changes/4483.bugfix.md
+new file mode 100644
+index 00000000..7f90482d
+--- /dev/null
++++ b/changes/4483.bugfix.md
+@@ -0,0 +1 @@
++FusedCodecPipeline reads no longer hang in a process forked after a read populated the module-level codec thread pool. `_pool`, `_pool_size`, and `_pool_lock` are now reset in the child via an `os.register_at_fork` hook. Previously the child inherited an executor whose threads did not exist, so small reads were queued on a pool nothing would run.
+diff --git a/src/zarr/core/codec_pipeline.py b/src/zarr/core/codec_pipeline.py
+index 9ed16bc3..dd893ea8 100644
+--- a/src/zarr/core/codec_pipeline.py
++++ b/src/zarr/core/codec_pipeline.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import asyncio
++import os
+ import threading
+ from concurrent.futures import ThreadPoolExecutor
+ from dataclasses import dataclass, field
+@@ -100,6 +101,24 @@ def _get_pool(max_workers: int) -> ThreadPoolExecutor:
+     return _pool
+ 
+ 
++def _reset_pool_after_fork() -> None:
++    """Discard the pool a forked child inherits from its parent.
++
++    Executor threads do not survive `fork()`, so the inherited pool accepts
++    submissions that no thread ever runs. The lock is recreated too: it may
++    have been held by a thread that no longer exists in the child.
++    """
++    global _pool, _pool_size, _pool_lock
++    _pool = None  # pragma: no cover
++    _pool_size = 0  # pragma: no cover
++    _pool_lock = threading.Lock()  # pragma: no cover
++
++
++# this is only available on certain operating systems
++if hasattr(os, "register_at_fork"):
++    os.register_at_fork(after_in_child=_reset_pool_after_fork)
++
++
+ def _unzip2[T, U](iterable: Iterable[tuple[T, U]]) -> tuple[list[T], list[U]]:
+     out0: list[T] = []
+     out1: list[U] = []

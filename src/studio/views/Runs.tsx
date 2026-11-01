@@ -1,5 +1,13 @@
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+	ALL_APPS,
+	type AppRef,
+	appOptions,
+	effectiveApp,
+	matchesApp,
+	useAppParam,
+} from "../../app-filter";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
 import {
@@ -58,7 +66,7 @@ interface Row {
 	cost?: number;
 	link: boolean;
 	error?: string;
-	target?: { name: string; title: string } | null;
+	target?: AppRef | null;
 	/** Epoch ms parsed from the run id timestamp (for sorting), or null. */
 	ts: number | null;
 	/** Built-but-ungraded trials remain → show "Resume grading". */
@@ -80,9 +88,12 @@ const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> =
 function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 	const byId = new Map<string, Row>();
 	for (const r of disk) {
-		const cands = r.summary?.scores.map((s) => s.candidate) ?? [];
+		const scored = r.summary?.scores.map((s) => s.candidate) ?? [];
+		// Brownfield runs carry candidates and a trial count but no scores.
+		const cands = scored.length ? scored : (r.summary?.candidates ?? []);
 		const total = r.summary
-			? cands.length * r.summary.config.trialsPerCandidate
+			? (r.summary.trialCount ??
+				cands.length * r.summary.config.trialsPerCandidate)
 			: 0;
 		byId.set(r.runId, {
 			runId: r.runId,
@@ -140,7 +151,7 @@ export function Runs() {
 	const [queue, setQueue] = useState<QueueEntry[]>([]);
 	const [disk, setDisk] = useState<RunSummary[]>([]);
 	const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
-	const [appFilter, setAppFilter] = useState<string>("all");
+	const [rawApp, setApp] = useAppParam();
 	// Runs we've asked to cancel — shows "cancelling…" until the status flips
 	// (cancellation is cooperative; an in-flight build finishes its step first).
 	const [cancelling, setCancelling] = useState<Set<string>>(new Set());
@@ -224,17 +235,9 @@ export function Runs() {
 		return sortDir === "desc" ? bv - av : av - bv;
 	});
 	// Distinct apps present across runs, for the filter dropdown.
-	const apps = [
-		...new Map(
-			allRows
-				.filter((r) => r.target)
-				.map((r) => [r.target?.name as string, r.target?.title as string]),
-		).entries(),
-	].sort((a, b) => a[1].localeCompare(b[1]));
-	const rows =
-		appFilter === "all"
-			? allRows
-			: allRows.filter((r) => r.target?.name === appFilter);
+	const apps = appOptions(allRows.map((r) => r.target));
+	const appFilter = effectiveApp(rawApp, apps);
+	const rows = allRows.filter((r) => matchesApp(r.target, appFilter));
 
 	const spin = (
 		<span
@@ -251,19 +254,19 @@ export function Runs() {
 				actions={
 					<>
 						{apps.length > 0 && (
-							<Select value={appFilter} onValueChange={setAppFilter}>
+							<Select value={appFilter} onValueChange={setApp}>
 								<SelectTrigger
-									aria-label="Target"
+									aria-label="App"
 									className="h-8 w-auto min-w-[200px] gap-2"
 								>
-									<span className="text-muted-foreground">Target</span>
-									<SelectValue placeholder="All targets" />
+									<span className="text-muted-foreground">App</span>
+									<SelectValue placeholder="All" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">All targets</SelectItem>
-									{apps.map(([name, title]) => (
-										<SelectItem key={name} value={name}>
-											{title}
+									<SelectItem value={ALL_APPS}>All</SelectItem>
+									{apps.map((o) => (
+										<SelectItem key={o.value} value={o.value}>
+											{o.label}
 										</SelectItem>
 									))}
 								</SelectContent>
@@ -279,12 +282,12 @@ export function Runs() {
 			{rows.length === 0 ? (
 				<Card className="grid place-items-center gap-2 px-6 py-16 text-center">
 					<h2 className="m-0 text-[15px] font-semibold">
-						{allRows.length === 0 ? "No runs yet" : "No runs for this target"}
+						{allRows.length === 0 ? "No runs yet" : "No runs for this app"}
 					</h2>
 					<p className="m-0 max-w-[48ch] text-[13.5px] text-muted-foreground">
 						{allRows.length === 0
 							? "Launch a dry run first to check the setup costs nothing, then a real run."
-							: "Pick another target, or start a run for this one."}
+							: "Pick another app, or start a run for this one."}
 					</p>
 					<a href="/configure" className={`${btn.primary} mt-2`}>
 						<Plus className="size-3.5" />

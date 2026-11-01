@@ -66,6 +66,37 @@ profiles:
       inputPerMtokUsd: 15
       outputPerMtokUsd: 75
 
+  # Claude Code driven by an API key (the operator has no Max OAuth token).
+  - name: claude-haiku-4-5-key
+    provider: anthropic
+    modelId: claude-haiku-4-5-20251001
+    transport: claude-code
+    authEnv: ANTHROPIC_API_KEY
+    authKind: api-key
+    pricing:
+      inputPerMtokUsd: 1
+      outputPerMtokUsd: 5
+
+  - name: claude-sonnet-4-6-key
+    provider: anthropic
+    modelId: claude-sonnet-4-6
+    transport: claude-code
+    authEnv: ANTHROPIC_API_KEY
+    authKind: api-key
+    pricing:
+      inputPerMtokUsd: 3
+      outputPerMtokUsd: 15
+
+  - name: claude-opus-4-6-key
+    provider: anthropic
+    modelId: claude-opus-4-6
+    transport: claude-code
+    authEnv: ANTHROPIC_API_KEY
+    authKind: api-key
+    pricing:
+      inputPerMtokUsd: 15
+      outputPerMtokUsd: 75
+
   # --- z.ai GLM via Claude Code (Anthropic-compatible coding endpoint) ---
   # Endpoint + integration per docs.z.ai/devpack/tool/claude. z.ai maps Claude's
   # opus/sonnet/haiku slots to GLM models via ANTHROPIC_DEFAULT_*_MODEL (set by

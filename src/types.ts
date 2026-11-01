@@ -62,6 +62,11 @@ export const HarnessSetup = z.object({
 	install: z.array(z.string().min(1)),
 	/** Ordered session steps; rendered with the shared base prompt. */
 	session: z.array(SessionStep).min(1),
+	/**
+	 * Steps for brownfield runs when the framework's greenfield flow doesn't fit an
+	 * existing repo and one issue. Same rules: the framework's own commands only.
+	 */
+	brownfieldSession: z.array(SessionStep).min(1).optional(),
 	continuation: ContinuationPolicy.default(ContinuationPolicy.parse({})),
 });
 export type HarnessSetup = z.infer<typeof HarnessSetup>;
@@ -90,6 +95,13 @@ export type CandidateEntry = z.infer<typeof CandidateEntry>;
 export const Registry = z.object({
 	/** Shared base task prompt template; identical for every candidate. */
 	basePrompt: z.string().min(1),
+	/**
+	 * Base prompt for brownfield trials (add-brownfield-track). Its only
+	 * placeholder is {{ISSUE_FILE}}: all task content lives in the issue file, so
+	 * the rendered prompt is identical for every task and candidate and can never
+	 * name the fixing PR.
+	 */
+	brownfieldBasePrompt: z.string().min(1).optional(),
 	candidates: z.array(CandidateEntry).min(1),
 });
 export type Registry = z.infer<typeof Registry>;
@@ -160,6 +172,8 @@ export const SessionRecord = z.object({
 	costUsd: z.number().nonnegative(),
 	usage: TokenUsage,
 	isError: z.boolean().default(false),
+	/** No final message: duration is measured and cost is a lower-bound estimate. */
+	partial: z.boolean().optional(),
 });
 export type SessionRecord = z.infer<typeof SessionRecord>;
 
@@ -171,6 +185,8 @@ export const TrialTelemetry = z.object({
 	totalCostUsd: z.number().nonnegative(),
 	totalTokens: TokenUsage,
 	totalTurns: z.int().nonnegative(),
+	/** Absent on archived trials, whose session costs are as the CLI reported them. */
+	costBasis: z.enum(["per-step", "corrected-from-cumulative"]).optional(),
 });
 export type TrialTelemetry = z.infer<typeof TrialTelemetry>;
 
@@ -197,6 +213,22 @@ export const CostSource = z.enum([
 ]);
 export type CostSource = z.infer<typeof CostSource>;
 
+/**
+ * Brownfield trial identity (add-brownfield-track, D2): the exact frozen bundle a
+ * trial ran, so a result is attributable to bytes that can never drift. Absent on
+ * PRD-target trials.
+ */
+export const BrownfieldProvenance = z.object({
+	repoDir: z.string(),
+	taskId: z.string(),
+	variant: z.string(),
+	/** sha256 of the bundle manifest (which hashes every bundle file). */
+	bundleSha256: z.string().length(64),
+	baseSha: z.string().min(7),
+	mergeSha: z.string().min(7),
+});
+export type BrownfieldProvenance = z.infer<typeof BrownfieldProvenance>;
+
 export const TrialProvenance = z.object({
 	runId: z.string(),
 	trialId: z.string(),
@@ -217,6 +249,10 @@ export const TrialProvenance = z.object({
 	status: TrialStatus,
 	cappedBy: z.enum(["wall-clock", "cost"]).nullable().default(null),
 	notes: z.array(z.string()).default([]),
+	/** Review flags (e.g. `gateway-rejected: …`); any flag means a human looks at the trial. */
+	flags: z.array(z.string()).default([]),
+	/** Present only for brownfield trials (add-brownfield-track). */
+	brownfield: BrownfieldProvenance.optional(),
 });
 export type TrialProvenance = z.infer<typeof TrialProvenance>;
 
@@ -361,10 +397,32 @@ export type TrialGrades = z.infer<typeof TrialGrades>;
 // Results / report JSON
 // ---------------------------------------------------------------------------
 
+/** Hidden-test resolution for a brownfield trial (task 5.1). */
+export const BrownfieldResolution = z.object({
+	verdict: z.enum(["resolved", "unresolved"]),
+	reason: z.string().nullable(),
+	failToPass: z.record(z.string(), z.string()),
+	passToPass: z.record(z.string(), z.string()),
+	testInfraModified: z.array(z.string()),
+	cassetteMiss: z.array(z.string()),
+});
+export type BrownfieldResolution = z.infer<typeof BrownfieldResolution>;
+
+/** Judge-based secondary signal for a brownfield trial (task 5.2). */
+export const BrownfieldJudge = z.object({
+	resolvesIssue: z.boolean(),
+	quality: z.enum(["good", "partial", "poor"]),
+	notes: z.string(),
+	model: z.string(),
+});
+export type BrownfieldJudge = z.infer<typeof BrownfieldJudge>;
+
 export const TrialResult = z.object({
 	provenance: TrialProvenance,
 	telemetry: TrialTelemetry.nullable(),
 	grades: TrialGrades.nullable(),
+	resolution: BrownfieldResolution.nullable().optional(),
+	judge: BrownfieldJudge.nullable().optional(),
 });
 export type TrialResult = z.infer<typeof TrialResult>;
 

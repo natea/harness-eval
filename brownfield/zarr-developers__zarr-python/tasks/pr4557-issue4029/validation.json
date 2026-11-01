@@ -1,0 +1,38 @@
+{
+  "pr": 4557,
+  "merged": "2026-10-26",
+  "issues": [
+    {
+      "n": 4029,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "changes/4557.bugfix.md",
+    "src/zarr/storage/__init__.py"
+  ],
+  "testFiles": [
+    "tests/test_store/test_core.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 1,
+  "selected": [
+    "tests/test_store/test_core.py::test_different_open_mode",
+    "tests/test_store/test_core.py::test_storage_module_pickles_by_name"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_store.test_core::test_storage_module_pickles_by_name"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

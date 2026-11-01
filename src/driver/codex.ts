@@ -37,8 +37,11 @@ const runCodexExec = createPrintCliSessionRunner({
 				: "";
 		// `--skip-git-repo-check` so a non-repo workspace doesn't block; the trial
 		// sandbox is disposable, mirroring claude's --dangerously-skip-permissions.
+		// Isolated trials: provider-side web search off (4.6).
+		const isolation = opts.isolated ? ["-c tools.web_search=false"] : [];
 		const exec = [
 			"codex exec",
+			...isolation,
 			resume,
 			modelFlag,
 			"--json",
@@ -62,6 +65,8 @@ const runCodexExec = createPrintCliSessionRunner({
 		return [auth, exec].join("; ");
 	},
 	parseOutput: parseCodexJsonl,
+	// [c] keeps the pattern from matching the shell running this very command.
+	stopCommand: 'pkill -TERM -f "[c]odex exec" || true',
 });
 
 export const codexDriver: HarnessDriver = {

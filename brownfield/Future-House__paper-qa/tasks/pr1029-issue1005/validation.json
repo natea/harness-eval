@@ -1,0 +1,52 @@
+{
+  "pr": 1029,
+  "merged": "2025-12-18",
+  "issues": [
+    {
+      "n": 1005,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 8,
+  "srcFiles": [
+    "src/paperqa/clients/__init__.py",
+    "src/paperqa/docs.py",
+    "src/paperqa/llms.py",
+    "src/paperqa/types.py",
+    "src/paperqa/utils.py"
+  ],
+  "testFiles": [
+    "tests/cassettes/test_docs_lifecycle.yaml",
+    "tests/test_agents.py",
+    "tests/test_paperqa.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 92,
+  "selected": [
+    "tests/test_agents.py::test_get_directory_index",
+    "tests/test_paperqa.py::test_docs_with_custom_embedding",
+    "tests/test_paperqa.py::test_duplicate",
+    "tests/test_paperqa.py::test_pdf_reader_match_doc_details",
+    "tests/test_paperqa.py::test_pdf_reader_w_no_match_doc_details"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 5,
+    "liveApi": 5,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_paperqa::test_pdf_reader_match_doc_details"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_agents::test_get_directory_index",
+    "tests.test_paperqa::test_docs_with_custom_embedding[NumpyVectorStore]",
+    "tests.test_paperqa::test_docs_with_custom_embedding[QdrantVectorStore]",
+    "tests.test_paperqa::test_duplicate",
+    "tests.test_paperqa::test_pdf_reader_w_no_match_doc_details"
+  ],
+  "verdict": "VALID"
+}

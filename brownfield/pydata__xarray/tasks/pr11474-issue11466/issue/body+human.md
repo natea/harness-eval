@@ -1,0 +1,155 @@
+# StringDType does not roundtrip through zarr
+
+_Opened by @jacksonriley_
+
+### What happened?
+
+Hi there, I noticed today that in `xarray>=2026.4.0`, a `Dataset` with a variable of type `np.dtypes.StringDType` does not roundtrip via zarr (you end up with fixed-length UTF32), and this also triggers a warning in Zarr:
+```
+/usr/local/lib/python3.12/site-packages/zarr/core/dtype/npy/string.py:249: UnstableSpecificationWarning: The data type
+(FixedLengthUTF32(length=8, endianness='little')) does not have a Zarr V3 specification. That means that the representation of
+arrays saved with this data type may change without warning in a future version of Zarr Python. Arrays stored with this data
+type may be unreadable by other Zarr libraries. Use this data type at your own risk! Check
+https://github.com/zarr-developers/zarr-extensions/tree/main/data-types for the status of data type specifications for Zarr V3.
+  v3_unstable_dtype_warning(self)
+```
+
+I believe this was triggered by https://github.com/pydata/xarray/pull/11218/changes#diff-3f2e57ad7128783ba303a2e5ef889d123f9a7a0fc244280869696f106f4d0222R61
+
+### What did you expect to happen?
+
+`Dataset` should roundtrip without change in datatypes.
+
+### Minimal Complete Verifiable Example
+
+```Python
+import tempfile
+
+import numpy as np
+import xarray as xr
+
+xr.show_versions()
+
+arr = np.array(["a", "bb", "ccc"], dtype=np.dtypes.StringDType())
+
+ds = xr.Dataset(
+    {"data_var": ("dim", arr.copy())},
+    coords={
+        "dim": ("dim", arr.copy()),
+        "nondim_coord": ("dim", arr.copy()),
+    },
+)
+
+path = f"{tempfile.mkdtemp()}/store.zarr"
+ds.to_zarr(path, zarr_format=3, consolidated=False)
+roundtripped = xr.open_zarr(path, consolidated=False).load()
+
+for name in ["data_var", "dim", "nondim_coord"]:
+    before = ds[name].dtype
+    after = roundtripped[name].dtype
+    print(f"{name:16s}  wrote {before!r} (kind {before.kind!r})  ->  read {after!r} (kind {after.kind!r})")
+```
+
+### Steps to reproduce
+
+#### Observe issue in xarray>=2026.4.0
+
+```console
+uv venv
+source .venv/bin/activate
+uv pip install xarray==2026.4.0 numpy zarr
+<run the above script, observe that it does not roundtrip and that the zarr spec warning is seen>
+```
+
+#### Observe that issue does not appear in xarray<2026.4.0
+
+```console
+uv pip install xarray==2026.2.0
+<run the above script, observe that it does and that the zarr spec warning is not seen>
+```
+
+### MVCE confirmation
+
+- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [x] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.
+- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.
+
+### Relevant log output
+
+```Python
+=== xarray==2026.4.0 ===
+
+/persist/code/scripts/repro_xarray_zarr/.venv/lib/python3.13/site-packages/zarr/core/dtype/npy/string.py:249: UnstableSpecificationWarning: The data type (FixedLengthUTF32(length=3, endianness='little')) doesnot have a Zarr V3 specification. That means that the representation of arrays saved with this data type may change without warning in a future version of Zarr Python. Arrays stored with this data type may beunreadable by other Zarr libraries. Use this data type at your own risk! Check https://github.com/zarr-developers/zarr-extensions/tree/main/data-types for the status of data type specifications for Zarr V3.
+  v3_unstable_dtype_warning(self)
+data_var          wrote StringDType() (kind 'T')  ->  read dtype('<U3') (kind 'U')
+dim               wrote StringDType() (kind 'T')  ->  read dtype('<U3') (kind 'U')
+nondim_coord      wrote StringDType() (kind 'T')  ->  read dtype('<U3') (kind 'U')
+
+
+=== xarray==2026.2.0 ===
+
+data_var          wrote StringDType() (kind 'T')  ->  read StringDType() (kind 'T')
+dim               wrote StringDType() (kind 'T')  ->  read StringDType() (kind 'T')
+nondim_coord      wrote StringDType() (kind 'T')  ->  read StringDType() (kind 'T')
+```
+
+### Anything else we need to know?
+
+I mention 2026.4.0 above because this is the first released version where I observe this behaviour, but this occurs in the latest release as well (2026.7.0 at the time of writing)
+
+### Environment
+
+<details>
+
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.13.12 (main, Mar 24 2026, 22:49:35) [Clang 22.1.1 ]
+python-bits: 64
+OS: Linux
+OS-release: 5.15.0-91-generic
+machine: x86_64
+processor: x86_64
+byteorder: little
+LC_ALL: en_GB.utf8
+LANG: en_US.UTF-8
+LOCALE: ('en_GB', 'UTF-8')
+libhdf5: None
+libnetcdf: None
+
+xarray: 2026.4.0
+pandas: 3.0.3
+numpy: 2.5.1
+scipy: None
+netCDF4: None
+pydap: None
+h5netcdf: None
+h5py: None
+zarr: 3.2.1
+cftime: None
+nc_time_axis: None
+iris: None
+bottleneck: None
+dask: None
+distributed: None
+matplotlib: None
+cartopy: None
+seaborn: None
+numbagg: None
+fsspec: None
+cupy: None
+pint: None
+sparse: None
+flox: None
+numpy_groupies: None
+setuptools: None
+pip: None
+conda: None
+pytest: None
+mypy: None
+IPython: None
+sphinx: None
+
+</details>

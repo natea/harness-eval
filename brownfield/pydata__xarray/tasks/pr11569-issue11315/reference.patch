@@ -1,0 +1,87 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 6d6b67f1..5cba4fd8 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -242,6 +242,11 @@ Bug Fixes
+   changes if a slice is all-``NaN`` and has to be filled with ``fill_value``
+   (:issue:`7527`, :pull:`11544`).
+   By `Shurong Cao <https://github.com/CAOShurong>`_.
++- :py:meth:`DataTree.chunk` now accepts a single chunk specification such as
++  ``"auto"`` or an integer and applies it to every dimension in the tree, as
++  :py:meth:`Dataset.chunk` does, instead of raising ``TypeError``
++  (:issue:`11315`, :pull:`11569`).
++  By `fredrikblau <https://github.com/fredrikblau>`_.
+ - Fix the ``netcdf4`` engine silently writing byte-swapped values for
+   non-native-endian numeric attribute arrays, such as attributes of netCDF-3
+   files read with the ``scipy`` engine (:pull:`11543`).
+diff --git a/xarray/core/datatree.py b/xarray/core/datatree.py
+index 41bb4eb4..aa6c6b06 100644
+--- a/xarray/core/datatree.py
++++ b/xarray/core/datatree.py
+@@ -14,6 +14,7 @@ from collections.abc import (
+ )
+ from dataclasses import dataclass, field
+ from html import escape
++from numbers import Number
+ from os import PathLike
+ from typing import (
+     TYPE_CHECKING,
+@@ -2653,9 +2654,10 @@ class DataTree(
+ 
+         Parameters
+         ----------
+-        chunks : int, tuple of int, "auto" or mapping of hashable to int or a TimeResampler, optional
++        chunks : int, "auto" or mapping of hashable to int or a TimeResampler, optional
+             Chunk sizes along each dimension, e.g., ``5``, ``"auto"``, or
+             ``{"x": 5, "y": 5}`` or ``{"x": 5, "time": TimeResampler(freq="YE")}``.
++            A single value is applied to every dimension in the tree.
+         name_prefix : str, default: "xarray-"
+             Prefix for the name of any new dask arrays.
+         token : str, optional
+@@ -2690,15 +2692,24 @@ class DataTree(
+         xarray.unify_chunks
+         dask.array.from_array
+         """
+-        # don't support deprecated ways of passing chunks
+-        if not isinstance(chunks, Mapping):
+-            raise TypeError(
+-                f"invalid type for chunks: {type(chunks)}. Only mappings are supported."
+-            )
+-        combined_chunks = either_dict_or_kwargs(chunks, chunks_kwargs, "chunk")
+-
+         all_dims = self._get_all_dims()
+ 
++        combined_chunks: Mapping[Any, T_ChunkDimFreq]
++        if not isinstance(chunks, Mapping):
++            # don't support deprecated ways of passing chunks: sequences of
++            # dimension-order sizes are deprecated for Dataset.chunk, and are
++            # additionally ambiguous for a tree whose groups need not share an
++            # ordering of their dimensions
++            if not isinstance(chunks, str | Number):
++                raise TypeError(
++                    f"invalid type for chunks: {type(chunks)}. Only mappings and "
++                    'single chunk specifications (e.g. 5 or "auto") to be applied '
++                    "to every dimension are supported."
++                )
++            combined_chunks = dict.fromkeys(all_dims, chunks)
++        else:
++            combined_chunks = either_dict_or_kwargs(chunks, chunks_kwargs, "chunk")
++
+         bad_dims = combined_chunks.keys() - all_dims
+         if bad_dims:
+             raise ValueError(
+diff --git a/xarray/core/types.py b/xarray/core/types.py
+index 61eea972..045e67a1 100644
+--- a/xarray/core/types.py
++++ b/xarray/core/types.py
+@@ -202,7 +202,9 @@ Dims = Union[str, Collection[Hashable], EllipsisType, None]
+ # FYI the `str` is for a size string, e.g. "16MB", supported by dask.
+ type T_ChunkDim = str | int | Literal["auto"] | tuple[int, ...] | None  # noqa: PYI051
+ type T_ChunkDimFreq = Resampler | T_ChunkDim
+-type T_ChunksFreq = T_ChunkDim | Mapping[Any, T_ChunkDimFreq]
++# Top-level tuples and None are deprecated in Dataset.chunk and DataArray.chunk,
++# and rejected by DataTree.chunk, so they are left out here.
++type T_ChunksFreq = str | int | Mapping[Any, T_ChunkDimFreq]
+ # We allow the tuple form of this (though arguably we could transition to named dims only)
+ type T_Chunks = T_ChunkDim | Mapping[Any, T_ChunkDim]
+ T_NormalizedChunks = tuple[tuple[int, ...], ...]

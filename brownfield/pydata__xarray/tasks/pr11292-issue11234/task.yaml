@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11292
+issues:
+  - 11234
+baseSha: 154bdf69f33edc99929f8c6987fc566587a3a109
+mergeSha: ede38e513f648eaf38fc5acf5ad03fba05c35d8d
+tStar: 2026-04-09T20:09:38Z
+issueCreatedAt: 2026-03-16T05:49:00Z
+prMergedAt: 2026-09-29T07:47:14Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestDataArray::test_constructor_tuple_coords_warn_when_dims_override_names
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: a836f1ec1e409ab027490f88b35a2428af24a8635cff8a39bd470e937a7a51a8
+  issue/body+human.md: 3fb0aa6e4f8df300b9a6ff94c32ac0513a895a42020be48fe2728128b8da0d21
+  issue/body.md: 01ebae6942f25d7cd16361fea1f96f1ad58f9ad169a30baef9f61215da7c75af
+  leaks.json: 405c17cf522778e2d752b8ae6db9175b510b564d148cce25ba35a46eaa3f882b
+  reference.patch: fc852b6a306d0a092b1d9bd6b8befc98cc4b4bfb3ee90cdefcff33b99d832481
+  snapshot.json: 780cfd526a15157b43eded7a7978d286ebb091d99a981855f6348b2da420538d
+  tests.patch: da57c6b55c034a7d587f935c94d830949c935e750d5713a7c92b6f247888f2d4
+  validation.json: 42e83db5d66aa573aab67e470a7389106f524373d97d87f22bd0fcaf28c9a4d9

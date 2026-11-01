@@ -1,0 +1,109 @@
+{
+  "pullRequest": {
+    "number": 1311,
+    "title": "Fixed CMYK images crashing PNG encoding in PyPDF reader",
+    "createdAt": "2026-03-03T21:08:48Z",
+    "mergedAt": "2026-03-04T07:01:55Z",
+    "url": "https://github.com/Future-House/paper-qa/pull/1311",
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "a0c25caa85bc67c2623297ad0dd6f0ab0fe07b69",
+            "authoredDate": "2026-03-03T21:08:20Z",
+            "committedDate": "2026-03-04T05:23:35Z"
+          }
+        }
+      ]
+    }
+  },
+  "issue": {
+    "number": 1310,
+    "title": "CMYK images in PDFs crash indexing with OSError",
+    "body": "## Bug\n\nWhen indexing a directory containing PDFs that have CMYK images, `pqa index` crashes instead of skipping the problematic files.\n\n## Error\n\n```\nOSError: cannot write mode CMYK as PNG\n```\n\nThe crash originates in `paperqa_pypdf/reader.py:323`:\n\n```python\npil_image.save(buf, format=\"PNG\")\n```\n\nPillow cannot save CMYK-mode images as PNG. The error propagates out of the `anyio.TaskGroup` in `get_directory_index` and kills the entire indexing process.\n\n## Steps to reproduce\n\n1. Have a directory of PDFs where at least one contains a CMYK image (common in academic papers from print journals)\n2. Run `pqa index /path/to/pdfs`\n3. Indexing crashes with an `ExceptionGroup` containing the `OSError`\n\n## Expected behavior\n\nThe file-level error handler in `process_file` (search.py:521) should catch this and skip the file, logging a warning. Currently it does log \"Error parsing ... skipping index for this file\" but the exception still propagates and crashes the TaskGroup.\n\n## Workaround\n\nSet `parsing.multimodal` to `\"OFF\"` in Settings to disable image extraction entirely.\n\n## Full traceback\n\n```\nExceptionGroup: unhandled errors in a TaskGroup (2 sub-exceptions)\n+-+---------------- 1 ----------------\n  | Traceback (most recent call last):\n  |   File \".../PIL/PngImagePlugin.py\", line 1380, in _save\n  |     rawmode, bit_depth, color_type = _OUTMODES[outmode]\n  | KeyError: 'CMYK'\n  |\n  | The above exception was the direct cause of the following exception:\n  |\n  | Traceback (most recent call last):\n  |   File \".../paperqa/agents/search.py\", line 522, in process_file\n  |     await tmp_docs.aadd(\n  |   File \".../paperqa/docs.py\", line 303, in aadd\n  |     texts, metadata = await read_doc(\n  |   File \".../paperqa/readers.py\", line 464, in read_doc\n  |     parsed_text = cast(SyncPDFParserFn, parse_pdf)(path, **parser_kwargs)\n  |   File \".../paperqa_pypdf/reader.py\", line 323, in parse_pdf_to_pages\n  |     pil_image.save(buf, format=\"PNG\")\n  |   File \".../PIL/Image.py\", line 2590, in save\n  |     save_handler(self, fp, filename)\n  |   File \".../PIL/PngImagePlugin.py\", line 1383, in _save\n  |     raise OSError(msg) from e\n  | OSError: cannot write mode CMYK as PNG\n```\n\n## Suggested fix\n\nIn `paperqa_pypdf/reader.py`, convert CMYK images to RGB before saving as PNG:\n\n```python\nif pil_image.mode == \"CMYK\":\n    pil_image = pil_image.convert(\"RGB\")\npil_image.save(buf, format=\"PNG\")\n```\n\n## Environment\n\n- paper-qa 1.26.0\n- pillow (latest)\n- macOS",
+    "createdAt": "2026-03-03T09:11:51Z",
+    "url": "https://github.com/Future-House/paper-qa/issues/1310",
+    "state": "CLOSED",
+    "author": {
+      "login": "menyoung"
+    },
+    "userContentEdits": {
+      "nodes": []
+    },
+    "comments": {
+      "nodes": [
+        {
+          "id": "IC_kwDOI55lCs7tzgFQ",
+          "createdAt": "2026-03-03T09:18:24Z",
+          "author": {
+            "login": "dosubot",
+            "__typename": "Bot"
+          },
+          "body": "<!-- Greeting -->\nHi @menyoung! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.\n\n<!-- Answer -->\nThanks for the detailed bug report! Your analysis is correct — the issue stems from [PR #1298](https://github.com/Future-House/paper-qa/pull/1298) which added image format conversion to PNG but only checks the image format, not the color mode.\n\nThe suggested fix looks right:\n\n```python\nif pil_image.mode == \"CMYK\":\n    pil_image = pil_image.convert(\"RGB\")\npil_image.save(buf, format=\"PNG\")\n```\n\nYou might also consider handling other non-RGB modes that could fail (like `LAB` or `P` with transparency) by using a more general approach:\n\n```python\nif pil_image.mode not in (\"RGB\", \"RGBA\", \"L\", \"LA\"):\n    pil_image = pil_image.convert(\"RGB\")\n```\n\nRegarding exception propagation: looking at [`process_file` in search.py](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/agents/search.py#L529-L553), only `ValueError` and `ImpossibleParsingError` are treated as recoverable — `OSError` is re-raised, which crashes the TaskGroup. There may also be value in adding `OSError` to the recoverable exceptions for image-related failures, but fixing the root cause in the reader is the better approach.\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=reply-with-mention&utm_term=Future-House%2Fpaper-qa).*\n\n---\n\nShare context across your team and agents. Try [Dosu](https://dosu.dev?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-tagline&utm_term=Future-House%2Fpaper-qa).\n\n[![Leave Feedback](https://img.shields.io/badge/Leave%20Feedback-555555?style=flat)](https://app.dosu.dev/response-feedback?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-feedback&utm_term=Future-House%2Fpaper-qa#message_id=2fd833f2-0db9-4469-8a88-4b219b6ea3fe) [![Learn about paper-qa with Dosu](https://img.shields.io/badge/Learn%20about%20paper--qa%20with%20Dosu-2f7b3f?style=flat&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iODYiIGhlaWdodD0iODkiIHZpZXdCb3g9IjAgMCA4NiA4OSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yOTIzNiAxMi43OTI4TDE3Ljc1OTMgNi42ODE4OFY3Mi41NjY3TDUuMjkyMzYgODQuMDYxOFYxMi43OTI4WiIgZmlsbD0iI0I0QkI5MSIvPjxwYXRoIGQ9Ik0xOC4yNTc1IDczLjExOTZMNTkuMTMyOSA3Mi43NDhMNTEuNzAxMSA4Mi40MDk1TDI5LjAzMzggODYuMjkxTDYuMjM5NjIgODUuMTU1NEwxOC4yNTc1IDczLjExOTZaIiBmaWxsPSIjNzc4NTYxIi8%2BPHBhdGggZD0iTTE3LjQ5MTYgMy43MzYzM0wzLjU4NTU3IDEyLjcwOTlWODMuNTc5MkMzLjU4NTU3IDg0Ljc1NDIgNC45ODU2MyA4NS4zNjUyIDUuODQ3MDUgODQuNTY2TDE5LjYyOTYgNzEuNzgwMSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjQyODQ0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bWFzayBpZD0iZG9zdS1kLWN1dG91dCIgZmlsbD0id2hpdGUiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDAuNzA0IDAuNTE4MDY2SDE3LjA0MzlWNzYuMjIyMUg0MC43MDRINDIuNTgwNUg0Ny44MDEzQzY4LjcwNjQgNzYuMjIyMSA4NS42NTMzIDU5LjI3NTIgODUuNjUzMyAzOC4zNzAxQzg1LjY1MzMgMTcuNDY1IDY4LjcwNjMgMC41MTgwNjYgNDcuODAxMyAwLjUxODA2Nkg0Mi41ODA1SDQwLjcwNFoiLz48L21hc2s%2BPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MC43MDQgMC41MTgwNjZIMTcuMDQzOVY3Ni4yMjIxSDQwLjcwNEg0Mi41ODA1SDQ3LjgwMTNDNjguNzA2NCA3Ni4yMjIxIDg1LjY1MzMgNTkuMjc1MiA4NS42NTMzIDM4LjM3MDFDODUuNjUzMyAxNy40NjUgNjguNzA2MyAwLjUxODA2NiA0Ny44MDEzIDAuNTE4MDY2SDQyLjU4MDVINDAuNzA0WiIgZmlsbD0iI0YzRjZGMSIvPjxwYXRoIGQ9Ik0xNy4wNDM5IDAuNTE4MDY2Vi02LjU3OTE5SDkuOTQ2NjlWMC41MTgwNjZIMTcuMDQzOVpNMTcuMDQzOSA3Ni4yMjIxSDkuOTQ2NjlWODMuMzE5NEgxNy4wNDM5Vjc2LjIyMjFaTTE3LjA0MzkgNy42MTUzMkg0MC43MDRWLTYuNTc5MTlIMTcuMDQzOVY3LjYxNTMyWk0yNC4xNDEyIDc2LjIyMjFWMC41MTgwNjZIOS45NDY2OVY3Ni4yMjIxSDI0LjE0MTJaTTQwLjcwNCA2OS4xMjQ5SDE3LjA0MzlWODMuMzE5NEg0MC43MDRWNjkuMTI0OVpNNDIuNTgwNSA2OS4xMjQ5SDQwLjcwNFY4My4zMTk0SDQyLjU4MDVWNjkuMTI0OVpNNDcuODAxMyA2OS4xMjQ5SDQyLjU4MDVWODMuMzE5NEg0Ny44MDEzVjY5LjEyNDlaTTc4LjU1NiAzOC4zNzAxQzc4LjU1NiA1NS4zNTU1IDY0Ljc4NjcgNjkuMTI0OSA0Ny44MDEzIDY5LjEyNDlWODMuMzE5NEM3Mi42MjYxIDgzLjMxOTQgOTIuNzUwNSA2My4xOTQ5IDkyLjc1MDUgMzguMzcwMUg3OC41NTZaTTQ3LjgwMTMgNy42MTUzMkM2NC43ODY2IDcuNjE1MzIgNzguNTU2IDIxLjM4NDcgNzguNTU2IDM4LjM3MDFIOTIuNzUwNUM5Mi43NTA1IDEzLjU0NTMgNzIuNjI2IC02LjU3OTE5IDQ3LjgwMTMgLTYuNTc5MTlWNy42MTUzMlpNNDIuNTgwNSA3LjYxNTMySDQ3LjgwMTNWLTYuNTc5MTlINDIuNTgwNVY3LjYxNTMyWk00MC43MDQgNy42MTUzMkg0Mi41ODA1Vi02LjU3OTE5SDQwLjcwNFY3LjYxNTMyWiIgZmlsbD0iYmxhY2siIG1hc2s9InVybCgjZG9zdS1kLWN1dG91dCkiLz48cGF0aCBkPSJNNjguOTIxNSAzNi4wMTM1QzY4LjkyMTUgMzYuMDEzNSA2NS43MzY5IDQ5LjQ3MzggNTEuNDIzMSA0OS40NzM4QzM3LjEwOTMgNDkuNDczOCAzMi41Nzg3IDM3LjM1OTYgMzIuNTc4NyAzNi4wMTM1IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjcuNjkxNjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0wLjM0ODYzMyA4NS40OTQ2QzAuMzQ4NjMzIDg1LjQ5NDYgMjkuNDg1NiA4NS44MzA5IDM0LjgwOSA4NS42OThDNDQuODMzNyA4NS40NDc3IDUxLjI4NzIgODQuNDAyIDU3LjUyNjkgNzguOTcyNEM2Mi44MTI5IDc0LjM3MjcgNzUuMTM0MiA1OS42ODM2IDc1LjEzNDIgNTkuNjgzNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjE2NDgyIi8%2BPC9zdmc%2B)](https://github.dosu.com/Future-House/paper-qa?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-learn-repo&utm_term=Future-House%2Fpaper-qa) [![Add Dosu to your team](https://img.shields.io/badge/Add%20Dosu%20to%20your%20team-1f6feb?style=flat)](https://app.dosu.dev/signup?referrer=openSource&source=github-footer&utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-add-team&utm_term=Future-House%2Fpaper-qa)",
+          "url": "https://github.com/Future-House/paper-qa/issues/1310#issuecomment-3989700944",
+          "userContentEdits": {
+            "nodes": [
+              {
+                "editedAt": "2026-04-29T00:36:22Z",
+                "createdAt": "2026-04-29T00:36:22Z",
+                "deletedAt": null,
+                "diff": "<!-- Greeting -->\nHi @menyoung! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.\n\n<!-- Answer -->\nThanks for the detailed bug report! Your analysis is correct — the issue stems from [PR #1298](https://github.com/Future-House/paper-qa/pull/1298) which added image format conversion to PNG but only checks the image format, not the color mode.\n\nThe suggested fix looks right:\n\n```python\nif pil_image.mode == \"CMYK\":\n    pil_image = pil_image.convert(\"RGB\")\npil_image.save(buf, format=\"PNG\")\n```\n\nYou might also consider handling other non-RGB modes that could fail (like `LAB` or `P` with transparency) by using a more general approach:\n\n```python\nif pil_image.mode not in (\"RGB\", \"RGBA\", \"L\", \"LA\"):\n    pil_image = pil_image.convert(\"RGB\")\n```\n\nRegarding exception propagation: looking at [`process_file` in search.py](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/agents/search.py#L529-L553), only `ValueError` and `ImpossibleParsingError` are treated as recoverable — `OSError` is re-raised, which crashes the TaskGroup. There may also be value in adding `OSError` to the recoverable exceptions for image-related failures, but fixing the root cause in the reader is the better approach.\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=reply-with-mention&utm_term=Future-House%2Fpaper-qa).*\n\n---\n\nShare context across your team and agents. Try [Dosu](https://dosu.dev?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-tagline&utm_term=Future-House%2Fpaper-qa).\n\n[![Leave Feedback](https://img.shields.io/badge/Leave%20Feedback-555555?style=flat)](https://app.dosu.dev/response-feedback?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-feedback&utm_term=Future-House%2Fpaper-qa#message_id=2fd833f2-0db9-4469-8a88-4b219b6ea3fe) [![Learn about paper-qa with Dosu](https://img.shields.io/badge/Learn%20about%20paper--qa%20with%20Dosu-2f7b3f?style=flat&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iODYiIGhlaWdodD0iODkiIHZpZXdCb3g9IjAgMCA4NiA4OSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yOTIzNiAxMi43OTI4TDE3Ljc1OTMgNi42ODE4OFY3Mi41NjY3TDUuMjkyMzYgODQuMDYxOFYxMi43OTI4WiIgZmlsbD0iI0I0QkI5MSIvPjxwYXRoIGQ9Ik0xOC4yNTc1IDczLjExOTZMNTkuMTMyOSA3Mi43NDhMNTEuNzAxMSA4Mi40MDk1TDI5LjAzMzggODYuMjkxTDYuMjM5NjIgODUuMTU1NEwxOC4yNTc1IDczLjExOTZaIiBmaWxsPSIjNzc4NTYxIi8%2BPHBhdGggZD0iTTE3LjQ5MTYgMy43MzYzM0wzLjU4NTU3IDEyLjcwOTlWODMuNTc5MkMzLjU4NTU3IDg0Ljc1NDIgNC45ODU2MyA4NS4zNjUyIDUuODQ3MDUgODQuNTY2TDE5LjYyOTYgNzEuNzgwMSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjQyODQ0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bWFzayBpZD0iZG9zdS1kLWN1dG91dCIgZmlsbD0id2hpdGUiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDAuNzA0IDAuNTE4MDY2SDE3LjA0MzlWNzYuMjIyMUg0MC43MDRINDIuNTgwNUg0Ny44MDEzQzY4LjcwNjQgNzYuMjIyMSA4NS42NTMzIDU5LjI3NTIgODUuNjUzMyAzOC4zNzAxQzg1LjY1MzMgMTcuNDY1IDY4LjcwNjMgMC41MTgwNjYgNDcuODAxMyAwLjUxODA2Nkg0Mi41ODA1SDQwLjcwNFoiLz48L21hc2s%2BPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MC43MDQgMC41MTgwNjZIMTcuMDQzOVY3Ni4yMjIxSDQwLjcwNEg0Mi41ODA1SDQ3LjgwMTNDNjguNzA2NCA3Ni4yMjIxIDg1LjY1MzMgNTkuMjc1MiA4NS42NTMzIDM4LjM3MDFDODUuNjUzMyAxNy40NjUgNjguNzA2MyAwLjUxODA2NiA0Ny44MDEzIDAuNTE4MDY2SDQyLjU4MDVINDAuNzA0WiIgZmlsbD0iI0YzRjZGMSIvPjxwYXRoIGQ9Ik0xNy4wNDM5IDAuNTE4MDY2Vi02LjU3OTE5SDkuOTQ2NjlWMC41MTgwNjZIMTcuMDQzOVpNMTcuMDQzOSA3Ni4yMjIxSDkuOTQ2NjlWODMuMzE5NEgxNy4wNDM5Vjc2LjIyMjFaTTE3LjA0MzkgNy42MTUzMkg0MC43MDRWLTYuNTc5MTlIMTcuMDQzOVY3LjYxNTMyWk0yNC4xNDEyIDc2LjIyMjFWMC41MTgwNjZIOS45NDY2OVY3Ni4yMjIxSDI0LjE0MTJaTTQwLjcwNCA2OS4xMjQ5SDE3LjA0MzlWODMuMzE5NEg0MC43MDRWNjkuMTI0OVpNNDIuNTgwNSA2OS4xMjQ5SDQwLjcwNFY4My4zMTk0SDQyLjU4MDVWNjkuMTI0OVpNNDcuODAxMyA2OS4xMjQ5SDQyLjU4MDVWODMuMzE5NEg0Ny44MDEzVjY5LjEyNDlaTTc4LjU1NiAzOC4zNzAxQzc4LjU1NiA1NS4zNTU1IDY0Ljc4NjcgNjkuMTI0OSA0Ny44MDEzIDY5LjEyNDlWODMuMzE5NEM3Mi42MjYxIDgzLjMxOTQgOTIuNzUwNSA2My4xOTQ5IDkyLjc1MDUgMzguMzcwMUg3OC41NTZaTTQ3LjgwMTMgNy42MTUzMkM2NC43ODY2IDcuNjE1MzIgNzguNTU2IDIxLjM4NDcgNzguNTU2IDM4LjM3MDFIOTIuNzUwNUM5Mi43NTA1IDEzLjU0NTMgNzIuNjI2IC02LjU3OTE5IDQ3LjgwMTMgLTYuNTc5MTlWNy42MTUzMlpNNDIuNTgwNSA3LjYxNTMySDQ3LjgwMTNWLTYuNTc5MTlINDIuNTgwNVY3LjYxNTMyWk00MC43MDQgNy42MTUzMkg0Mi41ODA1Vi02LjU3OTE5SDQwLjcwNFY3LjYxNTMyWiIgZmlsbD0iYmxhY2siIG1hc2s9InVybCgjZG9zdS1kLWN1dG91dCkiLz48cGF0aCBkPSJNNjguOTIxNSAzNi4wMTM1QzY4LjkyMTUgMzYuMDEzNSA2NS43MzY5IDQ5LjQ3MzggNTEuNDIzMSA0OS40NzM4QzM3LjEwOTMgNDkuNDczOCAzMi41Nzg3IDM3LjM1OTYgMzIuNTc4NyAzNi4wMTM1IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjcuNjkxNjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0wLjM0ODYzMyA4NS40OTQ2QzAuMzQ4NjMzIDg1LjQ5NDYgMjkuNDg1NiA4NS44MzA5IDM0LjgwOSA4NS42OThDNDQuODMzNyA4NS40NDc3IDUxLjI4NzIgODQuNDAyIDU3LjUyNjkgNzguOTcyNEM2Mi44MTI5IDc0LjM3MjcgNzUuMTM0MiA1OS42ODM2IDc1LjEzNDIgNTkuNjgzNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjE2NDgyIi8%2BPC9zdmc%2B)](https://github.dosu.com/Future-House/paper-qa?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-learn-repo&utm_term=Future-House%2Fpaper-qa) [![Add Dosu to your team](https://img.shields.io/badge/Add%20Dosu%20to%20your%20team-1f6feb?style=flat)](https://app.dosu.dev/signup?referrer=openSource&source=github-footer&utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-add-team&utm_term=Future-House%2Fpaper-qa)",
+                "editor": {
+                  "login": "dosubot"
+                }
+              },
+              {
+                "editedAt": "2026-03-03T09:18:24Z",
+                "createdAt": "2026-04-29T00:36:22Z",
+                "deletedAt": null,
+                "diff": "<!-- Greeting -->\nHi @menyoung! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.\n\n<!-- Answer -->\nThanks for the detailed bug report! Your analysis is correct — the issue stems from [PR #1298](https://github.com/Future-House/paper-qa/pull/1298) which added image format conversion to PNG but only checks the image format, not the color mode.\n\nThe suggested fix looks right:\n\n```python\nif pil_image.mode == \"CMYK\":\n    pil_image = pil_image.convert(\"RGB\")\npil_image.save(buf, format=\"PNG\")\n```\n\nYou might also consider handling other non-RGB modes that could fail (like `LAB` or `P` with transparency) by using a more general approach:\n\n```python\nif pil_image.mode not in (\"RGB\", \"RGBA\", \"L\", \"LA\"):\n    pil_image = pil_image.convert(\"RGB\")\n```\n\nRegarding exception propagation: looking at [`process_file` in search.py](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/agents/search.py#L529-L553), only `ValueError` and `ImpossibleParsingError` are treated as recoverable — `OSError` is re-raised, which crashes the TaskGroup. There may also be value in adding `OSError` to the recoverable exceptions for image-related failures, but fixing the root cause in the reader is the better approach.\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*\n\n---\n<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=other)</sup>\n\n[![Chat with Dosu](https://dosu.dev/dosu-chat-badge.svg)](https://app.dosu.dev/0e493df4-ff8c-42a6-a866-71a34b293513/ask?utm_source=github)&nbsp;[![Open in Cursor](https://dosu.dev/dosu-in-cursor.svg)](https://cursor.com/link/prompt?text=Thanks%20for%20the%20detailed%20bug%20report%21%20Your%20analysis%20is%20correct%20%E2%80%94%20the%20issue%20stems%20from%20%5BPR%20%231298%5D%28https%3A//github.com/Future-House/paper-qa/pull/1298%29%20which%20added%20image%20format%20conversion%20to%20PNG%20but%20only%20checks%20the%20image%20format%2C%20not%20the%20color%20mode.%0A%0AThe%20suggested%20fix%20looks%20right%3A%0A%0A%60%60%60python%0Aif%20pil_image.mode%20%3D%3D%20%22CMYK%22%3A%0A%20%20%20%20pil_image%20%3D%20pil_image.convert%28%22RGB%22%29%0Apil_image.save%28buf%2C%20format%3D%22PNG%22%29%0A%60%60%60%0A%0AYou%20might%20also%20consider%20handling%20other%20non-RGB%20modes%20that%20could%20fail%20%28like%20%60LAB%60%20or%20%60P%60%20with%20transparency%29%20by%20using%20a%20more%20general%20approach%3A%0A%0A%60%60%60python%0Aif%20pil_image.mode%20not%20in%20%28%22RGB%22%2C%20%22RGBA%22%2C%20%22L%22%2C%20%22LA%22%29%3A%0A%20%20%20%20pil_image%20%3D%20pil_image.convert%28%22RGB%22%29%0A%60%60%60%0A%0ARegarding%20exception%20propagation%3A%20looking%20at%20%5B%60process_file%60%20in%20search.py%5D%28https%3A//github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/agents/search.py%23L529-L553%29%2C%20only%20%60ValueError%60%20and%20%60ImpossibleParsingError%60%20are%20treated%20as%20recoverable%20%E2%80%94%20%60OSError%60%20is%20re-raised%2C%20which%20crashes%20the%20TaskGroup.%20There%20may%20also%20be%20value%20in%20adding%20%60OSError%60%20to%20the%20recoverable%20exceptions%20for%20image-related%20failures%2C%20but%20fixing%20the%20root%20cause%20in%20the%20reader%20is%20the%20better%20approach.)&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/1310)",
+                "editor": {
+                  "login": "dosubot"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "timelineItems": {
+      "nodes": [
+        {
+          "__typename": "LabeledEvent",
+          "createdAt": "2026-03-03T09:13:57Z",
+          "label": {
+            "name": "bug"
+          }
+        },
+        {
+          "__typename": "ReferencedEvent",
+          "createdAt": "2026-03-03T09:16:18Z",
+          "commit": {
+            "oid": "a458bd21a364903daf03c0cc4847b8bd38637091"
+          }
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "MentionedEvent"
+        },
+        {
+          "__typename": "SubscribedEvent"
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-03-03T21:08:49Z",
+          "source": {
+            "__typename": "PullRequest",
+            "number": 1311
+          }
+        },
+        {
+          "__typename": "ClosedEvent",
+          "createdAt": "2026-03-04T07:01:57Z"
+        }
+      ]
+    }
+  }
+}

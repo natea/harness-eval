@@ -1,0 +1,9 @@
+{
+  "pr": 11552,
+  "issue": 9789,
+  "tStar": "2026-08-31T15:40:55Z",
+  "title": "Support DataTree in apply_ufunc",
+  "issueAuthor": "shoyer",
+  "body": "Sub-issue of https://github.com/pydata/xarray/issues/9106",
+  "comments": []
+}

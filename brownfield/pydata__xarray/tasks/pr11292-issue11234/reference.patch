@@ -1,0 +1,40 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index b3056edd..864b344c 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -438,6 +438,9 @@ Bug Fixes
+   By `Emmanuel Ferdman <https://github.com/emmanuel-ferdman>`_.
+ - :func:`combine_by_coords` no longer returns an empty dataset when a generator is passed as ``data_objects`` (:issue:`10114`, :pull:`11265`).
+   By `Amartya Anand <https://github.com/SurfyPenguin>`_.
++- Warn when tuple-style ``DataArray`` coordinates are renamed by explicitly
++  provided dimension names (:issue:`11234`, :pull:`11292`).
++  By `Asish Kumar <https://github.com/officialasishkumar>`_.
+ - Preserve non-grouped coordinates in fallback ``groupby`` reductions when grouping
+   by a non-leading dimension reorders the underlying variable dimensions
+   (:issue:`11188`, :pull:`11290`).
+diff --git a/xarray/core/dataarray.py b/xarray/core/dataarray.py
+index 8d201ae1..01fa20a1 100644
+--- a/xarray/core/dataarray.py
++++ b/xarray/core/dataarray.py
+@@ -167,6 +167,21 @@ def _infer_coords_and_dims(
+         if not hashable(d):
+             raise TypeError(f"Dimension {d} is not hashable")
+ 
++    if coords is not None and not utils.is_dict_like(coords):
++        if any(
++            isinstance(coord, tuple)
++            and len(coord) >= 2
++            and hashable(coord[0])
++            and coord[0] != dim
++            for dim, coord in zip(dims_tuple, coords, strict=True)
++        ):
++            utils.emit_user_level_warning(
++                "Coordinate names in tuple-style coords are ignored when `dims` "
++                "are provided. Use a mapping for `coords` if you need named "
++                "coordinates.",
++                UserWarning,
++            )
++
+     new_coords: Mapping[Hashable, Any]
+ 
+     if isinstance(coords, Coordinates):

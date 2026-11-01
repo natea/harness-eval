@@ -1,0 +1,57 @@
+{
+  "pr": 4260,
+  "merged": "2026-08-13",
+  "issues": [
+    {
+      "n": 4237,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "changes/4260.bugfix.md",
+    "pyproject.toml",
+    "src/zarr/codecs/cast_value.py",
+    "uv.lock"
+  ],
+  "testFiles": [
+    "tests/test_codecs/test_cast_value.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 1,
+  "selected": [
+    "tests/test_codecs/test_cast_value.py::test_check_backend_version",
+    "tests/test_codecs/test_cast_value.py::test_check_backend_version_allows_missing_metadata",
+    "tests/test_codecs/test_cast_value.py::test_encode_rejects_outdated_backend",
+    "tests/test_codecs/test_cast_value.py::test_enforce_contiguous_arrays",
+    "tests/test_codecs/test_cast_value.py::test_min_version_matches_pyproject",
+    "tests/test_codecs/test_cast_value.py::test_parse_scalar_map"
+  ],
+  "counts": {
+    "f2p": 12,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 1,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_codecs.test_cast_value::test_check_backend_version[exactly-minimum]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[newer-patch]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[newer-minor]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[newer-major]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[post-release]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[known-corrupting]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[one-patch-below]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[older-minor]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version[pre-release-of-minimum]",
+    "tests.test_codecs.test_cast_value::test_check_backend_version_allows_missing_metadata",
+    "tests.test_codecs.test_cast_value::test_encode_rejects_outdated_backend",
+    "tests.test_codecs.test_cast_value::test_min_version_matches_pyproject"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_codecs.test_cast_value::test_enforce_contiguous_arrays"
+  ],
+  "verdict": "VALID"
+}

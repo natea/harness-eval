@@ -21,11 +21,32 @@ basePrompt: |
   unless {{PRD_FILE}} constrains it. When you consider the work complete,
   stop.
 
+# Brownfield trials (add-brownfield-track). The issue file carries all task
+# content; this text is identical for every task and candidate, and must never
+# name the fixing PR, its commits, or its URL.
+brownfieldBasePrompt: |
+  Resolve the issue described in {{ISSUE_FILE}} (in this repository's root) by
+  changing this repository's code. {{ISSUE_FILE}} is the issue as it was
+  reported; treat it as the complete task statement.
+
+  Work within the existing codebase and follow its conventions. You may read
+  the code, run the existing test suite, and add or update tests. Do not edit
+  {{ISSUE_FILE}}.
+
+  Do not consult the upstream project's pull requests, issues, releases, or
+  any other copy of this repository, and do not fetch history beyond this
+  checkout. Work only from this checkout and {{ISSUE_FILE}}.
+
+  Leave your changes in the working tree. When you consider the issue
+  resolved, stop.
+
 candidates:
   - id: superpowers
     name: Superpowers
     repo: https://github.com/obra/superpowers
-    pinnedVersion: 5.1.0
+    # Upstream marketplace moved past 5.1.0; re-pinned to the observed 7.0.1
+    # (2026-11-01). Recorded in provenance; see status doc.
+    pinnedVersion: 7.0.1
     markerPaths:
       - docs/plans/
       - .worktrees/
@@ -35,7 +56,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add obra/superpowers-marketplace
           - claude plugin install superpowers@superpowers-marketplace
-          - "claude plugin list | grep -A1 'superpowers@' | grep -q 'Version: 5.1.0'"
+          - "claude plugin list | grep -A1 'superpowers@' | grep -q 'Version: 7.0.1'"
         session:
           - prompt: "{{BASE_PROMPT}}"
         continuation:
@@ -58,7 +79,7 @@ candidates:
   - id: compound-engineering
     name: Compound Engineering
     repo: https://github.com/EveryInc/compound-engineering-plugin
-    pinnedVersion: 3.12.0
+    pinnedVersion: 3.34.0
     markerPaths:
       - docs/brainstorms/
       - docs/plans/
@@ -70,7 +91,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add EveryInc/compound-engineering-plugin
           - claude plugin install compound-engineering@compound-engineering-plugin
-          - "claude plugin list | grep -A1 'compound-engineering@' | grep -q 'Version: 3.12.0'"
+          - "claude plugin list | grep -A1 'compound-engineering@' | grep -q 'Version: 3.34.0'"
         session:
           - prompt: "/ce-setup"
           - prompt: "/ce-plan {{BASE_PROMPT}}"
@@ -83,7 +104,7 @@ candidates:
   - id: agent-skills
     name: Agent Skills
     repo: https://github.com/addyosmani/agent-skills
-    pinnedVersion: 3a6fc6392823
+    pinnedVersion: 0.6.15
     markerPaths: []
     harnesses:
       claude-code:
@@ -91,7 +112,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add addyosmani/agent-skills
           - claude plugin install agent-skills@addy-agent-skills
-          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 3a6fc6392823'"
+          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 0.6.15'"
         session:
           - prompt: "/agent-skills:spec {{BASE_PROMPT}}"
           - prompt: "/agent-skills:plan"
@@ -130,6 +151,12 @@ candidates:
           - prompt: "/gsd-plan-phase"
           - prompt: "/gsd-execute-phase"
           - prompt: "/gsd-verify-work"
+        # One issue in an existing repo: quick mode is GSD's prescribed path, and it
+        # requires a project, which --auto creates from a document. With the base
+        # prompt as that document the model skipped GSD and just fixed the bug.
+        brownfieldSession:
+          - prompt: "/gsd-new-project --auto @ISSUE.md"
+          - prompt: "/gsd-quick {{BASE_PROMPT}}"
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 20

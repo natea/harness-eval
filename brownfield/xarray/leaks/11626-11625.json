@@ -1,0 +1,24 @@
+{
+  "pr": 11626,
+  "issue": 11625,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0194806,
+  "prAuthor": "aniruddhaadak80",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/indexing.py",
+        "_decompose_outer_indexer"
+      ],
+      "evidence": "it does not append a matching\nentry to the in-memory (`np_indexer`) half of the decomposed key",
+      "rationale": "Pinpoints the root cause in _decompose_outer_indexer: the empty-array branch appends slice(0,0) to backend_indexer but no matching np_indexer entry. This is exactly what the reference adds. It also mentions the BASIC branch's missing guard, which the reference also fixes. It stops short of proposing the fix explicitly, so it is diagnosis, not fix_sketch.",
+      "author": "aniruddhaadak80",
+      "role": "issue author"
+    }
+  ]
+}

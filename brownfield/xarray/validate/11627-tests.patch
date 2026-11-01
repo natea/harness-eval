@@ -1,0 +1,139 @@
+diff --git a/xarray/tests/test_backends.py b/xarray/tests/test_backends.py
+index e94edeb1..85ab2dc1 100644
+--- a/xarray/tests/test_backends.py
++++ b/xarray/tests/test_backends.py
+@@ -5877,6 +5877,12 @@ class TestDask(DatasetIOBase):
+     def test_roundtrip_coordinates_with_space(self) -> None:
+         pass
+ 
++    @pytest.mark.skip(
++        reason="nulls are only replaced when encoding, which does not happen here"
++    )
++    def test_roundtrip_stringdtype_nulls(self) -> None:
++        pass
++
+     def test_roundtrip_numpy_datetime_data(self) -> None:
+         # Override method in DatasetIOBase - remove not applicable
+         # save_kwargs
+diff --git a/xarray/tests/test_dataarray.py b/xarray/tests/test_dataarray.py
+index 3d3d3882..805b96b9 100644
+--- a/xarray/tests/test_dataarray.py
++++ b/xarray/tests/test_dataarray.py
+@@ -5271,7 +5271,7 @@ class TestReduce1D(TestReduce):
+         assert_identical(result1, expected1)
+ 
+         result2 = ar.min(skipna=False)
+-        if nanindex is not None and ar.dtype.kind != "O":
++        if nanindex is not None:
+             expected2 = ar.isel(x=nanindex, drop=True)
+         else:
+             expected2 = expected1
+@@ -5308,7 +5308,7 @@ class TestReduce1D(TestReduce):
+         assert_identical(result1, expected1)
+ 
+         result2 = ar.max(skipna=False)
+-        if nanindex is not None and ar.dtype.kind != "O":
++        if nanindex is not None:
+             expected2 = ar.isel(x=nanindex, drop=True)
+         else:
+             expected2 = expected1
+@@ -5820,8 +5820,7 @@ class TestReduce2D(TestReduce):
+         assert_identical(result2, expected0)  # Default keeps attrs
+ 
+         minindex = [
+-            x if y is None or ar.dtype.kind == "O" else y
+-            for x, y in zip(minindex, nanindex, strict=True)
++            x if y is None else y for x, y in zip(minindex, nanindex, strict=True)
+         ]
+         expected2list = [
+             ar.isel(y=yi).isel(x=indi, drop=True) for yi, indi in enumerate(minindex)
+@@ -5870,8 +5869,7 @@ class TestReduce2D(TestReduce):
+         assert_identical(result2, expected0)  # Default keeps attrs
+ 
+         maxindex = [
+-            x if y is None or ar.dtype.kind == "O" else y
+-            for x, y in zip(maxindex, nanindex, strict=True)
++            x if y is None else y for x, y in zip(maxindex, nanindex, strict=True)
+         ]
+         expected2list = [
+             ar.isel(y=yi).isel(x=indi, drop=True) for yi, indi in enumerate(maxindex)
+diff --git a/xarray/tests/test_duck_array_ops.py b/xarray/tests/test_duck_array_ops.py
+index 9a98ef0c..ab0dd426 100644
+--- a/xarray/tests/test_duck_array_ops.py
++++ b/xarray/tests/test_duck_array_ops.py
+@@ -578,6 +578,23 @@ def test_empty_axis_dtype():
+     assert_identical(ds.sum(dim="time")["var"], ds["var"])
+ 
+ 
++@pytest.mark.parametrize("func", ["min", "max"])
++@pytest.mark.parametrize(
++    "values", [[1.0, np.nan, 2.0], [np.nan, 1.0, 2.0], [True, np.nan, False]]
++)
++def test_min_max_object_propagates_nan(func, values) -> None:
++    da = DataArray(np.array(values, dtype=object))
++    actual = getattr(da, func)(skipna=False)
++    assert np.isnan(actual.item())
++
++    da2d = DataArray(np.array([[3, np.nan], [2, 1]], dtype=object), dims=("x", "y"))
++    actual = getattr(da2d, func)("y", skipna=False)
++    expected = DataArray(
++        np.array([np.nan, 2 if func == "max" else 1], dtype=object), dims="x"
++    )
++    assert_identical(actual, expected)
++
++
+ def _reduce_params():
+     for dtype, use_dask, func, skipna in itertools.product(
+         [float, int, np.float32, np.bool_],
+@@ -643,7 +660,9 @@ def test_reduce(dim_num, dtype, use_dask, func, skipna, aggdim):
+                 assert isinstance(da.data, dask_array_type)
+             expected = series_reduce(da, func, skipna=skipna, dim=aggdim, ddof=5)
+             assert_allclose(actual, expected, rtol=rtol)
+-        else:
++        elif not (da.dtype.kind == "O" and not skipna and func in ["min", "max"]):
++            # pandas < 3.1 does not propagate NaN for object arrays here,
++            # see test_min_max_object_propagates_nan instead
+             expected = series_reduce(da, func, skipna=skipna, dim=aggdim)
+             assert_allclose(actual, expected, rtol=rtol)
+ 
+diff --git a/xarray/tests/test_plot.py b/xarray/tests/test_plot.py
+index 70a8ff5b..22d737ba 100644
+--- a/xarray/tests/test_plot.py
++++ b/xarray/tests/test_plot.py
+@@ -1870,10 +1870,12 @@ class TestContour(Common2dMixin, PlotTestCase):
+         artist = self.darray.plot.contour(
+             levels=[-0.5, 0.0, 0.5, 1.0], colors=["k", "r", "w", "b"]
+         )
+-        assert artist.cmap.colors[:5] == ["k", "r", "w", "b"]  # type: ignore[attr-defined,unused-ignore]
++        cmap = artist.cmap
++        assert isinstance(cmap, mpl.colors.ListedColormap)
++        assert cast(list[str], cmap.colors)[:5] == ["k", "r", "w", "b"]
+ 
+         # the last color is now under "over"
+-        assert self._color_as_tuple(artist.cmap.get_over()) == (0.0, 0.0, 1.0)
++        assert self._color_as_tuple(cmap.get_over()) == (0.0, 0.0, 1.0)
+ 
+     def test_colors_np_levels(self) -> None:
+         # https://github.com/pydata/xarray/issues/3284
+@@ -1882,7 +1884,7 @@ class TestContour(Common2dMixin, PlotTestCase):
+         cmap = artist.cmap
+         assert isinstance(cmap, mpl.colors.ListedColormap)
+ 
+-        assert artist.cmap.colors[:5] == ["k", "r", "w", "b"]  # type: ignore[attr-defined,unused-ignore]
++        assert cast(list[str], cmap.colors)[:5] == ["k", "r", "w", "b"]
+ 
+         # the last color is now under "over"
+         assert self._color_as_tuple(cmap.get_over()) == (0.0, 0.0, 1.0)
+diff --git a/xarray/tests/test_variable.py b/xarray/tests/test_variable.py
+index 1481fb5c..45bfb832 100644
+--- a/xarray/tests/test_variable.py
++++ b/xarray/tests/test_variable.py
+@@ -2837,7 +2837,7 @@ class TestAsCompatibleData(Generic[T_DuckArray]):
+             warnings.simplefilter("ignore")
+             actual2: T_DuckArray = as_compatible_data(series)
+ 
+-        np.testing.assert_array_equal(actual2, np.asarray(series.values))
++        np.testing.assert_array_equal(actual2, series.to_numpy(dtype="datetime64[s]"))
+         assert actual2.dtype == np.dtype("datetime64[s]")
+ 
+     def test_full_like(self) -> None:

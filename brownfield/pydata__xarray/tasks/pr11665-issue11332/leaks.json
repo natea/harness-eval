@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/backends/zarr.py"
+      ],
+      "evidence": "if value is None:\n            return None\n        # New: accept JSON-native scalars directly.\n        if dtype.kind in \"iuf\" and isinstance(value, (int, float)) and not isinstance(value, bool):\n            return np.asarray(value, dtype=dtype)[()]",
+      "rationale": "Issue provides near-identical code for FillValueCoder.decode: None handling, JSON-native float/int scalars and string scalars via np.asarray(...)[()]. Matches the reference fix.",
+      "author": "maxrjones",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Automated welcome message with no technical content.",
+      "author": "welcome",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "allow backends to select a set of default coders",
+      "rationale": "Proposes an alternative design (customizable coders) that the reference fix did not take; not a leak.",
+      "author": "keewis",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "fix_code",
+  "commentsLevel": "symptom"
+}

@@ -1,0 +1,71 @@
+{
+  "pr": 11701,
+  "merged": "2026-10-14",
+  "issues": [
+    {
+      "n": 9354,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/datatree.py",
+    "xarray/core/treenode.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_datatree.py",
+    "xarray/tests/test_treenode.py"
+  ],
+  "env": "exclude-newer 2026-10-14T21:52:00+02:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_datatree.py::TestContains",
+    "xarray/tests/test_datatree.py::TestContains::test_contains_double_leading_slash",
+    "xarray/tests/test_datatree.py::TestContains::test_contains_non_string_keys",
+    "xarray/tests/test_datatree.py::TestContains::test_contains_path",
+    "xarray/tests/test_datatree.py::TestContains::test_contains_relative_to_child",
+    "xarray/tests/test_datatree.py::TestContains::test_contains_self",
+    "xarray/tests/test_datatree.py::TestContains::test_not_contains_path",
+    "xarray/tests/test_datatree.py::TestGetItem::test_getitem_dict_like_selection_access_to_dataset",
+    "xarray/tests/test_datatree.py::TestGetItem::test_getitem_multiple_data_variables",
+    "xarray/tests/test_datatree.py::TestGetItem::test_getitem_nonexistent_variable",
+    "xarray/tests/test_datatree.py::TestGetItem::test_getitem_path_past_variable",
+    "xarray/tests/test_datatree.py::TestUpdate::test_update",
+    "xarray/tests/test_treenode.py::test_nodepath",
+    "xarray/tests/test_treenode.py::test_nodepath_double_leading_slash"
+  ],
+  "counts": {
+    "f2p": 20,
+    "p2p": 13,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_datatree.TestContains::test_contains_path[a/b]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[/a/b]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[./a]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[a/]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[a//b]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[c/../a]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[a/b/v]",
+    "xarray.tests.test_datatree.TestContains::test_contains_path[a/x]",
+    "xarray.tests.test_datatree.TestContains::test_contains_self[.]",
+    "xarray.tests.test_datatree.TestContains::test_contains_self[/]",
+    "xarray.tests.test_datatree.TestContains::test_contains_self[]",
+    "xarray.tests.test_datatree.TestContains::test_not_contains_path[a/b/v/x]",
+    "xarray.tests.test_datatree.TestContains::test_not_contains_path[a/b/v/..]",
+    "xarray.tests.test_datatree.TestContains::test_contains_double_leading_slash",
+    "xarray.tests.test_datatree.TestContains::test_contains_relative_to_child",
+    "xarray.tests.test_datatree.TestGetItem::test_getitem_path_past_variable",
+    "xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments0]",
+    "xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments1]",
+    "xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments2]",
+    "xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments3]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

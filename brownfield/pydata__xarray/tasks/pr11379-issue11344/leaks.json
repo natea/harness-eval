@@ -1,0 +1,29 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/namedarray/utils.py"
+      ],
+      "evidence": "a python exception during version check in  function module_available() in xarray/namedarray/utils.py.",
+      "rationale": "Names the function and file the fix changes, plus the TypeError on NoneType from the version check. It doesn't say what the fix is, but it locates the mechanism.",
+      "author": "janhec",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I think we would accept a PR with this change, are you willing to submit one?",
+      "rationale": "Asks for a PR and questions the use case. It has no technical content about the fix.",
+      "author": "headtr1ck",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise"
+}

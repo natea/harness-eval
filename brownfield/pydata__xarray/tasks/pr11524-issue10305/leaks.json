@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "For variables that are CF coordinate variables I expect no warning.",
+      "rationale": "Describes the warning and the expected behavior, but does not name the code location or the mechanism.",
+      "author": "djhoese",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/coding/variables.py"
+      ],
+      "evidence": "As a simple check for coordinate in `NonStringCoder` we could test if the variable name is the same as the variables only dimensions.",
+      "rationale": "Names NonStringCoder and proposes skipping the warning when the name equals the variable's only dimension. That is what the reference does with `dims != (name,)`.",
+      "author": "kmuehlbauer",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "The author only explains how they ended up with the warning. This adds no technical content about the fix.",
+      "author": "djhoese",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

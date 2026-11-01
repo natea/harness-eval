@@ -1,0 +1,45 @@
+{
+  "pr": 11658,
+  "merged": "2026-10-02",
+  "issues": [
+    {
+      "n": 9758,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/dataset.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_interp.py"
+  ],
+  "env": "exclude-newer 2026-10-02T10:03:24-06:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_interp.py::test_dimension_wo_coords",
+    "xarray/tests/test_interp.py::test_interp_decreasing_coord_with_ties_uses_sortby",
+    "xarray/tests/test_interp.py::test_interp_sorted_coords_skip_sortby",
+    "xarray/tests/test_interp.py::test_sorted"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_interp::test_interp_sorted_coords_skip_sortby[False-linear]",
+    "xarray.tests.test_interp::test_interp_sorted_coords_skip_sortby[False-nearest]",
+    "xarray.tests.test_interp::test_interp_sorted_coords_skip_sortby[False-cubic]",
+    "xarray.tests.test_interp::test_interp_sorted_coords_skip_sortby[True-linear]",
+    "xarray.tests.test_interp::test_interp_sorted_coords_skip_sortby[True-nearest]",
+    "xarray.tests.test_interp::test_interp_sorted_coords_skip_sortby[True-cubic]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

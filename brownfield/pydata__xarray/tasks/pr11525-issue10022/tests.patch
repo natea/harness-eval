@@ -1,0 +1,40 @@
+diff --git a/xarray/tests/test_dataarray.py b/xarray/tests/test_dataarray.py
+index 9bb1fa62..7b41dc35 100644
+--- a/xarray/tests/test_dataarray.py
++++ b/xarray/tests/test_dataarray.py
+@@ -7447,6 +7447,13 @@ def test_isin(da) -> None:
+     result = da.isin([2, 3]).sel(y=list("de"), z=0)
+     assert_equal(result, expected)
+ 
++    # set-like objects give the same answer as the equivalent list, GH10022
++    result = da.isin({2, 3}).sel(y=list("de"), z=0)
++    assert_equal(result, expected)
++
++    result = da.isin({2: "a", 3: "b"}.keys()).sel(y=list("de"), z=0)
++    assert_equal(result, expected)
++
+ 
+ def test_raise_no_warning_for_nan_in_binary_ops() -> None:
+     with assert_no_warnings():
+diff --git a/xarray/tests/test_dataset.py b/xarray/tests/test_dataset.py
+index ca2fee92..66aa838d 100644
+--- a/xarray/tests/test_dataset.py
++++ b/xarray/tests/test_dataset.py
+@@ -8067,8 +8067,15 @@ class TestDataset:
+ # pytest tests — new tests should go here, rather than in the class.
+ 
+ 
+-@pytest.mark.parametrize("test_elements", ([1, 2], np.array([1, 2]), DataArray([1, 2])))
+-def test_isin(test_elements, use_dask: bool) -> None:
++@pytest.mark.parametrize(
++    "test_elements",
++    ([1, 2], np.array([1, 2]), DataArray([1, 2]), {1, 2}, frozenset({1, 2})),
++    ids=["list", "numpy", "dataarray", "set", "frozenset"],
++)
++def test_isin(
++    test_elements: list[int] | np.ndarray | DataArray | set[int] | frozenset[int],
++    use_dask: bool,
++) -> None:
+     expected = Dataset(
+         data_vars={
+             "var1": (("dim1",), [0, 1]),

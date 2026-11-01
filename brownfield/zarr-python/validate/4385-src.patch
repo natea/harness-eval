@@ -1,0 +1,488 @@
+diff --git a/changes/351.bugfix.md b/changes/351.bugfix.md
+new file mode 100644
+index 00000000..5e38bc6d
+--- /dev/null
++++ b/changes/351.bugfix.md
+@@ -0,0 +1 @@
++Zarr format 2 arrays whose data type is a single-byte boolean or integer, or raw bytes, written with a `<` or `>` byte order (e.g. `<i1`, `>b1`, `<V4`, as written by netCDF-C, Zarr.jl and jzarr) can be read again, including as fields of structured data types. The byte order of these data types is not relevant, and metadata is written back with the canonical `|` spelling. Also, `datetime64` and `timedelta64` data types no longer accept an object codec in Zarr format 2, and a structured data type with an unrecognized field data type is rejected with `DataTypeValidationError`.
+diff --git a/examples/custom_dtype/custom_dtype.py b/examples/custom_dtype/custom_dtype.py
+index 53acb70f..3aa5763e 100644
+--- a/examples/custom_dtype/custom_dtype.py
++++ b/examples/custom_dtype/custom_dtype.py
+@@ -22,7 +22,7 @@ import numpy as np
+ import pytest
+ 
+ import zarr
+-from zarr.dtype import ZDType, check_dtype_spec_v2, data_type_registry
++from zarr.dtype import ZDType, check_dtype_spec_no_object_codec_v2, data_type_registry
+ from zarr.errors import DataTypeValidationError
+ from zarr.types import JSON, DTypeConfig_V2, DTypeJSON, ZarrFormat
+ 
+@@ -79,9 +79,7 @@ class Int2(ZDType[int2_dtype_cls, int2_scalar_cls]):
+ 
+         See the Zarr docs for more information about the JSON encoding for data types.
+         """
+-        return (
+-            check_dtype_spec_v2(data) and data["name"] == "int2" and data["object_codec_id"] is None
+-        )
++        return check_dtype_spec_no_object_codec_v2(data) and data["name"] == "int2"
+ 
+     @classmethod
+     def _check_json_v3(cls, data: DTypeJSON) -> TypeGuard[Literal["int2"]]:
+diff --git a/src/zarr/core/dtype/common.py b/src/zarr/core/dtype/common.py
+index 61cbfe03..5b334033 100644
+--- a/src/zarr/core/dtype/common.py
++++ b/src/zarr/core/dtype/common.py
+@@ -115,6 +115,19 @@ def check_dtype_spec_v2(data: object) -> TypeGuard[DTypeSpec_V2]:
+     return isinstance(data["object_codec_id"], str | None)
+ 
+ 
++def check_dtype_spec_no_object_codec_v2(
++    data: object,
++) -> TypeGuard[DTypeConfig_V2[DTypeName_V2, None]]:
++    """
++    Type guard for narrowing a python object to a Zarr V2 data type without an object codec.
++
++    Only the data types stored with the NumPy "O" data type have an object codec, so every other
++    data type should check its Zarr V2 JSON with this function rather than
++    [`check_dtype_spec_v2`][zarr.dtype.check_dtype_spec_v2].
++    """
++    return check_dtype_spec_v2(data) and data["object_codec_id"] is None
++
++
+ # By comparison, The JSON representation of a dtype in zarr v3 is much simpler.
+ # It's either a string, or a structured dict
+ DTypeSpec_V3 = str | NamedConfig[str, Mapping[str, object]]
+diff --git a/src/zarr/core/dtype/npy/bool.py b/src/zarr/core/dtype/npy/bool.py
+index f92476a4..509ed5db 100644
+--- a/src/zarr/core/dtype/npy/bool.py
++++ b/src/zarr/core/dtype/npy/bool.py
+@@ -9,7 +9,7 @@ from zarr.core.dtype.common import (
+     DTypeConfig_V2,
+     DTypeJSON,
+     HasItemSize,
+-    check_dtype_spec_v2,
++    check_dtype_spec_no_object_codec_v2,
+ )
+ from zarr.core.dtype.wrapper import TBaseDType, ZDType
+ from zarr.errors import DataTypeValidationError
+@@ -103,11 +103,7 @@ class Bool(ZDType[np.dtypes.BoolDType, np.bool_], HasItemSize):
+         ``TypeGuard[DTypeConfig_V2[Literal["|b1"], None]]``
+             True if the input is a valid JSON representation, False otherwise.
+         """
+-        return (
+-            check_dtype_spec_v2(data)
+-            and data["name"] == cls._zarr_v2_name
+-            and data["object_codec_id"] is None
+-        )
++        return check_dtype_spec_no_object_codec_v2(data) and data["name"] == cls._zarr_v2_name
+ 
+     @classmethod
+     def _check_json_v3(cls, data: DTypeJSON) -> TypeGuard[Literal["bool"]]:
+diff --git a/src/zarr/core/dtype/npy/bytes.py b/src/zarr/core/dtype/npy/bytes.py
+index e60f3c6c..daeb1058 100644
+--- a/src/zarr/core/dtype/npy/bytes.py
++++ b/src/zarr/core/dtype/npy/bytes.py
+@@ -14,6 +14,7 @@ from zarr.core.dtype.common import (
+     HasItemSize,
+     HasLength,
+     HasObjectCodec,
++    check_dtype_spec_no_object_codec_v2,
+     check_dtype_spec_v2,
+     v3_unstable_dtype_warning,
+ )
+@@ -267,10 +268,9 @@ class NullTerminatedBytes(ZDType[np.dtypes.BytesDType[int], np.bytes_], HasLengt
+         """
+ 
+         return (
+-            check_dtype_spec_v2(data)
++            check_dtype_spec_no_object_codec_v2(data)
+             and isinstance(data["name"], str)
+             and re.match(r"^\|S\d+$", data["name"]) is not None
+-            and data["object_codec_id"] is None
+         )
+ 
+     @classmethod
+@@ -669,10 +669,9 @@ class RawBytes(ZDType[np.dtypes.VoidDType[int], np.void], HasLength, HasItemSize
+ 
+         """
+         return (
+-            check_dtype_spec_v2(data)
++            check_dtype_spec_no_object_codec_v2(data)
+             and isinstance(data["name"], str)
+             and re.match(r"^\|V\d+$", data["name"]) is not None
+-            and data["object_codec_id"] is None
+         )
+ 
+     @classmethod
+diff --git a/src/zarr/core/dtype/npy/complex.py b/src/zarr/core/dtype/npy/complex.py
+index 0286d423..decfb6c0 100644
+--- a/src/zarr/core/dtype/npy/complex.py
++++ b/src/zarr/core/dtype/npy/complex.py
+@@ -17,7 +17,7 @@ from zarr.core.dtype.common import (
+     DTypeJSON,
+     HasEndianness,
+     HasItemSize,
+-    check_dtype_spec_v2,
++    check_dtype_spec_no_object_codec_v2,
+ )
+ from zarr.core.dtype.npy.common import (
+     ComplexLike,
+@@ -106,11 +106,7 @@ class BaseComplex[
+         bool
+             True if the input is a valid JSON representation, False otherwise.
+         """
+-        return (
+-            check_dtype_spec_v2(data)
+-            and data["name"] in cls._zarr_v2_names
+-            and data["object_codec_id"] is None
+-        )
++        return check_dtype_spec_no_object_codec_v2(data) and data["name"] in cls._zarr_v2_names
+ 
+     @classmethod
+     def _check_json_v3(cls, data: DTypeJSON) -> TypeGuard[str]:
+diff --git a/src/zarr/core/dtype/npy/float.py b/src/zarr/core/dtype/npy/float.py
+index d041416b..0fbd0c3e 100644
+--- a/src/zarr/core/dtype/npy/float.py
++++ b/src/zarr/core/dtype/npy/float.py
+@@ -10,7 +10,7 @@ from zarr.core.dtype.common import (
+     DTypeJSON,
+     HasEndianness,
+     HasItemSize,
+-    check_dtype_spec_v2,
++    check_dtype_spec_no_object_codec_v2,
+ )
+ from zarr.core.dtype.npy.common import (
+     FloatLike,
+@@ -91,11 +91,7 @@ class BaseFloat[
+         TypeGuard[DTypeConfig_V2[str, None]]
+             True if the input is a valid JSON representation of this data type, False otherwise.
+         """
+-        return (
+-            check_dtype_spec_v2(data)
+-            and data["name"] in cls._zarr_v2_names
+-            and data["object_codec_id"] is None
+-        )
++        return check_dtype_spec_no_object_codec_v2(data) and data["name"] in cls._zarr_v2_names
+ 
+     @classmethod
+     def _check_json_v3(cls, data: DTypeJSON) -> TypeGuard[str]:
+diff --git a/src/zarr/core/dtype/npy/int.py b/src/zarr/core/dtype/npy/int.py
+index c6080dbc..b7198fcb 100644
+--- a/src/zarr/core/dtype/npy/int.py
++++ b/src/zarr/core/dtype/npy/int.py
+@@ -19,7 +19,7 @@ from zarr.core.dtype.common import (
+     DTypeJSON,
+     HasEndianness,
+     HasItemSize,
+-    check_dtype_spec_v2,
++    check_dtype_spec_no_object_codec_v2,
+ )
+ from zarr.core.dtype.npy.common import (
+     check_json_int,
+@@ -86,11 +86,7 @@ class BaseInt[
+             False otherwise.
+         """
+ 
+-        return (
+-            check_dtype_spec_v2(data)
+-            and data["name"] in cls._zarr_v2_names
+-            and data["object_codec_id"] is None
+-        )
++        return check_dtype_spec_no_object_codec_v2(data) and data["name"] in cls._zarr_v2_names
+ 
+     @classmethod
+     def _check_json_v3(cls, data: object) -> TypeGuard[str]:
+@@ -415,11 +411,7 @@ class UInt8(BaseInt[np.dtypes.UInt8DType, np.uint8]):
+ 
+     dtype_cls = np.dtypes.UInt8DType
+     _zarr_v3_name: ClassVar[Literal["uint8"]] = "uint8"
+-    _zarr_v2_names: ClassVar[tuple[Literal["|u1"], Literal["<u1"], Literal[">u1"]]] = (
+-        "|u1",
+-        "<u1",
+-        ">u1",
+-    )
++    _zarr_v2_names: ClassVar[tuple[Literal["|u1"]]] = ("|u1",)
+ 
+     @classmethod
+     def from_native_dtype(cls, dtype: TBaseDType) -> Self:
+diff --git a/src/zarr/core/dtype/npy/string.py b/src/zarr/core/dtype/npy/string.py
+index 3f84e812..18a38601 100644
+--- a/src/zarr/core/dtype/npy/string.py
++++ b/src/zarr/core/dtype/npy/string.py
+@@ -24,6 +24,7 @@ from zarr.core.dtype.common import (
+     HasItemSize,
+     HasLength,
+     HasObjectCodec,
++    check_dtype_spec_no_object_codec_v2,
+     check_dtype_spec_v2,
+ )
+ from zarr.core.dtype.npy.common import (
+@@ -191,10 +192,9 @@ class FixedLengthUTF32(
+             Whether the input is a valid JSON representation of a NumPy U dtype.
+         """
+         return (
+-            check_dtype_spec_v2(data)
++            check_dtype_spec_no_object_codec_v2(data)
+             and isinstance(data["name"], str)
+             and re.match(r"^[><]U\d+$", data["name"]) is not None
+-            and data["object_codec_id"] is None
+         )
+ 
+     @classmethod
+diff --git a/src/zarr/core/dtype/npy/structured.py b/src/zarr/core/dtype/npy/structured.py
+index dcc523d1..06feb05b 100644
+--- a/src/zarr/core/dtype/npy/structured.py
++++ b/src/zarr/core/dtype/npy/structured.py
+@@ -12,7 +12,7 @@ from zarr.core.dtype.common import (
+     DTypeJSON,
+     HasItemSize,
+     StructuredName_V2,
+-    check_dtype_spec_v2,
++    check_dtype_spec_no_object_codec_v2,
+     check_structured_dtype_name_v2,
+     v3_unstable_dtype_warning,
+ )
+@@ -30,6 +30,22 @@ if TYPE_CHECKING:
+ StructuredScalarLike = list[object] | tuple[object, ...] | bytes | int
+ 
+ 
++def _field_from_json(
++    data: DTypeJSON, *, zarr_format: ZarrFormat
++) -> ZDType[TBaseDType, TBaseScalar]:
++    """
++    Parse the data type of a structured field, reporting an unrecognized field data type as an
++    invalid structured data type.
++    """
++    # avoid circular import
++    from zarr.core.dtype import get_data_type_from_json
++
++    try:
++        return get_data_type_from_json(data, zarr_format=zarr_format)
++    except ValueError as e:
++        raise DataTypeValidationError(f"Invalid structured field data type: {e}") from e
++
++
+ class StructuredJSON_V2(DTypeConfig_V2[StructuredName_V2, None]):
+     """
+     A wrapper around the JSON representation of the ``Structured`` data type in Zarr V2.
+@@ -239,10 +255,9 @@ class Structured(ZDType[np.dtypes.VoidDType[int], np.void], HasItemSize):
+             for Zarr V2, False otherwise.
+         """
+         return (
+-            check_dtype_spec_v2(data)
++            check_dtype_spec_no_object_codec_v2(data)
+             and not isinstance(data["name"], str)
+             and check_structured_dtype_name_v2(data["name"])
+-            and data["object_codec_id"] is None
+         )
+ 
+     @classmethod
+@@ -271,9 +286,6 @@ class Structured(ZDType[np.dtypes.VoidDType[int], np.void], HasItemSize):
+ 
+     @classmethod
+     def _from_json_v2(cls, data: DTypeJSON) -> Self:
+-        # avoid circular import
+-        from zarr.core.dtype import get_data_type_from_json
+-
+         if cls._check_json_v2(data):
+             # structured dtypes are constructed directly from a list of lists
+             # note that we do not handle the object codec here! this will prevent structured
+@@ -283,9 +295,7 @@ class Structured(ZDType[np.dtypes.VoidDType[int], np.void], HasItemSize):
+                 fields=tuple(  # type: ignore[str-unpack]
+                     (  # type: ignore[misc]
+                         f_name,
+-                        get_data_type_from_json(
+-                            {"name": f_dtype, "object_codec_id": None}, zarr_format=2
+-                        ),
++                        _field_from_json({"name": f_dtype, "object_codec_id": None}, zarr_format=2),
+                     )
+                     for f_name, f_dtype in name
+                 )
+@@ -295,14 +305,12 @@ class Structured(ZDType[np.dtypes.VoidDType[int], np.void], HasItemSize):
+ 
+     @classmethod
+     def _from_json_v3(cls, data: DTypeJSON) -> Self:
+-        from zarr.core.dtype import get_data_type_from_json
+-
+         if cls._check_json_v3(data):
+             config = data["configuration"]
+             meta_fields = config["fields"]
+             return cls(
+                 fields=tuple(
+-                    (f_name, get_data_type_from_json(f_dtype, zarr_format=3))  # type: ignore[misc]
++                    (f_name, _field_from_json(f_dtype, zarr_format=3))  # type: ignore[misc]
+                     for f_name, f_dtype in meta_fields
+                 )
+             )
+@@ -557,8 +565,6 @@ class Struct(Structured):
+ 
+     @classmethod
+     def _from_json_v3(cls, data: DTypeJSON) -> Self:
+-        from zarr.core.dtype import get_data_type_from_json
+-
+         if cls._check_json_v3(data):
+             config = data["configuration"]
+             meta_fields = config["fields"]
+@@ -570,7 +576,7 @@ class Struct(Structured):
+                 else:
+                     # Legacy tuple-style field format from "structured" dtype
+                     f_name, f_dtype = field  # type: ignore[unreachable]
+-                parsed_fields.append((f_name, get_data_type_from_json(f_dtype, zarr_format=3)))  # type: ignore[arg-type]
++                parsed_fields.append((f_name, _field_from_json(f_dtype, zarr_format=3)))  # type: ignore[arg-type]
+             return cls(fields=tuple(parsed_fields))
+         msg = f"Invalid JSON representation of {cls.__name__}. Got {data!r}, expected a JSON object with the key {cls._zarr_v3_name!r}"
+         raise DataTypeValidationError(msg)
+diff --git a/src/zarr/core/dtype/npy/time.py b/src/zarr/core/dtype/npy/time.py
+index 4efa0be7..c53bb4bd 100644
+--- a/src/zarr/core/dtype/npy/time.py
++++ b/src/zarr/core/dtype/npy/time.py
+@@ -23,7 +23,7 @@ from zarr.core.dtype.common import (
+     DTypeJSON,
+     HasEndianness,
+     HasItemSize,
+-    check_dtype_spec_v2,
++    check_dtype_spec_no_object_codec_v2,
+ )
+ from zarr.core.dtype.npy.common import (
+     DATETIME_UNIT,
+@@ -369,7 +369,7 @@ class TimeDelta64(TimeDTypeBase[np.dtypes.TimeDelta64DType, np.timedelta64], Has
+             True if the JSON input is a valid representation of this class,
+             otherwise False.
+         """
+-        if not check_dtype_spec_v2(data):
++        if not check_dtype_spec_no_object_codec_v2(data):
+             return False
+         name = data["name"]
+         # match <m[ns], >m[M], etc
+@@ -644,7 +644,7 @@ class DateTime64(TimeDTypeBase[np.dtypes.DateTime64DType, np.datetime64], HasEnd
+             True if the input is a valid JSON representation of a NumPy datetime64 data type,
+             otherwise False.
+         """
+-        if not check_dtype_spec_v2(data):
++        if not check_dtype_spec_no_object_codec_v2(data):
+             return False
+         name = data["name"]
+         if not isinstance(name, str):
+diff --git a/src/zarr/core/dtype/registry.py b/src/zarr/core/dtype/registry.py
+index 0a9b2aa6..73caf562 100644
+--- a/src/zarr/core/dtype/registry.py
++++ b/src/zarr/core/dtype/registry.py
+@@ -2,13 +2,14 @@ from __future__ import annotations
+ 
+ import contextlib
+ from dataclasses import dataclass, field
+-from typing import TYPE_CHECKING, Self
++from typing import TYPE_CHECKING, Final, Self
+ 
+ import numpy as np
+ 
+ from zarr.errors import DataTypeValidationError
+ 
+ if TYPE_CHECKING:
++    from collections.abc import Mapping
+     from importlib.metadata import EntryPoint
+ 
+     from zarr.core.common import ZarrFormat
+@@ -16,6 +17,59 @@ if TYPE_CHECKING:
+     from zarr.core.dtype.wrapper import TBaseDType, TBaseScalar, ZDType
+ 
+ 
++# Zarr V2 data type names are NumPy typestrs, whose first character is the byte order: "<", ">", or
++# "|" (not relevant). For the data types below the byte order is not relevant, so their "<" and ">"
++# spellings name the same data type as the canonical "|" spelling. Other implementations write
++# them: netCDF-C writes "<i1" and "<u1", Zarr.jl wrote "<b1", "<i1" and "<u1", and jzarr wrote
++# ">i1" and ">u1".
++
++# Single-byte data types, keyed by their non-canonical spellings.
++_V2_SINGLE_BYTE_ALIASES: Final[Mapping[str, str]] = {
++    "<b1": "|b1",
++    ">b1": "|b1",
++    "<i1": "|i1",
++    ">i1": "|i1",
++    "<u1": "|u1",
++    ">u1": "|u1",
++}
++# Fixed-length bytes data types, whose names are the kind followed by the length in bytes.
++_V2_BYTES_KINDS: Final = ("V",)
++
++
++def _v2_canonical_name(name: str) -> str:
++    """
++    The canonical spelling of a Zarr V2 data type name: `"|"` for a byte order that is not
++    relevant, and the name as written otherwise.
++    """
++    if name in _V2_SINGLE_BYTE_ALIASES:
++        return _V2_SINGLE_BYTE_ALIASES[name]
++    byte_order, kind, length = name[:1], name[1:2], name[2:]
++    if (
++        byte_order in ("<", ">")
++        and kind in _V2_BYTES_KINDS
++        and length.isascii()
++        and length.isdigit()
++    ):
++        return f"|{kind}{length}"
++    return name
++
++
++def _v2_spellings(data: DTypeJSON) -> tuple[DTypeJSON, ...]:
++    """
++    The spellings of a Zarr V2 data type JSON to match, in order: the name as written, then its
++    canonical spelling if it has another. A data type that declares a non-canonical spelling
++    (e.g. `">S1"`) takes precedence over the canonical alias, because the name as written is
++    tried first.
++    """
++    if (
++        isinstance(data, dict)
++        and isinstance(name := data.get("name"), str)
++        and (canonical := _v2_canonical_name(name)) != name
++    ):
++        return (data, {**data, "name": canonical})
++    return (data,)
++
++
+ # This class is different from the other registry classes, which inherit from
+ # dict. IMO it's simpler to just do a dataclass. But long-term we should
+ # have just 1 registry class in use.
+@@ -202,9 +256,11 @@ class DataTypeRegistry:
+             If no matching Zarr data type is found for the given JSON data.
+         """
+ 
+-        for val in self.contents.values():
+-            try:
+-                return val.from_json(data, zarr_format=zarr_format)
+-            except DataTypeValidationError:
+-                pass
++        candidates = _v2_spellings(data) if zarr_format == 2 else (data,)
++        for candidate in candidates:
++            for val in self.contents.values():
++                try:
++                    return val.from_json(candidate, zarr_format=zarr_format)
++                except DataTypeValidationError:
++                    pass
+         raise ValueError(f"No Zarr data type found that matches {data!r}")
+diff --git a/src/zarr/dtype.py b/src/zarr/dtype.py
+index 0c271b6c..df5e3f69 100644
+--- a/src/zarr/dtype.py
++++ b/src/zarr/dtype.py
+@@ -44,7 +44,11 @@ from zarr.core.dtype import (
+     parse_data_type,  # noqa: F401
+     parse_dtype,
+ )
+-from zarr.core.dtype.common import DTypeSpec_V2, check_dtype_spec_v2
++from zarr.core.dtype.common import (
++    DTypeSpec_V2,
++    check_dtype_spec_no_object_codec_v2,
++    check_dtype_spec_v2,
++)
+ 
+ __all__ = [
+     "Bool",
+@@ -87,6 +91,7 @@ __all__ = [
+     "VariableLengthUTF8",
+     "VariableLengthUTF8JSON_V2",
+     "ZDType",
++    "check_dtype_spec_no_object_codec_v2",
+     "check_dtype_spec_v2",
+     "data_type_registry",
+     "parse_dtype",

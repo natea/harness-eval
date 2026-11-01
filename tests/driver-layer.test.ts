@@ -97,17 +97,21 @@ describe("shared print-cli driver", () => {
 				content: "build this",
 			},
 		]);
+		// Stale prompt/output files from an earlier attempt are cleared first.
 		expect(sandbox.execs[0]?.command).toBe(
+			"rm -f /tmp/he-prompt-trial_bad__-3.txt /tmp/he-out-trial_bad__-3.jsonl",
+		);
+		expect(sandbox.execs[1]?.command).toBe(
 			"print-tool --model m-1 --prompt /tmp/he-prompt-trial_bad__-3.txt --out /tmp/he-out-trial_bad__-3.jsonl",
 		);
-		expect(sandbox.execs[0]?.opts).toEqual({
+		expect(sandbox.execs[1]?.opts).toEqual({
 			timeoutMs: 456,
 			env: { TOKEN: "secret" },
 		});
-		expect(sandbox.execs[1]?.command).toBe(
+		expect(sandbox.execs[2]?.command).toBe(
 			"cat /tmp/he-out-trial_bad__-3.jsonl",
 		);
-		expect(sandbox.execs[1]?.opts).toEqual({ timeoutMs: 120_000 });
+		expect(sandbox.execs[2]?.opts).toEqual({ timeoutMs: 120_000 });
 		expect(result.record.sessionId).toBe("custom-session");
 		expect(result.resultText).toBe("raw transcript");
 	});
@@ -127,9 +131,12 @@ describe("shared print-cli driver", () => {
 			{ path: "/tmp/he-prompt-trial.1-2.txt", content: "implement" },
 		]);
 		expect(sandbox.execs[0]?.command).toBe(
+			"rm -f /tmp/he-prompt-trial.1-2.txt /tmp/he-out-trial.1-2.jsonl",
+		);
+		expect(sandbox.execs[1]?.command).toBe(
 			'cat /tmp/he-prompt-trial.1-2.txt | claude -p --model "claude-opus-4-6" --output-format stream-json --verbose --dangerously-skip-permissions --resume "s-previous" > /tmp/he-out-trial.1-2.jsonl 2>&1',
 		);
-		expect(sandbox.execs[0]?.opts).toEqual({
+		expect(sandbox.execs[1]?.opts).toEqual({
 			timeoutMs: 789,
 			env: { CLAUDE_CODE_OAUTH_TOKEN: "token" },
 		});

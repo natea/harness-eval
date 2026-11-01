@@ -1,0 +1,40 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 314
+issues:
+  - 313
+baseSha: b9b9c224f16d570a9582f337a339ba7236d8f580
+mergeSha: 4ba43865c615c573674c6095395cf5b339724637
+tStar: 2024-09-04T21:36:49Z
+issueCreatedAt: 2024-09-05T20:23:00Z
+prMergedAt: 2024-09-11T02:39:24Z
+verdict: reject:issue-after-fix-start
+failToPass:
+  - tests.test_clients::test_doi_search[paper_attributes0]
+  - tests.test_clients::test_doi_search[paper_attributes1]
+  - tests.test_clients::test_doi_search[paper_attributes2]
+  - tests.test_clients::test_ensure_sequential_run_early_stop
+  - tests.test_clients::test_title_search[paper_attributes0]
+  - tests.test_clients::test_title_search[paper_attributes1]
+  - tests.test_clients::test_title_search[paper_attributes2]
+passToPass: []
+envBroken:
+  - tests.test_clients::test_crossref_retraction_status
+flaky: []
+testPaths:
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: noise
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: b7357b8caf0f4ab175da6f77a537d80bc63b91ee1b2c34d192f7dd079e25b633
+  issue/body+human.md: b7357b8caf0f4ab175da6f77a537d80bc63b91ee1b2c34d192f7dd079e25b633
+  issue/body.md: b7357b8caf0f4ab175da6f77a537d80bc63b91ee1b2c34d192f7dd079e25b633
+  leaks.json: a3df8514d340ce370d0f25cb2c35e936ebea05df9d4b9a7024915017dd95b9f7
+  reference.patch: 7e6f5a631779c24b8b106be5addcdb38296eb35b6241413eef745abadd7a21e4
+  snapshot.json: 34bd87f7951c4006ed075713f57b455b799a60b7a16869f3bacb837cfd7a550c
+  tests.patch: 4e0e383523457f910174d58d7b07bd959a43c074dcedf889232e6da278238891
+  validation.json: 46e95bda38125ca30e81398ec647a2d9f2ed346eb2ef3fa7691e9fcaac7783c8

@@ -1,0 +1,103 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 38e44575..3b3b9d3f 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -206,6 +206,10 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Fix CuPy indexers with pandas-backed coordinates, basic and label-based
++  assignment to CuPy arrays, and scalar truth conversion
++  (:issue:`11739`, :pull:`11797`).
++  By `Huashuo Lei <https://github.com/wpyaoxueros>`_.
+ - Fix :py:meth:`Dataset.interp` and :py:meth:`DataArray.interp` with
+   ``method="linear"`` or ``"nearest"`` raising a ``ValueError`` for empty new
+   coordinates (:pull:`11681`).
+diff --git a/xarray/core/common.py b/xarray/core/common.py
+index fbd3ebc5..499f4eea 100644
+--- a/xarray/core/common.py
++++ b/xarray/core/common.py
+@@ -166,7 +166,12 @@ class AbstractArray(Generic[DimType_co]):  # noqa: UP046
+     __slots__ = ()
+ 
+     def __bool__(self: Any) -> bool:
+-        return bool(self.values)
++        data = self.data
++        if isinstance(data, pd.api.extensions.ExtensionArray):
++            # bool(pd.array([False])) is True because it falls back to len().
++            # Convert to preserve NumPy's scalar and ambiguous truth semantics.
++            return bool(self.values)
++        return bool(data)
+ 
+     def __float__(self: Any) -> float:
+         return float(self.values)
+diff --git a/xarray/core/indexes.py b/xarray/core/indexes.py
+index bd8944c3..651be62d 100644
+--- a/xarray/core/indexes.py
++++ b/xarray/core/indexes.py
+@@ -26,12 +26,15 @@ from xarray.core.utils import (
+     get_valid_numpy_dtype,
+     is_allowed_extension_array_dtype,
+     is_dict_like,
++    is_duck_array,
+     is_scalar,
+ )
++from xarray.namedarray.pycompat import to_numpy
+ 
+ if TYPE_CHECKING:
+     from xarray.core.types import ErrorOptions, JoinOptions, Self
+     from xarray.core.variable import Variable
++    from xarray.namedarray._typing import duckarray
+ 
+ 
+ IndexVars = dict[Any, "Variable"]
+@@ -836,6 +839,9 @@ class PandasIndex(Index):
+         if isinstance(indxr, slice) and indxr == slice(None):
+             return self
+ 
++        if is_duck_array(indxr) and not isinstance(indxr, np.ndarray):
++            indxr = to_numpy(cast("duckarray[Any, Any]", indxr))
++
+         return self._replace(self.index[indxr])  # type: ignore[index,unused-ignore]
+ 
+     @override
+diff --git a/xarray/core/indexing.py b/xarray/core/indexing.py
+index 2de92f9b..204567b7 100644
+--- a/xarray/core/indexing.py
++++ b/xarray/core/indexing.py
+@@ -1791,7 +1791,7 @@ class NumpyIndexingAdapter(IndexingAdapter):
+             array[key] = value
+         except ValueError as exc:
+             # More informative exception if read-only view
+-            if not array.flags.writeable and not array.flags.owndata:
++            if not getattr(array.flags, "writeable", True) and not array.flags.owndata:
+                 raise ValueError(
+                     "Assignment destination is a view.  "
+                     "Do you want to .copy() array first?"
+@@ -2090,7 +2090,13 @@ class PandasIndexingAdapter(IndexingAdapter):
+     def _index_get(
+         self, indexer: ExplicitIndexer, func_name: str
+     ) -> PandasIndexingAdapter | np.ndarray:
+-        key = indexer.tuple
++        indexer = type(indexer)(
++            tuple(
++                to_numpy(k) if is_duck_array(k) and not isinstance(k, np.ndarray) else k
++                for k in indexer.tuple
++            )
++        )
++        key: Any = indexer.tuple
+ 
+         if len(key) == 1:
+             # unpack key so it can index a pandas.Index object (pandas.Index
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index b0281809..5da152fd 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -1129,6 +1129,7 @@ class Variable(
+                 value = Variable(dims[-value.ndim :], value)
+         # broadcast to become assignable
+         value = value.set_dims(dims).data
++        value = to_like_array(value, self._data)
+ 
+         if new_order:
+             value = duck_array_ops.asarray(value)

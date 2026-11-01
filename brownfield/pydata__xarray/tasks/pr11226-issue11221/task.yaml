@@ -1,0 +1,44 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11226
+issues:
+  - 11221
+baseSha: 1b9d9141945a8b8df59ed00a859799efe0113a65
+mergeSha: b987a43c0cfe0b3197dcf82ab7be6535a33ca157
+tStar: 2026-03-13T12:41:14Z
+issueCreatedAt: 2026-03-09T20:30:00Z
+prMergedAt: 2026-10-29T07:20:47Z
+verdict: VALID
+failToPass:
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-netcdf4]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-h5netcdf]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-scipy]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[dict-pydap]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-netcdf4]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-h5netcdf]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-scipy]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[MemoryStore-pydap]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-netcdf4]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-h5netcdf]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-scipy]
+  - xarray.tests.backends.test_common::test_open_zarr_store_with_other_engine[StorePath-pydap]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: a773b5631541ca7df23e199a9dca0e0a6e3f0c441b0a73bda6e0036aa91d970e
+  issue/body+human.md: a773b5631541ca7df23e199a9dca0e0a6e3f0c441b0a73bda6e0036aa91d970e
+  issue/body.md: 32b61b69ec81fa16d4df0a2766ed389e844c4cec8f5be29ebd6ae31e94c2edfc
+  leaks.json: 83e4c80509285849ab6e5cdf5ed233a6b09f1178ccbfdff05d8a2ea2599797b7
+  reference.patch: 8f5dffaf9ea49770361eddf72823e65a75153218ae26f7ac1221a81b0dd75f7e
+  snapshot.json: daf57697e2809406cd635c440508a48be2aaab8f92b23a707b0d6cbf29dfbce6
+  tests.patch: 6f3a9edbd53eb8e2679fffa1607addb3e036b239a48242f28f94666f3ff0f073
+  validation.json: a60e153c5d0f5ea93c3172e43360f5bb1ced785e2f8c17e572c156356113e64e

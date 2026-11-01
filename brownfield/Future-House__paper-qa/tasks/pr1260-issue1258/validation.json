@@ -1,0 +1,49 @@
+{
+  "pr": 1260,
+  "merged": "2025-12-31",
+  "issues": [
+    {
+      "n": 1258,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+    "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+    "src/paperqa/utils.py"
+  ],
+  "testFiles": [
+    "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py",
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 5,
+  "selected": [
+    "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_equation_parsing",
+    "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_table_parsing",
+    "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py::test_table_parsing_orphaned_surrogate",
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_media_deduplication",
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_table_parsing",
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_table_parsing_orphaned_surrogate"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_equation_parsing",
+    "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing",
+    "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing_orphaned_surrogate",
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_media_deduplication",
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing",
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing_orphaned_surrogate"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

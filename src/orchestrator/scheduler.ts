@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getHarnessDriver, type HarnessDriver } from "../driver";
+import { HarnessCheckError } from "../brownfield/harness-check";
+import { EgressLockError, type TrialEgress } from "../gateway/run";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
 import { aggregateTelemetry } from "../driver/telemetry";
@@ -20,6 +22,30 @@ export interface TrialPlan {
 	trialId: string;
 	candidate: CandidateEntry;
 	trialIndex: number;
+	/** Brownfield only: the frozen task bundle this trial runs (design D1). */
+	task?: BrownfieldTrialTask;
+}
+
+/**
+ * The brownfield task a trial runs. Identity fields are recorded in provenance;
+ * `prompt` is the rendered base prompt (identical for every candidate of the
+ * task) and `issueContent` the variant text written into the workspace.
+ */
+export interface BrownfieldTrialTask {
+	repoDir: string;
+	taskId: string;
+	variant: string;
+	/** sha256 of the bundle manifest (which hashes every bundle file). */
+	bundleSha256: string;
+	baseSha: string;
+	/** Merge commit of the reference fix — must be absent from the sealed repo. */
+	mergeSha: string;
+	bundleDir: string;
+	/** Rendered base prompt; rendered once per task, never per candidate. */
+	prompt: string;
+	/** Issue file name in the workspace root (e.g. `ISSUE.md`). */
+	issueFile: string;
+	issueContent: string;
 }
 
 /** Hard cap on per-trial teardown. Larger than the provider's internal ladder
@@ -48,6 +74,12 @@ export interface SchedulerDeps {
 	workerModelFlag?: string;
 	/** Resolved worker profile identity for provenance (never the key). */
 	workerModelRef?: import("../types").ModelRef;
+	/**
+	 * Model gateway + egress lock (brownfield, D11). When set, each trial is
+	 * locked after install and before the agent starts, runs on the gateway's
+	 * env instead of workerEnv, and gets review flags for gateway rejections.
+	 */
+	egress?: TrialEgress;
 	/** Injectable for tests. */
 	driver?: HarnessDriver;
 	executeScript?: typeof executeSessionScript;
@@ -55,6 +87,37 @@ export interface SchedulerDeps {
 		sandbox: Sandbox,
 		trialDir: string,
 		transcripts: string[],
+	) => Promise<unknown>;
+	/**
+	 * Brownfield: seed the workspace with the task's sealed repo + issue file
+	 * instead of writing `SPEC.md` (design D6/D11). Required when a plan carries a
+	 * task; a missing hook fails the trial rather than running an empty workspace.
+	 */
+	seedWorkspace?: (
+		sandbox: Sandbox,
+		plan: TrialPlan,
+		config: RunConfig,
+	) => Promise<void>;
+	/**
+	 * Egress lockdown (task 4.4): worker commands run in a loopback-only network
+	 * namespace wired to the gateway's unix socket. Brownfield trials only.
+	 */
+	sessionNetns?: { script: string };
+	/**
+	 * Provider for one plan, overriding `provider` (brownfield on docker: each
+	 * task runs on its own prebuilt task image).
+	 */
+	providerFor?: (plan: TrialPlan) => SandboxProvider;
+	/**
+	 * After install, before the agent: confirm the framework is visible to the
+	 * harness; returns a provenance note, throws to fail the trial (no retry).
+	 */
+	verifyHarness?: (sandbox: Sandbox, plan: TrialPlan) => Promise<string>;
+	/** Brownfield: capture the candidate's patch after the session (task 4.7). */
+	capturePatch?: (
+		sandbox: Sandbox,
+		trialDir: string,
+		plan: TrialPlan,
 	) => Promise<unknown>;
 	now?: () => Date;
 	/**
@@ -171,6 +234,12 @@ function baseProvenance(
 	status: TrialStatus,
 ): TrialProvenance {
 	const now = (deps.now ?? (() => new Date()))();
+	// A brownfield trial's task content is its bundle, so the bundle hash takes the
+	// PRD-content slot (per-trial identity), with the full bundle identity recorded
+	// separately in `brownfield`.
+	const registry = plan.task
+		? { ...deps.registry, basePrompt: plan.task.prompt }
+		: deps.registry;
 	return {
 		runId: deps.runDir.split("/").at(-1) ?? deps.runDir,
 		trialId: plan.trialId,
@@ -180,12 +249,12 @@ function baseProvenance(
 		harnessVersion: deps.harnessVersion,
 		model: deps.workerModelRef?.name ?? config.model,
 		workerModel: deps.workerModelRef,
-		provider: deps.provider.id,
-		snapshotId: deps.provider.snapshotId,
-		prdSha256: deps.prdSha256,
+		provider: (deps.providerFor?.(plan) ?? deps.provider).id,
+		snapshotId: (deps.providerFor?.(plan) ?? deps.provider).snapshotId,
+		prdSha256: plan.task?.bundleSha256 ?? deps.prdSha256,
 		testPlanSha256: deps.testPlanSha256,
 		sessionScript: renderSessionScript(
-			deps.registry,
+			registry,
 			plan.candidate,
 			config.harness,
 		),
@@ -194,6 +263,19 @@ function baseProvenance(
 		status,
 		cappedBy: null,
 		notes: [],
+		flags: [],
+		...(plan.task
+			? {
+					brownfield: {
+						repoDir: plan.task.repoDir,
+						taskId: plan.task.taskId,
+						variant: plan.task.variant,
+						bundleSha256: plan.task.bundleSha256,
+						baseSha: plan.task.baseSha,
+						mergeSha: plan.task.mergeSha,
+					},
+				}
+			: {}),
 	};
 }
 
@@ -207,7 +289,7 @@ function skippedResult(
 	provenance.endedAt = provenance.startedAt;
 	provenance.notes.push(reason);
 	persistProvenance(deps.runDir, provenance);
-	return { provenance, telemetry: null, grades: null };
+	return { provenance, telemetry: null, grades: null, resolution: null };
 }
 
 export async function runTrial(
@@ -229,7 +311,9 @@ export async function runTrial(
 		try {
 			const setupStart = Date.now();
 			deps.onStage?.(plan.trialId, "provisioning");
-			sandbox = await deps.provider.provision(plan.trialId);
+			sandbox = await (deps.providerFor?.(plan) ?? deps.provider).provision(
+				plan.trialId,
+			);
 			// Cancel teardown: destroying the in-flight sandbox makes the pending
 			// exec/install throw immediately, so a cancel interrupts a stuck trial
 			// instead of waiting for the wall-clock budget (studio live-run cancel).
@@ -238,10 +322,18 @@ export async function runTrial(
 				void s.destroy().catch(() => {});
 			};
 			deps.abortSignal?.addEventListener("abort", onAbort, { once: true });
-			await sandbox.writeFile(
-				join(sandbox.workspacePath, "SPEC.md"),
-				deps.prdContent,
-			);
+			if (plan.task) {
+				if (!deps.seedWorkspace)
+					throw new Error(
+						`trial ${plan.trialId} is a brownfield task but no seedWorkspace hook was provided`,
+					);
+				await deps.seedWorkspace(sandbox, plan, config);
+			} else {
+				await sandbox.writeFile(
+					join(sandbox.workspacePath, "SPEC.md"),
+					deps.prdContent,
+				);
+			}
 			if (deps.designContent)
 				await sandbox.writeFile(
 					join(sandbox.workspacePath, "DESIGN.md"),
@@ -259,10 +351,14 @@ export async function runTrial(
 					);
 				}
 			}
+			if (deps.verifyHarness)
+				provenance.notes.push(await deps.verifyHarness(sandbox, plan));
 			const setupDurationMs = Date.now() - setupStart;
 
 			const script = renderSessionScript(
-				deps.registry,
+				plan.task
+					? { ...deps.registry, basePrompt: plan.task.prompt }
+					: deps.registry,
 				plan.candidate,
 				config.harness,
 			);
@@ -285,22 +381,51 @@ export async function runTrial(
 					workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 				}
 			}
+			let modelFlag = deps.workerModelFlag ?? config.model;
+			if (deps.egress) {
+				// After install (which may need the network), before the agent.
+				const g = await deps.egress.enter(
+					plan.trialId,
+					config.harness,
+					sandbox,
+				);
+				workerAuth = g.env;
+				modelFlag = g.modelFlag;
+			}
 			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
 				driver,
-				model: deps.workerModelFlag ?? config.model,
+				model: modelFlag,
 				steps: script,
 				continuation: setup.continuation,
 				wallClockBudgetMs: config.budget.trialWallClockMs,
 				costBudgetUsd: config.budget.trialCostUsd,
 				env: workerAuth,
+				isolated: plan.task !== undefined,
+				netns: plan.task && deps.sessionNetns ? deps.sessionNetns : undefined,
 			});
 
+			if (deps.egress) provenance.flags.push(...deps.egress.exit(plan.trialId));
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);
 			ledger.add(telemetry.totalCostUsd);
+			// Capture the candidate's patch BEFORE archiving/teardown: grading and
+			// review read this, not the (possibly env-polluted) archived workspace.
+			if (plan.task && deps.capturePatch)
+				await deps.capturePatch(sandbox, trialDir, plan);
 			deps.onStage?.(plan.trialId, "archiving");
 			await archive(sandbox, trialDir, result.transcripts);
 
+			if (harnessNeverStarted(result)) {
+				// Not the candidate's fault, so never graded as an empty patch.
+				provenance.status = "infra-failed";
+				provenance.notes.push(
+					"harness did not start (command not found / exit 127); not graded",
+					...result.notes,
+				);
+				provenance.endedAt = new Date().toISOString();
+				persistProvenance(deps.runDir, provenance);
+				return { provenance, telemetry, grades: null };
+			}
 			provenance.status = result.status === "capped" ? "capped" : "completed";
 			provenance.cappedBy = result.cappedBy;
 			provenance.notes.push(...result.notes);
@@ -312,7 +437,7 @@ export async function runTrial(
 			}
 			provenance.endedAt = new Date().toISOString();
 			persistProvenance(deps.runDir, provenance);
-			return { provenance, telemetry, grades: null };
+			return { provenance, telemetry, grades: null, resolution: null };
 		} catch (err) {
 			// Cancelled mid-trial: the error is the torn-down sandbox, not real
 			// infra failure — terminate now, never retry.
@@ -323,9 +448,16 @@ export async function runTrial(
 					"cancelled by operator (in-flight sandbox torn down)",
 				);
 				persistProvenance(deps.runDir, provenance);
-				return { provenance, telemetry: null, grades: null };
+				return { provenance, telemetry: null, grades: null, resolution: null };
 			}
-			if (isInfraFailure(err) && attempt < config.infraRetryLimit) {
+			// A lock that doesn't hold, or an incompatible harness, is a setup
+			// error: retrying can't fix it.
+			if (
+				!(err instanceof EgressLockError) &&
+				!(err instanceof HarnessCheckError) &&
+				isInfraFailure(err) &&
+				attempt < config.infraRetryLimit
+			) {
 				provenance.notes.push(
 					`infra retry ${attempt + 1}: ${String(err).slice(0, 200)}`,
 				);
@@ -338,29 +470,51 @@ export async function runTrial(
 			provenance.endedAt = new Date().toISOString();
 			provenance.notes.push(String(err).slice(0, 500));
 			persistProvenance(deps.runDir, provenance);
-			return { provenance, telemetry: null, grades: null };
+			return { provenance, telemetry: null, grades: null, resolution: null };
 		} finally {
 			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
+			deps.egress?.exit(plan.trialId); // revoke even on failure (idempotent)
 			// Time-box teardown: destroy() is itself bounded + escalating, but cap
 			// the whole thing so an unexpected hang (e.g. a slow OS-level reap) can
 			// never stall the run. A sandbox that outlives the cap is logged as a
 			// leak rather than silently awaited forever (harden-container-teardown).
 			if (sandbox) {
 				const s = sandbox;
+				let capTimer: ReturnType<typeof setTimeout> | undefined;
 				await Promise.race([
 					s.destroy().catch(() => {}),
-					new Promise<void>((resolve) =>
-						setTimeout(() => {
+					new Promise<void>((resolve) => {
+						capTimer = setTimeout(() => {
 							console.warn(
 								`[scheduler] teardown of ${s.id} exceeded ${TEARDOWN_CAP_MS / 1000}s — moving on; run \`bun run src/cli.ts cleanup\` to reap any leaked VM`,
 							);
 							resolve();
-						}, TEARDOWN_CAP_MS),
-					),
+						}, TEARDOWN_CAP_MS);
+					}),
 				]);
+				// Without this the cap fires (falsely) after every fast teardown and
+				// holds the process open for 90s.
+				clearTimeout(capTimer);
 			}
 		}
 	}
+}
+
+/**
+ * The harness binary could not be launched at all: no session produced a result
+ * and the shell reported the command missing. A harness that ran and then crashed
+ * is a candidate failure and is NOT matched here.
+ */
+export function harnessNeverStarted(result: {
+	status: string;
+	records: unknown[];
+	notes: string[];
+}): boolean {
+	return (
+		result.status === "error" &&
+		result.records.length === 0 &&
+		result.notes.some((n) => /\(exit 127\)|command not found/.test(n))
+	);
 }
 
 export function persistProvenance(

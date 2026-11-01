@@ -1,0 +1,91 @@
+diff --git a/.pre-commit-config.yaml b/.pre-commit-config.yaml
+index c2f30c76..27dacded 100644
+--- a/.pre-commit-config.yaml
++++ b/.pre-commit-config.yaml
+@@ -67,14 +67,14 @@ repos:
+       - id: sync-mypy-version
+         name: sync mypy version
+         language: python
+-        files: ^\.pre-commit-config\.yaml$
++        files: ^(\.pre-commit-config\.yaml|pixi\.toml|ci/nightly/pixi\.toml)$
+         pass_filenames: false
+         entry: >-
+           python -c "import pathlib, re;
+           config = pathlib.Path('.pre-commit-config.yaml').read_text();
+           version = re.search(r'mirrors-mypy\s+rev: v?([0-9.]+)', config).group(1);
+-          pixi = pathlib.Path('pixi.toml');
+-          pixi.write_text(re.sub(r'(?m)^mypy = \"==[0-9.]+\"', f'mypy = \"=={version}\"', pixi.read_text()));
++          [pixi.write_text(re.sub(r'(?m)^mypy = \"==[0-9.]+\"', f'mypy = \"=={version}\"', pixi.read_text()))
++          for pixi in map(pathlib.Path, ['pixi.toml', 'ci/nightly/pixi.toml'])];
+           pyproject = pathlib.Path('pyproject.toml');
+           pyproject.write_text(re.sub(r'\"mypy==[0-9.]+\"', f'\"mypy=={version}\"', pyproject.read_text()))"
+   - repo: https://github.com/citation-file-format/cff-converter-python
+diff --git a/ci/nightly/pixi.toml b/ci/nightly/pixi.toml
+index 0f4f640c..16d7d99b 100644
+--- a/ci/nightly/pixi.toml
++++ b/ci/nightly/pixi.toml
+@@ -80,7 +80,7 @@ cartopy = "*"
+ seaborn = "*"
+ 
+ [feature.typing.dependencies]
+-mypy = "==1.19.1"
++mypy = "==2.3.1"
+ pyright = "*"
+ hypothesis = "*"
+ lxml = "*"
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 4cf481f6..d03dee7c 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -53,6 +53,13 @@ Deprecations
+ Bug Fixes
+ ~~~~~~~~~
+ 
++- ``min`` and ``max`` of object arrays with ``skipna=False`` now return ``NaN``
++  for slices containing missing values, instead of a result that depended on
++  the position of the missing value (:issue:`11501`, :pull:`#11627`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
++- Avoid pandas' deprecated ``Series.values`` when creating a
++  :py:class:`~xarray.Variable` from a timezone-aware :py:class:`pandas.Series`
++  (:issue:`11501`, :pull:`#11627`).
+ - Fix deadlocks when reading and writing netCDF files with dask at the same
+   time. Combined locks now always acquire their locks in the same order, which
+   previously depended on memory addresses, and a failed non-blocking acquire,
+diff --git a/xarray/core/duck_array_ops.py b/xarray/core/duck_array_ops.py
+index 9ce39b2b..90dfc5b7 100644
+--- a/xarray/core/duck_array_ops.py
++++ b/xarray/core/duck_array_ops.py
+@@ -538,6 +538,18 @@ def _create_nan_agg_method(name, coerce_strings=False, invariant_0d=False):
+ 
+             nanname = "nan" + name
+             func = getattr(nanops, nanname)
++        elif name in ["min", "max"] and dtypes.is_object(values.dtype):
++            # numpy's min/max of object arrays give order-dependent results
++            # when NaN is present, so compute ignoring nulls and then mask
++            # every slice that contains a null
++            from xarray.computation import nanops
++
++            nanfunc = getattr(nanops, "nan" + name)
++
++            def func(values, axis=None, **kwargs):
++                result = nanfunc(values, axis=axis, **kwargs)
++                return where_method(result, ~array_any(isnull(values), axis=axis))
++
+         else:
+             if name in ["sum", "prod"]:
+                 kwargs.pop("min_count", None)
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index 4bc073ab..37eacad3 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -292,6 +292,10 @@ def as_compatible_data(
+             and not isinstance(data.array, UNSUPPORTED_EXTENSION_ARRAY_TYPES)
+         ):
+             pandas_data = data.array
++        elif isinstance(data, pd.Series) and isinstance(data.dtype, pd.DatetimeTZDtype):
++            # Series.values is deprecated for timezone-aware data; convert
++            # to UTC datetime64 explicitly instead
++            pandas_data = data.to_numpy(dtype=f"datetime64[{data.dtype.unit}]")  # type: ignore[assignment]
+         else:
+             pandas_data = data.values  # type: ignore[assignment]
+         if isinstance(pandas_data, NON_NUMPY_SUPPORTED_ARRAY_TYPES):

@@ -1,0 +1,2 @@
+# Brownfield bundles are hash-frozen: store bytes exactly (issue text from GitHub is often CRLF).
+brownfield/** -text

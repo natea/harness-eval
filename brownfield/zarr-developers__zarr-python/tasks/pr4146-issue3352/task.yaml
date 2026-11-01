@@ -1,0 +1,39 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4146
+issues:
+  - 3352
+baseSha: 015732f58cc67888f7f638e09ca447c9349c85eb
+mergeSha: 0c07bf5ed6619b7e5c0b01aece7a93fc88de07b6
+tStar: 2026-07-15T00:22:35Z
+issueCreatedAt: 2025-08-06T11:57:00Z
+prMergedAt: 2026-07-28T20:24:09Z
+verdict: VALID
+failToPass:
+  - tests.test_api::test_open_like_creates_array_by_default[zarr2-mode_kwargs0]
+  - tests.test_api::test_open_like_creates_array_by_default[zarr2-mode_kwargs1]
+  - tests.test_api::test_open_like_creates_array_by_default[zarr3-mode_kwargs0]
+  - tests.test_api::test_open_like_creates_array_by_default[zarr3-mode_kwargs1]
+  - tests.test_api::test_open_like_default_mode_rejects_read_only_store[zarr2]
+  - tests.test_api::test_open_like_default_mode_rejects_read_only_store[zarr3]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: b8a4f267caf1ece880ff14dbc23ed7e0305292116822acff4bcfbf1c31dc0955
+  issue/body+human.md: b8a4f267caf1ece880ff14dbc23ed7e0305292116822acff4bcfbf1c31dc0955
+  issue/body.md: b8a4f267caf1ece880ff14dbc23ed7e0305292116822acff4bcfbf1c31dc0955
+  leaks.json: cb84433a7d49cb794f645c393e2bae643d31e41e0f096c9eb74bd74912e14e3e
+  reference.patch: a85a989449eb7fab7ceedf15fe9f02daccafd48340ed5b0511395ff2bfef340d
+  snapshot.json: 6beb830f9e720b360a1b6c433949893c0c8c70fd0731319385879699478141be
+  tests.patch: 8e69cdb37d1604c8f181356f6dac6d1346969636a12109bb8e4c6417da369d1b
+  validation.json: c37366fb71bf22124ccb8c458cf250e7e9d4923f27fb38a6172a101fa386a2e3

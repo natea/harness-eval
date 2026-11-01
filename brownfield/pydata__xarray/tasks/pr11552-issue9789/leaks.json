@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Sub-issue of https://github.com/pydata/xarray/issues/9106",
+      "rationale": "Only links to a parent issue; the title asks for DataTree support in apply_ufunc but gives no mechanism or location of the change.",
+      "author": "shoyer",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

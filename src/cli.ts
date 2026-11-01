@@ -618,13 +618,17 @@ async function cmdRunBrownfield(): Promise<void> {
 	// Frameworks with no entry command of their own get a routing step: consult
 	// the framework's help, pick its command/skill for this task, invoke it
 	// (src/brownfield/router.ts). Skip with --no-routing.
-	const { withRouting, needsRouting } = await import("./brownfield/router");
+	const { withBrownfieldSession, withRouting, needsRouting } = await import(
+		"./brownfield/router"
+	);
 	const candidates = resolveCandidates(
 		registry,
 		config.candidates,
 		config.harness,
 		harnesses,
-	).map((c) => (flag("no-routing") ? c : withRouting(c, config.harness)));
+	)
+		.map((c) => withBrownfieldSession(c, config.harness))
+		.map((c) => (flag("no-routing") ? c : withRouting(c, config.harness)));
 	for (const c of candidates)
 		if (!flag("no-routing") && c.id !== "bare")
 			console.log(

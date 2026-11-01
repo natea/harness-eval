@@ -34,6 +34,22 @@ export function needsRouting(
 	return !/^\s*[/$]/.test(first);
 }
 
+/** The candidate with its brownfield session, when the registry defines one. */
+export function withBrownfieldSession(
+	candidate: CandidateEntry,
+	harness: string,
+): CandidateEntry {
+	const setup = candidate.harnesses[harness];
+	if (!setup?.brownfieldSession) return candidate;
+	return {
+		...candidate,
+		harnesses: {
+			...candidate.harnesses,
+			[harness]: { ...setup, session: setup.brownfieldSession },
+		},
+	};
+}
+
 /** The candidate with the routing step prepended to its first session prompt. */
 export function withRouting(
 	candidate: CandidateEntry,

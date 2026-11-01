@@ -151,6 +151,12 @@ candidates:
           - prompt: "/gsd-plan-phase"
           - prompt: "/gsd-execute-phase"
           - prompt: "/gsd-verify-work"
+        # One issue in an existing repo: quick mode is GSD's prescribed path, and it
+        # requires a project, which --auto creates from a document. With the base
+        # prompt as that document the model skipped GSD and just fixed the bug.
+        brownfieldSession:
+          - prompt: "/gsd-new-project --auto @ISSUE.md"
+          - prompt: "/gsd-quick {{BASE_PROMPT}}"
         continuation:
           allowlist: ["proceed", "continue with the plan"]
           maxContinuations: 20

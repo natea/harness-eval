@@ -113,7 +113,7 @@ describe("registry validation (8.1)", () => {
 
 	test("shipped registry loads; unknown harness fails at load time", () => {
 		const registry = loadRegistry("config/registry.yaml");
-		expect(registry.candidates).toHaveLength(6);
+		expect(registry.candidates).toHaveLength(8);
 		expect(() => resolveCandidates(registry, ["gsd"], "opencode")).toThrow(
 			/unknown harness 'opencode'/,
 		);

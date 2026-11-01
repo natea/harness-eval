@@ -244,7 +244,10 @@ export function Leaderboard() {
 									</TableCell>
 									<TableCell className="text-muted-foreground">
 										{r.summary
-											? r.summary.scores.map((s) => s.candidate).join(", ")
+											? (r.summary.scores.length
+													? r.summary.scores.map((s) => s.candidate)
+													: (r.summary.candidates ?? [])
+												).join(", ") || "—"
 											: "—"}
 									</TableCell>
 									<TableCell>

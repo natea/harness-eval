@@ -80,6 +80,24 @@ function targetBySha(): Map<string, { name: string; title: string }> {
 	return m;
 }
 
+/** A brownfield run's "app": the repo it replayed, and its tasks. */
+function brownfieldTarget(
+	trials: {
+		provenance: { brownfield?: { repoDir: string; taskId: string } };
+	}[],
+): { name: string; title: string } | null {
+	const refs = trials.flatMap((t) =>
+		t.provenance.brownfield ? [t.provenance.brownfield] : [],
+	);
+	if (!refs.length) return null;
+	const repos = [...new Set(refs.map((r) => r.repoDir.replace("__", "/")))];
+	const tasks = [...new Set(refs.map((r) => r.taskId))];
+	return {
+		name: repos.join(", "),
+		title: `Brownfield: ${tasks.length > 2 ? `${tasks.length} tasks` : tasks.join(", ")}`,
+	};
+}
+
 /** Full target detail (incl. per-step checks) for a run, by prdSha256 match. */
 function resolveRunTarget(runId: string): RunTarget | null {
 	const sha = getRun(runId)?.results?.prdSha256;
@@ -306,7 +324,16 @@ const server = Bun.serve({
 								prdSha256: e.results.prdSha256,
 								// Which app/PRD this run built (resolved by content hash) so
 								// the runs listing isn't ambiguous about the target.
-								target: targetBySha().get(e.results.prdSha256) ?? null,
+								target:
+									targetBySha().get(e.results.prdSha256) ??
+									brownfieldTarget(e.results.trials),
+								// Brownfield runs have no PRD scores; list who ran from the trials.
+								candidates: [
+									...new Set(
+										e.results.trials.map((t) => t.provenance.candidate),
+									),
+								],
+								trialCount: e.results.trials.length,
 								testPlanSha256: e.results.testPlanSha256,
 								workerModel: e.results.workerModel,
 								judgeModelRef: e.results.judgeModel,

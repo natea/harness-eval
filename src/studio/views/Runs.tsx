@@ -64,23 +64,26 @@ interface Row {
 	regradable?: boolean;
 }
 
-const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = {
-	running: "warn",
-	completed: "ok",
-	error: "danger",
-	cancelled: "outline",
-	interrupted: "danger",
-	unsupported: "outline",
-};
+const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> =
+	{
+		running: "warn",
+		completed: "ok",
+		error: "danger",
+		cancelled: "outline",
+		interrupted: "danger",
+		unsupported: "outline",
+	};
 
 /** Merge historical runs from disk (/api/runs) with this session's live jobs
  *  (/api/queue): disk runs seed the list; queue entries overlay live status. */
 function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 	const byId = new Map<string, Row>();
 	for (const r of disk) {
-		const cands = r.summary?.scores.map((s) => s.candidate) ?? [];
+		const scored = r.summary?.scores.map((s) => s.candidate) ?? [];
+		const cands = scored.length ? scored : (r.summary?.candidates ?? []);
 		const total = r.summary
-			? cands.length * r.summary.config.trialsPerCandidate
+			? (r.summary.trialCount ??
+				cands.length * r.summary.config.trialsPerCandidate)
 			: 0;
 		byId.set(r.runId, {
 			runId: r.runId,

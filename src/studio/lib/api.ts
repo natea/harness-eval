@@ -32,6 +32,9 @@ export interface RunSummary {
 		costSource?: string;
 		/** Total run cost (sum of per-trial telemetry), or undefined if untracked. */
 		costUsd?: number;
+		/** Who ran, from the trials (brownfield runs have no PRD scores). */
+		candidates?: string[];
+		trialCount?: number;
 	};
 }
 

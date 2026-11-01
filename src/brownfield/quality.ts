@@ -197,8 +197,14 @@ export async function compareQuality(
 			if (notes[id])
 				slot.notes.push(
 					notes[id]
-						.replace(/\bA\b/g, harnessIsA ? "harness" : "original PR")
-						.replace(/\bB\b/g, harnessIsA ? "original PR" : "harness"),
+						.replace(
+							/\bPR A\b|\bA\b/g,
+							harnessIsA ? "harness PR" : "original PR",
+						)
+						.replace(
+							/\bPR B\b|\bB\b/g,
+							harnessIsA ? "original PR" : "harness PR",
+						),
 				);
 		}
 		const pref = String(structured.preference);
@@ -343,5 +349,7 @@ export function originalPrWording(text: string): string {
 		.replace(/\bhuman PR's\b/gi, "original PR's")
 		.replace(/\bhuman PR\b/gi, "original PR")
 		.replace(/\bhuman's\b/gi, "original PR's")
-		.replace(/\bhuman\b/gi, "original PR");
+		.replace(/\bhuman\b/gi, "original PR")
+		.replace(/\bPR harness\b/g, "harness PR")
+		.replace(/\bPR original PR\b/g, "original PR");
 }

@@ -165,7 +165,9 @@ const originalPrWording = (text: string) =>
 		.replace(/\bhuman PR's\b/gi, "original PR's")
 		.replace(/\bhuman PR\b/gi, "original PR")
 		.replace(/\bhuman's\b/gi, "original PR's")
-		.replace(/\bhuman\b/gi, "original PR");
+		.replace(/\bhuman\b/gi, "original PR")
+		.replace(/\bPR harness\b/g, "harness PR")
+		.replace(/\bPR original PR\b/g, "original PR");
 
 const prefLabel = (p: string) =>
 	p === "harness" ? "harness" : p === "human" ? "original PR" : "tie";

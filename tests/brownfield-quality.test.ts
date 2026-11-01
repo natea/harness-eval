@@ -45,7 +45,7 @@ test("blind A/B labels are mapped back; sides alternate so position bias cancels
 	expect(r.votes).toEqual({ harness: 1, human: 1, tie: 0 });
 	expect(r.preference).toBe("tie");
 	expect(r.criteria[0]?.harnessSamples).toEqual([8, 4]);
-	expect(r.criteria[0]?.notes[0]).toBe("harness is tidier than original PR");
+	expect(r.criteria[0]?.notes[0]).toBe("harness PR is tidier than original PR");
 	expect(r.rationales[1]).toBe("original PR is better than harness PR");
 	expect(r.costUsd).toBeCloseTo(0.02);
 	// The prompt never says which side is human.

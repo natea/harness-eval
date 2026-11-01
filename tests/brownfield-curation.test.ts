@@ -109,3 +109,36 @@ describe("schema compatibility (1.1)", () => {
 		}
 	});
 });
+
+describe("compare (4.3)", () => {
+	const { scoreArm, bundleResamples, kappaDiffCI } = require("../src/brownfield/curation/compare");
+	const mk = (task: string, human: Record<string, string>, a: Record<string, string>, b: Record<string, string>) => ({
+		task,
+		human,
+		humanFairness: "fair",
+		arms: {
+			a: { items: a, fairness: "fair", spendUsd: 0.1, excluded: false },
+			b: { items: b, fairness: "unsure", spendUsd: 0.2, excluded: false },
+		},
+	});
+	// Known κ: 4 items, 2 categories, perfect for a; for b, po=0.5 and pe=0.5 → κ=0.
+	const fixture = [
+		mk("t1", { body: "symptom", c1: "diagnosis" }, { body: "symptom", c1: "diagnosis" }, { body: "symptom", c1: "symptom" }),
+		mk("t2", { body: "symptom", c1: "diagnosis" }, { body: "symptom", c1: "diagnosis" }, { body: "diagnosis", c1: "diagnosis" }),
+	];
+	test("known κ on a synthetic fixture", () => {
+		const draws = bundleResamples(2, 200);
+		const a = scoreArm(fixture, "a", draws);
+		const b = scoreArm(fixture, "b", draws);
+		expect(a.kappa).toBe(1);
+		expect(b.accuracy).toBe(0.5);
+		expect(b.kappa).toBeCloseTo(0, 10);
+		expect(a.fairnessAgreement).toBe(1);
+		expect(b.fairnessAgreement).toBe(0);
+		expect(a.accuracyPerDollar).toBeCloseTo(10, 10);
+		expect(kappaDiffCI(fixture, "a", "b", draws)[0]).toBeCloseTo(1, 10);
+	});
+	test("bootstrap is deterministic", () => {
+		expect(bundleResamples(5, 3, 7)).toEqual(bundleResamples(5, 3, 7));
+	});
+});

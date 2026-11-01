@@ -79,7 +79,7 @@ candidates:
   - id: compound-engineering
     name: Compound Engineering
     repo: https://github.com/EveryInc/compound-engineering-plugin
-    pinnedVersion: 3.12.0
+    pinnedVersion: 3.34.0
     markerPaths:
       - docs/brainstorms/
       - docs/plans/
@@ -91,7 +91,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add EveryInc/compound-engineering-plugin
           - claude plugin install compound-engineering@compound-engineering-plugin
-          - "claude plugin list | grep -A1 'compound-engineering@' | grep -q 'Version: 3.12.0'"
+          - "claude plugin list | grep -A1 'compound-engineering@' | grep -q 'Version: 3.34.0'"
         session:
           - prompt: "/ce-setup"
           - prompt: "/ce-plan {{BASE_PROMPT}}"
@@ -104,7 +104,7 @@ candidates:
   - id: agent-skills
     name: Agent Skills
     repo: https://github.com/addyosmani/agent-skills
-    pinnedVersion: 3a6fc6392823
+    pinnedVersion: 0.6.15
     markerPaths: []
     harnesses:
       claude-code:
@@ -112,7 +112,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add addyosmani/agent-skills
           - claude plugin install agent-skills@addy-agent-skills
-          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 3a6fc6392823'"
+          - "claude plugin list | grep -A1 'agent-skills@' | grep -q 'Version: 0.6.15'"
         session:
           - prompt: "/agent-skills:spec {{BASE_PROMPT}}"
           - prompt: "/agent-skills:plan"

@@ -69,7 +69,7 @@ test("renders resolution, strata and human baseline columns", () => {
 	const md = renderBrownfieldReport(results);
 	expect(md).toContain("## Resolution by candidate");
 	expect(md).toContain(
-		"| bare | 2 | 1 (50%) | 1 | 0 | 10.0m | $0.50 | $0.50 |",
+		"| bare | 2 | 1 (50%) | 1 (50%) | 1 | 0 | 10.0m | $0.50 | $0.50 |",
 	);
 	expect(md).toContain("## Resolution by body leak level");
 	expect(md).toContain("symptom");

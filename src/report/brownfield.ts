@@ -60,8 +60,13 @@ export function renderBrownfieldReport(results: RunResults): string {
 
 	const lines: string[] = [];
 	lines.push(`# Brownfield report — ${results.runId}`, "");
+	const workerModels = [
+		...new Set(trials.map((t) => t.provenance.model ?? "unknown")),
+	];
 	lines.push(
-		`Model: ${results.trials[0]?.provenance.model ?? "unknown"} · provider: ${results.trials[0]?.provenance.provider ?? "unknown"} · trials: ${trials.length}`,
+		`Model: ${workerModels.join(", ")} · provider: ${results.trials[0]?.provenance.provider ?? "unknown"} · trials: ${trials.length}`,
+		"",
+		"Contamination flags apply per worker model; a trial disqualified for solution reach is counted as unresolved, not resolved.",
 		"",
 	);
 
@@ -69,9 +74,9 @@ export function renderBrownfieldReport(results: RunResults): string {
 	const candidates = [...new Set(trials.map((t) => t.provenance.candidate))];
 	lines.push("## Resolution by candidate", "");
 	lines.push(
-		"| Candidate | Tasks | Resolved | Unresolved | Cassette-miss | Agent time (resolved) | USD (resolved) | USD/resolved |",
+		"| Candidate | Tasks | Resolved | Resolved excl. cassette-miss | Unresolved | Cassette-miss | Agent time (resolved) | USD (resolved) | USD/resolved |",
 	);
-	lines.push("| --- | --: | --: | --: | --: | --: | --: | --: |");
+	lines.push("| --- | --: | --: | --: | --: | --: | --: | --: | --: |");
 	for (const c of candidates) {
 		const ts = trials.filter((t) => t.provenance.candidate === c);
 		const resolved = ts.filter((t) => t.resolution?.verdict === "resolved");
@@ -86,8 +91,16 @@ export function renderBrownfieldReport(results: RunResults): string {
 			(n, t) => n + (t.telemetry?.totalCostUsd ?? 0),
 			0,
 		);
+		const clean = ts.filter(
+			(t) =>
+				(t.resolution?.cassetteMiss.length ?? 0) === 0 &&
+				t.resolution?.verdict === "resolved",
+		);
+		const cleanPool = ts.filter(
+			(t) => (t.resolution?.cassetteMiss.length ?? 0) === 0,
+		);
 		lines.push(
-			`| ${c} | ${ts.length} | ${resolved.length} (${pct(resolved.length, ts.length)}) | ${ts.length - resolved.length} | ${cassette.length} | ${minutes(ms)} | ${usd(cost)} | ${resolved.length ? usd(cost / resolved.length) : "—"} |`,
+			`| ${c} | ${ts.length} | ${resolved.length} (${pct(resolved.length, ts.length)}) | ${clean.length} (${pct(clean.length, cleanPool.length)}) | ${ts.length - resolved.length} | ${cassette.length} | ${minutes(ms)} | ${usd(cost)} | ${resolved.length ? usd(cost / resolved.length) : "—"} |`,
 		);
 	}
 	lines.push("");

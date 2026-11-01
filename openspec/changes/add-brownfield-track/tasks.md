@@ -25,7 +25,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [x] 3.1 Sealed repo builder at merge^1 (single branch, no tags/remotes/reflog) with absence checks (`cat-file`, `log --all`, `fsck --lost-found`)
 - [x] 3.2 Env builder: `uv sync --frozen` + package reinstall; `--exclude-newer` fallback; record env digest
 - [x] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
-- [ ] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons
+- [x] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons
 - [x] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
 - [x] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
 - [ ] 3.7 Classify `needs-live-api` (blocked/unauthenticated provider calls in gold, no other FAIL_TO_PASS); recovery per D17 — record affected tests at mining time with a budget-capped key, seal recordings in tests.patch, re-validate offline, reject cassette-miss-only before-failures. Depends on 4.3/4.7 recording + 5.1 cassette-miss detection; paper-qa targets: #138, #512, #515, #717, #871, #1174

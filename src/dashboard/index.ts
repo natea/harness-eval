@@ -1,5 +1,10 @@
 #!/usr/bin/env bun
 import { loadTarget } from "../targets";
+import {
+	brownfieldRunRows,
+	brownfieldTrialArtifacts,
+	trialTranscript,
+} from "./brownfield";
 import { getRun, loadRunIndex } from "./data";
 /**
  * harness-eval results dashboard (read-only, localhost by default).
@@ -75,6 +80,30 @@ const server = Bun.serve({
 				if (!entry)
 					return Response.json({ error: "not found" }, { status: 404 });
 				return Response.json(entry);
+			},
+		},
+		"/api/runs/:id/brownfield": {
+			GET: (req) => {
+				const entry = getRun(req.params.id);
+				if (!entry?.results)
+					return Response.json({ error: "not found" }, { status: 404 });
+				return Response.json(
+					brownfieldRunRows(entry.dir, entry.results.trials as never),
+				);
+			},
+		},
+		"/api/runs/:id/trials/:trialId/artifacts": {
+			GET: (req) => {
+				const entry = getRun(req.params.id);
+				const trial = entry?.results?.trials.find(
+					(t) => t.provenance.trialId === req.params.trialId,
+				);
+				if (!entry || !trial)
+					return Response.json({ error: "not found" }, { status: 404 });
+				return Response.json({
+					brownfield: brownfieldTrialArtifacts(entry.dir, trial as never),
+					transcript: trialTranscript(entry.dir, req.params.trialId),
+				});
 			},
 		},
 		"/api/runs/:id/trials/:trialId": {

@@ -16,6 +16,7 @@ import { cli } from "../providers/cli-container";
 import { type Bundle, sha256 } from "./bundle";
 import { buildEnvWith, type EnvResult, type EnvRunner, shq } from "./env";
 import { buildSealedRepo, verifySealed } from "./seal";
+import { projectName } from "./seed";
 import { TRIAL_BRANCH } from "./workspace";
 
 export const WORKSPACE = "/home/ubuntu/workspace";
@@ -112,10 +113,6 @@ export async function buildTaskImage(
 			};
 	}
 
-	const pkg = opts.pkg ?? m.env?.pkg;
-	if (!pkg)
-		throw new Error(`${bundle.id}: no package name recorded; pass --pkg`);
-
 	const tmp = mkdtempSync(join(tmpdir(), "he-bfimg-"));
 	const repo = join(tmp, "repo");
 	const name = `he-bfimg-${bundle.id}-${Date.now().toString(36)}`;
@@ -124,6 +121,13 @@ export async function buildTaskImage(
 		await buildSealedRepo(opts.clone, m.baseSha, repo, {
 			branch: TRIAL_BRANCH,
 		});
+		// Provisional bundles don't record the package; read it from the base
+		// commit's pyproject.toml, as the worktree path does.
+		const pkg = opts.pkg ?? m.env?.pkg ?? projectName(repo);
+		if (!pkg)
+			throw new Error(
+				`${bundle.id}: no package name recorded or in pyproject.toml; pass --pkg`,
+			);
 		const problems = await verifySealed(repo, m.baseSha, [m.mergeSha]);
 		if (problems.length)
 			throw new Error(`${bundle.id}: not sealed: ${problems.join("; ")}`);

@@ -5,36 +5,56 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>harness-eval dashboard</title>
 		<style>
-			:root { color-scheme: dark; }
-			body { font: 14px/1.5 ui-sans-serif, system-ui; margin: 0; background: #0d1117; color: #e6edf3; }
-			a { color: #58a6ff; text-decoration: none; }
+			/* Light/dark palettes; html.dark is set before first paint (script below). */
+			:root {
+				color-scheme: light;
+				--bg: #ffffff; --fg: #1f2328; --muted: #59636e; --link: #0969da;
+				--line: #d1d9e0; --panel: #f6f8fa; --hover: #f6f8fa; --tip-bg: #ffffff;
+				--bar: #0969da;
+				--ok-bg: #dafbe1; --ok-fg: #116329; --warn-bg: #fff8c5; --warn-fg: #7d4e00;
+				--flag-bg: #ffebe9; --flag-fg: #a40e26;
+				--add-bg: #dafbe1; --add-fg: #116329; --del-bg: #ffebe9; --del-fg: #a40e26;
+				--hunk-fg: #8250df;
+			}
+			html.dark {
+				color-scheme: dark;
+				--bg: #0d1117; --fg: #e6edf3; --muted: #8b949e; --link: #58a6ff;
+				--line: #21262d; --panel: #161b22; --hover: #161b22; --tip-bg: #1c2128;
+				--bar: #2f81f7;
+				--ok-bg: #1d4a2a; --ok-fg: #9bffb0; --warn-bg: #5a3e00; --warn-fg: #f0c674;
+				--flag-bg: #4a1d1d; --flag-fg: #ff9b9b;
+				--add-bg: #12261e; --add-fg: #7ee2a8; --del-bg: #2d1316; --del-fg: #ffa198;
+				--hunk-fg: #d2a8ff;
+			}
+			body { font: 14px/1.5 ui-sans-serif, system-ui; margin: 0; background: var(--bg); color: var(--fg); }
+			a { color: var(--link); text-decoration: none; }
 			a:hover { text-decoration: underline; }
 			main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 			table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-			th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #21262d; }
-			th { color: #8b949e; font-weight: 600; font-size: 12px; text-transform: uppercase; }
-			tr:hover td { background: #161b22; }
+			th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+			th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+			tr:hover td { background: var(--hover); }
 			.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
-			.warn { background: #5a3e00; color: #f0c674; }
-			.flag { background: #4a1d1d; color: #ff9b9b; }
-			.ok { background: #1d4a2a; color: #9bffb0; }
-			.bar { display: inline-block; height: 9px; background: #2f81f7; border-radius: 2px; vertical-align: middle; }
-			.muted { color: #8b949e; }
+			.warn { background: var(--warn-bg); color: var(--warn-fg); }
+			.flag { background: var(--flag-bg); color: var(--flag-fg); }
+			.ok { background: var(--ok-bg); color: var(--ok-fg); }
+			.bar { display: inline-block; height: 9px; background: var(--bar); border-radius: 2px; vertical-align: middle; }
+			.muted { color: var(--muted); }
 			.mono { font-family: ui-monospace, monospace; font-size: 12px; }
-			pre { background: #161b22; padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; }
+			pre { background: var(--panel); padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; }
 			input[type="range"] { width: 120px; vertical-align: middle; }
-			.weights { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+			.weights { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
 			.weights .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 6px 18px; margin-top: 6px; }
 			.weights label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 			.weights input[type="range"] { flex: 1; min-width: 60px; width: auto; }
 			h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 28px; } h3 { font-size: 14px; }
-			details summary { cursor: pointer; color: #8b949e; }
+			details summary { cursor: pointer; color: var(--muted); }
 			.tip { position: relative; cursor: help; }
 			.tip::after {
 				content: attr(data-tip);
 				position: absolute; left: 0; top: 100%; z-index: 10;
 				display: none; width: max-content; max-width: 380px;
-				background: #1c2128; color: #e6edf3; border: 1px solid #30363d;
+				background: var(--tip-bg); color: var(--fg); border: 1px solid var(--line);
 				border-radius: 6px; padding: 8px 10px; margin-top: 4px;
 				font: 12px/1.45 ui-sans-serif, system-ui; font-weight: 400;
 				text-transform: none; letter-spacing: normal;
@@ -47,7 +67,30 @@
 			th:nth-last-child(-n+4) .tip::after, td:nth-last-child(-n+4) .tip::after {
 				left: auto; right: 0;
 			}
+			.topbar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 8px; }
+			.topbar > a { color: var(--fg); font-weight: 600; }
+			.theme-toggle { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 2px 10px; cursor: pointer; font: inherit; font-size: 12px; }
+			.theme-toggle:hover { color: var(--fg); background: var(--hover); }
+			.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+			.cols > div { min-width: 0; }
+			pre.diff { white-space: pre; overflow-x: auto; line-height: 1.45; }
+			pre.diff span { display: block; }
+			.d-add { background: var(--add-bg); color: var(--add-fg); }
+			.d-del { background: var(--del-bg); color: var(--del-fg); }
+			.d-hunk { color: var(--hunk-fg); }
+			.d-file { font-weight: 700; margin-top: 8px; }
+			.transcript .t-head { margin: 14px 0 4px; }
+			.transcript .t-para { white-space: pre-wrap; margin: 4px 0; }
 		</style>
+		<script>
+			(() => {
+				try {
+					const t = localStorage.getItem("dashboard-theme") || "system";
+					const dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+					document.documentElement.classList.toggle("dark", dark);
+				} catch (_) {}
+			})();
+		</script>
 	</head>
 	<body>
 		<main id="root"></main>

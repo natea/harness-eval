@@ -114,6 +114,7 @@ import {
 	resolveProviderSnapshot,
 } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
+import { DEFAULT_TRIAL_IMAGE } from "./providers/docker";
 import { writeBrownfieldReport } from "./report/brownfield";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
@@ -763,6 +764,25 @@ async function cmdRunBrownfield(): Promise<void> {
 		no_proxy: "127.0.0.1,localhost,::1",
 	};
 
+	const provider = createProvider(config.provider, {
+		snapshot:
+			config.provider === "docker"
+				? (arg("base-image") ?? DEFAULT_TRIAL_IMAGE)
+				: resolveProviderSnapshot(
+						config.provider,
+						config.harness,
+						arg("snapshot") ?? (defaults.snapshot as string | undefined),
+					),
+		worktreeBaseDir: join(runDir, "sandboxes"),
+	});
+	if (provider.preflight) {
+		await provider.preflight({
+			trialWallClockMs: config.budget.trialWallClockMs,
+			concurrency: config.concurrency,
+			requiredProbe: preflightProbeForHarness(config.harness),
+		});
+	}
+
 	// Docker (4.4 lockdown on any host OS): each task runs in its prebuilt image
 	// (sealed repo + env), locked to a per-run --internal network whose only exit
 	// is a relay to the run-owned gateway. Every trial gets its own placeholder key.
@@ -792,22 +812,6 @@ async function cmdRunBrownfield(): Promise<void> {
 				log: (m) => console.log(m),
 			})
 		: null;
-
-	const provider = createProvider(config.provider, {
-		snapshot: resolveProviderSnapshot(
-			config.provider,
-			config.harness,
-			arg("snapshot") ?? (defaults.snapshot as string | undefined),
-		),
-		worktreeBaseDir: join(runDir, "sandboxes"),
-	});
-	if (provider.preflight) {
-		await provider.preflight({
-			trialWallClockMs: config.budget.trialWallClockMs,
-			concurrency: config.concurrency,
-			requiredProbe: preflightProbeForHarness(config.harness),
-		});
-	}
 
 	console.log(
 		`brownfield run ${runId}: ${candidates.length} candidate(s) × ${tasks.length} task(s) [${spec.variant}] on ${provider.id}`,

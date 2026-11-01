@@ -102,6 +102,11 @@ export interface SchedulerDeps {
 	 * namespace wired to the gateway's unix socket. Brownfield trials only.
 	 */
 	sessionNetns?: { script: string };
+	/**
+	 * Provider for one plan, overriding `provider` (brownfield on docker: each
+	 * task runs on its own prebuilt task image).
+	 */
+	providerFor?: (plan: TrialPlan) => SandboxProvider;
 	/** Brownfield: capture the candidate's patch after the session (task 4.7). */
 	capturePatch?: (
 		sandbox: Sandbox,
@@ -238,8 +243,8 @@ function baseProvenance(
 		harnessVersion: deps.harnessVersion,
 		model: deps.workerModelRef?.name ?? config.model,
 		workerModel: deps.workerModelRef,
-		provider: deps.provider.id,
-		snapshotId: deps.provider.snapshotId,
+		provider: (deps.providerFor?.(plan) ?? deps.provider).id,
+		snapshotId: (deps.providerFor?.(plan) ?? deps.provider).snapshotId,
 		prdSha256: plan.task?.bundleSha256 ?? deps.prdSha256,
 		testPlanSha256: deps.testPlanSha256,
 		sessionScript: renderSessionScript(
@@ -300,7 +305,9 @@ export async function runTrial(
 		try {
 			const setupStart = Date.now();
 			deps.onStage?.(plan.trialId, "provisioning");
-			sandbox = await deps.provider.provision(plan.trialId);
+			sandbox = await (deps.providerFor?.(plan) ?? deps.provider).provision(
+				plan.trialId,
+			);
 			// Cancel teardown: destroying the in-flight sandbox makes the pending
 			// exec/install throw immediately, so a cancel interrupts a stuck trial
 			// instead of waiting for the wall-clock budget (studio live-run cancel).

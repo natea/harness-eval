@@ -2,6 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { composite } from "../grading/scoring";
 import type { CandidateScore, TrialResult, Weights } from "../types";
+import {
+	BrownfieldRunView,
+	BrownfieldTrialView,
+	ThemeToggle,
+	TranscriptSection,
+} from "./brownfield-views";
 
 /* ------------------------------------------------------------------ types */
 
@@ -62,7 +68,7 @@ function Th({ label }: { label: string }) {
 				<span
 					className="tip"
 					data-tip={help}
-					style={{ marginLeft: 4, color: "#8b949e" }}
+					style={{ marginLeft: 4, color: "var(--muted)" }}
 				>
 					ⓘ
 				</span>
@@ -370,6 +376,8 @@ function RunView({ runId }: { runId: string }) {
 				<span className="badge flag">unsupported</span> {entry.error}
 			</p>
 		);
+	if (entry.results.trials.some((t) => t.provenance.brownfield))
+		return <BrownfieldRunView runId={runId} results={entry.results} />;
 	const r = entry.results;
 	const rows = reweight(r.scores, weights);
 	const combined = runId.startsWith("combined:");
@@ -596,6 +604,8 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 	const t = useFetch<TrialResult>(`/api/runs/${runId}/trials/${trialId}`);
 	if (!t) return <p className="muted">loading…</p>;
 	if (!t.provenance) return <p className="badge flag">not found</p>;
+	if (t.provenance.brownfield)
+		return <BrownfieldTrialView runId={runId} trialId={trialId} t={t} />;
 	const a = t.grades?.adherence;
 	const q = t.grades?.quality;
 	const integ = t.grades?.integration;
@@ -730,6 +740,7 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 					</table>
 				</>
 			)}
+			<TranscriptSection runId={runId} trialId={trialId} />
 			{t.provenance.notes.length > 0 && (
 				<>
 					<h2>Notes</h2>
@@ -748,7 +759,7 @@ function TrialView({ runId, trialId }: { runId: string; trialId: string }) {
 
 /* ------------------------------------------------------------------- router */
 
-function App() {
+function Page() {
 	const path = window.location.pathname;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
@@ -756,6 +767,18 @@ function App() {
 	const run = path.match(/^\/runs\/([^/]+)$/);
 	if (run?.[1]) return <RunView runId={run[1]} />;
 	return <Leaderboard />;
+}
+
+function App() {
+	return (
+		<>
+			<div className="topbar">
+				<a href="/">harness-eval dashboard</a>
+				<ThemeToggle />
+			</div>
+			<Page />
+		</>
+	);
 }
 
 const rootEl = document.getElementById("root");

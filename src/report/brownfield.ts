@@ -3,9 +3,10 @@
  * candidate, stratified by body leak level, with agent time/USD beside the human
  * baseline. Claims are limited to what the run measured.
  */
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadBundle } from "../brownfield/bundle";
+import { QUALITY_FILE, type QualityComparison } from "../brownfield/quality";
 import type { RunResults } from "../types";
 
 const pct = (n: number, d: number) =>
@@ -45,11 +46,20 @@ export function writeBrownfieldReport(
 	results: RunResults,
 ): string {
 	const path = join(runDir, "brownfield.md");
-	writeFileSync(path, renderBrownfieldReport(results));
+	const quality = new Map<string, QualityComparison>();
+	for (const t of results.trials) {
+		const q = join(runDir, "trials", t.provenance.trialId, QUALITY_FILE);
+		if (existsSync(q))
+			quality.set(t.provenance.trialId, JSON.parse(readFileSync(q, "utf8")));
+	}
+	writeFileSync(path, renderBrownfieldReport(results, quality));
 	return path;
 }
 
-export function renderBrownfieldReport(results: RunResults): string {
+export function renderBrownfieldReport(
+	results: RunResults,
+	quality: Map<string, QualityComparison> = new Map(),
+): string {
 	const all = results.trials.filter((t) => t.provenance.brownfield);
 	// Trials that never got a fair attempt (harness missing, sandbox failure) are
 	// not scored; they are listed separately so they can't pass as unresolved.
@@ -196,6 +206,42 @@ export function renderBrownfieldReport(results: RunResults): string {
 			);
 		}
 		lines.push("");
+	}
+
+	const compared = trials.filter((t) => quality.has(t.provenance.trialId));
+	if (compared.length) {
+		const first = quality.get(compared[0]!.provenance.trialId)!;
+		lines.push(
+			`## Code quality vs the merged human PR (${first.judgeModel}, ${first.samples} samples)`,
+			"",
+			"Blind comparison: the judge sees the harness's diff and the merged PR's diff (fix + tests) labelled only A and B, with sides alternating across samples. Scores are 0–100 (mean of per-criterion medians × 10). This is a secondary signal; it never changes the resolution verdict.",
+			"",
+			"| Candidate | Task | Harness | Human PR | Preferred (harness/human/tie votes) |",
+			"| --- | --- | --: | --: | --- |",
+		);
+		for (const t of compared) {
+			const q = quality.get(t.provenance.trialId)!;
+			lines.push(
+				`| ${t.provenance.candidate} | ${t.provenance.brownfield!.taskId} | ${q.harnessScore} | ${q.humanScore} | **${q.preference}** (${q.votes.harness}/${q.votes.human}/${q.votes.tie}) |`,
+			);
+		}
+		lines.push("");
+		for (const t of compared) {
+			const q = quality.get(t.provenance.trialId)!;
+			lines.push(
+				`### ${t.provenance.candidate} × ${t.provenance.brownfield!.taskId}`,
+				"",
+				"| Criterion | Harness | Human PR | Judge's note |",
+				"| --- | --: | --: | --- |",
+				...q.criteria.map(
+					(c) =>
+						`| ${c.label} | ${c.harness} | ${c.human} | ${(c.notes[0] ?? "").replace(/\|/g, "/")} |`,
+				),
+				"",
+				`**Judge's rationale:** ${q.rationales[0] ?? ""}`,
+				"",
+			);
+		}
 	}
 
 	lines.push(

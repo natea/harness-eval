@@ -1,0 +1,668 @@
+/**
+ * Brownfield run/trial views, transcript view, and the theme toggle
+ * (results-dashboard spec: brownfield views, transcript, light/dark theme).
+ */
+import React, { useEffect, useState } from "react";
+import type { TrialResult } from "../types";
+
+function useJson<T>(url: string): T | undefined {
+	const [data, setData] = useState<T>();
+	useEffect(() => {
+		fetch(url)
+			.then((r) => r.json())
+			.then((d) => setData(d as T))
+			.catch(() => setData(undefined));
+	}, [url]);
+	return data;
+}
+
+/* ------------------------------------------------------------------ theme */
+
+type Theme = "light" | "dark" | "system";
+const THEME_KEY = "dashboard-theme";
+const resolveDark = (t: Theme) =>
+	t === "dark" ||
+	(t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+const storedTheme = (): Theme => {
+	const v = localStorage.getItem(THEME_KEY);
+	return v === "light" || v === "dark" || v === "system" ? v : "system";
+};
+
+export function ThemeToggle() {
+	const [theme, setTheme] = useState<Theme>(storedTheme);
+	useEffect(() => {
+		document.documentElement.classList.toggle("dark", resolveDark(theme));
+		localStorage.setItem(THEME_KEY, theme);
+		if (theme !== "system") return;
+		const mq = window.matchMedia("(prefers-color-scheme: dark)");
+		const onChange = () =>
+			document.documentElement.classList.toggle("dark", resolveDark("system"));
+		mq.addEventListener("change", onChange);
+		return () => mq.removeEventListener("change", onChange);
+	}, [theme]);
+	const next: Theme =
+		theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
+	const icon = theme === "light" ? "☀️" : theme === "dark" ? "🌙" : "🖥️";
+	return (
+		<button
+			type="button"
+			className="theme-toggle"
+			onClick={() => setTheme(next)}
+			title={`Theme: ${theme} — click for ${next}`}
+			aria-label={`Theme: ${theme}, switch to ${next}`}
+		>
+			{icon} {theme}
+		</button>
+	);
+}
+
+/* ------------------------------------------------------------------ types */
+
+interface TaskMeta {
+	repo: string;
+	taskId: string;
+	title: string;
+	pr: number;
+	issues: number[];
+	prUrl: string;
+	issueUrls: string[];
+	humanMinutes: number | null;
+	humanReviewRounds: number | null;
+	leakBody: string | null;
+}
+interface Row {
+	trialId: string;
+	candidate: string;
+	status: string;
+	variant: string;
+	task: TaskMeta | null;
+	verdict: string | null;
+	reason: string | null;
+	testInfraModified: string[];
+	audit: string | null;
+	quality: {
+		harness: number;
+		human: number;
+		preference: string;
+		votes: { harness: number; human: number; tie: number };
+	} | null;
+	signals: { candidateLines: number; humanLines: number; f1: number } | null;
+	minutes: number | null;
+	costUsd: number | null;
+	flags: string[];
+}
+interface QualityCriterion {
+	criterion: string;
+	label: string;
+	harness: number;
+	human: number;
+	harnessSamples: number[];
+	humanSamples: number[];
+	notes: string[];
+}
+interface Artifacts {
+	brownfield: {
+		task: TaskMeta | null;
+		candidatePatch: string | null;
+		referencePatch: string | null;
+		testsPatch: string | null;
+		grade: {
+			verdict: string;
+			reason: string | null;
+			failToPass: Record<string, string>;
+			passToPass: Record<string, string>;
+			testInfraModified: string[];
+			cassetteMiss: string[];
+		} | null;
+		judge: {
+			quality: string;
+			resolvesIssue: boolean;
+			notes: string;
+			model?: string;
+		} | null;
+		signals: {
+			localization: {
+				matched: string[];
+				missed: string[];
+				extra: string[];
+				f1: number;
+			};
+			diffSizeRatio: number;
+		} | null;
+		audit: { verdict: string; findings: unknown[]; attempts: unknown[] } | null;
+		quality: {
+			judgeModel: string;
+			samples: number;
+			criteria: QualityCriterion[];
+			harnessScore: number;
+			humanScore: number;
+			preference: string;
+			votes: { harness: number; human: number; tie: number };
+			rationales: string[];
+			costUsd: number;
+		} | null;
+	} | null;
+	transcript: string | null;
+}
+
+/* ------------------------------------------------------------ small parts */
+
+const verdictBadge = (v: string | null, status?: string) =>
+	status === "infra-failed" ? (
+		<span className="badge warn">infra-failed</span>
+	) : v === "resolved" ? (
+		<span className="badge ok">resolved</span>
+	) : v ? (
+		<span className="badge flag">{v}</span>
+	) : (
+		<span className="muted">—</span>
+	);
+
+const prefLabel = (p: string) =>
+	p === "harness" ? "harness" : p === "human" ? "human PR" : "tie";
+
+function TaskLinks({ task }: { task: TaskMeta | null }) {
+	if (!task) return <span className="muted">unknown task</span>;
+	return (
+		<>
+			<a href={task.prUrl} target="_blank" rel="noreferrer">
+				PR #{task.pr}
+			</a>
+			{task.issueUrls.map((u, i) => (
+				<span key={u}>
+					{" · "}
+					<a href={u} target="_blank" rel="noreferrer">
+						issue #{task.issues[i]}
+					</a>
+				</span>
+			))}
+		</>
+	);
+}
+
+/* --------------------------------------------------------------- run view */
+
+export function BrownfieldRunView({
+	runId,
+	results,
+}: {
+	runId: string;
+	results: {
+		config: Record<string, unknown>;
+		trials: TrialResult[];
+		startedAt: string;
+	};
+}) {
+	const rows = useJson<Row[]>(`/api/runs/${runId}/brownfield`);
+	const t0 = results.trials[0]?.provenance;
+	const scored = rows?.filter((r) => r.status !== "infra-failed") ?? [];
+	const resolved = scored.filter((r) => r.verdict === "resolved").length;
+	const cost = (rows ?? []).reduce((s, r) => s + (r.costUsd ?? 0), 0);
+	return (
+		<>
+			<p>
+				<a href="/">← all runs</a>
+			</p>
+			<h1>
+				{runId} <span className="badge ok">brownfield</span>
+			</h1>
+			<p className="mono muted">
+				{t0?.brownfield?.repoDir.replace("__", "/")} · variant{" "}
+				{t0?.brownfield?.variant} · model {t0?.model} · provider {t0?.provider}{" "}
+				· started {results.startedAt}
+			</p>
+			<p>
+				Resolved <strong>{resolved}</strong> of {scored.length} scored trial(s)
+				{rows && rows.length > scored.length && (
+					<span className="muted">
+						{" "}
+						· {rows.length - scored.length} infra-failed (not scored)
+					</span>
+				)}{" "}
+				· 💵 ${cost.toFixed(2)} agent spend
+			</p>
+			<p className="muted">
+				Each trial replays a real merged PR: the harness gets the issue as it
+				stood before the fix, and is graded by the PR's hidden tests. Quality
+				compares the harness's PR with the human PR that was merged (blind A/B
+				judge, 0–100).
+			</p>
+			{!rows ? (
+				<p className="muted">loading…</p>
+			) : (
+				<table>
+					<thead>
+						<tr>
+							<th>Candidate</th>
+							<th>Task</th>
+							<th>Verdict</th>
+							<th>Quality: harness vs human</th>
+							<th>Lines: harness / human</th>
+							<th>File overlap</th>
+							<th>Agent vs human time</th>
+							<th>Cost</th>
+							<th>Flags</th>
+						</tr>
+					</thead>
+					<tbody>
+						{rows.map((r) => (
+							<tr key={r.trialId}>
+								<td>
+									<a href={`/runs/${runId}/trials/${r.trialId}`}>
+										{r.candidate}
+									</a>
+								</td>
+								<td>
+									<div>{r.task?.title ?? r.trialId}</div>
+									<div className="mono muted">
+										<TaskLinks task={r.task} />
+									</div>
+								</td>
+								<td>
+									{verdictBadge(r.verdict, r.status)}
+									{r.reason && <div className="mono muted">{r.reason}</div>}
+								</td>
+								<td className="mono">
+									{r.quality ? (
+										<>
+											<strong>{r.quality.harness}</strong> vs {r.quality.human}
+											<div className="muted">
+												prefers {prefLabel(r.quality.preference)} (
+												{r.quality.votes.harness}/{r.quality.votes.human}/
+												{r.quality.votes.tie})
+											</div>
+										</>
+									) : (
+										<span className="muted">not compared</span>
+									)}
+								</td>
+								<td className="mono">
+									{r.signals
+										? `${r.signals.candidateLines} / ${r.signals.humanLines}`
+										: "—"}
+								</td>
+								<td className="mono">
+									{r.signals ? `F1 ${r.signals.f1.toFixed(2)}` : "—"}
+								</td>
+								<td className="mono">
+									{r.minutes != null ? `${r.minutes.toFixed(1)}m` : "—"} /{" "}
+									{r.task?.humanMinutes != null
+										? `${Math.round(r.task.humanMinutes)}m`
+										: "—"}
+								</td>
+								<td className="mono">
+									{r.costUsd != null ? `$${r.costUsd.toFixed(2)}` : "—"}
+								</td>
+								<td>
+									{r.testInfraModified.length > 0 && (
+										<span
+											className="badge warn"
+											title={r.testInfraModified.join(", ")}
+										>
+											test files edited
+										</span>
+									)}
+									{r.audit && r.audit !== "clean" && (
+										<span className="badge flag">audit: {r.audit}</span>
+									)}
+									{r.flags.map((f) => (
+										<span key={f} className="badge flag" title={f}>
+											{f.split(":")[0]}
+										</span>
+									))}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			)}
+		</>
+	);
+}
+
+/* -------------------------------------------------------------- diff view */
+
+function DiffBlock({ patch, empty }: { patch: string | null; empty: string }) {
+	if (!patch?.trim()) return <p className="muted">{empty}</p>;
+	return (
+		<pre className="diff">
+			{patch.split("\n").map((l, i) => (
+				<span
+					// biome-ignore lint/suspicious/noArrayIndexKey: static diff lines
+					key={i}
+					className={
+						l.startsWith("diff --git")
+							? "d-file"
+							: l.startsWith("@@")
+								? "d-hunk"
+								: l.startsWith("+") && !l.startsWith("+++")
+									? "d-add"
+									: l.startsWith("-") && !l.startsWith("---")
+										? "d-del"
+										: undefined
+					}
+				>
+					{l}
+					{"\n"}
+				</span>
+			))}
+		</pre>
+	);
+}
+
+/* ------------------------------------------------------------- transcript */
+
+/** Minimal markdown: headings, fenced code, paragraphs. */
+function MarkdownLite({ source }: { source: string }) {
+	const out: React.ReactNode[] = [];
+	const lines = source.split("\n");
+	let i = 0;
+	let k = 0;
+	while (i < lines.length) {
+		const line = lines[i] as string;
+		if (line.startsWith("```")) {
+			const body: string[] = [];
+			i++;
+			while (i < lines.length && !(lines[i] as string).startsWith("```"))
+				body.push(lines[i++] as string);
+			i++;
+			out.push(<pre key={k++}>{body.join("\n")}</pre>);
+			continue;
+		}
+		const h = /^(#{1,6})\s+(.*)$/.exec(line);
+		if (h) {
+			const level = Math.min(6, (h[1] as string).length + 2);
+			out.push(
+				React.createElement(
+					`h${level}`,
+					{ key: k++, className: "t-head" },
+					h[2],
+				),
+			);
+			i++;
+			continue;
+		}
+		const para: string[] = [];
+		while (
+			i < lines.length &&
+			(lines[i] as string).trim() !== "" &&
+			!(lines[i] as string).startsWith("```") &&
+			!/^#{1,6}\s/.test(lines[i] as string)
+		)
+			para.push(lines[i++] as string);
+		if (para.length)
+			out.push(
+				<p key={k++} className="t-para">
+					{para.join("\n")}
+				</p>,
+			);
+		else i++;
+	}
+	return <div className="transcript">{out}</div>;
+}
+
+export function TranscriptSection({
+	runId,
+	trialId,
+}: {
+	runId: string;
+	trialId: string;
+}) {
+	const a = useJson<Artifacts>(
+		`/api/runs/${runId}/trials/${trialId}/artifacts`,
+	);
+	if (!a) return null;
+	return <Transcript text={a.transcript} />;
+}
+
+function Transcript({ text }: { text: string | null }) {
+	return (
+		<>
+			<h2>Transcript</h2>
+			{text ? (
+				<details>
+					<summary>
+						show the full session ({text.length.toLocaleString()} characters)
+					</summary>
+					<MarkdownLite source={text} />
+				</details>
+			) : (
+				<p className="muted">no transcript archived for this trial</p>
+			)}
+		</>
+	);
+}
+
+/* ------------------------------------------------------------- trial view */
+
+export function BrownfieldTrialView({
+	runId,
+	trialId,
+	t,
+}: {
+	runId: string;
+	trialId: string;
+	t: TrialResult;
+}) {
+	const a = useJson<Artifacts>(
+		`/api/runs/${runId}/trials/${trialId}/artifacts`,
+	);
+	const bf = a?.brownfield;
+	const task = bf?.task;
+	const q = bf?.quality;
+	const g = bf?.grade;
+	return (
+		<>
+			<p>
+				<a href={`/runs/${runId}`}>← {runId}</a>
+			</p>
+			<h1>
+				{task?.title ?? trialId} <span className="badge ok">brownfield</span>
+			</h1>
+			<p className="mono muted">
+				{t.provenance.candidate}@{t.provenance.candidateVersion} ·{" "}
+				{t.provenance.harness} {t.provenance.harnessVersion} ·{" "}
+				{t.provenance.model} · {t.provenance.provider} · variant{" "}
+				{t.provenance.brownfield?.variant} · <TaskLinks task={task ?? null} />
+			</p>
+			{t.telemetry && (
+				<p>
+					⏱ {(t.telemetry.agentDurationMs / 60000).toFixed(1)}m agent
+					{task?.humanMinutes != null && (
+						<> (human: {Math.round(task.humanMinutes)}m)</>
+					)}{" "}
+					· 💵 ${t.telemetry.totalCostUsd.toFixed(2)} · {t.telemetry.totalTurns}{" "}
+					turns
+				</p>
+			)}
+			{!a ? (
+				<p className="muted">loading…</p>
+			) : (
+				<>
+					<h2>
+						Hidden tests:{" "}
+						{verdictBadge(g?.verdict ?? null, t.provenance.status)}{" "}
+						{g?.reason && <span className="mono muted">{g.reason}</span>}
+					</h2>
+					{g && (
+						<table>
+							<thead>
+								<tr>
+									<th>Test</th>
+									<th>Kind</th>
+									<th>Outcome</th>
+								</tr>
+							</thead>
+							<tbody>
+								{Object.entries(g.failToPass).map(([k, v]) => (
+									<tr key={`f-${k}`}>
+										<td className="mono">{k}</td>
+										<td>fail → pass</td>
+										<td>
+											{v === "pass" ? "✅" : "❌"} {v}
+										</td>
+									</tr>
+								))}
+								{Object.entries(g.passToPass).map(([k, v]) => (
+									<tr key={`p-${k}`}>
+										<td className="mono">{k}</td>
+										<td>pass → pass</td>
+										<td>
+											{v === "pass" ? "✅" : "❌"} {v}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					)}
+					{g && g.testInfraModified.length > 0 && (
+						<p>
+							<span className="badge warn">test files edited</span> restored
+							before grading:{" "}
+							<span className="mono">{g.testInfraModified.join(", ")}</span>
+						</p>
+					)}
+
+					<h2>
+						Code quality vs the merged human PR{" "}
+						{q && (
+							<span className="muted">
+								({q.judgeModel}, {q.samples} blind samples)
+							</span>
+						)}
+					</h2>
+					{q ? (
+						<>
+							<p>
+								Harness <strong>{q.harnessScore}</strong> vs human PR{" "}
+								<strong>{q.humanScore}</strong> · judge prefers{" "}
+								<strong>{prefLabel(q.preference)}</strong> (votes harness{" "}
+								{q.votes.harness} / human {q.votes.human} / tie {q.votes.tie})
+							</p>
+							<table>
+								<thead>
+									<tr>
+										<th>Criterion</th>
+										<th>Harness</th>
+										<th>Human PR</th>
+										<th>Judge's note</th>
+									</tr>
+								</thead>
+								<tbody>
+									{q.criteria.map((c) => (
+										<tr key={c.criterion}>
+											<td>{c.label}</td>
+											<td
+												className="mono"
+												title={`samples ${c.harnessSamples.join(", ")}`}
+											>
+												{c.harness}
+											</td>
+											<td
+												className="mono"
+												title={`samples ${c.humanSamples.join(", ")}`}
+											>
+												{c.human}
+											</td>
+											<td>{c.notes[0] ?? ""}</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+							<p>
+								<strong>Rationale:</strong> {q.rationales[0]}
+							</p>
+						</>
+					) : (
+						<p className="muted">
+							not compared yet — run{" "}
+							<span className="mono">
+								bun run src/cli.ts brownfield quality runs/{runId} --judge
+								&lt;profile&gt;
+							</span>
+						</p>
+					)}
+					{bf?.judge && (
+						<p className="muted">
+							Resolution judge ({bf.judge.model}): {bf.judge.quality},{" "}
+							{bf.judge.resolvesIssue
+								? "resolves the issue"
+								: "does not resolve the issue"}{" "}
+							— {bf.judge.notes}
+						</p>
+					)}
+
+					<h2>Harness PR vs merged human PR</h2>
+					{bf?.signals && (
+						<p className="mono muted">
+							files matched{" "}
+							{bf.signals.localization.matched.join(", ") || "none"} · missed{" "}
+							{bf.signals.localization.missed.join(", ") || "none"} · extra{" "}
+							{bf.signals.localization.extra.join(", ") || "none"} · size ratio{" "}
+							{bf.signals.diffSizeRatio.toFixed(2)}×
+						</p>
+					)}
+					<div className="cols">
+						<div>
+							<h3>Harness ({t.provenance.candidate})</h3>
+							<DiffBlock
+								patch={bf?.candidatePatch ?? null}
+								empty="empty patch"
+							/>
+						</div>
+						<div>
+							<h3>
+								Merged human PR{" "}
+								{task && (
+									<a href={task.prUrl} target="_blank" rel="noreferrer">
+										#{task.pr}
+									</a>
+								)}
+							</h3>
+							<DiffBlock
+								patch={bf?.referencePatch ?? null}
+								empty="no reference patch"
+							/>
+							<details>
+								<summary>human PR's tests (hidden from the harness)</summary>
+								<DiffBlock
+									patch={bf?.testsPatch ?? null}
+									empty="no test patch"
+								/>
+							</details>
+						</div>
+					</div>
+
+					<h2>Audit</h2>
+					<p>
+						{bf?.audit ? (
+							bf.audit.verdict === "clean" ? (
+								<span className="badge ok">clean</span>
+							) : (
+								<span className="badge flag">{bf.audit.verdict}</span>
+							)
+						) : (
+							<span className="muted">no audit</span>
+						)}{" "}
+						<span className="muted">
+							— did the agent try to reach the upstream fix?
+						</span>
+					</p>
+					<Transcript text={a.transcript} />
+				</>
+			)}
+			{t.provenance.notes.length > 0 && (
+				<>
+					<h2>Notes</h2>
+					<ul>
+						{t.provenance.notes.map((n, i) => (
+							<li key={`${i}-${n.slice(0, 12)}`} className="muted mono">
+								{n}
+							</li>
+						))}
+					</ul>
+				</>
+			)}
+		</>
+	);
+}

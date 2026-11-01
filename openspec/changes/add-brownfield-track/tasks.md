@@ -48,7 +48,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [x] 5.1 Hidden-test grading: restore test infrastructure (bundle `testPaths`, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; detect `cassette-miss` (vcrpy replay-only exception or offline-proxy `APIConnectionError`/`ProxyError`) → unresolved + flagged
 - [x] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
 - [x] 5.5 Code-quality comparison vs the merged PR: blind A/B, position-balanced samples, per-criterion medians for both sides, majority preference; `brownfield quality <run-dir> --judge <profile>` and automatic with `run --brownfield --judge` (`src/brownfield/quality.ts`). First result (pr293, Opus 4.6 judge, 3 samples, $0.29): harness 83 vs human 73, harness preferred 3/0
-- [ ] 5.6 Dashboard: brownfield run and trial views (task links, verdict, quality comparison, diffs side by side, hidden tests, audit, transcript) and a light/dark toggle (results-dashboard)
+- [x] 5.6 Dashboard: brownfield run and trial views (task links, verdict, quality comparison, diffs side by side, hidden tests, audit, transcript) and a light/dark toggle (results-dashboard)
 - [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
 - [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 

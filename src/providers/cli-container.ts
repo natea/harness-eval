@@ -330,6 +330,36 @@ class CliContainerSandbox implements Sandbox {
 			);
 	}
 
+	/**
+	 * Upload a host directory tree into the sandbox (brownfield seeding). Only
+	 * container CLIs with a `cp` verb can do this at usable speed; the exec+base64
+	 * path is reserved for small files, so a brownfield run on such a provider is
+	 * refused rather than silently run against an empty workspace.
+	 */
+	async copyIn(hostSrc: string, sandboxPath: string): Promise<void> {
+		if (this.spec.execCopy) {
+			throw new Error(
+				`${this.binary} has no cp verb; brownfield workspace seeding is unsupported on ${this.spec.providerId} (use the worktree or docker provider)`,
+			);
+		}
+		const dest = isAbsolute(sandboxPath)
+			? sandboxPath
+			: join(this.workspacePath, sandboxPath);
+		const mk = await this.exec(`mkdir -p ${JSON.stringify(dest)}`);
+		if (mk.exitCode !== 0)
+			throw new Error(`copy-in mkdir failed: ${mk.stderr.slice(0, 200)}`);
+		// Copy the tree's contents (`src/.`) so the destination is the workspace.
+		const res = await cli(
+			this.binary,
+			["cp", `${hostSrc}/.`, `${this.name}:${dest}`],
+			{ timeoutMs: 300_000 },
+		);
+		if (res.exitCode !== 0)
+			throw new Error(
+				`${this.binary} cp in failed: ${res.stderr.slice(0, 300)}`,
+			);
+	}
+
 	async writeFile(sandboxPath: string, content: string): Promise<void> {
 		const dest = isAbsolute(sandboxPath)
 			? sandboxPath

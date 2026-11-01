@@ -33,25 +33,25 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 ## 4. Brownfield trials
 
-- [ ] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`. Progress 2026-11-01: per-task trial images done (`brownfield image`, `src/brownfield/image.ts`: trial image + sealed repo on `work` + env built in-container with the validation recipe; verified offline on paper-qa #1311: F2P fails at base, passes with the reference); open: trial-runner hooks (issue file, patch capture), CLI flags
+- [x] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`. Progress 2026-11-01: per-task trial images done (`brownfield image`, `src/brownfield/image.ts`: trial image + sealed repo on `work` + env built in-container with the validation recipe; verified offline on paper-qa #1311: F2P fails at base, passes with the reference); open: trial-runner hooks (issue file, patch capture), CLI flags
 - [x] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
 - [x] 4.3 Spike: Claude Code against an `ANTHROPIC_BASE_URL` proxy that injects (a) an API key and (b) a subscription OAuth token; record the required headers and whether (b) works and is permitted; outcome decides the gateway's default credential (API key until (b) is verified). Done 2026-11-01: (a) and (b) both work technically; operator chose the API key (2026-11-01), so the gateway injects only an API key (design D11)
 - [ ] 4.4 Model gateway outside the sandbox: API-key injection (placeholder in sandbox; no OAuth), forward only to the run's model, reject provider-side tool requests, request log; same-protocol endpoint override per harness (`ANTHROPIC_BASE_URL`, Codex `model_providers`), refuse protocol mismatches; pin all Claude Code model slots via `resolveClaudeCodeEnv`; network lockdown (egress only to the gateway) per provider, starting with docker/worktree. Progress 2026-11-01: gateway core + Claude Code env done and smoke-tested (`src/gateway/anthropic.ts`); docker egress lock done and verified (`src/providers/egress.ts`: per-run `--internal` network + relay to the host gateway; opt-in test `HE_DOCKER_TESTS=1`); run wiring done (per-trial keys, `egress` step in `runTrial`, fail-closed leak probes, `provenance.flags`; real Docker trial verified); protocol-mismatch refusal done for the trial step; open: Codex (OpenAI-protocol gateway), worktree/cloud egress, CLI run config (4.1)
-- [ ] 4.5 Gateway preflight: extend `model probe` beyond the claude-code transport; one probe request per candidate through the gateway before dispatch; fail the run before spend on rejection, naming candidate and reason
-- [ ] 4.6 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
+- [x] 4.5 Gateway preflight: extend `model probe` beyond the claude-code transport; one probe request per candidate through the gateway before dispatch; fail the run before spend on rejection, naming candidate and reason
+- [x] 4.6 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
 - [x] 4.7 Capture candidate patch at trial end
-- [ ] 4.8 Trial isolation (all trials, MODIFIED requirement): fresh home/config per trial with no operator MCP servers, plugins/skills, memory, or global instructions; test on the worktree provider
+- [x] 4.8 Trial isolation (all trials, MODIFIED requirement): fresh home/config per trial with no operator MCP servers, plugins/skills, memory, or global instructions; test on the worktree provider
 - [ ] 4.9 Application egress: empty `appEgress` default (recorded fixtures only); per-task allowlist of provider endpoints and models (paper-qa: `gpt-4o`, `text-embedding-3-*`) forwarded through the gateway with a separate budget-capped credential and logging
 
 ## 5. Grading + audit + reporting
 
 - [x] 5.1 Hidden-test grading: restore test infrastructure (bundle `testPaths`, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; detect `cassette-miss` (vcrpy replay-only exception or offline-proxy `APIConnectionError`/`ProxyError`) → unresolved + flagged
-- [ ] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
-- [ ] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
-- [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
+- [x] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
+- [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
+- [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 
 ## 6. Pilot
 
-- [ ] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
-- [ ] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
-- [ ] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants
+- [x] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
+- [x] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
+- [x] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants

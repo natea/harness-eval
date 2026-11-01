@@ -1,3 +1,4 @@
+import { buildQualityPrompt } from "../src/brownfield/quality";
 import { describe, expect, test } from "bun:test";
 import {
 	buildJudgePrompt,
@@ -50,6 +51,16 @@ describe("judgeCandidate", () => {
 				}),
 			}),
 		).rejects.toThrow(/unknown quality/);
+	});
+
+	test("a fix far into a large patch still reaches the judge", () => {
+		const fix = "diff --git a/paperqa/utils.py b/paperqa/utils.py";
+		const candidatePatch = `${"+config line\n".repeat(3000)}${fix}`;
+		expect(candidatePatch.length).toBeGreaterThan(30_000);
+		expect(buildJudgePrompt({ ...input, candidatePatch })).toContain(fix);
+		expect(
+			buildQualityPrompt({ title: "t", body: "b" }, candidatePatch, "x"),
+		).toContain(fix);
 	});
 
 	test("prompt carries both diffs and clips long bodies", () => {

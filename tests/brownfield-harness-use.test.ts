@@ -98,15 +98,51 @@ test("activity: loaded but unused is NOT engaged; a Skill call or a framework co
 	expect(activitySummary(used)).toBe(
 		"engaged: superpowers:test-driven-development",
 	);
-	const gsd = harnessActivity(
-		[""],
-		["/gsd-new-project --auto do it", "/gsd-plan-phase"],
+	// Scripted commands alone prove nothing: GSD's model ignored them and fixed the bug.
+	const prompts = ["/gsd-new-project --auto do it", "/gsd-plan-phase"];
+	const scripted = harnessActivity([""], prompts);
+	expect(scripted.engaged).toBe(false);
+	expect(activitySummary(scripted)).toMatch(
+		/^NOT engaged: scripted \/gsd-new-project/,
 	);
-	expect(gsd.engaged).toBe(true);
-	expect(gsd.commandsInvoked).toEqual(["gsd-new-project", "gsd-plan-phase"]);
+	const consulted = harnessActivity(
+		[
+			tool("Read", {
+				file_path: "/home/u/.claude/gsd-core/workflows/plan-phase.md",
+			}),
+		],
+		prompts,
+	);
+	expect(consulted.engaged).toBe(false);
+	expect(consulted.frameworkReads).toBe(1);
+	const delegated = harnessActivity(
+		[tool("Agent", { subagent_type: "gsd-planner" })],
+		prompts,
+	);
+	expect(delegated.engaged).toBe(true);
+	const plain = harnessActivity(
+		[tool("Agent", { subagent_type: "general-purpose" })],
+		prompts,
+	);
+	expect(plain.engaged).toBe(false);
+	const wrote = harnessActivity(
+		[tool("Write", { file_path: "/w/.planning/PROJECT.md" })],
+		prompts,
+		[".planning/"],
+	);
+	expect(wrote.engaged).toBe(true);
+	expect(scripted.commandsInvoked).toEqual([
+		"gsd-new-project",
+		"gsd-plan-phase",
+	]);
 	expect(activitySummary(harnessActivity([tool("Bash", {})], ["fix it"]))).toBe(
 		"no framework (plain Claude Code)",
 	);
+	// A built-in skill isn't the framework's.
+	expect(
+		harnessActivity([tool("Skill", { skill: "code-review" })], ["/ce-plan x"])
+			.engaged,
+	).toBe(false);
 });
 
 test("harness check parses claude plugin list and skill dirs", () => {

@@ -4,7 +4,11 @@
  * the frozen task bundle; nothing is written.
  */
 
-import { activitySummary, trialActivity } from "../brownfield/activity";
+import {
+	activitySummary,
+	candidateMarkerPaths,
+	trialActivity,
+} from "../brownfield/activity";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -60,6 +64,7 @@ function activityOf(trialDir: string, provenance: any) {
 	const a = trialActivity(
 		trialDir,
 		(provenance.sessionScript ?? []).map((s: { prompt: string }) => s.prompt),
+		candidateMarkerPaths(provenance.candidate),
 	);
 	return a ? { ...a, summary: activitySummary(a) } : null;
 }

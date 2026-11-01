@@ -2,7 +2,7 @@
 /**
  * Judge already-finished brownfield trials that have no judge signal (task 5.2).
  *
- *   bun run scripts/judge-run.ts runs/<run-id> [--profile claude-sonnet-4-6-key]
+ *   bun run scripts/judge-run.ts runs/<run-id> [--profile claude-sonnet-4-6-key] [--candidate <id>]
  *
  * Costs one model call per trial; the judge must differ from the worker model.
  */
@@ -29,13 +29,17 @@ const profile = resolveProfile(profileRef, loadModels());
 const codeEnv = resolveClaudeCodeEnv(profile);
 const modelId = profile.modelId;
 
+// Re-judge one candidate (e.g. after a judge fix); the earlier verdict is overwritten.
+const only = process.argv.includes("--candidate")
+	? process.argv[process.argv.indexOf("--candidate") + 1]
+	: undefined;
 const resultsPath = join(runDir, "results.json");
 const results = JSON.parse(readFileSync(resultsPath, "utf8")) as RunResults;
 
 for (const trial of results.trials) {
 	const ref = trial.provenance.brownfield;
 	if (!ref) continue;
-	if (trial.judge) continue;
+	if (only ? trial.provenance.candidate !== only : trial.judge) continue;
 	if (trial.resolution?.reason === "solution-reach") continue;
 	assertClassifierIndependent(modelId, trial.provenance.model ?? modelId);
 	const trialDir = join(runDir, "trials", trial.provenance.trialId);

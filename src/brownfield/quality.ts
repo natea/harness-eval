@@ -10,7 +10,11 @@
  * greenfield quality judge). Judge ≠ worker is enforced by the caller.
  */
 
-import { anthropicApiJudgeRunner, type JudgeRunner } from "./judge";
+import {
+	anthropicApiJudgeRunner,
+	type JudgeRunner,
+	MAX_JUDGE_PATCH_CHARS,
+} from "./judge";
 
 export const QUALITY_CRITERIA = [
 	{
@@ -118,7 +122,7 @@ export interface QualityComparison {
 	costUsd: number;
 }
 
-const MAX_PATCH = 14_000;
+const MAX_PATCH = MAX_JUDGE_PATCH_CHARS;
 const clip = (s: string, n: number) =>
 	s.length > n ? `${s.slice(0, n)}\n… (${s.length - n} chars truncated)` : s;
 

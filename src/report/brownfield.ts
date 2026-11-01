@@ -5,7 +5,12 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { activitySummary, trialActivity } from "../brownfield/activity";
+import {
+	activitySummary,
+	candidateMarkerPaths,
+	trialActivity,
+} from "../brownfield/activity";
+import { withCorrectedCosts } from "../driver/telemetry";
 import { loadBundle } from "../brownfield/bundle";
 import {
 	originalPrWording,
@@ -48,8 +53,12 @@ function taskInfo(repoDir: string, taskId: string): TaskInfo | null {
 /** Write `brownfield.md` next to the run's other artifacts; returns its path. */
 export function writeBrownfieldReport(
 	runDir: string,
-	results: RunResults,
+	archived: RunResults,
 ): string {
+	const results = {
+		...archived,
+		trials: archived.trials.map(withCorrectedCosts),
+	};
 	const path = join(runDir, "brownfield.md");
 	const quality = new Map<string, QualityComparison>();
 	for (const t of results.trials) {
@@ -62,6 +71,7 @@ export function writeBrownfieldReport(
 		const a = trialActivity(
 			join(runDir, "trials", t.provenance.trialId),
 			t.provenance.sessionScript.map((x) => x.prompt),
+			candidateMarkerPaths(t.provenance.candidate),
 		);
 		if (a) activity.set(t.provenance.trialId, activitySummary(a));
 	}

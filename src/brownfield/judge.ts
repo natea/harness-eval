@@ -29,7 +29,13 @@ export type JudgeRunner = (args: {
 	env?: Record<string, string>;
 }) => Promise<{ structured: Record<string, unknown>; costUsd: number }>;
 
-const MAX_PATCH = 12_000;
+/**
+ * Per-diff limit for judges: above the largest original PR mined so far (137k),
+ * so a patch's fix isn't cut off behind whatever sorts ahead of it. A 14k limit
+ * once hid a real fix behind 14k of framework config and scored it 0.
+ */
+export const MAX_JUDGE_PATCH_CHARS = 200_000;
+const MAX_PATCH = MAX_JUDGE_PATCH_CHARS;
 const clip = (s: string, n: number) =>
 	s.length > n ? `${s.slice(0, n)}\n… (${s.length - n} chars truncated)` : s;
 

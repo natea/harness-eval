@@ -531,7 +531,7 @@ export function BrownfieldTrialView({
 							<p>{bf.activity.summary}</p>
 							{!bf.activity.noFramework && (
 								<p className="mono muted">
-									framework commands run:{" "}
+									commands scripted:{" "}
 									{bf.activity.commandsInvoked.map((c) => `/${c}`).join(", ") ||
 										"none"}{" "}
 									· skills invoked:{" "}

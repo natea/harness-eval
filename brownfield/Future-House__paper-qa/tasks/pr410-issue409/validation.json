@@ -1,0 +1,16 @@
+{
+  "pr": 410,
+  "merged": "2024-09-16",
+  "issues": [
+    {
+      "n": 409,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 1,
+  "srcFiles": [],
+  "testFiles": [
+    "tests/conftest.py"
+  ],
+  "verdict": "skip:no-src-code-change"
+}

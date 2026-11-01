@@ -1,0 +1,60 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 1311
+issues:
+  - 1310
+baseSha: 17a2bb8e5faf50d8cbdc9a8cd56c54ccdb36b2b5
+mergeSha: 0e4a06e78bca06d4aa7c928d5ced9868265159f0
+tStar: 2026-03-03T21:08:20Z
+issueCreatedAt: 2026-03-03T09:11:51Z
+prMergedAt: 2026-03-04T07:01:55Z
+verdict: VALID
+failToPass:
+  - packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[cmyk_converts_to_rgb]
+passToPass:
+  - packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[non_png_re_encodes]
+  - packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[png_passthrough]
+  - packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[grayscale_preserves_mode]
+envBroken: []
+flaky: []
+testPaths:
+  - packages/paper-qa-docling/tests
+  - packages/paper-qa-nemotron/tests
+  - packages/paper-qa-pymupdf/tests
+  - packages/paper-qa-pypdf/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_code
+  comments: fix_code
+cutBy: firstPrCommit
+env:
+  method: uv.lock
+  digest: ea632e1a5d2780f548c8a43e317bbc85682d6dc75c2396cc5881202896c71ae5
+  python: "3.12"
+validationSelection: touched
+humanBaseline:
+  codingWindowMinutes: 0
+  reviewMinutes: 593
+  reviewRounds: 6
+  commitsAfterFirstReview: 1
+  issueLifetimeMinutes: 1310
+  humanDiff:
+    linesAdded: 9
+    linesRemoved: 1
+    filesTouched: 1
+provisional: false
+files:
+  issue/assets/07c40f3784fa.svg: 07c40f3784fa749eed82bc2ee44fa1810fb00d3ccb7dbf0c3141bc4fa2a23bdc
+  issue/assets/40b384e75d82.svg: 40b384e75d821266cf135e95507704f42c8ed9329e75bdd6dfe1acc516c1d86a
+  issue/assets/58edc5b4256c.svg: 58edc5b4256c23a8e45f07f9395b24291b6b756416b3af6f7abc5bc33bb5012e
+  issue/assets/a8c54d1dc2b6.svg: a8c54d1dc2b64986c2abaefceafeabfeceb852c80e29b1b1dcf47005f861269e
+  issue/body+all.md: 80cef2dbe8ddb872a6f47f53a0729c3eaf6315bb32648f9e78a86366130f346e
+  issue/body+human.md: ba9948dfd65389b6444080523615d4f6beb21fcf5344f1e70b6101e6c7da19b6
+  issue/body.md: ba9948dfd65389b6444080523615d4f6beb21fcf5344f1e70b6101e6c7da19b6
+  leaks.json: 5818add0b33264b65d1269f11379de32aee89e384d7684ffffedd30630efda8f
+  reference.patch: 9fe6cac975a522086507388baefd70fabdad581a9ca954a24896cd7c77d8b745
+  snapshot.json: 5ed66a9f7b441a55a6cdeb1dfdcfb1592892bac16bf615802d66091aec3d24a7
+  tests.patch: 4a90a77ee040f3f0784727f7e3319ee18c6e59c87ff7f79ea91c1a5c84c7cc61
+  validation.json: e532e386cb22333c8e9206360144e2fb986826529cd7c3600fad7361589b28c5

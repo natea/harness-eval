@@ -1,0 +1,501 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 25e60ec1..38e44575 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -424,6 +424,14 @@ Bug Fixes
+   ``StringDtype`` is used as the new concat dimension and another input has a
+   numpy string-dtype coord (:issue:`11317`, :pull:`11322`).
+   By `Sai Asish Y <https://github.com/SAY-5>`_.
++- Add type annotations to all arguments of :py:func:`open_zarr`, so that type
++  checkers accept its documented arguments and reject unknown ones.
++  :py:func:`open_dataset`, :py:func:`open_dataarray`, :py:func:`open_datatree`
++  and :py:func:`open_groups` now also accept zarr stores in their type hints.
++  Passing a zarr store to the ``netcdf4``, ``h5netcdf``, ``scipy`` or ``pydap``
++  engine raises a ``TypeError`` that points to ``engine="zarr"``
++  (:issue:`11221`, :pull:`11226`).
++  By `Carson Jones <https://github.com/wavebyrd>`_.
+ 
+ 
+ Documentation
+diff --git a/xarray/backends/api.py b/xarray/backends/api.py
+index 72f29a79..86792bd0 100644
+--- a/xarray/backends/api.py
++++ b/xarray/backends/api.py
+@@ -419,13 +419,14 @@ def open_dataset(
+ 
+     Parameters
+     ----------
+-    filename_or_obj : str, Path, file-like, bytes, memoryview or DataStore
++    filename_or_obj : str, Path, file-like, bytes, memoryview, DataStore or zarr store
+         Strings and Path objects are interpreted as a path to a netCDF file
+         or an OpenDAP URL and opened with python-netCDF4, unless the filename
+         ends with .gz, in which case the file is gunzipped and opened with
+         scipy.io.netcdf (only netCDF3 supported). Bytes, memoryview and
+         file-like objects are opened by scipy.io.netcdf (netCDF3) or h5netcdf
+-        (netCDF4).
++        (netCDF4). Zarr stores (see ``zarr.storage.StoreLike``) are opened
++        with ``engine="zarr"``.
+     engine : {"netcdf4", "scipy", "pydap", "h5netcdf", "zarr", None}\
+         , installed backend \
+         or subclass of xarray.backends.BackendEntrypoint, optional
+@@ -675,13 +676,14 @@ def open_dataarray(
+ 
+     Parameters
+     ----------
+-    filename_or_obj : str, Path, file-like, bytes, memoryview or DataStore
++    filename_or_obj : str, Path, file-like, bytes, memoryview, DataStore or zarr store
+         Strings and Path objects are interpreted as a path to a netCDF file
+         or an OpenDAP URL and opened with python-netCDF4, unless the filename
+         ends with .gz, in which case the file is gunzipped and opened with
+         scipy.io.netcdf (only netCDF3 supported). Bytes, memoryview and
+         file-like objects are opened by scipy.io.netcdf (netCDF3) or h5netcdf
+-        (netCDF4).
++        (netCDF4). Zarr stores (see ``zarr.storage.StoreLike``) are opened
++        with ``engine="zarr"``.
+     engine : {"netcdf4", "scipy", "pydap", "h5netcdf", "zarr", None}\
+         , installed backend \
+         or subclass of xarray.backends.BackendEntrypoint, optional
+@@ -911,10 +913,11 @@ def open_datatree(
+ 
+     Parameters
+     ----------
+-    filename_or_obj : str, Path, file-like, bytes or DataStore
++    filename_or_obj : str, Path, file-like, bytes, memoryview, DataStore or zarr store
+         Strings and Path objects are interpreted as a path to a netCDF file or
+         Zarr store. Bytes and memoryview objects are interpreted as file
+-        contents.
++        contents. Zarr stores (see ``zarr.storage.StoreLike``) are opened with
++        ``engine="zarr"``.
+     engine : {"netcdf4", "h5netcdf", "zarr", None}, \
+              installed backend or xarray.backends.BackendEntrypoint, optional
+         Engine to use when reading files. If not provided, the default engine
+@@ -1163,10 +1166,11 @@ def open_groups(
+ 
+     Parameters
+     ----------
+-    filename_or_obj : str, Path, file-like, bytes, memoryview or DataStore
++    filename_or_obj : str, Path, file-like, bytes, memoryview, DataStore or zarr store
+         Strings and Path objects are interpreted as a path to a netCDF file or
+         Zarr store. Bytes and memoryview objects are interpreted as file
+-        contents.
++        contents. Zarr stores (see ``zarr.storage.StoreLike``) are opened with
++        ``engine="zarr"``.
+     engine : {"netcdf4", "h5netcdf", "zarr", None}, \
+              installed backend or xarray.backends.BackendEntrypoint, optional
+         Engine to use when reading files. If not provided, the default engine
+diff --git a/xarray/backends/common.py b/xarray/backends/common.py
+index c1cbab8b..a19170d0 100644
+--- a/xarray/backends/common.py
++++ b/xarray/backends/common.py
+@@ -2,6 +2,7 @@ from __future__ import annotations
+ 
+ import logging
+ import os
++import sys
+ import time
+ import traceback
+ from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
+@@ -39,7 +40,7 @@ from xarray.namedarray.utils import is_duck_dask_array
+ 
+ if TYPE_CHECKING:
+     from xarray.core.dataset import Dataset
+-    from xarray.core.types import NestedSequence
++    from xarray.core.types import NestedSequence, ZarrStoreLike
+ 
+     T_Name = Union[Hashable, None]
+ 
+@@ -50,6 +51,25 @@ logger = logging.getLogger(__name__)
+ NONE_VAR_NAME = "__values__"
+ 
+ 
++def _raise_if_zarr_store(filename_or_obj: object, engine: str) -> None:
++    """Raise a helpful error if a backend other than zarr gets a zarr store."""
++    # zarr stores can only exist if zarr has been imported already
++    zarr_store = sys.modules.get("zarr.abc.store")
++    zarr_storage = sys.modules.get("zarr.storage")
++    if (
++        isinstance(filename_or_obj, Mapping)
++        or (zarr_store is not None and isinstance(filename_or_obj, zarr_store.Store))
++        or (
++            zarr_storage is not None
++            and isinstance(filename_or_obj, zarr_storage.StorePath)
++        )
++    ):
++        raise TypeError(
++            f"the {engine} backend cannot open zarr stores, got {filename_or_obj!r}. "
++            "Use engine='zarr' instead."
++        )
++
++
+ @overload
+ def _normalize_path(path: os.PathLike) -> str: ...
+ 
+@@ -380,7 +400,13 @@ class AbstractDataStore:
+ 
+ 
+ type T_PathFileOrDataStore = (
+-    str | os.PathLike[Any] | ReadBuffer | bytes | memoryview | AbstractDataStore
++    str
++    | os.PathLike[Any]
++    | ReadBuffer
++    | bytes
++    | memoryview
++    | AbstractDataStore
++    | ZarrStoreLike
+ )
+ 
+ 
+diff --git a/xarray/backends/h5netcdf_.py b/xarray/backends/h5netcdf_.py
+index 18ade782..6b493ac2 100644
+--- a/xarray/backends/h5netcdf_.py
++++ b/xarray/backends/h5netcdf_.py
+@@ -4,7 +4,7 @@ import functools
+ import io
+ import os
+ from collections.abc import Iterable
+-from typing import TYPE_CHECKING, Any, Self, override
++from typing import TYPE_CHECKING, Any, Self, cast, override
+ 
+ import numpy as np
+ from packaging.version import Version
+@@ -17,6 +17,7 @@ from xarray.backends.common import (
+     WritableCFDataStore,
+     _normalize_path,
+     _open_remote_file,
++    _raise_if_zarr_store,
+     collect_ancestor_dimensions,
+     datatree_from_dict_with_io_cleanup,
+     find_root_and_group,
+@@ -491,8 +492,10 @@ def _normalize_filename_or_obj(
+ ) -> str | ReadBuffer | AbstractDataStore:
+     if isinstance(filename_or_obj, bytes | memoryview):
+         return io.BytesIO(filename_or_obj)
+-    else:
+-        return _normalize_path(filename_or_obj)
++    _raise_if_zarr_store(filename_or_obj, "h5netcdf")
++    return cast(
++        "str | ReadBuffer | AbstractDataStore", _normalize_path(filename_or_obj)
++    )
+ 
+ 
+ class H5netcdfBackendEntrypoint(BackendEntrypoint):
+diff --git a/xarray/backends/netCDF4_.py b/xarray/backends/netCDF4_.py
+index 143edebd..92f6e389 100644
+--- a/xarray/backends/netCDF4_.py
++++ b/xarray/backends/netCDF4_.py
+@@ -19,6 +19,7 @@ from xarray.backends.common import (
+     T_PathFileOrDataStore,
+     WritableCFDataStore,
+     _normalize_path,
++    _raise_if_zarr_store,
+     collect_ancestor_dimensions,
+     datatree_from_dict_with_io_cleanup,
+     find_root_and_group,
+@@ -509,6 +510,7 @@ class NetCDF4DataStore(WritableCFDataStore):
+             )
+ 
+         if not isinstance(filename, str | bytes | memoryview | BytesIOProxy):
++            _raise_if_zarr_store(filename, "netCDF4")
+             raise TypeError(f"invalid filename for netCDF4 backend: {filename}")
+ 
+         if format is None:
+diff --git a/xarray/backends/plugins.py b/xarray/backends/plugins.py
+index d36a5732..908fd184 100644
+--- a/xarray/backends/plugins.py
++++ b/xarray/backends/plugins.py
+@@ -8,7 +8,7 @@ import warnings
+ from collections.abc import Callable
+ from html import escape
+ from importlib.metadata import entry_points
+-from typing import TYPE_CHECKING, Any, TextIO
++from typing import TYPE_CHECKING, TextIO
+ 
+ from xarray.backends.common import BACKEND_ENTRYPOINTS, BackendEntrypoint
+ from xarray.core.options import OPTIONS
+@@ -18,8 +18,7 @@ from xarray.util._report import package_version, show_report
+ if TYPE_CHECKING:
+     from importlib.metadata import EntryPoint, EntryPoints
+ 
+-    from xarray.backends.common import AbstractDataStore
+-    from xarray.core.types import ReadBuffer
++    from xarray.backends.common import T_PathFileOrDataStore
+ 
+ 
+ def remove_duplicates(entrypoints: EntryPoints) -> list[EntryPoint]:
+@@ -215,12 +214,7 @@ def show_backends(file: TextIO | None = None, markdown: bool = False) -> None:
+ 
+ 
+ def guess_engine(
+-    store_spec: str
+-    | os.PathLike[Any]
+-    | ReadBuffer
+-    | bytes
+-    | memoryview
+-    | AbstractDataStore,
++    store_spec: T_PathFileOrDataStore,
+     must_support_groups: bool = False,
+ ) -> str | type[BackendEntrypoint]:
+     engines = list_engines()
+diff --git a/xarray/backends/pydap_.py b/xarray/backends/pydap_.py
+index 90eb0aa9..fd3f70c7 100644
+--- a/xarray/backends/pydap_.py
++++ b/xarray/backends/pydap_.py
+@@ -1,8 +1,7 @@
+ from __future__ import annotations
+ 
+-import os
+ from collections.abc import Iterable
+-from typing import TYPE_CHECKING, Any, override
++from typing import TYPE_CHECKING, override
+ 
+ import numpy as np
+ 
+@@ -14,6 +13,7 @@ from xarray.backends.common import (
+     T_PathFileOrDataStore,
+     _is_likely_dap_url,
+     _normalize_path,
++    _raise_if_zarr_store,
+     datatree_from_dict_with_io_cleanup,
+     robust_getitem,
+ )
+@@ -28,11 +28,8 @@ from xarray.core.variable import Variable
+ from xarray.namedarray.pycompat import integer_types
+ 
+ if TYPE_CHECKING:
+-    import os
+-
+     from xarray.core.dataset import Dataset
+     from xarray.core.datatree import DataTree
+-    from xarray.core.types import ReadBuffer
+ 
+ 
+ class PydapArrayWrapper(BackendArray):
+@@ -144,12 +141,15 @@ class PydapDataStore(AbstractDataStore):
+         elif hasattr(url, "ds"):
+             # pydap dataset
+             dataset = url.ds
++        else:
++            _raise_if_zarr_store(url, "pydap")
++            raise TypeError(f"invalid url for pydap backend: {url!r}")
+         args = {"dataset": dataset, "checksums": checksums}
+         if group:
+             args["group"] = group
+-        if url.startswith(("http", "dap2")):
++        if isinstance(url, str) and url.startswith(("http", "dap2")):
+             args["protocol"] = "dap2"
+-        elif url.startswith("dap4"):
++        elif isinstance(url, str) and url.startswith("dap4"):
+             args["protocol"] = "dap4"
+         return cls(**args)
+ 
+@@ -264,9 +264,7 @@ class PydapBackendEntrypoint(BackendEntrypoint):
+     @override
+     def open_dataset(
+         self,
+-        filename_or_obj: (
+-            str | os.PathLike[Any] | ReadBuffer | bytes | memoryview | AbstractDataStore
+-        ),
++        filename_or_obj: T_PathFileOrDataStore,
+         *,
+         mask_and_scale=True,
+         decode_times=True,
+diff --git a/xarray/backends/scipy_.py b/xarray/backends/scipy_.py
+index 54d40680..aba94c42 100644
+--- a/xarray/backends/scipy_.py
++++ b/xarray/backends/scipy_.py
+@@ -4,7 +4,16 @@ import gzip
+ import io
+ import os
+ from collections.abc import Iterable, Mapping
+-from typing import IO, TYPE_CHECKING, Any, ClassVar, Literal, overload, override
++from typing import (
++    IO,
++    TYPE_CHECKING,
++    Any,
++    ClassVar,
++    Literal,
++    cast,
++    overload,
++    override,
++)
+ 
+ import numpy as np
+ 
+@@ -16,6 +25,7 @@ from xarray.backends.common import (
+     T_PathFileOrDataStore,
+     WritableCFDataStore,
+     _normalize_path,
++    _raise_if_zarr_store,
+ )
+ from xarray.backends.file_manager import CachingFileManager, DummyFileManager
+ from xarray.backends.locks import ensure_lock, get_write_lock
+@@ -395,8 +405,10 @@ def _normalize_filename_or_obj(
+ ) -> str | ReadBuffer | AbstractDataStore:
+     if isinstance(filename_or_obj, bytes | memoryview):
+         return io.BytesIO(filename_or_obj)
+-    else:
+-        return _normalize_path(filename_or_obj)
++    _raise_if_zarr_store(filename_or_obj, "scipy")
++    return cast(
++        "str | ReadBuffer | AbstractDataStore", _normalize_path(filename_or_obj)
++    )
+ 
+ 
+ class ScipyBackendEntrypoint(BackendEntrypoint):
+diff --git a/xarray/backends/zarr.py b/xarray/backends/zarr.py
+index e496b5d8..f97ce840 100644
+--- a/xarray/backends/zarr.py
++++ b/xarray/backends/zarr.py
+@@ -42,9 +42,10 @@ from xarray.namedarray.parallelcompat import guess_chunkmanager
+ from xarray.namedarray.pycompat import integer_types
+ 
+ if TYPE_CHECKING:
++    from xarray.coders import CFDatetimeCoder, CFTimedeltaCoder
+     from xarray.core.dataset import Dataset
+     from xarray.core.datatree import DataTree
+-    from xarray.core.types import ZarrArray, ZarrGroup
++    from xarray.core.types import T_Chunks, ZarrArray, ZarrGroup, ZarrStoreLike
+ 
+ 
+ def _get_mappers(*, storage_options, store):
+@@ -1525,27 +1526,30 @@ class ZarrStore(AbstractWritableDataStore):
+ 
+ 
+ def open_zarr(
+-    store,
+-    group=None,
+-    chunks: int | dict | Literal["auto"] | Default | None = _default,
+-    decode_cf=True,
+-    mask_and_scale=True,
+-    decode_times=True,
+-    concat_characters=True,
++    store: ZarrStoreLike,
++    group: str | None = None,
++    chunks: T_Chunks | Default | None = _default,
++    decode_cf: bool = True,
++    mask_and_scale: bool | Mapping[str, bool] = True,
++    decode_times: (
++        bool | CFDatetimeCoder | Mapping[str, bool | CFDatetimeCoder]
++    ) = True,
++    concat_characters: bool | Mapping[str, bool] = True,
+     decode_coords: Literal["coordinates", "all"] | bool = True,
+-    drop_variables=None,
+-    consolidated=None,
+-    overwrite_encoded_chunks=False,
+-    storage_options=None,
+-    decode_timedelta=None,
+-    use_cftime=None,
+-    zarr_format=None,
+-    use_zarr_fill_value_as_mask=None,
++    drop_variables: str | Iterable[str] | None = None,
++    consolidated: bool | None = None,
++    overwrite_encoded_chunks: bool = False,
++    storage_options: dict[str, Any] | None = None,
++    decode_timedelta: (
++        bool | CFTimedeltaCoder | Mapping[str, bool | CFTimedeltaCoder] | None
++    ) = None,
++    use_cftime: bool | Mapping[str, bool] | None = None,
++    zarr_format: ZarrFormat | None = None,
++    use_zarr_fill_value_as_mask: bool | None = None,
+     chunked_array_type: str | None = None,
+     from_array_kwargs: dict[str, Any] | None = None,
+-    create_default_indexes=True,
+-    **kwargs,
+-):
++    create_default_indexes: bool = True,
++) -> Dataset:
+     """Load and decode a dataset from a Zarr store.
+ 
+     The `store` object should be a valid store for a Zarr group. `store`
+@@ -1554,9 +1558,9 @@ def open_zarr(
+ 
+     Parameters
+     ----------
+-    store : MutableMapping or str
+-        A MutableMapping where a Zarr Group has been stored or a path to a
+-        directory in file system where a Zarr DirectoryStore has been stored.
++    store : zarr.storage.StoreLike
++        A zarr store, an fsspec mapper or a ``dict`` where a Zarr Group has been
++        stored, or a path or URL to a Zarr Group.
+     group : str, optional
+         Group path. (a.k.a. `path` in zarr terminology.)
+     chunks : int, dict, "auto" or None, optional
+@@ -1580,22 +1584,27 @@ def open_zarr(
+     decode_cf : bool, optional
+         Whether to decode these variables, assuming they were saved according
+         to CF conventions.
+-    mask_and_scale : bool, optional
++    mask_and_scale : bool or dict-like, optional
+         If True, replace array values equal to `_FillValue` with NA and scale
+         values according to the formula `original_values * scale_factor +
+         add_offset`, where `_FillValue`, `scale_factor` and `add_offset` are
+         taken from variable attributes (if they exist).  If the `_FillValue` or
+         `missing_value` attribute contains multiple values a warning will be
+         issued and all array values matching one of the multiple values will
+-        be replaced by NA.
+-    decode_times : bool, optional
++        be replaced by NA. Pass a mapping, e.g. ``{"my_variable": False}``,
++        to toggle this feature per-variable individually.
++    decode_times : bool, CFDatetimeCoder or dict-like, optional
+         If True, decode times encoded in the standard NetCDF datetime format
+-        into datetime objects. Otherwise, leave them encoded as numbers.
+-    concat_characters : bool, optional
++        into datetime objects. Otherwise, use :py:class:`coders.CFDatetimeCoder` or
++        leave them encoded as numbers. Pass a mapping, e.g. ``{"my_variable": False}``,
++        to toggle this feature per-variable individually.
++    concat_characters : bool or dict-like, optional
+         If True, concatenate along the last dimension of character arrays to
+         form string arrays. Dimensions will only be concatenated over (and
+         removed) if they have no corresponding variable and if they are only
+         used as the last dimension of character arrays.
++        Pass a mapping, e.g. ``{"my_variable": False}``,
++        to toggle this feature per-variable individually.
+     decode_coords : bool or {"coordinates", "all"}, optional
+         Controls which variables are set as coordinate variables:
+ 
+@@ -1620,12 +1629,16 @@ def open_zarr(
+     storage_options : dict, optional
+         Any additional parameters for the storage backend (ignored for local
+         paths).
+-    decode_timedelta : bool, optional
++    decode_timedelta : bool, CFTimedeltaCoder or dict-like, optional
+         If True, decode variables and coordinates with time units in
+         {'days', 'hours', 'minutes', 'seconds', 'milliseconds', 'microseconds'}
+         into timedelta objects. If False, leave them encoded as numbers.
+-        If None (default), assume the same value of decode_time.
+-    use_cftime : bool, optional
++        If None (default), assume the same value of ``decode_times``; if
++        ``decode_times`` is a :py:class:`coders.CFDatetimeCoder` instance, this
++        takes the form of a :py:class:`coders.CFTimedeltaCoder` instance with a
++        matching ``time_unit``. Pass a mapping, e.g. ``{"my_variable": False}``,
++        to toggle this feature per-variable individually.
++    use_cftime : bool or dict-like, optional
+         Only relevant if encoded dates come from a standard calendar
+         (e.g. "gregorian", "proleptic_gregorian", "standard", or not
+         specified).  If None (default), attempt to decode times to
+@@ -1634,9 +1647,10 @@ def open_zarr(
+         ``cftime.datetime`` objects, regardless of whether or not they can be
+         represented using ``np.datetime64[ns]`` objects.  If False, always
+         decode times to ``np.datetime64[ns]`` objects; if this is not possible
+-        raise an error.
+-    zarr_format : int or None, optional
+-        The desired zarr format to target (currently 2 or 3). The default
++        raise an error. Pass a mapping, e.g. ``{"my_variable": False}``,
++        to toggle this feature per-variable individually.
++    zarr_format : {2, 3} or None, optional
++        The desired zarr format to target. The default
+         of None will attempt to determine the zarr version from ``store`` when
+         possible, otherwise defaulting to the default version used by
+         the zarr-python library installed.
+@@ -1691,11 +1705,6 @@ def open_zarr(
+         except (ValueError, ImportError):
+             chunks = None
+ 
+-    if kwargs:
+-        raise TypeError(
+-            "open_zarr() got unexpected keyword arguments " + ",".join(kwargs.keys())
+-        )
+-
+     backend_kwargs = {
+         "consolidated": consolidated,
+         "overwrite_encoded_chunks": overwrite_encoded_chunks,

@@ -1,0 +1,39 @@
+{
+  "pr": 11673,
+  "merged": "2026-10-11",
+  "issues": [
+    {
+      "n": 11672,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/datatree.py"
+  ],
+  "testFiles": [
+    "xarray/tests/backends/test_datatree.py"
+  ],
+  "env": "exclude-newer 2026-10-11T18:31:39Z",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/backends/test_datatree.py"
+  ],
+  "counts": {
+    "f2p": 3,
+    "p2p": 211,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.backends.test_datatree.TestGenericNetCDFIO::test_load_datatree_overwrite_same_named_variable",
+    "xarray.tests.backends.test_datatree.TestNetCDF4DatatreeIO::test_load_datatree_overwrite_same_named_variable",
+    "xarray.tests.backends.test_datatree.TestH5NetCDFDatatreeIO::test_load_datatree_overwrite_same_named_variable"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

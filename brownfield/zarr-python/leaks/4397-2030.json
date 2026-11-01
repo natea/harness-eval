@@ -1,0 +1,87 @@
+{
+  "pr": 4397,
+  "issue": 2030,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0316106,
+  "prAuthor": "d-v-b",
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The above snippet works even though it shouldn't.",
+      "rationale": "Describes the spec violation and reproduction, and the NotImplementedError on read. Does not identify the fix location or mechanism.",
+      "author": "zoj613",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/codecs/sharding.py"
+      ],
+      "evidence": "would the fix here be to check that all elements of `index_codecs` have `is_fixed_size=True`?",
+      "rationale": "This proposes the check the reference implements: reject index_codecs whose is_fixed_size is False.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Yes, I think something like that should work.",
+      "rationale": "Confirms the is_fixed_size check. The rest is a question about how to enforce it on new codecs.",
+      "author": "zoj613",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I think we are relying on developers to set that field correctly.",
+      "rationale": "Discussion of inheritance and runtime behavior. It adds no concrete change.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "My thinking was that we just add a \"tag\" on a codec implementation that says \"I always encode to a fixed size\" or not.",
+      "rationale": "General design discussion about tagging codecs. It is vague, though loosely related to the is_fixed_size flag.",
+      "author": "zoj613",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/abc/codec.py"
+      ],
+      "evidence": "`is_fixed_size` is an attribute of the [codec base class]",
+      "rationale": "Points to the existing is_fixed_size attribute on the base codec. The reference fix relies on it and edits that comment.",
+      "author": "d-v-b",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c6",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/codecs/sharding.py"
+      ],
+      "evidence": "Then I think your initial suggestion of just checking if `is_fixed_size` is set should be enough.",
+      "rationale": "Restates the is_fixed_size check as the fix.",
+      "author": "zoj613",
+      "role": "issue author"
+    }
+  ]
+}

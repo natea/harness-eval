@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "TypeError: invalid type for chunks: <class 'str'>. Only mappings are supported.",
+      "rationale": "Reports the error and reproduction. The traceback shows the raising location in DataTree.chunk but gives no root-cause analysis or fix. The map_over_datasets workaround avoids the bug without revealing the mechanism.",
+      "author": "BorisTheBrave",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Bot welcome message with no technical content.",
+      "author": "welcome",
+      "role": "bot"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

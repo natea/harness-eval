@@ -1,0 +1,33 @@
+{
+  "pr": 11476,
+  "issue": 11452,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0160966,
+  "prAuthor": "genrichez",
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "if the length of both strings passes a certain threshold, the label on the plot is not rendered as Latex anymore.",
+      "rationale": "Describes the observed behavior and reproduction conditions; does not identify textwrap or the code location.",
+      "author": "mtrocadomoreira",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/plot/utils.py"
+      ],
+      "evidence": "we call a `textwrap` with a hard break that doesn't know about latex so for very long ones it ends up breaking the rendering.",
+      "rationale": "Identifies the root cause: textwrap wrapping in label handling breaks LaTeX, which is what the fix removes. It proposes no fix.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ]
+}

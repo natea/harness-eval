@@ -1,0 +1,32 @@
+{
+  "pr": 11523,
+  "issue": 10194,
+  "tStar": "2026-08-14T23:13:54Z",
+  "title": "raise an error for `assign_coords({Hashable: xr.Coordinates})`",
+  "issueAuthor": "dcherian",
+  "body": "### What happened?\n\nThis works but is wrong.\n\n```\nimport xarray as xr\nfrom xarray.indexes import RangeIndex\n\nds = xr.Dataset({\"foo\": (\"x\", [1, 2, 3])})\ncoords = xr.Coordinates.from_xindex(RangeIndex.arange(\"x\", \"x\", 1.5, 4.5, 1.0))\nds.assign_coords({\"x\": coords})\n```\n\n### What did you expect to happen?\n\nWe should error and tell the user to use `ds.assign_coords(coords)` instead\n\nxref https://github.com/pydata/xarray/pull/10076/commits/efe3e81be686881ca63a561095e95f50856a8d19#r2019841034",
+  "comments": [
+    {
+      "at": "2025-04-03T00:25:33Z",
+      "author": "benbovy",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "Yes I agree we can easily detect when such case happens.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-05-13T19:36:38Z",
+      "author": "gcaria",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Running this on main now raises:\n\n```python\nIn [1]: import xarray as xr\n   ...: from xarray.indexes import RangeIndex\n   ...:\n   ...: ds = xr.Dataset({\"foo\": (\"x\", [1, 2, 3])})\n   ...: coords = xr.Coordinates.from_xindex(RangeIndex.arange(1.5, 4.5, 1.0, dim='x', coord_name='x'))\n\nIn [2]: ds.assign_coords({\"x\": coords})\n---------------------------------------------------------------------------\nValueError                                Traceback (most recent call last)\nCell In[2], line 1\n----> 1 ds.assign_coords({\"x\": coords})\n\nFile ~/repositories/xarray/xarray/core/common.py:664, in DataWithCoords.assign_coords(self, coords, **coords_kwargs)\n    661 else:\n    662     results = self._calc_assign_results(coords_combined)\n--> 664 data.coords.update(results)\n    665 return data\n\nFile ~/repositories/xarray/xarray/core/coordinates.py:603, in Coordinates.update(self, other)\n    597 # special case for PandasMultiIndex: updating only its dimension coordinate\n    598 # is still allowed but depreciated.\n    599 # It is the only case where we need to actually drop coordinates here (multi-index levels)\n    600 # TODO: remove when removing PandasMultiIndex's dimension coordinate.\n    601 self._drop_coords(self._names - coords_to_align._names)\n--> 603 self._update_coords(coords, indexes)\n\nFile ~/repositories/xarray/xarray/core/coordinates.py:789, in DatasetCoordinates._update_coords(self, coords, indexes)\n    786 variables.update(coords)\n    788 # check for inconsistent state *before* modifying anything in-place\n--> 789 dims = calculate_dimensions(variables)\n    790 new_coord_names = set(coords)\n    791 for dim in dims.keys():\n\nFile ~/repositories/xarray/xarray/core/variable.py:3031, in calculate_dimensions(variables)\n   3029             last_used[dim] = k\n   3030         elif dims[dim] != size:\n-> 3031             raise ValueError(\n   3032                 f\"conflicting sizes for dimension {dim!r}: \"\n   3033                 f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n   3034             )\n   3035 return dims\n\nValueError: conflicting sizes for dimension 'x': length 1 on 'x' and length 3 on {'x': 'foo'}\n```",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "code block"
+      ]
+    }
+  ]
+}

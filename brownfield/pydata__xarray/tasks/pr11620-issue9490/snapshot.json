@@ -1,0 +1,9 @@
+{
+  "pr": 11620,
+  "issue": 9490,
+  "tStar": "2026-09-27T15:16:04Z",
+  "title": "Forbid path-like child names",
+  "issueAuthor": "TomNicholas",
+  "body": "It would also be nice to add a check like this for child names.\r\n\r\n_Originally posted by @shoyer in https://github.com/pydata/xarray/pull/9378#pullrequestreview-2301368526_\r\n            ",
+  "comments": []
+}

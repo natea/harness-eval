@@ -1,0 +1,9 @@
+# enrichment image format not accepted
+
+_Opened by @satra_
+
+for several, but not all pdfs that i am indexing, i get the following error
+
+> Skipping enrichment for media index 0 on page 1 with metadata {'type': 'picture', 'width': 517, 'height': 108, 'info_hashable': '{"height": 108, "type": "picture", "width": 517}', 'page_num': 1} because it was rejected by the LLM provider for 'gpt-4o-2024-11-20'. Full error message: litellm.BadRequestError: OpenAIException - You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp'].. Received Model Group=gpt-4o-2024-11-20
+
+is there a way to address this issue?

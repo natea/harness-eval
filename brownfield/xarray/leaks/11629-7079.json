@@ -1,0 +1,251 @@
+{
+  "pr": 11629,
+  "issue": 7079,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.060078599999999996,
+  "prAuthor": "headtr1ck",
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "`open_mfdataset` fails with `NetCDF: Unknown file format`",
+      "rationale": "Only reports behavior and workaround of retrying; no cause.",
+      "author": "cefect",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I rolled it back to `conda-forge/linux-64::netcdf4-1.6.0-nompi_py39h6ced12a_102`",
+      "rationale": "Version info and downgrade workaround.",
+      "author": "pnorton-usgs",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Your parallelization may not be thread safe, which makes 1.6.1 failures that expected.",
+      "rationale": "Vague thread-safety guess, no code location; workaround suggestions.",
+      "author": "ocefpaf",
+      "role": "other user"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "dask.config.set(scheduler=\"single-threaded\")",
+      "rationale": "Workaround avoiding the bug.",
+      "author": "ocefpaf",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "did indeed avoid the issue for me.",
+      "rationale": "Confirms workaround.",
+      "author": "kthyng",
+      "role": "other user"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The right fix is to disable threads, like in my example above, or to wait for a netcdf-c release that is thread safe.",
+      "rationale": "Says not an xarray problem; the reference fix is in xarray locking.",
+      "author": "ocefpaf",
+      "role": "other user"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You can also parallelize across processes using something like",
+      "rationale": "Workaround.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c7",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Chit-chat.",
+      "author": "ocefpaf",
+      "role": "other user"
+    },
+    {
+      "id": "c8",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Chit-chat.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c9",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "EDIT: We already have locks:",
+      "rationale": "Points to existing locks in netCDF4_.py but concludes nothing needed; no mechanism of the fix.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c10",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "It would be great if someone could put together a MCVE",
+      "rationale": "Request for repro; test pointers only.",
+      "author": "jhamman",
+      "role": "maintainer"
+    },
+    {
+      "id": "c11",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "we're running tests on an older working version",
+      "rationale": "CI environment info.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c12",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "`iris` has the pin in their package metadata",
+      "rationale": "Environment trivia.",
+      "author": "keewis",
+      "role": "maintainer"
+    },
+    {
+      "id": "c13",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Project status.",
+      "author": "trexfeathers",
+      "role": "other user"
+    },
+    {
+      "id": "c14",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Process update.",
+      "author": "jhamman",
+      "role": "maintainer"
+    },
+    {
+      "id": "c15",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "They are not failing in our test env.",
+      "rationale": "Test status only.",
+      "author": "jhamman",
+      "role": "maintainer"
+    },
+    {
+      "id": "c16",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Request for help.",
+      "author": "jhamman",
+      "role": "maintainer"
+    },
+    {
+      "id": "c17",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Scheduling.",
+      "author": "kthyng",
+      "role": "other user"
+    },
+    {
+      "id": "c18",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "OSError: [Errno -70] NetCDF: DAP server error",
+      "rationale": "Repro and error report.",
+      "author": "kthyng",
+      "role": "other user"
+    },
+    {
+      "id": "c19",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "any difference when running with `parallel=True` vs `parallel=False`?",
+      "rationale": "Question.",
+      "author": "jhamman",
+      "role": "maintainer"
+    },
+    {
+      "id": "c20",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "with `parallel=True` I met the error but with `parallel=False` I did not.",
+      "rationale": "Observed behavior.",
+      "author": "kthyng",
+      "role": "other user"
+    },
+    {
+      "id": "c21",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "It may be a server that is not happy with parallel access.",
+      "rationale": "Unconfirmed guess.",
+      "author": "ocefpaf",
+      "role": "other user"
+    },
+    {
+      "id": "c22",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "there is no error with `parallel=True` nor `parallel=False`",
+      "rationale": "Observed behavior.",
+      "author": "kthyng",
+      "role": "other user"
+    },
+    {
+      "id": "c23",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "using single threading), but using local files at the moment seems to remove the error",
+      "rationale": "Observations only.",
+      "author": "kthyng",
+      "role": "other user"
+    }
+  ]
+}

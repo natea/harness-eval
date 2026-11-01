@@ -24,7 +24,7 @@ export interface RunSummary {
 		startedAt: string;
 		prdSha256: string;
 		/** Which app/PRD this run built (resolved by content hash), or null. */
-		target?: { name: string; title: string } | null;
+		target?: { name: string; title: string; appLabel?: string } | null;
 		testPlanSha256: string | null;
 		workerModel?: ModelRef;
 		judgeModelRef?: ModelRef;
@@ -32,6 +32,9 @@ export interface RunSummary {
 		costSource?: string;
 		/** Total run cost (sum of per-trial telemetry), or undefined if untracked. */
 		costUsd?: number;
+		/** Who ran, from the trials (brownfield runs have no PRD scores). */
+		candidates?: string[];
+		trialCount?: number;
 	};
 }
 

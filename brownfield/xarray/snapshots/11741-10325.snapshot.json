@@ -1,0 +1,22 @@
+{
+  "pr": 11741,
+  "issue": 10325,
+  "tStar": "2026-10-15T13:54:14Z",
+  "title": "Potential bug in interp",
+  "issueAuthor": "bbabenko",
+  "body": "### What happened?\n\nThere seems to be an issue with dtypes when calling interp on dask-backed data arrays.\n\nExample:\n\n```\nda = xr.DataArray(\n    data=dask.array.array([1, 2, 3], dtype=np.float32),\n    dims=(\"x\"),\n    coords={\"x\": np.array([0, 1, 2], dtype=np.float32)},\n)\nda = da.interp(x=np.array([0.75], dtype=np.float64))\nprint(da.dtype, da.compute().dtype, da.astype(np.float32).compute().dtype)\n```\n\nthis prints out:\n\n```\nfloat32 float64 float64\n```\n\nso, not only is there a difference before/after compute(), explicitly casting to float32 doesn't seem to have an effect.\n\n\n\n### What did you expect to happen?\n\n_No response_\n\n### Minimal Complete Verifiable Example\n\n```Python\n\n```\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\n\n```\n\n### Anything else we need to know?\n\n_No response_\n\n### Environment\n\n<details>\n\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.11.8 (stable, redacted, redacted) [Clang 9999.0.0 (799e9053641a6478d3144866a97737b37b87c260)]\npython-bits: 64\nOS: Linux\nOS-release: 5.10.0-smp-1105.47.0.0\nmachine: x86_64\nprocessor: \nbyteorder: little\nLC_ALL: en_US.UTF-8\nLANG: None\nLOCALE: ('en_US', 'UTF-8')\nlibhdf5: 1.12.3\nlibnetcdf: 4.6.1\n\nxarray: 2025.01.2\npandas: 2.2.3\nnumpy: 2.2.4\nscipy: 1.13.1\nnetCDF4: 1.6.5\npydap: None\nh5netcdf: 999\nh5py: 3.11.0\nzarr: 2.18.2\ncftime: 1.6.4\nnc_time_axis: None\niris: None\nbottleneck: None\ndask: 2024.8.2\ndistributed: None\nmatplotlib: 3.9.1\ncartopy: 0+unknown\nseaborn: 0.12.2\nnumbagg: None\nfsspec: 2023.3.0\ncupy: None\npint: 0.24.3\nsparse: None\nflox: None\nnumpy_groupies: None\nsetuptools: 0.dev0+unknown\npip: None\nconda: None\npytest: None\nmypy: None\nIPython: 7.34.0\nsphinx: None\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2025-05-14T19:42:32Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    }
+  ]
+}

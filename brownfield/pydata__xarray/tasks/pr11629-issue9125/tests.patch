@@ -1,0 +1,286 @@
+diff --git a/xarray/tests/backends/base.py b/xarray/tests/backends/base.py
+index 8e8ba4da..b718de52 100644
+--- a/xarray/tests/backends/base.py
++++ b/xarray/tests/backends/base.py
+@@ -13,6 +13,7 @@ import warnings
+ from collections.abc import Generator, Iterator
+ from contextlib import ExitStack
+ from io import BytesIO
++from pathlib import Path
+ from typing import TYPE_CHECKING, Any, cast
+ 
+ import numpy as np
+@@ -2188,6 +2189,25 @@ class FileObjectNetCDF:
+         assert not f.closed
+ 
+ 
++def _write_mfdataset_files(tmp_path: Path, nfiles: int) -> tuple[list[Path], Dataset]:
++    # files like in the MVCE of GH11088, concatenated along a time dimension
++    datasets = [
++        Dataset(
++            {"foo": (("x", "y"), np.random.rand(4, 5))},
++            coords={
++                "x": [10, 20, 30, 40],
++                "y": pd.date_range("2000-01-01", periods=5) + pd.Timedelta(days=5 * i),
++                "z": ("x", list("abcd")),
++            },
++        )
++        for i in range(nfiles)
++    ]
++    paths = [tmp_path / f"{i}.nc" for i in range(nfiles)]
++    for ds, path in zip(datasets, paths, strict=True):
++        ds.to_netcdf(path, engine="netcdf4")
++    return paths, xr.concat(datasets, dim="y")
++
++
+ def _check_guess_can_open_and_open(entrypoint, obj, engine, expected):
+     assert entrypoint.guess_can_open(obj)
+     with open_dataset(obj, engine=engine) as actual:
+diff --git a/xarray/tests/backends/test_api.py b/xarray/tests/backends/test_api.py
+index fed5e5bb..84b6cc61 100644
+--- a/xarray/tests/backends/test_api.py
++++ b/xarray/tests/backends/test_api.py
+@@ -538,11 +538,6 @@ def chunks(request):
+ def test_open_mfdataset_manyfiles(
+     readengine, nfiles, parallel, chunks, file_cache_maxsize
+ ):
+-    if readengine == "netcdf4" and parallel:
+-        pytest.skip(
+-            "netCDF4 reads metadata without holding the netCDF-C lock and can "
+-            "crash the worker, see GH9779"
+-        )
+     randdata = np.random.randn(nfiles)
+     original = Dataset({"foo": ("x", randdata)})
+     # test standard open_mfdataset approach with too many files
+diff --git a/xarray/tests/backends/test_locks.py b/xarray/tests/backends/test_locks.py
+index 7d209ebd..1d35e381 100644
+--- a/xarray/tests/backends/test_locks.py
++++ b/xarray/tests/backends/test_locks.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import multiprocessing
+ import pickle
+ import threading
+ 
+@@ -9,7 +10,7 @@ from xarray.backends.locks import CombinedLock, SerializableLock, combine_locks
+ 
+ def test_threaded_lock() -> None:
+     lock1 = locks._get_threaded_lock("foo")
+-    assert isinstance(lock1, type(threading.Lock()))
++    assert isinstance(lock1, locks._ReentrantLock)
+     lock2 = locks._get_threaded_lock("foo")
+     assert lock1 is lock2
+ 
+@@ -174,3 +175,77 @@ def test_combined_lock_is_sorted_again_when_unpickled() -> None:
+ 
+     unpickled = pickle.loads(pickle.dumps(combined))
+     assert [locks._lock_identity(lock) for lock in unpickled.locks] == local_order
++
++
++def test_reentrant_serializable_lock() -> None:
++    lock = SerializableLock(reentrant=True)
++    with lock:
++        with lock:
++            assert lock.locked()
++        assert lock.locked()
++
++        # other threads still have to wait
++        result = []
++        thread = threading.Thread(target=lambda: result.append(lock.acquire(False)))
++        thread.start()
++        thread.join()
++        assert result == [False]
++    assert not lock.locked()
++
++
++def test_reentrant_serializable_lock_release_from_other_thread() -> None:
++    lock = SerializableLock(reentrant=True)
++    lock.acquire()
++    errors = []
++
++    def release():
++        try:
++            lock.release()
++        except RuntimeError as err:
++            errors.append(err)
++
++    thread = threading.Thread(target=release)
++    thread.start()
++    thread.join()
++    assert len(errors) == 1
++    assert lock.locked()
++    lock.release()
++
++
++def test_reentrant_serializable_lock_pickle() -> None:
++    lock = SerializableLock(reentrant=True)
++    unpickled = pickle.loads(pickle.dumps(lock))
++    assert unpickled.reentrant
++    assert unpickled.lock is lock.lock
++
++    # a fresh process only has the pickled state
++    del SerializableLock._locks[lock.token]
++    restored = SerializableLock.__new__(SerializableLock)
++    restored.__setstate__(lock.__getstate__())
++    assert restored.reentrant
++    with restored:
++        with restored:
++            pass
++
++
++def test_is_reentrant_lock() -> None:
++    reentrant = SerializableLock(reentrant=True)
++    assert locks.is_reentrant_lock(reentrant)
++    assert locks.is_reentrant_lock(locks.HDF5_LOCK)
++    assert locks.is_reentrant_lock(combine_locks([locks.NETCDFC_LOCK, reentrant]))
++    assert not locks.is_reentrant_lock(SerializableLock())
++    assert not locks.is_reentrant_lock(threading.Lock())
++    assert not locks.is_reentrant_lock(combine_locks([reentrant, threading.Lock()]))
++
++
++def _unpickles_to_global_locks(payload: bytes) -> bool:
++    hdf5, netcdfc = pickle.loads(payload)
++    return hdf5.lock is locks.HDF5_LOCK.lock and netcdfc.lock is locks.NETCDFC_LOCK.lock
++
++
++def test_global_locks_unpickle_to_global_locks_of_other_process() -> None:
++    # e.g. a dask worker reading a dataset that was opened in another process
++    # must use its own global locks, not separate ones
++    payload = pickle.dumps((locks.HDF5_LOCK, locks.NETCDFC_LOCK))
++    with multiprocessing.get_context("spawn").Pool(1) as pool:
++        assert pool.apply(_unpickles_to_global_locks, (payload,))
+diff --git a/xarray/tests/backends/test_netCDF4.py b/xarray/tests/backends/test_netCDF4.py
+index f430a4b6..a4e2f65a 100644
+--- a/xarray/tests/backends/test_netCDF4.py
++++ b/xarray/tests/backends/test_netCDF4.py
+@@ -2,6 +2,7 @@ from __future__ import annotations
+ 
+ import contextlib
+ import tempfile
++from concurrent.futures import ThreadPoolExecutor
+ from pathlib import Path
+ from typing import TYPE_CHECKING, Any
+ 
+@@ -9,7 +10,7 @@ import numpy as np
+ import pytest
+ 
+ import xarray as xr
+-from xarray import DataArray, Dataset, backends, open_dataset
++from xarray import DataArray, Dataset, backends, open_dataset, open_mfdataset
+ from xarray.backends.netCDF4_ import (
+     NetCDF4BackendEntrypoint,
+     _extract_nc4_variable_encoding,
+@@ -35,6 +36,7 @@ from xarray.tests.backends.base import (
+     NetCDF3Only,
+     NetCDF4Base,
+     _check_guess_can_open_and_open,
++    _write_mfdataset_files,
+     create_tmp_file,
+ )
+ from xarray.tests.test_dataset import create_test_data
+@@ -541,3 +543,54 @@ def test_netcdf4_entrypoint(tmp_path: Path) -> None:
+     with open(path, "wb") as f:
+         f.write(b"not-a-netcdf-file")
+     assert not entrypoint.guess_can_open(path)
++
++
++def _dataset_with_metadata() -> Dataset:
++    return Dataset(
++        {
++            f"v{i}": (("x", "y"), np.full((4, 3), float(i)), {"units": "m"})
++            for i in range(10)
++        },
++        coords={"x": np.arange(4), "y": np.arange(3)},
++        attrs={f"attr{i}": i for i in range(5)},
++    )
++
++
++@requires_netCDF4
++def test_netcdf4_concurrent_writes(tmp_path: Path) -> None:
++    # GH9779: netCDF-C is not thread-safe, so writing metadata must hold its lock
++    original = _dataset_with_metadata()
++    paths = [tmp_path / f"{i}.nc" for i in range(16)]
++    with ThreadPoolExecutor(8) as executor:
++        list(executor.map(lambda p: original.to_netcdf(p, engine="netcdf4"), paths))
++
++    for path in paths:
++        with open_dataset(path, engine="netcdf4") as actual:
++            assert_identical(actual, original)
++
++
++@requires_netCDF4
++def test_netcdf4_concurrent_opens(tmp_path: Path) -> None:
++    # GH9779: netCDF-C is not thread-safe, so reading metadata must hold its lock
++    original = _dataset_with_metadata()
++    paths = [tmp_path / f"{i}.nc" for i in range(16)]
++    for path in paths:
++        original.to_netcdf(path, engine="netcdf4")
++
++    def load(path):
++        with open_dataset(path, engine="netcdf4") as ds:
++            return ds.load()
++
++    with ThreadPoolExecutor(8) as executor:
++        for actual in executor.map(load, paths * 4):
++            assert_identical(actual, original)
++
++
++@requires_netCDF4
++@requires_dask
++def test_open_mfdataset_netcdf4_parallel(tmp_path: Path) -> None:
++    # GH11088: opening netCDF4 files in parallel threads crashed with segfaults
++    paths, expected = _write_mfdataset_files(tmp_path, nfiles=8)
++    for _ in range(10):
++        with open_mfdataset(paths, engine="netcdf4", parallel=True) as actual:
++            assert_identical(actual.load(), expected)
+diff --git a/xarray/tests/test_distributed.py b/xarray/tests/test_distributed.py
+index 9f8e0719..712a1c1c 100644
+--- a/xarray/tests/test_distributed.py
++++ b/xarray/tests/test_distributed.py
+@@ -44,6 +44,7 @@ from xarray.tests import (
+ )
+ from xarray.tests.backends.base import (
+     ON_WINDOWS,
++    _write_mfdataset_files,
+     create_tmp_file,
+ )
+ from xarray.tests.test_dataset import create_test_data
+@@ -165,12 +166,32 @@ def test_open_mfdataset_multiple_files_parallel_distributed(parallel, tmp_path):
+         da.isel(time=slice(i, i + 10)).to_netcdf(fname)
+         fnames.append(fname)
+ 
+-    with cluster() as (s, [_a, _b]):
++    # GH7079: only multi-threaded workers open files concurrently within a
++    # process, and the race does not show up on every open
++    with cluster(worker_kwargs={"nthreads": 4}) as (s, [_a, _b]):
+         with Client(s["address"]):
+-            with xr.open_mfdataset(
+-                fnames, parallel=parallel, concat_dim="time", combine="nested"
+-            ) as tf:
+-                assert_identical(tf["test"], da)
++            for _ in range(5):
++                with xr.open_mfdataset(
++                    fnames, parallel=parallel, concat_dim="time", combine="nested"
++                ) as tf:
++                    assert_identical(tf["test"], da)
++
++
++@requires_netCDF4
++def test_open_mfdataset_netcdf4_parallel_distributed(
++    loop,  # noqa: F811
++    tmp_path,
++) -> None:
++    # GH11088: datasets are opened on one worker and read on another, so the
++    # global netCDF-C and HDF5 locks must survive pickling as the same locks
++    paths, expected = _write_mfdataset_files(tmp_path, nfiles=8)
++    with cluster(worker_kwargs={"nthreads": 4}) as (s, [_a, _b]):
++        with Client(s["address"], loop=loop):
++            for _ in range(5):
++                with xr.open_mfdataset(
++                    paths, engine="netcdf4", parallel=True
++                ) as actual:
++                    assert_identical(actual.load(), expected)
+ 
+ 
+ @pytest.mark.parametrize("engine,nc_format", ENGINES_AND_FORMATS)

@@ -1,0 +1,36 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4557
+issues:
+  - 4029
+baseSha: 957a5f682b46b4055d5619d01b4a3a3cc36c04db
+mergeSha: e210f9245faa716248d8f0d698aef4e12bf68507
+tStar: 2026-10-22T20:42:00Z
+issueCreatedAt: 2026-06-03T20:43:00Z
+prMergedAt: 2026-10-26T09:39:33Z
+verdict: VALID
+failToPass:
+  - tests.test_store.test_core::test_storage_module_pickles_by_name
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: a2e5c94d61d88f459bb45d3adc0f958535f0f0393692e4f63ae41651145be665
+  issue/body+human.md: a2e5c94d61d88f459bb45d3adc0f958535f0f0393692e4f63ae41651145be665
+  issue/body.md: e6cbf8b9ce81b56fc0d6c089df48257c029d3f802b152abac11dd19db528a264
+  leaks.json: e40c3dac8332809931acc93b1ef136c91705926580cb89d7540f5aa0450ad336
+  reference.patch: e5172d35f0710aa875e550eab8258620437fffbf40045e526ab89b341319aa4f
+  snapshot.json: 5d2175dd48521743ee848fec074337428f3f6cb3d57efc8a927d1f007e86fa8b
+  tests.patch: 6e4c28c4668fe7c24d8864a81c3ed3542766a86fb64ba983304c20114c0065f9
+  validation.json: 1b3fcb4813a820709bd55a7eb21f71aed87d173fe03a33a75a88c2cb59832e73

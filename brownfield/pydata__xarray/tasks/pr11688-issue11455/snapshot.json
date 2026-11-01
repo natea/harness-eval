@@ -1,0 +1,46 @@
+{
+  "pr": 11688,
+  "issue": 11455,
+  "tStar": "2026-10-07T07:39:59Z",
+  "title": "unstack is slow for regular data",
+  "issueAuthor": "takluyver",
+  "body": "### What happened?\n\nUnstacking an array with a 'regular' MultiIndex, i.e. a cartesian product which doesn't need any missing value handling, is unexpectedly slow.\n\nE.g. unstacking (300_000, 1024) -> (10_000, 30, 1024) takes ~660 ms in my test, whereas reshaping the numpy array is massively quicker.\n\n### What did you expect to happen?\n\nWhere possible, I'd like unstack to make a view rather than a copy. I know it won't match the performance of reshape because it has to deal with coordinates etc., but it could be a lot closer.\n\nxarray actually already has the code to do what I want, in `Dataset._unstack_full_reindex()` and `Variable.unstack()`. If I call `._unstack_full_reindex()` by hand, I get a significant speedup. But unstack prefers the \"fast path\" `_unstack_once` added in #4746, which is not fast in this scenario:\n\n<img width=\"936\" height=\"280\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/f3975a07-de33-4db3-9cd0-9803255e782a\" />\n\nIIUC, `_unstack_once` is meant to speed up dealing with missing values, when a new array has to be allocated. But unfortunately it always allocates a new array and copies the data across, even if there are no missing values to handle.\n\n### Minimal Complete Verifiable Example\n\n```Python\nimport time\nimport pandas as pd\nimport xarray as xr\n\nxr.show_versions()\n\nda = xr.DataArray(data=np.ones((300_000, 1024)), dims=[\"midx\", \"other\"], coords={\n    \"midx\": pd.MultiIndex.from_product([range(10_000), range(30)])\n})\n\nt0 = time.perf_counter()\n\nda.unstack()\nt1 = time.perf_counter()\n\nda.values.reshape(10_000, 30, 1024)\nt2 = time.perf_counter()\n\ntds = da.to_dataset(name=\"tmp\")\ntds._unstack_full_reindex('midx', tds._get_stack_index('midx', multi=True), xr.core.dtypes.NA, False)['tmp']\nt3 = time.perf_counter()\n\nprint(f\"unstack: {t1-t0:.4g} s\")\nprint(f\"reshape: {t2-t1:.4g} s\")\nprint(f\"_unstack_full_reindex: {t3-t2:.4g} s\")\n```\n\n### Steps to reproduce\n\n_No response_\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\nunstack: 0.6793 s\nreshape: 6.684e-05 s\n_unstack_full_reindex: 0.02158 s\n```\n\n### Anything else we need to know?\n\n_No response_\n\n### Environment\n\n<details>\n\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.11.13 | packaged by conda-forge | (main, Jun  4 2025, 14:48:23) [GCC 13.3.0]\npython-bits: 64\nOS: Linux\nOS-release: 5.14.0-687.25.1.el9_8.x86_64\nmachine: x86_64\nprocessor: x86_64\nbyteorder: little\nLC_ALL: None\nLANG: en_US.UTF-8\nLOCALE: ('en_US', 'UTF-8')\nlibhdf5: 1.14.6\nlibnetcdf: 4.9.2\n\nxarray: 2025.6.1\npandas: 2.3.0\nnumpy: 1.26.4\nscipy: 1.16.0\nnetCDF4: 1.7.2\npydap: None\nh5netcdf: 1.6.3\nh5py: 3.14.0\nzarr: 3.0.9\ncftime: 1.6.4\nnc_time_axis: None\niris: None\nbottleneck: 1.5.0\ndask: 2025.5.1\ndistributed: 2025.5.1\nmatplotlib: 3.8.2\ncartopy: None\nseaborn: 0.13.2\nnumbagg: None\nfsspec: 2025.5.1\ncupy: None\npint: 0.24.4\nsparse: None\nflox: None\nnumpy_groupies: None\nsetuptools: 80.9.0\npip: 26.0.1\nconda: None\npytest: 8.4.1\nmypy: None\nIPython: 8.21.0\nsphinx: 7.3.7\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2026-07-17T16:24:20Z",
+      "author": "welcome",
+      "isBot": true,
+      "assoc": "NONE",
+      "role": "bot",
+      "text": "Thanks for opening your first issue here at xarray! Be sure to follow the issue template!\nIf you have an idea for a solution, we would really welcome a Pull Request with proposed changes.\nSee the [Contributing Guide](https://docs.xarray.dev/en/latest/contributing.html) for more.\nIt may take us a while to respond here, but we really value your contribution. Contributors like you help make xarray better.\nThank you!\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2026-07-17T17:23:03Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "> even if there are no missing values to handle\n\nThe trick is to infer this from the `pd.MultiIndex`. Can it be done?",
+      "source": "no-edits"
+    },
+    {
+      "at": "2026-07-17T17:38:37Z",
+      "author": "takluyver",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "role": "issue author",
+      "text": "I believe this code in `_unstack_full_reindex` checks for this:\n\nhttps://github.com/pydata/xarray/blob/5c765c33a3135dc5572cc67ce8eb8ff3fb0b31b8/xarray/core/dataset.py#L5567-L5572\n\nBefore spotting this, I had been playing around with how to check this. So this function is faster, but not battle-tested:\n\n```python\ndef _multiindex_regular_labels(mix: \"pandas.MultiIndex\"):\n    \"\"\"Return a tuple of indexes if mix is a cartesian product, else None\"\"\"\n    import pandas as pd\n    if mix.has_duplicates:\n        return None\n\n    k1_sel, k1_subix = mix.get_loc_level(mix[0][0])\n    rpt_len = len(k1_subix)\n    rpt, rem = divmod(len(mix), rpt_len)\n    if rem != 0:\n        return None\n\n    if isinstance(k1_subix, pd.MultiIndex):\n        inner_labels = _multiindex_regular_labels(k1_subix)\n        if inner_labels is None:\n            return None\n    else:\n        inner_labels = (k1_subix,)\n\n    # Check that the outermost level has each value rpt_len times\n    outer_codes = mix.codes[0].reshape(-1, rpt_len)\n    if (outer_codes != outer_codes[:, 0, np.newaxis]).any():\n        return None\n\n    # Check that each inner level is repeating regularly\n    for level in range(1, mix.nlevels):\n        codes = mix.codes[level].reshape(-1, rpt_len)\n        if (codes != codes[0]).any():\n            return None\n\n    outer_labels = mix.levels[0][outer_codes[:, 0]]\n    return (outer_labels,) + inner_labels\n```\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2026-07-20T13:31:58Z",
+      "author": "sahilmathur254",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "other user",
+      "text": "@takluyver The check in `_unstack_full_reindex` looks like the right anchor, and I'd like to work on this.\nI’ll profile the current Dataset, unstack dispatch to determine why a full Cartesian MultiIndex still reaches the slower reindexing path, then make fast path selection explicit when the required invariants hold and add regression coverage for regular indexes while confirming that missing combinations, duplicates, and irregular indexes retain their existing behaviour, along with an ASV benchmark based on the reproducer. \nI’ll keep the change focused on fast path selection unless the existing regularity check proves insufficient.",
+      "source": "no-edits"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "pr": 4239,
+  "issue": 4220,
+  "tStar": "2026-07-30T19:43:32Z",
+  "title": "FsspecStore.from_mapper() fails with DefaultAzureCredential because AzureBlobFileSystem is not JSON serializable",
+  "issueAuthor": "hginzel",
+  "body": "### Zarr version\n\nv3.3.0\n\n### Numcodecs version\n\nv0.6.15\n\n### Python Version\n\n3.12.11\n\n### Operating System\n\nUbuntu 26.04\n\n### Installation\n\nuv add zarr\n\n### Description\n\n### Environment\n\n- Python 3.12.11\n- zarr 3.3.0\n- xarray 2026.7.0\n- fsspec 2026.7.0\n- adlfs 2026.5.0\n- azure-identity 1.25.3\n\n### Description\n\nOpening an xarray dataset backed by an Azure Blob Storage FSMap created with\nDefaultAzureCredential fails because `FsspecStore.from_mapper()` attempts to\nserialize the filesystem using `fs.to_json()`.\n\nThe embedded `DefaultAzureCredential` is not JSON serializable.\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\nfrom fsspec import filesystem\nfrom azure.identity import DefaultAzureCredential\nimport xarray as xr\n\nfs = filesystem(\n    \"az\",\n    account_name=\"<account>\",\n    credential=DefaultAzureCredential(),\n)\nmapper = fs.get_mapper(\"container/example.zarr\")\nxr.open_zarr(mapper)\n\n# zarr.print_debug_info()\n```\n\n### Additional output\n\n#### Traceback\n\n`TypeError: Object of type DefaultAzureCredential is not JSON serializable`\n\n##### The traceback ends in\n\n```\nFsspecStore.from_mapper(...)\n_make_async(...)\nfs.to_json()\njson.dumps(...)\n```",
+  "comments": [
+    {
+      "at": "2026-07-30T19:38:50Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "thanks for the report, did this start breaking in the recent 3.3.0 release?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

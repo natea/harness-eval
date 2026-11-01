@@ -1,0 +1,74 @@
+diff --git a/doc/user-guide/io.md b/doc/user-guide/io.md
+index 8519fc32..e3d94472 100644
+--- a/doc/user-guide/io.md
++++ b/doc/user-guide/io.md
+@@ -1352,7 +1352,10 @@ So you can set `fill_value` in `encoding` as usual.
+ 
+ Note that at read-time, you can control whether `_FillValue` is masked using the
+ `mask_and_scale` kwarg; and whether Zarr's `fill_value` is treated as synonymous
+-with `_FillValue` using the `use_zarr_fill_value_as_mask` kwarg to {py:func}`xarray.open_zarr`.
++with `_FillValue` using the `use_zarr_fill_value_as_mask` kwarg to {py:func}`xarray.open_zarr`,
++{py:func}`xarray.open_dataset`, {py:func}`xarray.open_datatree` or {py:func}`xarray.open_groups`
++(where it applies to every group). By default (`None`), Zarr fill values are masked for format 2
++and are not masked for format 3.
+ 
+ (io-kerchunk)=
+ 
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index e65810e0..71359ae5 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -292,10 +292,13 @@ Bug Fixes
+   the reduction nor in the weights array (:issue:`11560`, :pull:`11562`).
+   By `Charles Turner <https://github.com/charles-turner-1>`_.
+ - :py:func:`open_dataset` and :py:func:`open_zarr` no longer ignore
+-  ``use_zarr_fill_value_as_mask``. The option was not passed on to the Zarr
+-  store, so the default for the Zarr format was always used, e.g. the Zarr
+-  ``fill_value`` of a Zarr v3 array was never used as a mask (:issue:`10269`, :pull:`11748`).
+-  By `Vladimir Saraikin <https://github.com/vsaraikin>`_.
++  ``use_zarr_fill_value_as_mask``, and :py:func:`open_datatree` and
++  :py:func:`open_groups` now accept it. The option was not passed on to the
++  Zarr store, so the default for the Zarr format was always used, e.g. the Zarr
++  ``fill_value`` of a Zarr v3 array was never used as a mask (:issue:`10269`,
++  :issue:`11361`, :pull:`11748`, :pull:`11663`).
++  By `Vladimir Saraikin <https://github.com/vsaraikin>`_ and
++  `Anshu Raj Bisoyi <https://github.com/anshurajbisoyi98-ctrl>`_.
+ - :py:meth:`DataArray.interp` and :py:meth:`Dataset.interp` now return the
+   dtype they report for dask arrays. Float32 data could be computed as float64
+   depending on the method and the coordinate dtypes, which also made a later
+diff --git a/xarray/backends/zarr.py b/xarray/backends/zarr.py
+index 0ea753db..9cd67c35 100644
+--- a/xarray/backends/zarr.py
++++ b/xarray/backends/zarr.py
+@@ -1814,6 +1814,7 @@ class ZarrBackendEntrypoint(BackendEntrypoint):
+         consolidated=None,
+         storage_options=None,
+         zarr_format=None,
++        use_zarr_fill_value_as_mask=None,
+     ) -> DataTree:
+         filename_or_obj = _normalize_path(filename_or_obj)
+         groups_dict = self.open_groups_as_dict(
+@@ -1830,6 +1831,7 @@ class ZarrBackendEntrypoint(BackendEntrypoint):
+             consolidated=consolidated,
+             storage_options=storage_options,
+             zarr_format=zarr_format,
++            use_zarr_fill_value_as_mask=use_zarr_fill_value_as_mask,
+         )
+ 
+         return datatree_from_dict_with_io_cleanup(groups_dict)
+@@ -1851,6 +1853,7 @@ class ZarrBackendEntrypoint(BackendEntrypoint):
+         consolidated=None,
+         storage_options=None,
+         zarr_format=None,
++        use_zarr_fill_value_as_mask=None,
+     ) -> dict[str, Dataset]:
+         filename_or_obj = _normalize_path(filename_or_obj)
+ 
+@@ -1868,6 +1871,7 @@ class ZarrBackendEntrypoint(BackendEntrypoint):
+             consolidate_on_close=False,
+             storage_options=storage_options,
+             zarr_format=zarr_format,
++            use_zarr_fill_value_as_mask=use_zarr_fill_value_as_mask,
+         )
+ 
+         groups_dict = {}

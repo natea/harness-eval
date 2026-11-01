@@ -1,0 +1,137 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 7eebddd3..d6e15fb7 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -214,6 +214,10 @@ Bug Fixes
+   The object is now shuffled so that each group is in a single chunk first
+   (:issue:`11651`, :pull:`11653`).
+   By `Michael Niklas <https://github.com/headtr1ck>`_.
++- :py:meth:`DataArray.plot.line` now draws lines sharing a hue value with the
++  same color (and other cycled styles) and deduplicates their legend entries, consistent with
++  :py:meth:`DataArray.plot.scatter` (:issue:`10998`, :pull:`11164`).
++  By `Harikrishna KP <https://github.com/Mr-Neutr0n>`_.
+ - Fix occasional deadlocks when combined locks, e.g. the HDF5 or netCDF-C lock
+   together with a per-file write lock, are used from several threads of a dask
+   worker. The locks are now always acquired in the same order, also after
+diff --git a/xarray/plot/dataarray_plot.py b/xarray/plot/dataarray_plot.py
+index 06edc365..2f855e49 100644
+--- a/xarray/plot/dataarray_plot.py
++++ b/xarray/plot/dataarray_plot.py
+@@ -11,6 +11,7 @@ import pandas as pd
+ from xarray.core.utils import attempt_import
+ from xarray.plot.facetgrid import _easy_facetgrid
+ from xarray.plot.utils import (
++    _CYCLE_PROPS,
+     _LINEWIDTH_RANGE,
+     _MARKERSIZE_RANGE,
+     _add_colorbar,
+@@ -18,6 +19,7 @@ from xarray.plot.utils import (
+     _assert_valid_xy,
+     _determine_guide,
+     _ensure_plottable,
++    _group_hue_values,
+     _guess_coords_to_plot,
+     _infer_interval_breaks,
+     _infer_xy_labels,
+@@ -538,6 +540,22 @@ def line(
+ 
+     primitive = ax.plot(xplt_val, yplt_val, *args, **kwargs)
+ 
++    # ax.plot draws each column of a 2D array with the next style from the
++    # axes' property cycle, so duplicate hue values get distinct styles.
++    # Restyle so lines sharing a hue value share a style: the k-th hue value
++    # (in order of first appearance) takes the style of the k-th line, which
++    # inherits whatever property cycle the axes carries.
++    if hueplt is not None:
++        hue_values = hueplt.to_numpy()
++        hue_codes, hue_first = _group_hue_values(hue_values)
++        if len(hue_first) < len(primitive):
++            styles = [
++                {prop: getattr(line2d, f"get_{prop}")() for prop in _CYCLE_PROPS}
++                for line2d in primitive
++            ]
++            for line2d, code in zip(primitive, hue_codes, strict=True):
++                line2d.set(**styles[code])
++
+     if _labels:
+         if xlabel is not None:
+             ax.set_xlabel(xlabel)
+@@ -549,7 +567,12 @@ def line(
+ 
+     if darray.ndim == 2 and add_legend:
+         assert hueplt is not None
+-        ax.legend(handles=primitive, labels=list(hueplt.to_numpy()), title=hue_label)
++        # One legend entry per hue value, keyed to the first line drawn with it.
++        ax.legend(
++            handles=[primitive[i] for i in hue_first],
++            labels=list(hue_values[hue_first]),
++            title=hue_label,
++        )
+ 
+     if isinstance(xplt.dtype, np.dtype) and np.issubdtype(xplt.dtype, np.datetime64):  # type: ignore[redundant-expr]
+         _set_concise_date(ax, axis="x")
+diff --git a/xarray/plot/facetgrid.py b/xarray/plot/facetgrid.py
+index 0f618177..1ac743c4 100644
+--- a/xarray/plot/facetgrid.py
++++ b/xarray/plot/facetgrid.py
+@@ -16,6 +16,7 @@ from xarray.plot.utils import (
+     _add_legend,
+     _determine_guide,
+     _get_nice_quiver_magnitude,
++    _group_hue_values,
+     _guess_coords_to_plot,
+     _infer_xy_labels,
+     _Normalize,
+@@ -769,9 +770,19 @@ class FacetGrid[T_DataArrayOrSet: Dataset | DataArray]:
+             self.figlegend = _add_legend(**kwargs)
+         else:
+             assert self._hue_var is not None
++            handles: Any = self._mappables[-1]
++            labels = list(self._hue_var.to_numpy())
++            # DataArray.plot.line draws one line per position along the hue
++            # coordinate, so repeated hue values would otherwise appear
++            # multiple times in the legend (GH10998). Keep the first handle
++            # drawn for each hue value, matching the non-faceted line legend.
++            if isinstance(handles, list) and len(handles) == len(labels):
++                _, hue_first = _group_hue_values(self._hue_var.to_numpy())
++                handles = [handles[i] for i in hue_first]
++                labels = [labels[i] for i in hue_first]
+             self.figlegend = self.fig.legend(
+-                handles=self._mappables[-1],
+-                labels=list(self._hue_var.to_numpy()),
++                handles=handles,
++                labels=labels,
+                 title=label if label is not None else label_from_attrs(self._hue_var),
+                 loc=kwargs.pop("loc", "center right"),
+                 **kwargs,
+diff --git a/xarray/plot/utils.py b/xarray/plot/utils.py
+index edda40d1..60cc77b8 100644
+--- a/xarray/plot/utils.py
++++ b/xarray/plot/utils.py
+@@ -2127,3 +2127,26 @@ def _set_concise_date(ax: Axes, axis: Literal["x", "y", "z"] = "x") -> None:
+     _axis = getattr(ax, f"{axis}axis")
+     _axis.set_major_locator(locator)
+     _axis.set_major_formatter(formatter)
++
++
++# Line2D properties that an axes' property cycle commonly varies per line.
++_CYCLE_PROPS = (
++    "color",
++    "linestyle",
++    "linewidth",
++    "marker",
++    "markersize",
++    "markeredgewidth",
++    "alpha",
++)
++
++
++def _group_hue_values(hue_values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
++    """Group hue values in order of first appearance.
++
++    Returns the group code of every position and the position of the first
++    occurrence of every group. Missing values (NaN, NaT, None) form one group.
++    """
++    codes, _ = pd.factorize(hue_values, use_na_sentinel=False)
++    first = np.unique(codes, return_index=True)[1]
++    return codes, first

@@ -1,0 +1,41 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4142
+issues:
+  - 4141
+baseSha: de2cce1adc41a4d38721bf62b25eb312a52066dd
+mergeSha: bbe27d7ce9713d50e34df2cda5108f4dcf410b92
+tStar: 2026-07-13T07:18:45Z
+issueCreatedAt: 2026-07-13T05:00:00Z
+prMergedAt: 2026-07-14T11:39:53Z
+verdict: VALID
+failToPass:
+  - tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[native-scalar-big]
+  - tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[big-scalar-little]
+  - tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[mixed-endian-struct-little]
+  - tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[mixed-endian-struct-big]
+  - tests.test_codecs.test_bytes::test_endian[big-little-struct-local]
+  - tests.test_codecs.test_bytes::test_endian[big-little-struct-memory]
+  - tests.test_codecs.test_bytes::test_endian[little-big-struct-local]
+  - tests.test_codecs.test_bytes::test_endian[little-big-struct-memory]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: f33fe725c53c291cf46a019987afe220bade1f3fdd07f6e084ae126073044a71
+  issue/body+human.md: f33fe725c53c291cf46a019987afe220bade1f3fdd07f6e084ae126073044a71
+  issue/body.md: f33fe725c53c291cf46a019987afe220bade1f3fdd07f6e084ae126073044a71
+  leaks.json: 278d4d3ee582ea36d049eecf922cca48574dff955fdb9a2b6fc6bfce572aec0d
+  reference.patch: 4e41fcc15e021e807a3264f6818429aa93fd77f84cd1745a1e24bb1a38a8cc86
+  snapshot.json: c3b3d192e17754a62fcd54ad32be1d4f54fd46bd94af49d162161e1b4c3f786c
+  tests.patch: 6926149f038c6aaa8a998d211ecf174ac4664397bb5db055addefc98a056d213
+  validation.json: ea26075bfc199d193bc8afad4c5775640fca3427d7bc1be82a2c6403969525a2

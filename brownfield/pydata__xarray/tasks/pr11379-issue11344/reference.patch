@@ -1,0 +1,30 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 38fe1478..f51905d7 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -48,6 +48,11 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Fix ``TypeError`` on import when ``importlib.metadata.version`` returns ``None``
++  for an installed package, e.g. with some editable installs or custom import hooks
++  in QGIS. Such packages are now treated as not meeting a minimum version
++  (:issue:`11344`, :pull:`11379`).
++  By `Jay <https://github.com/jaythehardcoder>`_.
+ - Fix reading JSON-native Zarr fill values from non-xarray Zarr writers
+   (:issue:`11332`, :pull:`11665`).
+   By `Om Satpute <https://github.com/omsatpute61-afk>`_.
+diff --git a/xarray/namedarray/utils.py b/xarray/namedarray/utils.py
+index 2c36f4ec..e199b5b8 100644
+--- a/xarray/namedarray/utils.py
++++ b/xarray/namedarray/utils.py
+@@ -56,6 +56,9 @@ def module_available(module: str, minversion: str | None = None) -> bool:
+     if minversion is not None:
+         version = importlib.metadata.version(module)
+ 
++        if version is None:
++            return False
++
+         return Version(version) >= Version(minversion)
+ 
+     return True

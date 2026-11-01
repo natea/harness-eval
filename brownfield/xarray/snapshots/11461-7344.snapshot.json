@@ -1,0 +1,133 @@
+{
+  "pr": 11461,
+  "issue": 7344,
+  "tStar": "2026-07-20T09:03:59Z",
+  "title": "Disable bottleneck by default?",
+  "issueAuthor": "dcherian",
+  "body": "### What is your issue?\n\nOur choice to enable bottleneck by default results in quite a few issues about numerical stability and funny dtype behaviour: #7336, #7128, #2370, #1346 (and probably more)\r\n\r\nShall we disable it by default?\r\n\r\n",
+  "comments": [
+    {
+      "at": "2022-12-01T19:24:24Z",
+      "author": "TomNicholas",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "I kinda think correctness by default is more important than performance, especially if the default performance isn't prohibitively slow. ",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2022-12-01T22:22:02Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "I'd be fine with disabling, since bottleneck doesn't seem to be actively maintained.\r\n\r\nThough I would say it's numerically unstable rather than incorrect! I would always want it enabled, but it does make sense to default to the conservative option.\r\n\r\nI had dreams of making numbagg into a better bottleneck — it's just as fast, much more flexible, and integrates really well with xarray. But those dreams have not come to pass (yet!).",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2022-12-04T01:55:34Z",
+      "author": "shoyer",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "The case where Bottleneck really makes a difference was for moving window statistics, where it uses a smarter algorithm than our current NumPy implementation, which creating a moving window view.\r\n\r\nOtherwise, I agree, it probably isn't worth the trouble.\r\n\r\nThat said -- we could also switch to smarter NumPy based algorithms to implement most moving window calculations, e.g,. using `np.nancumsum` for moving window means.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2022-12-14T13:54:06Z",
+      "author": "markelg",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "I fully agree that correctness is the priority. Note however that some functions now require bottleneck, like ffill and bfill (I am not sure if there are more cases). They may need to be modified so they can run without bottleneck.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2022-12-14T18:24:04Z",
+      "author": "shoyer",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "I think it's OK to still require bottleneck for `ffill` and `bfill`:\r\n\r\n1. There are no numerical concerns: these functions simply repeat numbers forward (or backwards).\r\n2. There is no good alternative to using a loop, and writing the loop in NumPy would be probitively slow.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2023-03-10T20:31:28Z",
+      "author": "headtr1ck",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "Maybe it is just a problem of documenting it more clearly?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2023-05-24T23:12:48Z",
+      "author": "riley-brady",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I want to add a +1 to disable it by default. It's pretty common to be using `float32` precision arrays. I have a rolling mean operation early on in some code and the errors balloon over time in subsequent processes. This was a super obscure bug to track down as well.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-03-26T20:54:58Z",
+      "author": "bqi343",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "> Though I would say it's numerically unstable rather than incorrect! I would always want it enabled, but it does make sense to default to the conservative option.\r\n\r\nI recently stumbled across a case where bottleneck gives a completely incorrect answer or segfaults when taking the max of a small array (similar to: https://github.com/pydata/bottleneck/issues/381 - a fix was proposed but never merged).\r\n\r\n> I think it's OK to still require bottleneck for ffill and bfill:\r\n\r\nAs of #8389 `bottleneck` is no longer used for `ffill` and `bfill` by default. Given the issues w/ precision and correctness, is there any remaining reason to **not** disable it by default? If any remaining functions require bottleneck, it would make sense to enable bottleneck by default for those functions only.",
+      "source": "edit@2024-03-26T21:01:32Z",
+      "editedAfter": 0,
+      "flags": [
+        "mentions #N",
+        "fix language"
+      ]
+    },
+    {
+      "at": "2024-03-26T22:25:32Z",
+      "author": "shoyer",
+      "isBot": false,
+      "assoc": "MEMBER",
+      "text": "I would support disabling bottleneck by default for now, and eventually permanently removing support for bottleneck. Numbagg seems to be a more than capable and much more maintainable replacement.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-03-26T22:26:51Z",
+      "author": "max-sixty",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "As an update — numbagg is in a pretty good place now, and xarray defaults to using numbagg over bottleneck for overlapping functions when both are installed.\r\n\r\n(I didn't finish my fuzzing work in numbagg, so I'm not as confident as I'd hope to be, but also no one has reported anything for a long time, so the \"fuzzing from the world\" has been successful...)\r\n\r\nNumbagg doesn't do all of bottlenecks functions — there are functions that aren't practical to write with numba, since they require specialized data structures, such as moving max.\r\n\r\n...though I'm not sure if that updates us towards or away from disabling it by default — the substitute is better than it used to be, but also the substitute overrides many of its functions by default when installed...\r\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2024-03-27T00:22:25Z",
+      "author": "bqi343",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "> ...though I'm not sure if that updates us towards or away from disabling it by default — the substitute is better than it used to be, but also the substitute overrides many of its functions by default when installed...\r\n\r\nIf I don't have numbagg installed but happen to have `bottleneck` installed, I would prefer for the default behavior to be using `np.nanmax` instead of the incorrect `bottleneck.nanmax` from the issue I linked above.",
+      "source": "edit@2024-03-27T00:22:41Z",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2025-03-26T10:37:44Z",
+      "author": "smith33341",
+      "isBot": false,
+      "assoc": "NONE",
+      "text": "I agree that correctness should be the priority, and if Bottleneck is causing numerical instability, disabling it by default seems like a logical step. While performance optimizations are valuable, they shouldn’t come at the cost of accuracy—especially when errors from floating-point precision issues can propagate and become difficult to debug.\n\nIt’s also great to see alternatives like Numbagg being explored as a potential replacement. If it provides a more stable and maintainable solution while still offering good performance, then gradually transitioning away from Bottleneck makes sense.\n\nOn a related note, if performance bottlenecks are a concern, using a [bottleneck calculator](https://pcbottleneckcalculator.org/) can help identify where slowdowns are happening and guide optimizations. It might be worth considering in the context of numerical performance trade-offs.\n\n\n\n\n\n\n\n",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

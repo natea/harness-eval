@@ -1,0 +1,81 @@
+# Unexpected behavior: PQA_HOME is ignored if set after importing Settings
+
+_Opened by @lingyaochu_
+
+The default data storage path is `Path.home()`, but I'm trying to set it to the working directory. According to the paper-qa documentation, this can be done by setting the `PQA_HOME` environment variable. Here's my initial attempt:
+```python
+from paperqa import Settings
+import os 
+from pathlib import Path
+
+# set PQA_HOME to current path, which is WindowsPath('D:/test/paper-qa-test')
+# the default home directory is WindowsPath('C:/Users/xin')
+os.environ["PQA_HOME"] = Path.cwd().as_posix()
+
+setting = Settings(
+    paper_directory = "papers"
+)
+
+print(setting.index_directory)
+```
+The expected output was `WindowsPath('D:/test/paper-qa-test/.pqa/indexes')`, but the actual output was `WindowsPath('C:/Users/xin/.pqa/indexes')`. It appears that setting `PQA_HOME` in this way isn't working.
+
+Digging into the source code, the handling of `PQA_HOME` seems to originate from two main locations:
+
+In `paperqa/settings.py`
+```python
+class Settings(BaseSettings):
+    ...
+
+    index_directory: str | os.PathLike | None = Field(
+        default=pqa_directory("indexes"),
+        description=(
+            "Directory to store the PQA generated search index, configuration, and"
+            " answer indexes."
+        ),
+        exclude=True,
+        frozen=True,
+    )
+
+    ...
+```
+
+and `pqa_directory()` is defined in `paperqa/utils.py` as:
+```python
+def pqa_directory(name: str) -> Path:
+    if pqa_home := os.environ.get("PQA_HOME"):
+        directory = Path(pqa_home) / ".pqa" / name
+    else:
+        directory = Path.home() / ".pqa" / name
+
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+```
+
+The `index_directory` in `Settings` is set with `frozen=True`, implying it's immutable once set. However, when a module is imported, the code within it is executed, and `index_directory` is set at that time. Therefore, it seems the `PQA_HOME` environment variable needs to be set **before** importing the `Settings` module. I modified the test code as follows:
+```python
+import os 
+from pathlib import Path
+# set PQA_HOME to current path, which is WindowsPath('D:/test/paper-qa-test')
+# the default home directory is WindowsPath('C:/Users/xin')
+os.environ["PQA_HOME"] = Path.cwd().as_posix()
+
+from paperqa import Settings
+
+setting = Settings(
+    paper_directory = "papers"
+)
+
+print(setting.index_directory)
+```
+This time, the desired output `WindowsPath('D:/test/paper-qa-test/.pqa/indexes')` was achieved.
+
+While reordering the code to set the environment variable before importing `Settings` resolves the immediate problem, it's worth considering that this might not align with typical Python user expectations. Developers often import modules at the beginning of their scripts, and requiring a specific environment variable to be set prior to the import could be easily overlooked, leading to unexpected behavior.
+
+---
+
+## Discussion
+
+**@lingyaochu** (2025-02-28):
+
+This may not be a critical bug, but I recommend adding some instructions to the documentation to improve clarity and usability for users.

@@ -1,0 +1,31 @@
+# perf improvement for interp: set `assume_sorted` automatically
+
+_Opened by @dcherian_
+
+### What is your issue?
+
+`assume_sorted` is False, so for vectorized interpolation across multiple dimensions, we end up lexsorting the coordinates all the time.  For some reason, this can be quite slow with dask.
+
+https://github.com/pydata/xarray/blob/6df8bd606a8a9a3378c7672c087e08ced00b2e15/xarray/core/dataset.py#L4081
+
+Instead we should be able to do
+```python
+obj = self
+# sort by slicing if we can
+for coord in set(indexers) and set(self._indexes):
+    # TODO: better check for PandasIndex
+    if self.indexes[coord].is_monotonic_decreasing:
+        obj = obj.isel(coord: slice(None, None, -1))
+
+# TODO: make None the new default
+if assume_sorted is None:
+    # TODO: dims without coordinates are fine too
+    assume_sorted = all(self.indexes[coord].is_monotonic_increasing for coord in indexers)
+```
+
+I'll add a reproducible example later, but the problem I've been playing gets much faster for graph construction:
+<img width="642" alt="image" src="https://github.com/user-attachments/assets/4badec3c-4672-4c08-bea9-ec3c507eaac6">
+
+xref #6799 
+
+cc @mpiannucci @Illviljan

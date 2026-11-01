@@ -1,0 +1,40 @@
+{
+  "pr": 11748,
+  "merged": "2026-10-17",
+  "issues": [
+    {
+      "n": 10269,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/backends/zarr.py"
+  ],
+  "testFiles": [
+    "xarray/tests/backends/test_zarr.py"
+  ],
+  "env": "exclude-newer 2026-10-16T11:43:02Z",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/backends/test_zarr.py"
+  ],
+  "counts": {
+    "f2p": 4,
+    "p2p": 1537,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.backends.test_zarr.TestZarrDictStore::test_use_zarr_fill_value_as_mask[3-True-expected0]",
+    "xarray.tests.backends.test_zarr.TestZarrNoConsolidatedMetadataSupport::test_use_zarr_fill_value_as_mask[3-True-expected0]",
+    "xarray.tests.backends.test_zarr.TestZarrDirectoryStore::test_use_zarr_fill_value_as_mask[3-True-expected0]",
+    "xarray.tests.backends.test_zarr.TestZarrWriteEmpty::test_use_zarr_fill_value_as_mask[3-True-expected0]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

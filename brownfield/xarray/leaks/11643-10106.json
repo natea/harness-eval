@@ -1,0 +1,33 @@
+{
+  "pr": 11643,
+  "issue": 10106,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0140786,
+  "prAuthor": "nightcityblade",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataset.py"
+      ],
+      "evidence": "ds.close()  # does nothing since ds._close is currently None\nds2.close()  # does nothing",
+      "rationale": "Identifies that copy doesn't carry over the _close callback, so the copy can't close the reopened file. Points to Dataset.copy mechanism, though doesn't explicitly propose the fix.",
+      "author": "Huite",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Only announces intent to work on it; no technical content.",
+      "author": "nightcityblade",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

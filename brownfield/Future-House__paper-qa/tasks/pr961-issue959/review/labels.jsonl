@@ -1,0 +1,1 @@
+{"reviewer":"Justin","at":"2026-11-01T04:51:26.828Z","items":[{"id":"body","label":"symptom"},{"id":"c1","label":"symptom"}],"fairness":{"verdict":"unsure","note":"uncertain; the cases likely cover the root cause of the described behavior, but honesty/quality/fairness hinge on the test author's ability to diagnose said cause; issue thread contains no diagnosis"}}

@@ -1,0 +1,38 @@
+{
+  "pr": 11476,
+  "merged": "2026-08-19",
+  "issues": [
+    {
+      "n": 11452,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/plot/utils.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_plot.py"
+  ],
+  "env": "exclude-newer 2026-08-19T14:46:44-06:00",
+  "envSecs": 4,
+  "selected": [
+    "xarray/tests/test_plot.py::TestPlot::test1d",
+    "xarray/tests/test_plot.py::TestPlot::test_label_from_attrs"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_plot.TestPlot::test_label_from_attrs"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

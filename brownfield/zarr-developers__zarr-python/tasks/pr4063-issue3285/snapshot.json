@@ -1,0 +1,57 @@
+{
+  "pr": 4063,
+  "issue": 3285,
+  "tStar": "2026-06-15T05:51:21Z",
+  "title": "unified runtime type checking for our json data",
+  "issueAuthor": "d-v-b",
+  "body": "Reading array metadata documents means consuming JSON-formatted data and type-checking them. We are doing this in a clunky way right now: for each field `f`, we essentially have a `parse_f` function that checks if the input data is compatible with `f`. \n\nA big improvement would be unifying the `parse_x` functions into something with the following form:\n\n```python\ndef check_literal(value, type_annotation) -> type_annotation:\n    if value in get_args(type_annotation):\n        return value\n    raise UsefulException\n\ndef parse_union(value, type_annotation) -> type_annotation:\n    # check if the value is in the union type, return it if so\n\ndef parse_tuple(value, type_annotation) -> type_annotation:\n    # check if the value is consistent with the tuple type annotation, return the input as a tuple if so\n\n...\n\nparse_json(value, type_annotation) -> type_annotation:\n    # categorize the type annotation into Mapping, tuple, Sequence, union, literal, and call out to the relevant \n    # parsing routine\n    # return data \n```\n\ni.e., functions that take a value and a type annotation, and return data assignable to that type annotation or raise a useful exception. In my thinking these are not strict type checks, because these functions are allowed to transform the input, e.g. `parse_tuple([1,2,3], tuple[int, int, int])` would return `(1,2,3)`.\n\nThis would remove a _lot_ of redundant code. We would keep the scope narrow by only concerning ourselves with the types relevant for creating array metadata documents, namely:\n\n- primitive types None, str, int, float, bool\n- Sequences (they should come out as tuples)\n- unions\n- TypedDict (essential for handling JSON form of dtypes, codecs, chunk grids, and metadata itself)\n- Mapping[str, T], where T is any of the other types in this list\n\nI have have had LLMs whip up implementations of this on like 3 separate occasions, and each time it wasn't more than a few hundred LOC, so I think this would not be a huge maintenance burden. ",
+  "comments": [
+    {
+      "at": "2025-07-27T15:39:59Z",
+      "author": "shubham2Nayak",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "other user",
+      "text": "hey there\ncan i start doing this?\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-08-23T13:35:57Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "an update on this: I have been working on an implementation of a runtime type checker that basically works for zarr, in the sense that, for some JSON-like type `type`, the function `check_type(obj, type)` will check if `obj` is assignable to `type`. The code is pretty hideous because python type annotations were not really designed for runtime use, and it shows.\n\nSo that's one feasible solution -- a function that introspects a type, breaks the type and the value into parts as needed, and aggregates the type checking results of those sub-types and sub-values. \n\nAn advantage of this approach is flexibility -- we can support user-defined types very easily. The disadvantage is runtime cost and ultimately inefficiency -- given a type like ` Movie = TypedDict('Movie', {'name': str, 'year': int})`, each time we call `check_type(obj, Movie)`, we spend cycles introspecting the `Movie` type. \n\nAn alternative is to use code that takes a type `T` and _generates the source code for a type-checking function for T_. Then we could insert these functions in our source code like any other function.\n\nTo keep our codebase fully human-written, I am imagining introducing the auto-generated type checking functions in our test suite. A test will check if, for each type we want to check (like all the metadata types), there is a function with source code matching exactly the result of the auto-generated type checker  for that type. if not, the test fails, and the developer is prompted to generate that missing function. because this code generation is part of our test suite, it's easy to modify by simply telling pytest not to check certain types, for example.\n\nThis might be a totally weird idea that i'm not explaining properly. please let me know if this is confusing, or if there's some flaw here. I'm going to keep going with the runtime type checking function and open a PR soon, but I will have this code generation idea in the back of my mind as an alternative if we ever start to experience performance problems.\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2026-06-09T05:53:22Z",
+      "author": "vup903",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "future fixer (author of the reference PR)",
+      "text": "Hi @d-v-b , I'd like to take this on if it's still open.\n\nI'm a CS master's student at Georgia Tech with a strong interest in Python data\ninfrastructure. I went through the contributing guide and traced how the\nmetadata layer validates JSON today — the per-field `parse_*` helpers are\nscattered and duplicate a fair amount of logic, which is what this issue is\ncalling out.\n\nMy plan: consolidate them into a single `parse_json(value, type_annotation)`\nentry point that validates a value against its expected type annotation, then\nmigrate the existing call sites over. Before I dig in — is this still up for\ngrabs, or is it already being handled as part of your recent work on the\nmetadata/types layer? And do you have a preference for where the unified parser\nshould live?\n\nThanks!\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2026-06-09T06:03:50Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "issue author",
+      "text": "hi @vup903 I think the biggest win for us would de-duplication. So if you're willing to open a draft PR that shows the direction you want to go, I think that would be a great start!",
+      "source": "no-edits"
+    },
+    {
+      "at": "2026-06-09T06:39:30Z",
+      "author": "vup903",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "future fixer (author of the reference PR)",
+      "text": "Thanks @d-v-b, that's really helpful. I'll put together a draft PR that consolidates the scattered `parse_*`\nhelpers into a single shared path, and tag you for early feedback on the direction before polishing.\n",
+      "source": "no-edits"
+    }
+  ],
+  "selfCheckFailures": [],
+  "imagesFailed": []
+}

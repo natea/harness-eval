@@ -1,0 +1,90 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+new file mode 100644
+index 0000000..85c9a13
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@ -0,0 +1,59 @@
++# Contributing to PaperQA
++
++Thank you for your interest in contributing to PaperQA!
++Here are some guidelines to help you get started.
++
++## Setting up the development environment
++
++We use [`uv`](https://github.com/astral-sh/uv) for our local development.
++
++1. Install `uv` by following the instructions on the [uv website](https://astral.sh/uv/).
++2. Run the following command to install all dependencies and set up the development environment:
++
++   ```bash
++   uv sync
++   ```
++
++## Installing the package for development
++
++If you prefer to use `pip` for installing the package in development mode, you can do so by running:
++
++```bash
++pip install -e .
++```
++
++## Running tests and other tooling
++
++Use the following commands:
++
++- Run tests (requires an OpenAI key in your environment)
++
++  ```bash
++  pytest
++  # or for multiprocessing based parallelism
++  pytest -n auto
++  ```
++
++- Run `pre-commit` for formatting and type checking
++
++  ```bash
++  pre-commit run --all-files
++  ```
++
++- Run `mypy`, `refurb`, or `pylint` directly:
++
++  ```bash
++  mypy paperqa
++  # or
++  refurb paperqa
++  # or
++  pylint paperqa
++  ```
++
++See our GitHub Actions [`tests.yml`](.github/workflows/tests.yml) for further reference.
++
++## Additional resources
++
++For more information on contributing, please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file in the repository.
++
++Happy coding!
+diff --git a/README.md b/README.md
+index 56a2f01..5b7978b 100644
+--- a/README.md
++++ b/README.md
+@@ -54,14 +54,18 @@ PaperQA2 depends on some awesome libraries/APIs that make our repo possible. Her
+ 7. [pybtex](https://pybtex.org/)
+ 8. [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/)
+ 
+-## Install
++## Installation
+ 
+-You can install PaperQA2 via pip:
++For a non-development setup,
++install PaperQA2 from [PyPI](https://pypi.org/project/paper-qa/):
+ 
+ ```bash
+ pip install paper-qa
+ ```
+ 
++For development setup,
++please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file.
++
+ PaperQA2 uses an LLM to operate,
+ so you'll need to either set an appropriate [API key environment variable][LiteLLM providers] (i.e. `export OPENAI_API_KEY=sk-...`)
+ or set up an open source LLM server (i.e. using [llamafile](https://github.com/Mozilla-Ocho/llamafile).

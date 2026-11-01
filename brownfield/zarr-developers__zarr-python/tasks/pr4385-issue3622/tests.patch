@@ -1,0 +1,631 @@
+diff --git a/tests/test_dtype/test_common.py b/tests/test_dtype/test_common.py
+new file mode 100644
+index 00000000..8679d734
+--- /dev/null
++++ b/tests/test_dtype/test_common.py
+@@ -0,0 +1,25 @@
++from __future__ import annotations
++
++import pytest
++
++from zarr.dtype import check_dtype_spec_no_object_codec_v2
++
++
++@pytest.mark.parametrize(
++    ("data", "expected"),
++    [
++        ({"name": "|u1", "object_codec_id": None}, True),
++        ({"name": [["a", "<f8"]], "object_codec_id": None}, True),
++        # an object codec
++        ({"name": "|O", "object_codec_id": "vlen-utf8"}, False),
++        ({"name": "|u1", "object_codec_id": "vlen-utf8"}, False),
++        # not a Zarr V2 data type
++        ({"name": "|u1"}, False),
++        ({"name": "|u1", "object_codec_id": None, "extra": 1}, False),
++        ({"name": 1, "object_codec_id": None}, False),
++        ("|u1", False),
++    ],
++    ids=str,
++)
++def test_check_dtype_spec_no_object_codec_v2(data: object, expected: bool) -> None:
++    assert check_dtype_spec_no_object_codec_v2(data) is expected
+diff --git a/tests/test_dtype/test_npy/test_bool.py b/tests/test_dtype/test_npy/test_bool.py
+index da30214b..bdc010c7 100644
+--- a/tests/test_dtype/test_npy/test_bool.py
++++ b/tests/test_dtype/test_npy/test_bool.py
+@@ -18,9 +18,9 @@ class TestBool(BaseTestZDType):
+     valid_json_v2 = ({"name": "|b1", "object_codec_id": None},)
+     valid_json_v3 = ("bool",)
+     invalid_json_v2 = (
+-        "|b1",
+-        "bool",
+-        "|f8",
++        {"name": "|b1", "object_codec_id": "vlen-utf8"},
++        {"name": "bool", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
+     )
+     invalid_json_v3 = (
+         "|b1",
+diff --git a/tests/test_dtype/test_npy/test_bytes.py b/tests/test_dtype/test_npy/test_bytes.py
+index 6a4bcc46..2d384d82 100644
+--- a/tests/test_dtype/test_npy/test_bytes.py
++++ b/tests/test_dtype/test_npy/test_bytes.py
+@@ -21,9 +21,9 @@ class TestNullTerminatedBytes(BaseTestZDType):
+     )
+     valid_json_v3 = ({"name": "null_terminated_bytes", "configuration": {"length_bytes": 10}},)
+     invalid_json_v2 = (
+-        "|S",
+-        "|U10",
+-        "|f8",
++        {"name": "|S", "object_codec_id": None},
++        {"name": "|U10", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
+         {"name": "|S4", "object_codec_id": "vlen-bytes"},
+     )
+     invalid_json_v3 = (
+@@ -69,9 +69,9 @@ class TestRawBytes(BaseTestZDType):
+     )
+ 
+     invalid_json_v2 = (
+-        "|V",
+-        "|S10",
+-        "|f8",
++        {"name": "|V", "object_codec_id": None},
++        {"name": "|S10", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
+     )
+     invalid_json_v3 = (
+         {"name": "r10"},
+@@ -112,9 +112,10 @@ class TestVariableLengthBytes(BaseTestZDType):
+     valid_json_v2 = ({"name": "|O", "object_codec_id": "vlen-bytes"},)
+     valid_json_v3 = ("variable_length_bytes",)
+     invalid_json_v2 = (
+-        "|S",
+-        "|U10",
+-        "|f8",
++        {"name": "|S", "object_codec_id": None},
++        {"name": "|U10", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "|O", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         {"name": "fixed_length_ascii", "configuration": {"length_bits": 0}},
+diff --git a/tests/test_dtype/test_npy/test_complex.py b/tests/test_dtype/test_npy/test_complex.py
+index b4ce42be..afaa8ff3 100644
+--- a/tests/test_dtype/test_npy/test_complex.py
++++ b/tests/test_dtype/test_npy/test_complex.py
+@@ -29,9 +29,10 @@ class TestComplex64(_BaseTestFloat):
+     )
+     valid_json_v3 = ("complex64",)
+     invalid_json_v2 = (
+-        "|c8",
+-        "complex64",
+-        "|f8",
++        {"name": "|c8", "object_codec_id": None},
++        {"name": "complex64", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<c8", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|c8",
+@@ -72,9 +73,10 @@ class TestComplex128(_BaseTestFloat):
+     )
+     valid_json_v3 = ("complex128",)
+     invalid_json_v2 = (
+-        "|c16",
+-        "complex128",
+-        "|f8",
++        {"name": "|c16", "object_codec_id": None},
++        {"name": "complex128", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<c16", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|c16",
+diff --git a/tests/test_dtype/test_npy/test_float.py b/tests/test_dtype/test_npy/test_float.py
+index 8d8e7682..c8418f92 100644
+--- a/tests/test_dtype/test_npy/test_float.py
++++ b/tests/test_dtype/test_npy/test_float.py
+@@ -38,9 +38,10 @@ class TestFloat16(_BaseTestFloat):
+     )
+     valid_json_v3 = ("float16",)
+     invalid_json_v2 = (
+-        "|f2",
+-        "float16",
+-        "|i1",
++        {"name": "|f2", "object_codec_id": None},
++        {"name": "float16", "object_codec_id": None},
++        {"name": "|i1", "object_codec_id": None},
++        {"name": "<f2", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|f2",
+@@ -88,9 +89,10 @@ class TestFloat32(_BaseTestFloat):
+     )
+     valid_json_v3 = ("float32",)
+     invalid_json_v2 = (
+-        "|f4",
+-        "float32",
+-        "|i1",
++        {"name": "|f4", "object_codec_id": None},
++        {"name": "float32", "object_codec_id": None},
++        {"name": "|i1", "object_codec_id": None},
++        {"name": "<f4", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|f4",
+@@ -138,9 +140,10 @@ class TestFloat64(_BaseTestFloat):
+     )
+     valid_json_v3 = ("float64",)
+     invalid_json_v2 = (
+-        "|f8",
+-        "float64",
+-        "|i1",
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "float64", "object_codec_id": None},
++        {"name": "|i1", "object_codec_id": None},
++        {"name": "<f8", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|f8",
+diff --git a/tests/test_dtype/test_npy/test_int.py b/tests/test_dtype/test_npy/test_int.py
+index bbe25667..f25fa1a5 100644
+--- a/tests/test_dtype/test_npy/test_int.py
++++ b/tests/test_dtype/test_npy/test_int.py
+@@ -1,12 +1,9 @@
+ from __future__ import annotations
+ 
+ import numpy as np
+-import pytest
+ 
+ from tests.test_dtype.test_wrapper import BaseTestZDType
+-from zarr.core.dtype import get_data_type_from_json
+ from zarr.core.dtype.npy.int import Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64
+-from zarr.errors import DataTypeValidationError
+ 
+ 
+ class TestInt8(BaseTestZDType):
+@@ -21,9 +18,10 @@ class TestInt8(BaseTestZDType):
+     valid_json_v2 = ({"name": "|i1", "object_codec_id": None},)
+     valid_json_v3 = ("int8",)
+     invalid_json_v2 = (
+-        ">i1",
+-        "int8",
+-        "|f8",
++        {"name": "|u1", "object_codec_id": None},
++        {"name": "int8", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "|i1", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|i1",
+@@ -56,9 +54,10 @@ class TestInt16(BaseTestZDType):
+     )
+     valid_json_v3 = ("int16",)
+     invalid_json_v2 = (
+-        "|i2",
+-        "int16",
+-        "|f8",
++        {"name": "|i2", "object_codec_id": None},
++        {"name": "int16", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<i2", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|i2",
+@@ -94,9 +93,10 @@ class TestInt32(BaseTestZDType):
+     )
+     valid_json_v3 = ("int32",)
+     invalid_json_v2 = (
+-        "|i4",
+-        "int32",
+-        "|f8",
++        {"name": "|i4", "object_codec_id": None},
++        {"name": "int32", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<i4", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|i4",
+@@ -129,9 +129,10 @@ class TestInt64(BaseTestZDType):
+     )
+     valid_json_v3 = ("int64",)
+     invalid_json_v2 = (
+-        "|i8",
+-        "int64",
+-        "|f8",
++        {"name": "|i8", "object_codec_id": None},
++        {"name": "int64", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<i8", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|i8",
+@@ -161,9 +162,10 @@ class TestUInt8(BaseTestZDType):
+     valid_json_v2 = ({"name": "|u1", "object_codec_id": None},)
+     valid_json_v3 = ("uint8",)
+     invalid_json_v2 = (
+-        "|u1",
+-        "uint8",
+-        "|f8",
++        {"name": "|i1", "object_codec_id": None},
++        {"name": "uint8", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "|u1", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|u1",
+@@ -196,9 +198,10 @@ class TestUInt16(BaseTestZDType):
+     )
+     valid_json_v3 = ("uint16",)
+     invalid_json_v2 = (
+-        "|u2",
+-        "uint16",
+-        "|f8",
++        {"name": "|u2", "object_codec_id": None},
++        {"name": "uint16", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<u2", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|u2",
+@@ -240,9 +243,10 @@ class TestUInt32(BaseTestZDType):
+     )
+     valid_json_v3 = ("uint32",)
+     invalid_json_v2 = (
+-        "|u4",
+-        "uint32",
+-        "|f8",
++        {"name": "|u4", "object_codec_id": None},
++        {"name": "uint32", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<u4", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|u4",
+@@ -275,9 +279,10 @@ class TestUInt64(BaseTestZDType):
+     )
+     valid_json_v3 = ("uint64",)
+     invalid_json_v2 = (
+-        "|u8",
+-        "uint64",
+-        "|f8",
++        {"name": "|u8", "object_codec_id": None},
++        {"name": "uint64", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<u8", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         "|u8",
+@@ -332,30 +337,3 @@ def test_string_integer_from_json_scalar() -> None:
+     # Test that it works for v2 format too
+     result = dtype_instance.from_json_scalar("123", zarr_format=2)
+     assert result == np.int32(123)
+-
+-
+-@pytest.mark.parametrize("name", ["|u1", "<u1", ">u1"])
+-def test_uint8_v2_aliases(name: str) -> None:
+-    data = {"name": name, "object_codec_id": None}
+-    dtype = UInt8.from_json(data, zarr_format=2)
+-    assert dtype == UInt8()
+-    assert get_data_type_from_json(data, zarr_format=2) == dtype
+-    assert dtype.to_native_dtype() == np.dtype("uint8")
+-    serialized = dtype.to_json(zarr_format=2)
+-    assert serialized["name"] == "|u1"
+-    assert serialized["object_codec_id"] is None
+-    assert dtype.to_json(zarr_format=3) == "uint8"
+-    with pytest.raises(DataTypeValidationError):
+-        UInt8.from_json(name, zarr_format=3)
+-
+-
+-@pytest.mark.parametrize("name", ["|u1", "<u1", ">u1"])
+-def test_uint8_v2_aliases_reject_object_codec(name: str) -> None:
+-    with pytest.raises(DataTypeValidationError):
+-        UInt8.from_json({"name": name, "object_codec_id": "vlen-utf8"}, zarr_format=2)
+-
+-
+-@pytest.mark.parametrize("name", ["|i1", "<u2", ">u2", "uint8", "invalid"])
+-def test_uint8_v2_rejects_other_types(name: str) -> None:
+-    with pytest.raises(DataTypeValidationError):
+-        UInt8.from_json({"name": name, "object_codec_id": None}, zarr_format=2)
+diff --git a/tests/test_dtype/test_npy/test_string.py b/tests/test_dtype/test_npy/test_string.py
+index c3b292e5..49a3d894 100644
+--- a/tests/test_dtype/test_npy/test_string.py
++++ b/tests/test_dtype/test_npy/test_string.py
+@@ -19,9 +19,10 @@ class TestVariableLengthString(BaseTestZDType):
+     valid_json_v2 = ({"name": "|O", "object_codec_id": "vlen-utf8"},)
+     valid_json_v3 = ("string",)
+     invalid_json_v2 = (
+-        "|S10",
+-        "|f8",
+-        "invalid",
++        {"name": "|S10", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "invalid", "object_codec_id": None},
++        {"name": "|O", "object_codec_id": "vlen-bytes"},
+     )
+     invalid_json_v3 = (
+         {"name": "variable_length_utf8", "configuration": {"invalid_key": "value"}},
+@@ -57,9 +58,10 @@ class TestFixedLengthUTF32(BaseTestZDType):
+     )
+     valid_json_v3 = ({"name": "fixed_length_utf32", "configuration": {"length_bytes": 320}},)
+     invalid_json_v2 = (
+-        "|U",
+-        "|S10",
+-        "|f8",
++        {"name": "|U", "object_codec_id": None},
++        {"name": "|S10", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "<U10", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         {"name": "fixed_length_utf32", "configuration": {"length_bits": 0}},
+diff --git a/tests/test_dtype/test_npy/test_structured.py b/tests/test_dtype/test_npy/test_structured.py
+index 554c3b4e..553b5183 100644
+--- a/tests/test_dtype/test_npy/test_structured.py
++++ b/tests/test_dtype/test_npy/test_structured.py
+@@ -67,8 +67,9 @@ class TestStruct(BaseTestZDType):
+         },
+     )
+     invalid_json_v2 = (
+-        [("field1", "|i1"), ("field2", "|f8")],
+-        [("field1", "|S10"), ("field2", "|f8")],
++        {"name": "|f8", "object_codec_id": None},
++        {"name": [["field1", "|i9"], ["field2", "<f8"]], "object_codec_id": None},
++        {"name": [["field1", "|i1"], ["field2", "<f8"]], "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         {
+diff --git a/tests/test_dtype/test_npy/test_time.py b/tests/test_dtype/test_npy/test_time.py
+index 67ba3bd1..34fca2f7 100644
+--- a/tests/test_dtype/test_npy/test_time.py
++++ b/tests/test_dtype/test_npy/test_time.py
+@@ -45,9 +45,11 @@ class TestDateTime64(_TestTimeBase):
+         {"name": "numpy.datetime64", "configuration": {"unit": "us", "scale_factor": 1}},
+     )
+     invalid_json_v2 = (
+-        "datetime64",
+-        "|f8",
+-        "timedelta64[ns]",
++        {"name": "datetime64", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "timedelta64[ns]", "object_codec_id": None},
++        {"name": "<m8[ns]", "object_codec_id": None},
++        {"name": "<M8[ns]", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         {"name": "datetime64", "configuration": {"unit": "invalid"}},
+@@ -95,9 +97,11 @@ class TestTimeDelta64(_TestTimeBase):
+         {"name": "numpy.timedelta64", "configuration": {"unit": "us", "scale_factor": 1}},
+     )
+     invalid_json_v2 = (
+-        "timedelta64",
+-        "|f8",
+-        "datetime64[ns]",
++        {"name": "timedelta64", "object_codec_id": None},
++        {"name": "|f8", "object_codec_id": None},
++        {"name": "datetime64[ns]", "object_codec_id": None},
++        {"name": "<M8[ns]", "object_codec_id": None},
++        {"name": "<m8[ns]", "object_codec_id": "vlen-utf8"},
+     )
+     invalid_json_v3 = (
+         {"name": "timedelta64", "configuration": {"unit": 1, "scale_factor": 10}},
+diff --git a/tests/test_dtype/test_wrapper.py b/tests/test_dtype/test_wrapper.py
+index cc365e86..898cb0fa 100644
+--- a/tests/test_dtype/test_wrapper.py
++++ b/tests/test_dtype/test_wrapper.py
+@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
+ import pytest
+ 
+ from zarr.core.dtype.common import DTypeSpec_V2, DTypeSpec_V3, HasItemSize
++from zarr.errors import DataTypeValidationError
+ 
+ if TYPE_CHECKING:
+     from zarr.core.dtype.wrapper import TBaseDType, TBaseScalar, ZDType
+@@ -52,8 +53,10 @@ class BaseTestZDType:
+         A tuple of invalid numpy dtypes for the ZDType.
+     valid_json_v2 : ClassVar[tuple[str | dict[str, object] | list[object], ...]]
+         A tuple of valid JSON representations for Zarr format version 2.
+-    invalid_json_v2 : ClassVar[tuple[str | dict[str, object] | list[object], ...]]
+-        A tuple of invalid JSON representations for Zarr format version 2.
++    invalid_json_v2 : ClassVar[tuple[DTypeSpec_V2, ...]]
++        A tuple of invalid JSON representations for Zarr format version 2. Each has the
++        ``{"name": ..., "object_codec_id": ...}`` shape of a Zarr V2 data type, so that it is
++        rejected for its contents rather than its shape.
+     valid_json_v3 : ClassVar[tuple[str | dict[str, object], ...]]
+         A tuple of valid JSON representations for Zarr format version 3.
+     invalid_json_v3 : ClassVar[tuple[str | dict[str, object], ...]]
+@@ -78,7 +81,7 @@ class BaseTestZDType:
+     invalid_dtype: ClassVar[tuple[TBaseDType, ...]] = ()
+ 
+     valid_json_v2: ClassVar[tuple[DTypeSpec_V2, ...]] = ()
+-    invalid_json_v2: ClassVar[tuple[str | dict[str, object] | list[object], ...]] = ()
++    invalid_json_v2: ClassVar[tuple[DTypeSpec_V2, ...]] = ()
+ 
+     valid_json_v3: ClassVar[tuple[DTypeSpec_V3, ...]] = ()
+     invalid_json_v3: ClassVar[tuple[str | dict[str, object], ...]] = ()
+@@ -124,6 +127,14 @@ class BaseTestZDType:
+         zdtype = self.test_cls.from_json(valid_json_v3, zarr_format=3)
+         assert zdtype.to_json(zarr_format=3) == valid_json_v3
+ 
++    def test_from_json_invalid_v2(self, invalid_json_v2: DTypeSpec_V2) -> None:
++        with pytest.raises(DataTypeValidationError):
++            self.test_cls.from_json(invalid_json_v2, zarr_format=2)
++
++    def test_from_json_invalid_v3(self, invalid_json_v3: DTypeSpec_V3) -> None:
++        with pytest.raises(DataTypeValidationError):
++            self.test_cls.from_json(invalid_json_v3, zarr_format=3)
++
+     def test_scalar_roundtrip_v2(self, scalar_v2_params: tuple[ZDType[Any, Any], Any]) -> None:
+         zdtype, scalar_json = scalar_v2_params
+         scalar = zdtype.from_json_scalar(scalar_json, zarr_format=2)
+diff --git a/tests/test_dtype_registry.py b/tests/test_dtype_registry.py
+index 40239c11..c7f78457 100644
+--- a/tests/test_dtype_registry.py
++++ b/tests/test_dtype_registry.py
+@@ -18,6 +18,11 @@ from zarr.core.dtype.common import unpack_dtype_json
+ from zarr.dtype import (  # type: ignore[attr-defined]
+     Bool,
+     FixedLengthUTF32,
++    Int8,
++    Int16,
++    RawBytes,
++    Struct,
++    UInt8,
+     VariableLengthUTF8,
+     ZDType,
+     data_type_registry,
+@@ -27,6 +32,7 @@ from zarr.dtype import (  # type: ignore[attr-defined]
+ 
+ if TYPE_CHECKING:
+     from zarr.core.common import ZarrFormat
++    from zarr.core.dtype.common import DTypeName_V2
+ 
+ from .test_dtype.conftest import zdtype_examples
+ 
+@@ -215,3 +221,79 @@ def test_parse_data_type(
+     else:
+         observed = dtype_parser_func(dtype_spec, zarr_format=zarr_format)
+         assert observed == data_type
++
++
++class _LittleEndianUInt8(UInt8):
++    """A data type that declares the non-canonical spelling "<u1" as its own Zarr V2 name."""
++
++    _zarr_v3_name = "test.little_endian_uint8"  # type: ignore[assignment]
++    _zarr_v2_names = ("<u1",)  # type: ignore[assignment]
++
++
++@pytest.mark.parametrize(
++    ("name", "expected"),
++    [
++        *((name, Bool()) for name in ("|b1", "<b1", ">b1")),
++        *((name, Int8()) for name in ("|i1", "<i1", ">i1")),
++        *((name, UInt8()) for name in ("|u1", "<u1", ">u1")),
++        *((name, RawBytes(length=4)) for name in ("|V4", "<V4", ">V4")),
++        ("<i2", Int16(endianness="little")),
++        (">i2", Int16(endianness="big")),
++        ([["a", "<i1"], ["b", ">b1"]], Struct(fields=(("a", Int8()), ("b", Bool())))),
++    ],
++    ids=str,
++)
++def test_match_json_v2_byte_order(name: DTypeName_V2, expected: ZDType[Any, Any]) -> None:
++    """
++    A Zarr V2 data type name whose byte order is not relevant matches the same data type for any
++    byte order character, and serializes with the canonical "|".
++    """
++    observed = data_type_registry.match_json({"name": name, "object_codec_id": None}, zarr_format=2)
++    assert observed == expected
++    assert observed.to_json(zarr_format=2) == expected.to_json(zarr_format=2)
++
++
++def test_match_json_v2_declared_spelling_takes_precedence(
++    data_type_registry_fixture: DataTypeRegistry,
++) -> None:
++    """
++    A data type that declares a non-canonical spelling matches that spelling, and the other
++    spellings still match the canonical data type.
++    """
++    data_type_registry_fixture.register(UInt8._zarr_v3_name, UInt8)
++    data_type_registry_fixture.register(_LittleEndianUInt8._zarr_v3_name, _LittleEndianUInt8)
++    for name, expected in (("<u1", _LittleEndianUInt8()), (">u1", UInt8()), ("|u1", UInt8())):
++        observed = data_type_registry_fixture.match_json(
++            {"name": name, "object_codec_id": None}, zarr_format=2
++        )
++        assert type(observed) is type(expected)
++        assert observed.to_json(zarr_format=2)["name"] == ("<u1" if name == "<u1" else "|u1")
++
++
++@pytest.mark.parametrize("name", ["|i2", "|f4", "|U1", "|M8[ns]"])
++def test_match_json_v2_byte_order_relevant(name: str) -> None:
++    """The byte order of a multi-byte data type is part of its name, so "|" is rejected."""
++    with pytest.raises(ValueError, match="No Zarr data type found"):
++        data_type_registry.match_json({"name": name, "object_codec_id": None}, zarr_format=2)
++
++
++@pytest.mark.parametrize("name", ["=u1", "=i2"])
++def test_match_json_v2_native_byte_order(name: str) -> None:
++    """The Zarr V2 byte order character is one of "<", ">", or "|"; NumPy's "=" is not allowed."""
++    with pytest.raises(ValueError, match="No Zarr data type found"):
++        data_type_registry.match_json({"name": name, "object_codec_id": None}, zarr_format=2)
++
++
++def test_match_json_v2_byte_order_alias_object_codec() -> None:
++    """Normalizing the byte order does not relax the other members of the data type."""
++    with pytest.raises(ValueError, match="No Zarr data type found"):
++        data_type_registry.match_json(
++            {"name": "<u1", "object_codec_id": "vlen-utf8"}, zarr_format=2
++        )
++
++
++@pytest.mark.parametrize("name", ["<V", ">V", "<V-1", "<V4x", "<V٤"])
++def test_match_json_v2_byte_order_alias_malformed_length(name: str) -> None:
++    """A fixed-length bytes name needs a length of ASCII digits to have a canonical alias."""
++    with pytest.raises(ValueError, match="No Zarr data type found"):
++        data_type_registry.match_json({"name": name, "object_codec_id": None}, zarr_format=2)
+diff --git a/tests/test_metadata/test_v2.py b/tests/test_metadata/test_v2.py
+index 322c62c3..64b1e189 100644
+--- a/tests/test_metadata/test_v2.py
++++ b/tests/test_metadata/test_v2.py
+@@ -23,6 +23,7 @@ if TYPE_CHECKING:
+ 
+     from zarr.abc.codec import Codec
+     from zarr.core.common import JSON
++    from zarr.core.dtype.common import DTypeName_V2
+ 
+ 
+ def test_parse_zarr_format_valid() -> None:
+@@ -401,24 +402,43 @@ def test_structured_dtype_fill_value_serialization(
+     assert observed == fill_value
+ 
+ 
+-@pytest.mark.parametrize("dtype", ["|u1", "<u1", ">u1"])
+-def test_open_uint8_dtype_aliases(tmp_path: Path, dtype: str) -> None:
++@pytest.mark.parametrize(
++    ("stored", "canonical", "values"),
++    [
++        *((f"{b}b1", "|b1", np.array([True, False, True])) for b in "<>|"),
++        *((f"{b}i1", "|i1", np.array([-128, 0, 127], dtype=np.int8)) for b in "<>|"),
++        *((f"{b}u1", "|u1", np.array([0, 128, 255], dtype=np.uint8)) for b in "<>|"),
++        (
++            [["a", "<i1"], ["b", ">u1"]],
++            [["a", "|i1"], ["b", "|u1"]],
++            np.array([(-1, 1), (0, 128), (1, 255)], dtype=[("a", "i1"), ("b", "u1")]),
++        ),
++    ],
++    ids=str,
++)
++def test_open_v2_byte_order_irrelevant_dtype(
++    tmp_path: Path, stored: DTypeName_V2, canonical: DTypeName_V2, values: np.ndarray[Any, Any]
++) -> None:
++    """
++    An array whose data type is written with any byte order character, where the byte order is not
++    relevant, reads the stored data and writes the data type back with the canonical "|".
++    """
+     metadata = {
+         "zarr_format": 2,
+         "shape": [3],
+         "chunks": [3],
+-        "dtype": dtype,
++        "dtype": stored,
+         "compressor": None,
+-        "fill_value": 0,
++        "fill_value": None,
+         "order": "C",
+         "filters": None,
+     }
+     metadata_path = tmp_path / ".zarray"
+     metadata_path.write_text(json.dumps(metadata))
+-    (tmp_path / "0").write_bytes(bytes([0, 128, 255]))
++    (tmp_path / "0").write_bytes(values.tobytes())
++
++    array = zarr.open_array(tmp_path, mode="r+")
++    np.testing.assert_array_equal(array[:], values)
+ 
+-    array = zarr.open_array(tmp_path, mode="r")
+-    assert array.dtype == np.dtype("uint8")
+-    np.testing.assert_array_equal(array[:], np.array([0, 128, 255], dtype=np.uint8))
+-    assert array.metadata.to_dict()["dtype"] == "|u1"
+-    assert json.loads(metadata_path.read_text()) == metadata
++    array.update_attributes({"foo": "bar"})
++    assert json.loads(metadata_path.read_text())["dtype"] == canonical

@@ -1,0 +1,25 @@
+{
+  "verdict": "fail:needs-live-api",
+  "failToPass": [],
+  "passToPass": [],
+  "flaky": [],
+  "envBroken": [
+    "tests.test_agents::test_propagate_options"
+  ],
+  "liveApi": [
+    "tests.test_agents::test_propagate_options"
+  ],
+  "goldRegress": [],
+  "gpuSkipped": [],
+  "selection": "touched",
+  "targets": [
+    "tests/test_agents.py::test_propagate_options"
+  ],
+  "env": {
+    "ok": true,
+    "method": "uv.lock",
+    "digest": "5916dfce48ea81b156a14a64ae6ef7f09596a17d65fa33758caf86fb4c745149",
+    "seconds": 6
+  },
+  "sealProblems": []
+}

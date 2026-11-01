@@ -1,0 +1,42 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11627
+issues:
+  - 11501
+baseSha: ad79ed8ee9d9d5d35cb4aea2dd743f6754f68df4
+mergeSha: 17c982aacd13c0c785be8b400be48379593b1014
+tStar: 2026-09-28T11:09:41Z
+issueCreatedAt: 2026-08-04T00:42:00Z
+prMergedAt: 2026-09-28T23:26:11Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestReduce1D::test_max[obj]
+  - xarray.tests.test_dataarray.TestReduce1D::test_min[obj]
+  - xarray.tests.test_dataarray.TestReduce2D::test_max[obj]
+  - xarray.tests.test_dataarray.TestReduce2D::test_min[obj]
+  - xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values0-min]
+  - xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values0-max]
+  - xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values1-min]
+  - xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values1-max]
+  - xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values2-min]
+  - xarray.tests.test_duck_array_ops::test_min_max_object_propagates_nan[values2-max]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 7cb6cef441926b3e90882a25d05530aa2025e7dba768a26e3b97471731c07c73
+  issue/body+human.md: 7cb6cef441926b3e90882a25d05530aa2025e7dba768a26e3b97471731c07c73
+  issue/body.md: be9496d09cd084f80944a1769f9ea946a2a7ee6f69da53441b8edfaf069b9f06
+  leaks.json: 1ceb82a28f6aedb88546659feec53c0af1ebf4bcb640c1287fda6095daccc406
+  reference.patch: 9eb1f2df03daf818f8306a862fa626a3f92bd56ebb3dc36ead1fb1ba5f9936d9
+  snapshot.json: 2cd5185384eefebbc094b2a61bcb3961d71a45ff4af1caf090e90fad3e20f851
+  tests.patch: 35d365ec9bec70530ce438fe4b8274b3ec11c4b8ed236a542f4ef04c51d48612
+  validation.json: 15647bbd2d893905ca4fe5ceb46dc857489aa05788309ada9c6a243cba031056

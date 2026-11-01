@@ -1,0 +1,2 @@
+{"reviewer":"Nate Aune","at":"2026-11-01T02:35:23.327Z","items":[{"id":"body","label":"diagnosis"}],"fairness":{"verdict":"unsure","note":""}}
+{"reviewer":"Justin","at":"2026-11-01T03:03:28.497Z","items":[{"id":"body","label":"symptom"}],"fairness":{"verdict":"yes","note":"test is fair, but issue body is unclear. it does not describe the issue sufficiently, it should have at least a passing mention of raw newlines in json"}}

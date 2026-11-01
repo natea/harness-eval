@@ -13,7 +13,7 @@ confidently wrong.
 Splitting curation across agents that each hold **different private evidence**,
 and deciding by quorum, may produce labels that agree better with humans. The
 human labels D15 already collects let us **measure** that against a
-single-agent and a centrally controlled baseline at equal budget. Doing this at
+single-agent and a centrally controlled baseline under one spend cap. Doing this at
 **mine time** freezes every decision into the bundle, so trials, prompts and
 grading stay exactly as `add-brownfield-track` specifies, with no drift at run
 time.
@@ -29,23 +29,30 @@ time.
 - **Curation decisions:**
   - leak level per body and per comment (the existing D9 scale)
   - test fairness
-  - eligibility flags (flaky or env-broken tests worth excluding, an `appEgress`
-    need)
-  - a difficulty stratum
+  - advisory eligibility flags (tests proposed for exclusion, an `appEgress`
+    need), surfaced for human review and never applied automatically
+  - a `difficulty` field, distinct from the brownfield `leakStratum`
 - **Four role agents**, each with its own evidence:
-  - *issue reader*: issue at T* only; makes a blind localization and fix guess
+  - *issue reader*: issue at T* only; blind file localization on cumulative
+    prefixes of the thread, round 1 only, never sees other verdicts
   - *gold comparer*: issue plus reference patch
-  - *test auditor*: tests patch plus validation results
+  - *test auditor*: issue plus tests patch plus validation results
   - *history agent*: past commits and blame on the touched files, base commit only
-- **Equal-budget comparison:** all three arms run on the same bundles under the
-  same token/USD cap. Each is scored against blind human Studio labels on
-  per-level accuracy, Cohen's κ, test-fairness agreement and cost.
+- **Quorum rule in code:** median of the role votes with abstentions, even
+  splits resolved upward, and a gold cap (an item the gold comparer finds
+  inconsistent with the reference is at most `symptom`).
+- **Comparison under one spend cap:** all three arms run on the 14
+  human-labeled paper-qa bundles under the same per-bundle token/USD cap. Each
+  is scored against blind human Studio labels on per-level accuracy, Cohen's κ,
+  test-fairness agreement, cost and accuracy per dollar, with per-role vote
+  accuracy and bundle-level bootstrap CIs.
 - **Output** keeps the existing `leaks.json` item schema, adds the other
   decisions and a provenance block (arm, models, prompt hashes, per-agent
   verdicts), and is frozen into the bundle hash. Runs read only the chosen
   arm's frozen labels.
 
-Runtime behavior (trials, prompts, grading, audit) is unchanged.
+Runtime behavior (trials, prompts, grading, audit) is unchanged; curation never
+alters the scored test set or trial setup.
 
 ## Capabilities
 
@@ -63,12 +70,12 @@ Runtime behavior (trials, prompts, grading, audit) is unchanged.
 
 - **Depends on** `add-brownfield-track`:
   - the bundle format and the D9 leak schema
-  - the D15 Studio human labels
-  - PR #81 (spec notes), which this branch is stacked on
+  - the D15 Studio human labels (`review/labels.jsonl`, 14 paper-qa bundles)
+  - `src/brownfield/classify.ts` and `src/brownfield/agreement.ts`
 - **New code:** `src/brownfield/curation/` (role agents, shared verdict record,
   quorum rule, arms, comparison report), a `curate` CLI subcommand, and role
   prompts in `config/`.
 - **Spend:** the spike's single classifier cost about $0.02 per issue. Three arms
-  on the 37 spike issues should cost a few dollars in total.
+  on the 14 labeled bundles should cost a few dollars in total.
 - **Constraint:** every model used in an arm must differ from the worker model
   of any run that uses its labels (same rule as D9).

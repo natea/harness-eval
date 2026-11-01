@@ -1,0 +1,37 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4397
+issues:
+  - 2030
+baseSha: aa2ba285c0c72aa2023b8b4bd021160fe1b6040e
+mergeSha: edba2ee3ad10523483da7eb21220da6a35875d53
+tStar: 2026-09-24T09:45:25Z
+issueCreatedAt: 2024-07-11T19:26:00Z
+prMergedAt: 2026-09-24T10:00:38Z
+verdict: VALID
+failToPass:
+  - tests.test_codecs.test_sharding::test_sharding_codec_rejects_variable_size_index_codecs[compressor0]
+  - tests.test_codecs.test_sharding::test_sharding_codec_rejects_variable_size_index_codecs[compressor1]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: true
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: 96607e9ac8c549ec6fb561e3e165c3078f8ca3366055fa8a7cbadbf4471103bb
+  issue/body+human.md: 96607e9ac8c549ec6fb561e3e165c3078f8ca3366055fa8a7cbadbf4471103bb
+  issue/body.md: 311089a0191185ac1e6f7dd702c38925a4c8057340df648462aafe82afc9e53d
+  leaks.json: d867f540ba5d9b97fd652f0fd0fb2bbe991d195cb2ece3dee869941d135f78b7
+  reference.patch: 4c2c88206b3a95a8b120127b64547adfcfad124331db6059f4614f7d99652ca0
+  snapshot.json: 703ec7827563aea2ebccfaeaaef88d4a0e3409a44d5b08df659c95ff75cc8e26
+  tests.patch: b6b290902945952f72502ccf93170bf186f6e1b28e0fd35d0497b449e6874134
+  validation.json: a41dc88c47aa4a205de32d0211841bb3b698aec625484e133ae8d0b0400b1b97

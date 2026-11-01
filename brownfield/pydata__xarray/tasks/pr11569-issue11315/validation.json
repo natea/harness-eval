@@ -1,0 +1,43 @@
+{
+  "pr": 11569,
+  "merged": "2026-10-16",
+  "issues": [
+    {
+      "n": 11315,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/datatree.py",
+    "xarray/core/types.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py",
+    "xarray/tests/test_datatree.py"
+  ],
+  "env": "exclude-newer 2026-10-16T07:21:46Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestDataArray::test_chunk",
+    "xarray/tests/test_datatree.py::TestDask::test_chunk",
+    "xarray/tests/test_datatree.py::TestDask::test_chunk_single_spec"
+  ],
+  "counts": {
+    "f2p": 3,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_datatree.TestDask::test_chunk_single_spec[auto]",
+    "xarray.tests.test_datatree.TestDask::test_chunk_single_spec[5]",
+    "xarray.tests.test_datatree.TestDask::test_chunk_single_spec[20B]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -1,0 +1,9 @@
+{
+  "pr": 293,
+  "issue": 292,
+  "tStar": "2024-06-25T15:33:00Z",
+  "title": "Parsing JSON with newlines",
+  "issueAuthor": "whitead",
+  "body": "If the model response looks like:\r\n\r\n```\r\n{\r\n  \"summary\": \"The excerpt discusses different approaches to representing protein structures for machine learning, including equivariant methods. It mentions that scalar quantities of proteins like interaction interfaces are intrinsically rotation and translation invariant. The text describes several equivariant approaches:\r\n\r\n1. Tensor Field Networks (TFN) using rotation equivariant convolutions based on spherical harmonics\r\n2. Cormorant networks improving on TFN with Clebsch-Gordan non-linearity \r\n3. Geometric vector perceptron (GVP) using linear operations on vectors respecting rotation equivariance\r\n4. Equivariant graph neural networks\r\n\r\nThe excerpt notes that TFN architectures have been successful in predicting protein-protein complex quality. However, it does not explicitly state that equivariant layers are definitively better at modeling protein structure compared to other approaches.\",\r\n  \"relevance_score\": 7\r\n}\r\n```\r\n\r\nwe do not parse it correctly. We should be able to handle that. ",
+  "comments": []
+}

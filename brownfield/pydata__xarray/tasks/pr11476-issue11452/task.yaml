@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11476
+issues:
+  - 11452
+baseSha: 0e627d9d140b45dda311b89c8b557d8922270d04
+mergeSha: 63b61d37ab4f77b7804f076c025480dbc791e678
+tStar: 2026-07-25T22:51:42Z
+issueCreatedAt: 2026-07-14T15:29:00Z
+prMergedAt: 2026-08-19T20:47:01Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_plot.TestPlot::test_label_from_attrs
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: diagnosis
+provisional: true
+files:
+  issue/body+all.md: fe4a4188031a4b56fc35c151e556576f97512347ab3b417efc8546f301666f8d
+  issue/body+human.md: fe4a4188031a4b56fc35c151e556576f97512347ab3b417efc8546f301666f8d
+  issue/body.md: a387d416465876c1cc0465123062d3f20820a8ee170d8cc614220e3012ecc301
+  leaks.json: 10a4f69cde0af6bcec7b68e0da76ee3ca30fdc5f47da6914d07b5a1c0da25b20
+  reference.patch: 268e47b22aa7d0508a5282e0592be821aae35ffeb67556c6415e214b7f916f5b
+  snapshot.json: bf0adf7cd0de751404e86bd8eda5b684563a6623ab769fcddfe706a3bd00181a
+  tests.patch: c7d85c6eceb31f84078d8da004ddf553f47288ae423c497bb46c66ebc1b66c3d
+  validation.json: 82ec9224c56e01b33523f40422d6c63f3e77a77b2734aa1cbd34ff279e5a9b19

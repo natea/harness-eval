@@ -1,0 +1,46 @@
+{
+  "pr": 4142,
+  "merged": "2026-07-14",
+  "issues": [
+    {
+      "n": 4141,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "changes/4141.bugfix.md",
+    "src/zarr/codecs/bytes.py"
+  ],
+  "testFiles": [
+    "tests/test_codecs/test_bytes.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_codecs/test_bytes.py::test_bytes_codec_supports_sync",
+    "tests/test_codecs/test_bytes.py::test_bytes_codec_sync_roundtrip",
+    "tests/test_codecs/test_bytes.py::test_endian"
+  ],
+  "counts": {
+    "f2p": 8,
+    "p2p": 15,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[native-scalar-big]",
+    "tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[big-scalar-little]",
+    "tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[mixed-endian-struct-little]",
+    "tests.test_codecs.test_bytes::test_bytes_codec_sync_roundtrip[mixed-endian-struct-big]",
+    "tests.test_codecs.test_bytes::test_endian[big-little-struct-local]",
+    "tests.test_codecs.test_bytes::test_endian[big-little-struct-memory]",
+    "tests.test_codecs.test_bytes::test_endian[little-big-struct-local]",
+    "tests.test_codecs.test_bytes::test_endian[little-big-struct-memory]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -1,0 +1,48 @@
+diff --git a/changes/4402.bugfix.md b/changes/4402.bugfix.md
+new file mode 100644
+index 00000000..2161b80a
+--- /dev/null
++++ b/changes/4402.bugfix.md
+@@ -0,0 +1,5 @@
++Fixed `FsspecStore.list_dir` over HTTP returning entries that are not children
++of the listed directory. A link to the site root on the index page made a group
++list itself as a member named `""`, in-page anchor links such as `#usage` were
++returned as keys, and directory names kept a trailing `/`. `list_dir` now
++returns each direct child once, by its bare name.
+diff --git a/src/zarr/storage/_fsspec.py b/src/zarr/storage/_fsspec.py
+index a212e95f..23cf9834 100644
+--- a/src/zarr/storage/_fsspec.py
++++ b/src/zarr/storage/_fsspec.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import posixpath
+ import warnings
+ from contextlib import suppress
+ from typing import TYPE_CHECKING, Any
+@@ -431,8 +432,23 @@ class FsspecStore(Store):
+             allfiles = await self.fs._ls(prefix, detail=False)
+         except FileNotFoundError:
+             return
+-        for onefile in (a.replace(f"{prefix}/", "") for a in allfiles):
+-            yield onefile.removeprefix(self.path).removeprefix("/")
++        seen: set[str] = set()
++        for onefile in allfiles:
++            name = onefile.replace(f"{prefix}/", "").removeprefix(self.path).removeprefix("/")
++            if onefile.startswith(("http://", "https://")):
++                # An HTTP listing is scraped from the links on an HTML page. In-page anchors
++                # and queries name the page itself, not an object, and relative links such
++                # as "./a" need normalizing.
++                if "#" in name or "?" in name:
++                    continue
++                name = posixpath.normpath(name)
++            # Only direct children, each once: an HTTP listing marks directories with a
++            # trailing "/", and a link back to the listed directory reduces to "" or ".".
++            name = name.rstrip("/")
++            if name in ("", ".", "..") or "/" in name or name in seen:
++                continue
++            seen.add(name)
++            yield name
+ 
+     async def list_prefix(self, prefix: str) -> AsyncIterator[str]:
+         # docstring inherited

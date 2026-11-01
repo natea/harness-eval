@@ -1,0 +1,33 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 6d56c410..8fbce607 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -170,6 +170,9 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- :py:meth:`Dataset.query` now resolves coordinates in datasets with no data
++  variables (:issue:`6449`).
++  By `Liang, Jingyi <https://github.com/LJimmy007>`_.
+ - Results of the string accessor methods ``strip``, ``pad``, ``center``,
+   ``ljust``, ``rjust``, ``zfill`` and ``replace`` on dask arrays are no longer
+   truncated to a single character, and ``repeat`` no longer fails on dask arrays
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index ccec59b4..3e2cfbea 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -10025,9 +10025,12 @@ class Dataset(
+                 msg = f"expr for dim {dim} must be a string to be evaluated, {type(expr)} given"
+                 raise ValueError(msg)
+ 
+-        # evaluate the queries to create the indexers
++        # Include coords so pandas considers the resolvers nonempty even when
++        # there are no data variables.
+         indexers = {
+-            dim: pd.eval(expr, resolvers=[self], parser=parser, engine=engine)
++            dim: pd.eval(
++                expr, resolvers=[self, self.coords], parser=parser, engine=engine
++            )
+             for dim, expr in queries.items()
+         }
+ 

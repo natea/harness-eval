@@ -1,0 +1,19 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/computation/computation.py"
+      ],
+      "evidence": "if (skipna or (skipna is None and array.dtype.kind in na_dtypes)) and allna.any():\n        # Put the NaN values back in after removing them, if any",
+      "rationale": "Pinpoints the res.where(~allna, fill_value) in _calc_idxminmax and proposes guarding it with allna.any(), which is essentially the reference fix (it additionally handles chunked arrays).",
+      "author": "templiert",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "fix_code",
+  "commentsLevel": "noise"
+}

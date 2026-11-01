@@ -1,0 +1,95 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 8f7566e8..e65810e0 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -281,6 +281,13 @@ Bug Fixes
+   This was due to a bug in the reduction method generation introduced in :pull:`11556`
+   (:pull:`11686`).
+   By `Andrew Scherer <https://github.com/andrew-s28>`_.
++- Fix indexing with a 0-dimensional non-NumPy array, e.g. a CuPy array, which
++  raised ``ValueError`` instead of dropping the indexed dimension (:issue:`8820`).
++  By `Trinh Quoc Anh <https://github.com/tqa236>`_.
++- Fix indexing with a 0-dimensional dask array combined with an outer indexer, e.g.
++  ``da.isel(x=dask.array.from_array(np.array(2)), y=[0, 2])``, which raised
++  ``ValueError`` (:issue:`8820`).
++  By `Trinh Quoc Anh <https://github.com/tqa236>`_.
+ - Fix DatasetWeighted dropping coordinates/dimensions which are not affected by
+   the reduction nor in the weights array (:issue:`11560`, :pull:`11562`).
+   By `Charles Turner <https://github.com/charles-turner-1>`_.
+diff --git a/xarray/core/indexing.py b/xarray/core/indexing.py
+index f2489246..bb75b5b5 100644
+--- a/xarray/core/indexing.py
++++ b/xarray/core/indexing.py
+@@ -1076,12 +1076,22 @@ def _outer_to_vectorized_indexer(
+     """
+     key = indexer.tuple
+ 
+-    n_dim = len([k for k in key if not isinstance(k, integer_types)])
++    # 0d duck arrays (e.g. dask, cupy) are treated like integers
++    n_dim = len(
++        [
++            k
++            for k in key
++            if not isinstance(k, integer_types) and getattr(k, "ndim", None) != 0
++        ]
++    )
+     i_dim = 0
+     new_key = []
+     for k, size in zip(key, shape, strict=True):
+         if isinstance(k, integer_types):
+             new_key.append(np.array(k).reshape((1,) * n_dim))
++        elif getattr(k, "ndim", None) == 0:
++            # 0d duck array: reshape without converting to numpy
++            new_key.append(k.reshape((1,) * n_dim))
+         else:  # np.ndarray or slice
+             if isinstance(k, slice):
+                 k = np.arange(*k.indices(size))
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index 04683387..abab7305 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -65,7 +65,6 @@ from xarray.namedarray.pycompat import (
+     array_type,
+     async_to_duck_array,
+     integer_types,
+-    is_0d_dask_array,
+     is_chunked_array,
+     to_duck_array,
+ )
+@@ -944,11 +943,11 @@ class Variable(
+                         )
+ 
+     def _broadcast_indexes_outer(self, key):
+-        # drop dim if k is integer or if k is a 0d dask array
++        # drop dim if k is integer or if k is a 0d duck array (e.g. dask, cupy)
+         dims = tuple(
+             k.dims[0] if isinstance(k, Variable) else dim
+             for k, dim in zip(key, self.dims, strict=True)
+-            if (not isinstance(k, integer_types) and not is_0d_dask_array(k))
++            if not (isinstance(k, integer_types) or (is_duck_array(k) and k.ndim == 0))
+         )
+ 
+         new_key = []
+diff --git a/xarray/namedarray/pycompat.py b/xarray/namedarray/pycompat.py
+index 3a859e4b..c5e27d18 100644
+--- a/xarray/namedarray/pycompat.py
++++ b/xarray/namedarray/pycompat.py
+@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Literal
+ import numpy as np
+ from packaging.version import Version
+ 
+-from xarray.core.utils import is_scalar
+ from xarray.namedarray.utils import is_duck_array, is_duck_dask_array
+ 
+ integer_types = (int, np.integer)
+@@ -92,10 +91,6 @@ def is_chunked_array(x: duckarray[Any, Any]) -> bool:
+     return is_duck_dask_array(x) or (is_duck_array(x) and hasattr(x, "chunks"))
+ 
+ 
+-def is_0d_dask_array(x: duckarray[Any, Any]) -> bool:
+-    return is_duck_dask_array(x) and is_scalar(x)
+-
+-
+ def to_numpy(
+     data: duckarray[Any, Any], **kwargs: Any
+ ) -> np.ndarray[Any, np.dtype[Any]]:

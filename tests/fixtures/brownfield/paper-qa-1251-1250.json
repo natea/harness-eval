@@ -1,0 +1,248 @@
+{
+  "pullRequest": {
+    "number": 1251,
+    "title": "Modernizing bundled configs",
+    "createdAt": "2025-12-22T14:45:09Z",
+    "mergedAt": "2025-12-22T15:58:21Z",
+    "url": "https://github.com/Future-House/paper-qa/pull/1251",
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "c2de78964fa1487a86af7c5e5b647014910c5d2a",
+            "authoredDate": "2025-12-22T14:39:58Z",
+            "committedDate": "2025-12-22T14:39:58Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "30540fa3b48c1d57f3d470dec0d3f6d1485ff3f7",
+            "authoredDate": "2025-12-22T14:42:21Z",
+            "committedDate": "2025-12-22T14:42:21Z"
+          }
+        }
+      ]
+    }
+  },
+  "issue": {
+    "number": 1250,
+    "title": "pydantic validation Error - running in colab",
+    "body": "Hi!\n\nI am trying to get familiar with paper-qa in Google Colab and using this [tutorial](https://github.com/Future-House/paper-qa/blob/main/docs/tutorials/querying_with_clinical_trials.md) for it:\n\nInstall the library:\n```\n!pip install paperqa>=5\n```\n\nCode I try to run:\n```\nfrom paperqa import Settings, agent_query\nimport os\n\nos.environ[\"OPENAI_API_KEY\"] = \"...\"\nanswer_response = await agent_query(\n    query=\"What drugs have been found to effectively treat Ulcerative Colitis?\",\n    settings=Settings.from_name(\"search_only_clinical_trials\"),\n)\n\nprint(answer_response.session.answer)\n```\n\nUnfortunately, this results in the following error:\n```\n---------------------------------------------------------------------------\nValidationError                           Traceback (most recent call last)\n[/tmp/ipython-input-4015278062.py](https://kgrpvjq2iq9-496ff2e9c6d22116-0-colab.googleusercontent.com/outputframe.html?vrz=colab-external_20251217-060051_RC00_845688750#) in <cell line: 1>()\n      5 answer_response = await agent_query(\n      6     query=\"What drugs have been found to effectively treat Ulcerative Colitis?\",\n----> 7     settings=Settings.from_name(\"search_only_clinical_trials\"),\n      8 )\n      9 \n\n1 frames\n[/usr/local/lib/python3.12/dist-packages/paperqa/settings.py](https://kgrpvjq2iq9-496ff2e9c6d22116-0-colab.googleusercontent.com/outputframe.html?vrz=colab-external_20251217-060051_RC00_845688750#) in from_name(cls, config_name, cli_source)\n    900             # then dump it\n    901             # going json.loads directly will not get types correct\n--> 902             tmp = Settings.model_validate_json(json_path.read_text())\n    903             return Settings(\n    904                 **(tmp.model_dump()),\n\n[/usr/local/lib/python3.12/dist-packages/pydantic/main.py](https://kgrpvjq2iq9-496ff2e9c6d22116-0-colab.googleusercontent.com/outputframe.html?vrz=colab-external_20251217-060051_RC00_845688750#) in model_validate_json(cls, json_data, strict, extra, context, by_alias, by_name)\n    764             )\n    765 \n--> 766         return cls.__pydantic_validator__.validate_json(\n    767             json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name\n    768         )\n\nValidationError: 2 validation errors for Settings\nparsing.chunk_size\n  Extra inputs are not permitted [type=extra_forbidden, input_value=9000, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden\nparsing.overlap\n  Extra inputs are not permitted [type=extra_forbidden, input_value=750, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden\n```\n\nAny ideas how to overcome this?\n\n",
+    "createdAt": "2025-12-22T14:05:18Z",
+    "url": "https://github.com/Future-House/paper-qa/issues/1250",
+    "state": "CLOSED",
+    "author": {
+      "login": "kirillkoncha"
+    },
+    "userContentEdits": {
+      "nodes": []
+    },
+    "comments": {
+      "nodes": [
+        {
+          "id": "IC_kwDOI55lCs7bek2t",
+          "createdAt": "2025-12-22T14:08:40Z",
+          "author": {
+            "login": "dosubot",
+            "__typename": "Bot"
+          },
+          "body": "<!-- Greeting -->\nHi @kirillkoncha! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.\n\n<!-- Answer -->\nThis error happens because the config for \"search_only_clinical_trials\" includes chunk_size and overlap fields under parsing, but the current paper-qa version expects only specific fields there and forbids any extras. If these fields are present but not recognized by the ParsingSettings model, Pydantic will throw a validation error like the one you’re seeing. This is likely due to a mismatch between the config file and the latest code expectations, which has happened with other settings in recent updates as well [see discussion](https://github.com/Future-House/paper-qa/issues/1026).\n\nTo fix this, you can try removing the chunk_size and overlap fields from the parsing section of your config, or if you’re using the built-in config, copy it locally, edit out those fields, and then load it with Settings.from_name pointing to your edited config. This should let you proceed without the validation error.\n\nIf you want to keep custom chunking, make sure the fields you use in parsing match exactly what the current ParsingSettings model allows. If you’re not sure, you can check the latest source for allowed fields [here](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/settings.py#L156-L865).\n\nLet me know if you want a quick example of how to patch the config!\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=reply-with-mention&utm_term=Future-House%2Fpaper-qa).*\n\n---\n\nShare context across your team and agents. Try [Dosu](https://dosu.dev?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-tagline&utm_term=Future-House%2Fpaper-qa).\n\n[![Leave Feedback](https://img.shields.io/badge/Leave%20Feedback-555555?style=flat)](https://app.dosu.dev/response-feedback?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-feedback&utm_term=Future-House%2Fpaper-qa#message_id=ce777cf1-fbcf-499d-834f-96ed021f94ee) [![Learn about paper-qa with Dosu](https://img.shields.io/badge/Learn%20about%20paper--qa%20with%20Dosu-2f7b3f?style=flat&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iODYiIGhlaWdodD0iODkiIHZpZXdCb3g9IjAgMCA4NiA4OSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yOTIzNiAxMi43OTI4TDE3Ljc1OTMgNi42ODE4OFY3Mi41NjY3TDUuMjkyMzYgODQuMDYxOFYxMi43OTI4WiIgZmlsbD0iI0I0QkI5MSIvPjxwYXRoIGQ9Ik0xOC4yNTc1IDczLjExOTZMNTkuMTMyOSA3Mi43NDhMNTEuNzAxMSA4Mi40MDk1TDI5LjAzMzggODYuMjkxTDYuMjM5NjIgODUuMTU1NEwxOC4yNTc1IDczLjExOTZaIiBmaWxsPSIjNzc4NTYxIi8%2BPHBhdGggZD0iTTE3LjQ5MTYgMy43MzYzM0wzLjU4NTU3IDEyLjcwOTlWODMuNTc5MkMzLjU4NTU3IDg0Ljc1NDIgNC45ODU2MyA4NS4zNjUyIDUuODQ3MDUgODQuNTY2TDE5LjYyOTYgNzEuNzgwMSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjQyODQ0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bWFzayBpZD0iZG9zdS1kLWN1dG91dCIgZmlsbD0id2hpdGUiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDAuNzA0IDAuNTE4MDY2SDE3LjA0MzlWNzYuMjIyMUg0MC43MDRINDIuNTgwNUg0Ny44MDEzQzY4LjcwNjQgNzYuMjIyMSA4NS42NTMzIDU5LjI3NTIgODUuNjUzMyAzOC4zNzAxQzg1LjY1MzMgMTcuNDY1IDY4LjcwNjMgMC41MTgwNjYgNDcuODAxMyAwLjUxODA2Nkg0Mi41ODA1SDQwLjcwNFoiLz48L21hc2s%2BPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MC43MDQgMC41MTgwNjZIMTcuMDQzOVY3Ni4yMjIxSDQwLjcwNEg0Mi41ODA1SDQ3LjgwMTNDNjguNzA2NCA3Ni4yMjIxIDg1LjY1MzMgNTkuMjc1MiA4NS42NTMzIDM4LjM3MDFDODUuNjUzMyAxNy40NjUgNjguNzA2MyAwLjUxODA2NiA0Ny44MDEzIDAuNTE4MDY2SDQyLjU4MDVINDAuNzA0WiIgZmlsbD0iI0YzRjZGMSIvPjxwYXRoIGQ9Ik0xNy4wNDM5IDAuNTE4MDY2Vi02LjU3OTE5SDkuOTQ2NjlWMC41MTgwNjZIMTcuMDQzOVpNMTcuMDQzOSA3Ni4yMjIxSDkuOTQ2NjlWODMuMzE5NEgxNy4wNDM5Vjc2LjIyMjFaTTE3LjA0MzkgNy42MTUzMkg0MC43MDRWLTYuNTc5MTlIMTcuMDQzOVY3LjYxNTMyWk0yNC4xNDEyIDc2LjIyMjFWMC41MTgwNjZIOS45NDY2OVY3Ni4yMjIxSDI0LjE0MTJaTTQwLjcwNCA2OS4xMjQ5SDE3LjA0MzlWODMuMzE5NEg0MC43MDRWNjkuMTI0OVpNNDIuNTgwNSA2OS4xMjQ5SDQwLjcwNFY4My4zMTk0SDQyLjU4MDVWNjkuMTI0OVpNNDcuODAxMyA2OS4xMjQ5SDQyLjU4MDVWODMuMzE5NEg0Ny44MDEzVjY5LjEyNDlaTTc4LjU1NiAzOC4zNzAxQzc4LjU1NiA1NS4zNTU1IDY0Ljc4NjcgNjkuMTI0OSA0Ny44MDEzIDY5LjEyNDlWODMuMzE5NEM3Mi42MjYxIDgzLjMxOTQgOTIuNzUwNSA2My4xOTQ5IDkyLjc1MDUgMzguMzcwMUg3OC41NTZaTTQ3LjgwMTMgNy42MTUzMkM2NC43ODY2IDcuNjE1MzIgNzguNTU2IDIxLjM4NDcgNzguNTU2IDM4LjM3MDFIOTIuNzUwNUM5Mi43NTA1IDEzLjU0NTMgNzIuNjI2IC02LjU3OTE5IDQ3LjgwMTMgLTYuNTc5MTlWNy42MTUzMlpNNDIuNTgwNSA3LjYxNTMySDQ3LjgwMTNWLTYuNTc5MTlINDIuNTgwNVY3LjYxNTMyWk00MC43MDQgNy42MTUzMkg0Mi41ODA1Vi02LjU3OTE5SDQwLjcwNFY3LjYxNTMyWiIgZmlsbD0iYmxhY2siIG1hc2s9InVybCgjZG9zdS1kLWN1dG91dCkiLz48cGF0aCBkPSJNNjguOTIxNSAzNi4wMTM1QzY4LjkyMTUgMzYuMDEzNSA2NS43MzY5IDQ5LjQ3MzggNTEuNDIzMSA0OS40NzM4QzM3LjEwOTMgNDkuNDczOCAzMi41Nzg3IDM3LjM1OTYgMzIuNTc4NyAzNi4wMTM1IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjcuNjkxNjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0wLjM0ODYzMyA4NS40OTQ2QzAuMzQ4NjMzIDg1LjQ5NDYgMjkuNDg1NiA4NS44MzA5IDM0LjgwOSA4NS42OThDNDQuODMzNyA4NS40NDc3IDUxLjI4NzIgODQuNDAyIDU3LjUyNjkgNzguOTcyNEM2Mi44MTI5IDc0LjM3MjcgNzUuMTM0MiA1OS42ODM2IDc1LjEzNDIgNTkuNjgzNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjE2NDgyIi8%2BPC9zdmc%2B)](https://github.dosu.com/Future-House/paper-qa?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-learn-repo&utm_term=Future-House%2Fpaper-qa) [![Add Dosu to your team](https://img.shields.io/badge/Add%20Dosu%20to%20your%20team-1f6feb?style=flat)](https://app.dosu.dev/signup?referrer=openSource&source=github-footer&utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-add-team&utm_term=Future-House%2Fpaper-qa)",
+          "url": "https://github.com/Future-House/paper-qa/issues/1250#issuecomment-3682225581",
+          "userContentEdits": {
+            "nodes": [
+              {
+                "editedAt": "2026-04-29T00:35:19Z",
+                "createdAt": "2026-04-29T00:35:19Z",
+                "deletedAt": null,
+                "diff": "<!-- Greeting -->\nHi @kirillkoncha! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.\n\n<!-- Answer -->\nThis error happens because the config for \"search_only_clinical_trials\" includes chunk_size and overlap fields under parsing, but the current paper-qa version expects only specific fields there and forbids any extras. If these fields are present but not recognized by the ParsingSettings model, Pydantic will throw a validation error like the one you’re seeing. This is likely due to a mismatch between the config file and the latest code expectations, which has happened with other settings in recent updates as well [see discussion](https://github.com/Future-House/paper-qa/issues/1026).\n\nTo fix this, you can try removing the chunk_size and overlap fields from the parsing section of your config, or if you’re using the built-in config, copy it locally, edit out those fields, and then load it with Settings.from_name pointing to your edited config. This should let you proceed without the validation error.\n\nIf you want to keep custom chunking, make sure the fields you use in parsing match exactly what the current ParsingSettings model allows. If you’re not sure, you can check the latest source for allowed fields [here](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/settings.py#L156-L865).\n\nLet me know if you want a quick example of how to patch the config!\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=reply-with-mention&utm_term=Future-House%2Fpaper-qa).*\n\n---\n\nShare context across your team and agents. Try [Dosu](https://dosu.dev?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-tagline&utm_term=Future-House%2Fpaper-qa).\n\n[![Leave Feedback](https://img.shields.io/badge/Leave%20Feedback-555555?style=flat)](https://app.dosu.dev/response-feedback?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-feedback&utm_term=Future-House%2Fpaper-qa#message_id=ce777cf1-fbcf-499d-834f-96ed021f94ee) [![Learn about paper-qa with Dosu](https://img.shields.io/badge/Learn%20about%20paper--qa%20with%20Dosu-2f7b3f?style=flat&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iODYiIGhlaWdodD0iODkiIHZpZXdCb3g9IjAgMCA4NiA4OSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yOTIzNiAxMi43OTI4TDE3Ljc1OTMgNi42ODE4OFY3Mi41NjY3TDUuMjkyMzYgODQuMDYxOFYxMi43OTI4WiIgZmlsbD0iI0I0QkI5MSIvPjxwYXRoIGQ9Ik0xOC4yNTc1IDczLjExOTZMNTkuMTMyOSA3Mi43NDhMNTEuNzAxMSA4Mi40MDk1TDI5LjAzMzggODYuMjkxTDYuMjM5NjIgODUuMTU1NEwxOC4yNTc1IDczLjExOTZaIiBmaWxsPSIjNzc4NTYxIi8%2BPHBhdGggZD0iTTE3LjQ5MTYgMy43MzYzM0wzLjU4NTU3IDEyLjcwOTlWODMuNTc5MkMzLjU4NTU3IDg0Ljc1NDIgNC45ODU2MyA4NS4zNjUyIDUuODQ3MDUgODQuNTY2TDE5LjYyOTYgNzEuNzgwMSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjQyODQ0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bWFzayBpZD0iZG9zdS1kLWN1dG91dCIgZmlsbD0id2hpdGUiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDAuNzA0IDAuNTE4MDY2SDE3LjA0MzlWNzYuMjIyMUg0MC43MDRINDIuNTgwNUg0Ny44MDEzQzY4LjcwNjQgNzYuMjIyMSA4NS42NTMzIDU5LjI3NTIgODUuNjUzMyAzOC4zNzAxQzg1LjY1MzMgMTcuNDY1IDY4LjcwNjMgMC41MTgwNjYgNDcuODAxMyAwLjUxODA2Nkg0Mi41ODA1SDQwLjcwNFoiLz48L21hc2s%2BPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MC43MDQgMC41MTgwNjZIMTcuMDQzOVY3Ni4yMjIxSDQwLjcwNEg0Mi41ODA1SDQ3LjgwMTNDNjguNzA2NCA3Ni4yMjIxIDg1LjY1MzMgNTkuMjc1MiA4NS42NTMzIDM4LjM3MDFDODUuNjUzMyAxNy40NjUgNjguNzA2MyAwLjUxODA2NiA0Ny44MDEzIDAuNTE4MDY2SDQyLjU4MDVINDAuNzA0WiIgZmlsbD0iI0YzRjZGMSIvPjxwYXRoIGQ9Ik0xNy4wNDM5IDAuNTE4MDY2Vi02LjU3OTE5SDkuOTQ2NjlWMC41MTgwNjZIMTcuMDQzOVpNMTcuMDQzOSA3Ni4yMjIxSDkuOTQ2NjlWODMuMzE5NEgxNy4wNDM5Vjc2LjIyMjFaTTE3LjA0MzkgNy42MTUzMkg0MC43MDRWLTYuNTc5MTlIMTcuMDQzOVY3LjYxNTMyWk0yNC4xNDEyIDc2LjIyMjFWMC41MTgwNjZIOS45NDY2OVY3Ni4yMjIxSDI0LjE0MTJaTTQwLjcwNCA2OS4xMjQ5SDE3LjA0MzlWODMuMzE5NEg0MC43MDRWNjkuMTI0OVpNNDIuNTgwNSA2OS4xMjQ5SDQwLjcwNFY4My4zMTk0SDQyLjU4MDVWNjkuMTI0OVpNNDcuODAxMyA2OS4xMjQ5SDQyLjU4MDVWODMuMzE5NEg0Ny44MDEzVjY5LjEyNDlaTTc4LjU1NiAzOC4zNzAxQzc4LjU1NiA1NS4zNTU1IDY0Ljc4NjcgNjkuMTI0OSA0Ny44MDEzIDY5LjEyNDlWODMuMzE5NEM3Mi42MjYxIDgzLjMxOTQgOTIuNzUwNSA2My4xOTQ5IDkyLjc1MDUgMzguMzcwMUg3OC41NTZaTTQ3LjgwMTMgNy42MTUzMkM2NC43ODY2IDcuNjE1MzIgNzguNTU2IDIxLjM4NDcgNzguNTU2IDM4LjM3MDFIOTIuNzUwNUM5Mi43NTA1IDEzLjU0NTMgNzIuNjI2IC02LjU3OTE5IDQ3LjgwMTMgLTYuNTc5MTlWNy42MTUzMlpNNDIuNTgwNSA3LjYxNTMySDQ3LjgwMTNWLTYuNTc5MTlINDIuNTgwNVY3LjYxNTMyWk00MC43MDQgNy42MTUzMkg0Mi41ODA1Vi02LjU3OTE5SDQwLjcwNFY3LjYxNTMyWiIgZmlsbD0iYmxhY2siIG1hc2s9InVybCgjZG9zdS1kLWN1dG91dCkiLz48cGF0aCBkPSJNNjguOTIxNSAzNi4wMTM1QzY4LjkyMTUgMzYuMDEzNSA2NS43MzY5IDQ5LjQ3MzggNTEuNDIzMSA0OS40NzM4QzM3LjEwOTMgNDkuNDczOCAzMi41Nzg3IDM3LjM1OTYgMzIuNTc4NyAzNi4wMTM1IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjcuNjkxNjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0wLjM0ODYzMyA4NS40OTQ2QzAuMzQ4NjMzIDg1LjQ5NDYgMjkuNDg1NiA4NS44MzA5IDM0LjgwOSA4NS42OThDNDQuODMzNyA4NS40NDc3IDUxLjI4NzIgODQuNDAyIDU3LjUyNjkgNzguOTcyNEM2Mi44MTI5IDc0LjM3MjcgNzUuMTM0MiA1OS42ODM2IDc1LjEzNDIgNTkuNjgzNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjE2NDgyIi8%2BPC9zdmc%2B)](https://github.dosu.com/Future-House/paper-qa?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-learn-repo&utm_term=Future-House%2Fpaper-qa) [![Add Dosu to your team](https://img.shields.io/badge/Add%20Dosu%20to%20your%20team-1f6feb?style=flat)](https://app.dosu.dev/signup?referrer=openSource&source=github-footer&utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-add-team&utm_term=Future-House%2Fpaper-qa)",
+                "editor": {
+                  "login": "dosubot"
+                }
+              },
+              {
+                "editedAt": "2025-12-22T14:08:40Z",
+                "createdAt": "2026-04-29T00:35:19Z",
+                "deletedAt": null,
+                "diff": "<!-- Greeting -->\nHi @kirillkoncha! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.\n\n<!-- Answer -->\nThis error happens because the config for \"search_only_clinical_trials\" includes chunk_size and overlap fields under parsing, but the current paper-qa version expects only specific fields there and forbids any extras. If these fields are present but not recognized by the ParsingSettings model, Pydantic will throw a validation error like the one you’re seeing. This is likely due to a mismatch between the config file and the latest code expectations, which has happened with other settings in recent updates as well [see discussion](https://github.com/Future-House/paper-qa/issues/1026).\n\nTo fix this, you can try removing the chunk_size and overlap fields from the parsing section of your config, or if you’re using the built-in config, copy it locally, edit out those fields, and then load it with Settings.from_name pointing to your edited config. This should let you proceed without the validation error.\n\nIf you want to keep custom chunking, make sure the fields you use in parsing match exactly what the current ParsingSettings model allows. If you’re not sure, you can check the latest source for allowed fields [here](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/settings.py#L156-L865).\n\nLet me know if you want a quick example of how to patch the config!\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*\n\n---\n<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/ce777cf1-fbcf-499d-834f-96ed021f94ee?feedback_type=other)</sup>\n\n[![Chat with Dosu](https://dosu.dev/dosu-chat-badge.svg)](https://app.dosu.dev/0e493df4-ff8c-42a6-a866-71a34b293513/ask?utm_source=github)&nbsp;[![Open in Cursor](https://dosu.dev/dosu-in-cursor.svg)](https://cursor.com/link/prompt?text=This%20error%20happens%20because%20the%20config%20for%20%22search_only_clinical_trials%22%20includes%20chunk_size%20and%20overlap%20fields%20under%20parsing%2C%20but%20the%20current%20paper-qa%20version%20expects%20only%20specific%20fields%20there%20and%20forbids%20any%20extras.%20If%20these%20fields%20are%20present%20but%20not%20recognized%20by%20the%20ParsingSettings%20model%2C%20Pydantic%20will%20throw%20a%20validation%20error%20like%20the%20one%20you%E2%80%99re%20seeing.%20This%20is%20likely%20due%20to%20a%20mismatch%20between%20the%20config%20file%20and%20the%20latest%20code%20expectations%2C%20which%20has%20happened%20with%20other%20settings%20in%20recent%20updates%20as%20well%C2%A0%5Bsee%20discussion%5D%28https%3A//github.com/Future-House/paper-qa/issues/1026%29.%0A%0ATo%20fix%20this%2C%20you%20can%20try%20removing%20the%20chunk_size%20and%20overlap%20fields%20from%20the%20parsing%20section%20of%20your%20config%2C%20or%20if%20you%E2%80%99re%20using%20the%20built-in%20config%2C%20copy%20it%20locally%2C%20edit%20out%20those%20fields%2C%20and%20then%20load%20it%20with%20Settings.from_name%20pointing%20to%20your%20edited%20config.%20This%20should%20let%20you%20proceed%20without%20the%20validation%20error.%0A%0AIf%20you%20want%20to%20keep%20custom%20chunking%2C%20make%20sure%20the%20fields%20you%20use%20in%20parsing%20match%20exactly%20what%20the%20current%20ParsingSettings%20model%20allows.%20If%20you%E2%80%99re%20not%20sure%2C%20you%20can%20check%20the%20latest%20source%20for%20allowed%20fields%C2%A0%5Bhere%5D%28https%3A//github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/settings.py%23L156-L865%29.%0A%0ALet%20me%20know%20if%20you%20want%20a%20quick%20example%20of%20how%20to%20patch%20the%20config%21)&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/1250)",
+                "editor": {
+                  "login": "dosubot"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "IC_kwDOI55lCs7berck",
+          "createdAt": "2025-12-22T14:14:54Z",
+          "author": {
+            "login": "kirillkoncha",
+            "__typename": "User"
+          },
+          "body": "@dosu, but I am not using custom settings, I am using the built-in ones ",
+          "url": "https://github.com/Future-House/paper-qa/issues/1250#issuecomment-3682252580",
+          "userContentEdits": {
+            "nodes": []
+          }
+        },
+        {
+          "id": "IC_kwDOI55lCs7bexI8",
+          "createdAt": "2025-12-22T14:17:58Z",
+          "author": {
+            "login": "dosubot",
+            "__typename": "Bot"
+          },
+          "body": "<!-- Answer -->\nYou're right, you are using the built-in settings. The reason you're seeing this error is likely a version mismatch between the code and the built-in config files: the built-in config for `\"search_only_clinical_trials\"` does include `chunk_size` and `overlap` under `parsing`, which should be valid according to the current code, but if your installed package and config files are out of sync, Pydantic will complain about \"extra fields\" like this [see code reference](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/configs/search_only_clinical_trials.json#L15-L19).\n\nTo fix this, try the following:\n1. Make sure you have a clean, up-to-date install of paper-qa (e.g., run `pip install --upgrade --force-reinstall paperqa` in your Colab).\n2. If you still get the error, it's possible an old config is being picked up from your user directory. Try deleting any `~/.config/paperqa/settings/search_only_clinical_trials.json` file if it exists, so the package uses the bundled config.\n\nIf the problem persists, as a workaround, you can copy the built-in config, remove the `chunk_size` and `overlap` fields, and load it as a custom config. Let me know if you want a quick step-by-step for that!\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=reply-with-mention&utm_term=Future-House%2Fpaper-qa).*\n\n---\n\nShare context across your team and agents. Try [Dosu](https://dosu.dev?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-tagline&utm_term=Future-House%2Fpaper-qa).\n\n[![Leave Feedback](https://img.shields.io/badge/Leave%20Feedback-555555?style=flat)](https://app.dosu.dev/response-feedback?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-feedback&utm_term=Future-House%2Fpaper-qa#message_id=94ce96e6-d5a0-491b-a50c-c031dd164330) [![Learn about paper-qa with Dosu](https://img.shields.io/badge/Learn%20about%20paper--qa%20with%20Dosu-2f7b3f?style=flat&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iODYiIGhlaWdodD0iODkiIHZpZXdCb3g9IjAgMCA4NiA4OSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yOTIzNiAxMi43OTI4TDE3Ljc1OTMgNi42ODE4OFY3Mi41NjY3TDUuMjkyMzYgODQuMDYxOFYxMi43OTI4WiIgZmlsbD0iI0I0QkI5MSIvPjxwYXRoIGQ9Ik0xOC4yNTc1IDczLjExOTZMNTkuMTMyOSA3Mi43NDhMNTEuNzAxMSA4Mi40MDk1TDI5LjAzMzggODYuMjkxTDYuMjM5NjIgODUuMTU1NEwxOC4yNTc1IDczLjExOTZaIiBmaWxsPSIjNzc4NTYxIi8%2BPHBhdGggZD0iTTE3LjQ5MTYgMy43MzYzM0wzLjU4NTU3IDEyLjcwOTlWODMuNTc5MkMzLjU4NTU3IDg0Ljc1NDIgNC45ODU2MyA4NS4zNjUyIDUuODQ3MDUgODQuNTY2TDE5LjYyOTYgNzEuNzgwMSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjQyODQ0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bWFzayBpZD0iZG9zdS1kLWN1dG91dCIgZmlsbD0id2hpdGUiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDAuNzA0IDAuNTE4MDY2SDE3LjA0MzlWNzYuMjIyMUg0MC43MDRINDIuNTgwNUg0Ny44MDEzQzY4LjcwNjQgNzYuMjIyMSA4NS42NTMzIDU5LjI3NTIgODUuNjUzMyAzOC4zNzAxQzg1LjY1MzMgMTcuNDY1IDY4LjcwNjMgMC41MTgwNjYgNDcuODAxMyAwLjUxODA2Nkg0Mi41ODA1SDQwLjcwNFoiLz48L21hc2s%2BPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MC43MDQgMC41MTgwNjZIMTcuMDQzOVY3Ni4yMjIxSDQwLjcwNEg0Mi41ODA1SDQ3LjgwMTNDNjguNzA2NCA3Ni4yMjIxIDg1LjY1MzMgNTkuMjc1MiA4NS42NTMzIDM4LjM3MDFDODUuNjUzMyAxNy40NjUgNjguNzA2MyAwLjUxODA2NiA0Ny44MDEzIDAuNTE4MDY2SDQyLjU4MDVINDAuNzA0WiIgZmlsbD0iI0YzRjZGMSIvPjxwYXRoIGQ9Ik0xNy4wNDM5IDAuNTE4MDY2Vi02LjU3OTE5SDkuOTQ2NjlWMC41MTgwNjZIMTcuMDQzOVpNMTcuMDQzOSA3Ni4yMjIxSDkuOTQ2NjlWODMuMzE5NEgxNy4wNDM5Vjc2LjIyMjFaTTE3LjA0MzkgNy42MTUzMkg0MC43MDRWLTYuNTc5MTlIMTcuMDQzOVY3LjYxNTMyWk0yNC4xNDEyIDc2LjIyMjFWMC41MTgwNjZIOS45NDY2OVY3Ni4yMjIxSDI0LjE0MTJaTTQwLjcwNCA2OS4xMjQ5SDE3LjA0MzlWODMuMzE5NEg0MC43MDRWNjkuMTI0OVpNNDIuNTgwNSA2OS4xMjQ5SDQwLjcwNFY4My4zMTk0SDQyLjU4MDVWNjkuMTI0OVpNNDcuODAxMyA2OS4xMjQ5SDQyLjU4MDVWODMuMzE5NEg0Ny44MDEzVjY5LjEyNDlaTTc4LjU1NiAzOC4zNzAxQzc4LjU1NiA1NS4zNTU1IDY0Ljc4NjcgNjkuMTI0OSA0Ny44MDEzIDY5LjEyNDlWODMuMzE5NEM3Mi42MjYxIDgzLjMxOTQgOTIuNzUwNSA2My4xOTQ5IDkyLjc1MDUgMzguMzcwMUg3OC41NTZaTTQ3LjgwMTMgNy42MTUzMkM2NC43ODY2IDcuNjE1MzIgNzguNTU2IDIxLjM4NDcgNzguNTU2IDM4LjM3MDFIOTIuNzUwNUM5Mi43NTA1IDEzLjU0NTMgNzIuNjI2IC02LjU3OTE5IDQ3LjgwMTMgLTYuNTc5MTlWNy42MTUzMlpNNDIuNTgwNSA3LjYxNTMySDQ3LjgwMTNWLTYuNTc5MTlINDIuNTgwNVY3LjYxNTMyWk00MC43MDQgNy42MTUzMkg0Mi41ODA1Vi02LjU3OTE5SDQwLjcwNFY3LjYxNTMyWiIgZmlsbD0iYmxhY2siIG1hc2s9InVybCgjZG9zdS1kLWN1dG91dCkiLz48cGF0aCBkPSJNNjguOTIxNSAzNi4wMTM1QzY4LjkyMTUgMzYuMDEzNSA2NS43MzY5IDQ5LjQ3MzggNTEuNDIzMSA0OS40NzM4QzM3LjEwOTMgNDkuNDczOCAzMi41Nzg3IDM3LjM1OTYgMzIuNTc4NyAzNi4wMTM1IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjcuNjkxNjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0wLjM0ODYzMyA4NS40OTQ2QzAuMzQ4NjMzIDg1LjQ5NDYgMjkuNDg1NiA4NS44MzA5IDM0LjgwOSA4NS42OThDNDQuODMzNyA4NS40NDc3IDUxLjI4NzIgODQuNDAyIDU3LjUyNjkgNzguOTcyNEM2Mi44MTI5IDc0LjM3MjcgNzUuMTM0MiA1OS42ODM2IDc1LjEzNDIgNTkuNjgzNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjE2NDgyIi8%2BPC9zdmc%2B)](https://github.dosu.com/Future-House/paper-qa?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-learn-repo&utm_term=Future-House%2Fpaper-qa) [![Add Dosu to your team](https://img.shields.io/badge/Add%20Dosu%20to%20your%20team-1f6feb?style=flat)](https://app.dosu.dev/signup?referrer=openSource&source=github-footer&utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-add-team&utm_term=Future-House%2Fpaper-qa)",
+          "url": "https://github.com/Future-House/paper-qa/issues/1250#issuecomment-3682275900",
+          "userContentEdits": {
+            "nodes": [
+              {
+                "editedAt": "2026-04-29T00:35:24Z",
+                "createdAt": "2026-04-29T00:35:24Z",
+                "deletedAt": null,
+                "diff": "<!-- Answer -->\nYou're right, you are using the built-in settings. The reason you're seeing this error is likely a version mismatch between the code and the built-in config files: the built-in config for `\"search_only_clinical_trials\"` does include `chunk_size` and `overlap` under `parsing`, which should be valid according to the current code, but if your installed package and config files are out of sync, Pydantic will complain about \"extra fields\" like this [see code reference](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/configs/search_only_clinical_trials.json#L15-L19).\n\nTo fix this, try the following:\n1. Make sure you have a clean, up-to-date install of paper-qa (e.g., run `pip install --upgrade --force-reinstall paperqa` in your Colab).\n2. If you still get the error, it's possible an old config is being picked up from your user directory. Try deleting any `~/.config/paperqa/settings/search_only_clinical_trials.json` file if it exists, so the package uses the bundled config.\n\nIf the problem persists, as a workaround, you can copy the built-in config, remove the `chunk_size` and `overlap` fields, and load it as a custom config. Let me know if you want a quick step-by-step for that!\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=reply-with-mention&utm_term=Future-House%2Fpaper-qa).*\n\n---\n\nShare context across your team and agents. Try [Dosu](https://dosu.dev?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-tagline&utm_term=Future-House%2Fpaper-qa).\n\n[![Leave Feedback](https://img.shields.io/badge/Leave%20Feedback-555555?style=flat)](https://app.dosu.dev/response-feedback?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-feedback&utm_term=Future-House%2Fpaper-qa#message_id=94ce96e6-d5a0-491b-a50c-c031dd164330) [![Learn about paper-qa with Dosu](https://img.shields.io/badge/Learn%20about%20paper--qa%20with%20Dosu-2f7b3f?style=flat&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iODYiIGhlaWdodD0iODkiIHZpZXdCb3g9IjAgMCA4NiA4OSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yOTIzNiAxMi43OTI4TDE3Ljc1OTMgNi42ODE4OFY3Mi41NjY3TDUuMjkyMzYgODQuMDYxOFYxMi43OTI4WiIgZmlsbD0iI0I0QkI5MSIvPjxwYXRoIGQ9Ik0xOC4yNTc1IDczLjExOTZMNTkuMTMyOSA3Mi43NDhMNTEuNzAxMSA4Mi40MDk1TDI5LjAzMzggODYuMjkxTDYuMjM5NjIgODUuMTU1NEwxOC4yNTc1IDczLjExOTZaIiBmaWxsPSIjNzc4NTYxIi8%2BPHBhdGggZD0iTTE3LjQ5MTYgMy43MzYzM0wzLjU4NTU3IDEyLjcwOTlWODMuNTc5MkMzLjU4NTU3IDg0Ljc1NDIgNC45ODU2MyA4NS4zNjUyIDUuODQ3MDUgODQuNTY2TDE5LjYyOTYgNzEuNzgwMSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjQyODQ0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bWFzayBpZD0iZG9zdS1kLWN1dG91dCIgZmlsbD0id2hpdGUiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDAuNzA0IDAuNTE4MDY2SDE3LjA0MzlWNzYuMjIyMUg0MC43MDRINDIuNTgwNUg0Ny44MDEzQzY4LjcwNjQgNzYuMjIyMSA4NS42NTMzIDU5LjI3NTIgODUuNjUzMyAzOC4zNzAxQzg1LjY1MzMgMTcuNDY1IDY4LjcwNjMgMC41MTgwNjYgNDcuODAxMyAwLjUxODA2Nkg0Mi41ODA1SDQwLjcwNFoiLz48L21hc2s%2BPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MC43MDQgMC41MTgwNjZIMTcuMDQzOVY3Ni4yMjIxSDQwLjcwNEg0Mi41ODA1SDQ3LjgwMTNDNjguNzA2NCA3Ni4yMjIxIDg1LjY1MzMgNTkuMjc1MiA4NS42NTMzIDM4LjM3MDFDODUuNjUzMyAxNy40NjUgNjguNzA2MyAwLjUxODA2NiA0Ny44MDEzIDAuNTE4MDY2SDQyLjU4MDVINDAuNzA0WiIgZmlsbD0iI0YzRjZGMSIvPjxwYXRoIGQ9Ik0xNy4wNDM5IDAuNTE4MDY2Vi02LjU3OTE5SDkuOTQ2NjlWMC41MTgwNjZIMTcuMDQzOVpNMTcuMDQzOSA3Ni4yMjIxSDkuOTQ2NjlWODMuMzE5NEgxNy4wNDM5Vjc2LjIyMjFaTTE3LjA0MzkgNy42MTUzMkg0MC43MDRWLTYuNTc5MTlIMTcuMDQzOVY3LjYxNTMyWk0yNC4xNDEyIDc2LjIyMjFWMC41MTgwNjZIOS45NDY2OVY3Ni4yMjIxSDI0LjE0MTJaTTQwLjcwNCA2OS4xMjQ5SDE3LjA0MzlWODMuMzE5NEg0MC43MDRWNjkuMTI0OVpNNDIuNTgwNSA2OS4xMjQ5SDQwLjcwNFY4My4zMTk0SDQyLjU4MDVWNjkuMTI0OVpNNDcuODAxMyA2OS4xMjQ5SDQyLjU4MDVWODMuMzE5NEg0Ny44MDEzVjY5LjEyNDlaTTc4LjU1NiAzOC4zNzAxQzc4LjU1NiA1NS4zNTU1IDY0Ljc4NjcgNjkuMTI0OSA0Ny44MDEzIDY5LjEyNDlWODMuMzE5NEM3Mi42MjYxIDgzLjMxOTQgOTIuNzUwNSA2My4xOTQ5IDkyLjc1MDUgMzguMzcwMUg3OC41NTZaTTQ3LjgwMTMgNy42MTUzMkM2NC43ODY2IDcuNjE1MzIgNzguNTU2IDIxLjM4NDcgNzguNTU2IDM4LjM3MDFIOTIuNzUwNUM5Mi43NTA1IDEzLjU0NTMgNzIuNjI2IC02LjU3OTE5IDQ3LjgwMTMgLTYuNTc5MTlWNy42MTUzMlpNNDIuNTgwNSA3LjYxNTMySDQ3LjgwMTNWLTYuNTc5MTlINDIuNTgwNVY3LjYxNTMyWk00MC43MDQgNy42MTUzMkg0Mi41ODA1Vi02LjU3OTE5SDQwLjcwNFY3LjYxNTMyWiIgZmlsbD0iYmxhY2siIG1hc2s9InVybCgjZG9zdS1kLWN1dG91dCkiLz48cGF0aCBkPSJNNjguOTIxNSAzNi4wMTM1QzY4LjkyMTUgMzYuMDEzNSA2NS43MzY5IDQ5LjQ3MzggNTEuNDIzMSA0OS40NzM4QzM3LjEwOTMgNDkuNDczOCAzMi41Nzg3IDM3LjM1OTYgMzIuNTc4NyAzNi4wMTM1IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjcuNjkxNjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0wLjM0ODYzMyA4NS40OTQ2QzAuMzQ4NjMzIDg1LjQ5NDYgMjkuNDg1NiA4NS44MzA5IDM0LjgwOSA4NS42OThDNDQuODMzNyA4NS40NDc3IDUxLjI4NzIgODQuNDAyIDU3LjUyNjkgNzguOTcyNEM2Mi44MTI5IDc0LjM3MjcgNzUuMTM0MiA1OS42ODM2IDc1LjEzNDIgNTkuNjgzNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSI2LjE2NDgyIi8%2BPC9zdmc%2B)](https://github.dosu.com/Future-House/paper-qa?utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-learn-repo&utm_term=Future-House%2Fpaper-qa) [![Add Dosu to your team](https://img.shields.io/badge/Add%20Dosu%20to%20your%20team-1f6feb?style=flat)](https://app.dosu.dev/signup?referrer=openSource&source=github-footer&utm_source=github&utm_medium=bot-comment&utm_campaign=github-comment-footer-20260415&utm_content=knowledge-infrastructure-add-team&utm_term=Future-House%2Fpaper-qa)",
+                "editor": {
+                  "login": "dosubot"
+                }
+              },
+              {
+                "editedAt": "2025-12-22T14:17:58Z",
+                "createdAt": "2026-04-29T00:35:24Z",
+                "deletedAt": null,
+                "diff": "<!-- Answer -->\nYou're right, you are using the built-in settings. The reason you're seeing this error is likely a version mismatch between the code and the built-in config files: the built-in config for `\"search_only_clinical_trials\"` does include `chunk_size` and `overlap` under `parsing`, which should be valid according to the current code, but if your installed package and config files are out of sync, Pydantic will complain about \"extra fields\" like this [see code reference](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/configs/search_only_clinical_trials.json#L15-L19).\n\nTo fix this, try the following:\n1. Make sure you have a clean, up-to-date install of paper-qa (e.g., run `pip install --upgrade --force-reinstall paperqa` in your Colab).\n2. If you still get the error, it's possible an old config is being picked up from your user directory. Try deleting any `~/.config/paperqa/settings/search_only_clinical_trials.json` file if it exists, so the package uses the bundled config.\n\nIf the problem persists, as a workaround, you can copy the built-in config, remove the `chunk_size` and `overlap` fields, and load it as a custom config. Let me know if you want a quick step-by-step for that!\n\n\n<!-- Dosu Comment Footer -->\n*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*\n\n---\n<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/94ce96e6-d5a0-491b-a50c-c031dd164330?feedback_type=other)</sup>\n\n[![Chat with Dosu](https://dosu.dev/dosu-chat-badge.svg)](https://app.dosu.dev/0e493df4-ff8c-42a6-a866-71a34b293513/ask?utm_source=github)&nbsp;[![Open in Cursor](https://dosu.dev/dosu-in-cursor.svg)](https://cursor.com/link/prompt?text=You%27re%20right%2C%20you%20are%20using%20the%20built-in%20settings.%20The%20reason%20you%27re%20seeing%20this%20error%20is%20likely%20a%20version%20mismatch%20between%20the%20code%20and%20the%20built-in%20config%20files%3A%20the%20built-in%20config%20for%20%60%22search_only_clinical_trials%22%60%20does%20include%20%60chunk_size%60%20and%20%60overlap%60%20under%20%60parsing%60%2C%20which%20should%20be%20valid%20according%20to%20the%20current%20code%2C%20but%20if%20your%20installed%20package%20and%20config%20files%20are%20out%20of%20sync%2C%20Pydantic%20will%20complain%20about%20%22extra%20fields%22%20like%20this%C2%A0%5Bsee%20code%20reference%5D%28https%3A//github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/configs/search_only_clinical_trials.json%23L15-L19%29.%0A%0ATo%20fix%20this%2C%20try%20the%20following%3A%0A1.%20Make%20sure%20you%20have%20a%20clean%2C%20up-to-date%20install%20of%20paper-qa%20%28e.g.%2C%20run%20%60pip%20install%20--upgrade%20--force-reinstall%20paperqa%60%20in%20your%20Colab%29.%0A2.%20If%20you%20still%20get%20the%20error%2C%20it%27s%20possible%20an%20old%20config%20is%20being%20picked%20up%20from%20your%20user%20directory.%20Try%20deleting%20any%20%60~/.config/paperqa/settings/search_only_clinical_trials.json%60%20file%20if%20it%20exists%2C%20so%20the%20package%20uses%20the%20bundled%20config.%0A%0AIf%20the%20problem%20persists%2C%20as%20a%20workaround%2C%20you%20can%20copy%20the%20built-in%20config%2C%20remove%20the%20%60chunk_size%60%20and%20%60overlap%60%20fields%2C%20and%20load%20it%20as%20a%20custom%20config.%20Let%20me%20know%20if%20you%20want%20a%20quick%20step-by-step%20for%20that%21)&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/1250)",
+                "editor": {
+                  "login": "dosubot"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "IC_kwDOI55lCs7bfJUR",
+          "createdAt": "2025-12-22T14:45:32Z",
+          "author": {
+            "login": "jamesbraza",
+            "__typename": "User"
+          },
+          "body": "Hi @kirillkoncha thanks for the report. We just completed a deprecation cycle, and looks like our built-in configurations need updating. I just made https://github.com/Future-House/paper-qa/pull/1251 for this.",
+          "url": "https://github.com/Future-House/paper-qa/issues/1250#issuecomment-3682374929",
+          "userContentEdits": {
+            "nodes": []
+          }
+        },
+        {
+          "id": "IC_kwDOI55lCs7bf7lg",
+          "createdAt": "2025-12-22T15:31:57Z",
+          "author": {
+            "login": "kirillkoncha",
+            "__typename": "User"
+          },
+          "body": "> Hi [@kirillkoncha](https://github.com/kirillkoncha) thanks for the report. We just completed a deprecation cycle, and looks like our built-in configurations need updating. I just made [#1251](https://github.com/Future-House/paper-qa/pull/1251) for this.\n\nthank you so much!",
+          "url": "https://github.com/Future-House/paper-qa/issues/1250#issuecomment-3682580832",
+          "userContentEdits": {
+            "nodes": []
+          }
+        },
+        {
+          "id": "IC_kwDOI55lCs7btd-A",
+          "createdAt": "2025-12-23T10:38:45Z",
+          "author": {
+            "login": "kirillkoncha",
+            "__typename": "User"
+          },
+          "body": "New issue of the same nature: https://github.com/Future-House/paper-qa/pull/1251#issuecomment-3686104549",
+          "url": "https://github.com/Future-House/paper-qa/issues/1250#issuecomment-3686129536",
+          "userContentEdits": {
+            "nodes": []
+          }
+        }
+      ]
+    },
+    "timelineItems": {
+      "nodes": [
+        {
+          "__typename": "RenamedTitleEvent",
+          "createdAt": "2025-12-22T14:06:40Z",
+          "previousTitle": "pydantic validation Error - running in colab",
+          "currentTitle": "[BUG] pydantic validation Error - running in colab"
+        },
+        {
+          "__typename": "LabeledEvent",
+          "createdAt": "2025-12-22T14:07:30Z",
+          "label": {
+            "name": "bug"
+          }
+        },
+        {
+          "__typename": "RenamedTitleEvent",
+          "createdAt": "2025-12-22T14:07:43Z",
+          "previousTitle": "[BUG] pydantic validation Error - running in colab",
+          "currentTitle": "pydantic validation Error - running in colab"
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "MentionedEvent"
+        },
+        {
+          "__typename": "SubscribedEvent"
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "MentionedEvent"
+        },
+        {
+          "__typename": "SubscribedEvent"
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2025-12-22T14:45:10Z",
+          "source": {
+            "__typename": "PullRequest",
+            "number": 1251
+          }
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "MentionedEvent"
+        },
+        {
+          "__typename": "SubscribedEvent"
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "ClosedEvent",
+          "createdAt": "2025-12-22T15:58:22Z"
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2025-12-23T14:00:57Z",
+          "source": {
+            "__typename": "Issue",
+            "number": 1254
+          }
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-03-26T13:51:35Z",
+          "source": {
+            "__typename": "Issue",
+            "number": 1321
+          }
+        }
+      ]
+    }
+  }
+}

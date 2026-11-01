@@ -1,0 +1,20 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/core/config.py",
+        "src/zarr/codecs/_v2.py"
+      ],
+      "evidence": "opening data encoded with the pickle codec should probably fail unless the user has explicitly opted in to accessing the unsafe codec, e.g. via an environment variable and runtime configuration setting.",
+      "rationale": "Proposes the change: fail on decoding pickle unless opted in via env var and runtime config, which matches the reference fix. It doesn't name specific files or the error class.",
+      "author": "d-v-b",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise"
+}

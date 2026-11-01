@@ -1,0 +1,9 @@
+{
+  "pr": 724,
+  "issue": 709,
+  "tStar": "2024-11-26T18:37:37Z",
+  "title": "Failures to correct evaluate non-single letter answers",
+  "issueAuthor": "jamesbraza",
+  "body": "For the `qa_prompt`:\r\n\r\n> Q: What is my office's zip code?\r\n> \r\n> Options:\r\n> A) 94107\r\n> B) 94106\r\n> C) cheesecake\r\n> D) Insufficient information to answer this question\r\n> E) -8\r\n\r\nAnd the `qa_answer` (where correct is A):\r\n\r\n> the answer is 94106 or 94107\r\n\r\nThe LLM evaluation says:\r\n\r\n> The single letter answer is B.\r\n\r\nWhich gets converted to `\"T\"`, and declares it as `LitQAEvaluation.INCORRECT`.\r\n\r\nEven though `LitQAEvaluation.INCORRECT` is actually the right output, we got it right here for the wrong reasons.",
+  "comments": []
+}

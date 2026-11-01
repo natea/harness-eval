@@ -1,0 +1,40 @@
+{
+  "pr": 1262,
+  "merged": "2026-01-05",
+  "issues": [
+    {
+      "n": 1257,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "src/paperqa/settings.py",
+    "src/paperqa/utils.py"
+  ],
+  "testFiles": [
+    "tests/test_paperqa.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 4,
+  "selected": [
+    "tests/test_paperqa.py::test_parse_pdf_string_resolution",
+    "tests/test_paperqa.py::test_timeout_resilience"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 1,
+    "liveApi": 1,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_paperqa::test_parse_pdf_string_resolution"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_paperqa::test_timeout_resilience"
+  ],
+  "verdict": "VALID"
+}

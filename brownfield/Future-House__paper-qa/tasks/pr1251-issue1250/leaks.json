@@ -1,0 +1,47 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "parsing.chunk_size\n  Extra inputs are not permitted [type=extra_forbidden, input_value=9000, input_type=int]",
+      "rationale": "Error report with traceback showing the config has extra fields chunk_size and overlap under parsing; does not state the fix.",
+      "author": "kirillkoncha",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "you can try removing the chunk_size and overlap fields from the parsing section of your config",
+      "rationale": "Suggests removing fields locally as a workaround; the reference fix moves them into reader_config in the bundled configs. Not the actual fix.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "but I am not using custom settings, I am using the built-in ones",
+      "rationale": "Clarification of user context, no fix info.",
+      "author": "kirillkoncha",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "likely a version mismatch between the code and the built-in config files",
+      "rationale": "Guesses version mismatch/reinstall; wrong cause relative to the reference, which updated the built-in config files to the new schema.",
+      "author": "dosubot",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

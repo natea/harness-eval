@@ -1,0 +1,19 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/backends/zarr.py"
+      ],
+      "evidence": "it seems that we should be able to forward a `use_zarr_fill_value_as_mask` option",
+      "rationale": "Identifies that open_datatree/open_groups in the Zarr backend lack the option, links to the code locations, and proposes forwarding it, matching the reference fix.",
+      "author": "vincentsarago",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise"
+}

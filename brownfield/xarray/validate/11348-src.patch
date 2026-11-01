@@ -1,0 +1,37 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 9932d6c0..b49cbc3d 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -158,6 +158,9 @@ Deprecations
+ Bug Fixes
+ ~~~~~~~~~
+ 
++- Treat a full ``MultiIndex`` key with tuple-valued levels as scalar selection,
++  so ``.sel`` no longer preserves a length-1 dimension for nested tuple keys
++  that identify a single row (:issue:`11341`).
+ - :py:meth:`Dataset.drop_encoding` and :py:meth:`DataArray.drop_encoding` no
+   longer copy the underlying data, avoiding excessive memory use on large
+   datasets (:issue:`11390`, :pull:`11394`).
+diff --git a/xarray/core/indexes.py b/xarray/core/indexes.py
+index 7907f1f5..e87c0d5c 100644
+--- a/xarray/core/indexes.py
++++ b/xarray/core/indexes.py
+@@ -1368,10 +1368,15 @@ class PandasMultiIndex(PandasIndex):
+                 indexer = _query_slice(self.index, label, coord_name)
+ 
+             elif isinstance(label, tuple):
+-                if _is_nested_tuple(label):
++                if len(label) == self.index.nlevels:
++                    try:
++                        indexer = self.index.get_loc(label)
++                    except (KeyError, TypeError, pd.errors.InvalidIndexError):
++                        if not _is_nested_tuple(label):
++                            raise
++                        indexer = self.index.get_locs(label)
++                elif _is_nested_tuple(label):
+                     indexer = self.index.get_locs(label)
+-                elif len(label) == self.index.nlevels:
+-                    indexer = self.index.get_loc(label)
+                 else:
+                     levels = [self.index.names[i] for i in range(len(label))]
+                     indexer, new_index = self.index.get_loc_level(label, level=levels)

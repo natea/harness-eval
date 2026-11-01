@@ -1,0 +1,57 @@
+{
+  "pr": 4183,
+  "issue": 3054,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.019862599999999998,
+  "prAuthor": "sehoffmann",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "fix_sketch",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/codecs/sharding.py"
+      ],
+      "evidence": "numpy void scalars are not hashable, which means that a class with a np.void attribute cannot be hashed by `lru_cache`, which is used by the sharding codec class",
+      "rationale": "Identifies root cause (unhashable np.void in lru_cache-used spec) and location in sharding codec, which the fix re-enables. No fix described.",
+      "author": "d-v-b",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": false,
+      "reveals_files": [
+        "src/zarr/codecs/sharding.py"
+      ],
+      "evidence": "add another function that parses the inputs to `_get_chunk_spec` prior to calling it? This parser could then check for a void scalar, convert it to something hashable (e.g. `(dtype signature, raw bytes)`",
+      "rationale": "Proposes converting void to raw bytes, similar in idea, but placed in sharding wrapper around _get_chunk_spec rather than ArraySpec hash/eq. Points somewhere the reference did not go, though bytes idea overlaps.",
+      "author": "nenb",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Also ran across this when trying to do sharding on arrays with structured dtypes (as they have np.void type fill values)",
+      "rationale": "Reports the same failure with structured dtypes; no fix info.",
+      "author": "sehoffmann",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/core/array_spec.py"
+      ],
+      "evidence": "the issue is the default `ArraySpec.__hash__` implementation which hashes each field, including `np.void` fill values. I think this can be fixed locally in `ArraySpec` by manually hashing `np.void` fill values based on their byte content (`.tobytes()`)",
+      "rationale": "Describes the reference fix: custom ArraySpec hash using fill_value.tobytes().",
+      "author": "sehoffmann",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ]
+}

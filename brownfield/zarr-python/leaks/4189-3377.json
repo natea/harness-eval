@@ -1,0 +1,23 @@
+{
+  "pr": 4189,
+  "issue": 3377,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0100166,
+  "prAuthor": "JOhnsonKC201",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/core/group.py"
+      ],
+      "evidence": "[this line](https://github.com/zarr-developers/zarr-python/blob/c21d1f92f7f2648a4c55b164510c524a951ac11d/src/zarr/core/group.py#L1271) will trigger a failure if you attempt to use a `ZDType` instance",
+      "rationale": "Points to the specific line in group.py (np.dtype(dtype) in require_array) that the fix changes, and the cause (ZDType passed to np.dtype). Doesn't describe the replacement explicitly.",
+      "author": "d-v-b",
+      "role": "issue author"
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+# interp() performance regression in 2025.1.0+
+
+_Opened by @k-collie_
+
+### What happened?
+
+A performance regression has been introduced between 2024.11.0 and 2025.1.0, possibly in #9881, as was the case in #10287.  This issue is still present in 2025.8.0. In the example running on my machine it is a 76x performance regression. It seems to be present when interpolating 2D arrays but the degradation is more extreme with 3D arrays.
+
+### What did you expect to happen?
+
+No performance regression.
+
+### Minimal Complete Verifiable Example
+
+```Python
+import numpy as np
+import xarray as xr
+
+import time
+
+n_repeats = 10
+
+# array dims
+n_t = 122
+n_r = 65
+n_z = 65
+
+# generate some random data to interpolate
+rng = np.random.default_rng(seed=42)
+
+data = rng.random((n_t, n_r, n_z))
+data_t = np.linspace(0.01, 0.855, n_t)
+data_r = np.linspace(0.04, 4., n_r)
+data_z = np.linspace(-1.2, 1.2, n_z)
+
+da = xr.DataArray(
+    data=data,
+    dims=["t", "r", "z"],
+    coords=dict(
+        t=data_t,
+        r=data_r,
+        z=data_z,
+    ),
+)
+
+interp_z_data = rng.random((n_t))
+interp_z = xr.DataArray(
+    data=interp_z_data,
+    dims=["t"],
+    coords=dict(
+        t=data_t,
+    ),
+)
+
+start = time.time()
+for _ in range(n_repeats):
+    # regression is here:
+    da.interp(z=interp_z)
+end = time.time()
+
+t_elapsed = end - start
+print(f"Time elapsed: {t_elapsed}")
+```
+
+### MVCE confirmation
+
+- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [x] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.
+- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.
+
+### Relevant log output
+
+```Python
+pip install "xarray==2024.11.0"
+python test.py
+Time elapsed: 0.22251605987548828
+
+pip install "xarray==2025.1.0"
+python test.py
+Time elapsed: 16.765803813934326
+```
+
+### Anything else we need to know?
+
+_No response_
+
+### Environment
+
+<details>
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.13.7 (main, Aug 14 2025, 00:00:00) [GCC 15.2.1 20250808 (Red Hat 15.2.1-1)]
+python-bits: 64
+OS: Linux
+OS-release: 6.16.3-200.fc42.x86_64
+machine: x86_64
+processor:
+byteorder: little
+LC_ALL: None
+LANG: en_GB.UTF-8
+LOCALE: ('en_GB', 'UTF-8')
+libhdf5: None
+libnetcdf: None
+
+xarray: 2025.1.0
+pandas: 2.3.2
+numpy: 2.3.2
+scipy: 1.16.1
+netCDF4: None
+pydap: None
+h5netcdf: None
+h5py: None
+zarr: None
+cftime: None
+nc_time_axis: None
+iris: None
+bottleneck: None
+dask: None
+distributed: None
+matplotlib: None
+cartopy: None
+seaborn: None
+numbagg: None
+fsspec: None
+cupy: None
+pint: None
+sparse: None
+flox: None
+numpy_groupies: None
+setuptools: None
+pip: 24.3.1
+conda: None
+pytest: None
+mypy: None
+IPython: None
+sphinx: None
+</details>
+
+---
+
+## Discussion
+
+**@shoyer** (2025-09-02):
+
+cc @dcherian
+
+**@ianhi** (2025-09-10):
+
+I looked into this a little bit, and it seems as though the vectorization is breaking down in this case with the ufunc applying interpnd( https://github.com/pydata/xarray/blob/5d9aa6e22955ed49d52659667adfe7abec6848b6/xarray/core/missing.py#L786) 
+
+7930 per run ( 7930 =  122 *65) which ends up taking up more than 70% of the runtime
+
+<img width="1374" height="761" alt="Image" src="https://github.com/user-attachments/assets/baba7f7f-9b2d-4a02-baa4-245bcb45f25c" />
+
+<img width="1402" height="560" alt="Image" src="https://github.com/user-attachments/assets/1f14cb1d-6dda-43cf-95b8-7e1e7ef95270" />
+
+
+my first guess (need to investigate more) is that this is happening due to some negative consequence of `interp_z` varying along the `t` dimension which is where we are getting our 122 x 65 from
+
+**@dcherian** (2025-09-10):
+
+https://github.com/pydata/xarray/pull/9881#discussion_r1883377901 seems relevant
+
+**@leroyvn** (2026-01-30):
+
+Hi, I am running into this issue once more. [One of my libraries](https://github.com/eradiate/axsdb/) breaks down multivariate interpolation into a sequence of univariate interpolations to adjust the out-of-bound error handling policy depending on the processed dimension. I've recently upgraded xarray in my dev environment from 2024.11 to 2026.1 and saw a huge performance hit that makes this approach completely impractical. Here is a MWE:
+
+<details><summary><strong>mwe.py</strong></summary>
+
+```python
+"""
+Minimal Working Example for xarray interpolation bug report.
+
+This script demonstrates an issue with multi-dimensional interpolation in xarray
+where using `interp()` with all dimensions at once vs. sequential interpolation
+produces different behaviour.
+"""
+import argparse
+
+import numpy as np
+import xarray as xr
+
+# Create synthetic thermoprops dataset (atmospheric profile with 121 altitude levels)
+z_levels = 121
+thermoprops = xr.Dataset(
+    {
+        "t": ("z", np.linspace(187, 360, z_levels)),  # Temperature (K)
+        "p": ("z", np.logspace(np.log10(2.54e-3), np.log10(1.013e5), z_levels)),  # Pressure (Pa)
+        "x_H2O": ("z", np.logspace(np.log10(2.0e-7), np.log10(7.75e-3), z_levels)),  # H2O mixing ratio
+        "x_O3": ("z", np.logspace(np.log10(5.0e-10), np.log10(7.84e-6), z_levels)),  # O3 mixing ratio
+        "x_CO2": ("z", np.linspace(3.5e-5, 3.3e-4, z_levels)),  # CO2 mixing ratio
+    },
+    coords={"z": np.linspace(0, 120, z_levels)},  # Altitude (km)
+)
+
+# Create synthetic sigma_a data array (absorption coefficient from CKD database)
+# Dimensions: (x_CO2, x_H2O, x_O3, p, t, g)
+# This mimics the structure from a correlated k-distribution absorption database
+da = xr.DataArray(
+    np.random.rand(2, 4, 2, 16, 8, 32),  # Random absorption coefficients
+    dims=["x_CO2", "x_H2O", "x_O3", "p", "t", "g"],
+    coords={
+        "x_CO2": [0.0, 5.0e-4],
+        "x_H2O": [0.0, 1.0e-6, 1.0e-5, 1.0e-4],
+        "x_O3": [0.0, 1.0e-5],
+        "p": np.logspace(2, 5, 16),  # 100 to 100,000 Pa
+        "t": np.linspace(200, 340, 8),  # 200 to 340 K
+        "g": np.linspace(0, 1, 32),  # g-points for quadrature
+    },
+)
+
+# Build interpolation coordinate list
+# Note: Only species present in da.dims are included
+species_dims = ["x_H2O", "x_O3", "x_CO2"]
+
+dims_coords = [
+    ("g", [0.1, 0.5, 0.9]),
+    ("t", thermoprops["t"]),
+    ("p", thermoprops["p"]),
+    *[
+        (species_dim, thermoprops[species_dim])
+        for species_dim in species_dims
+    ],
+]
+
+def interp_multi(da, dims_coords, interp_kwargs: dict | None = None):
+    print(f"{da.shape = }")
+    if interp_kwargs is None:
+        interp_kwargs = {}
+    da = da.interp(dict(dims_coords), **interp_kwargs)
+    print(f"{da.shape = }")
+    return da
+
+
+def interp_seq(da, dims_coords, interp_kwargs: dict | None = None):
+    if interp_kwargs is None:
+        interp_kwargs = {}
+    print(f"{da.shape = }")
+
+    for dim, coords in dims_coords:
+        if dim in da.dims:
+            da = da.interp({dim: coords}, **interp_kwargs)
+            print(f"{dim}: {da.shape = }")
+
+    return da
+
+
+interp_kwargs = {
+    "method": "linear",
+    "assume_sorted": True,
+    "kwargs": {"bounds_error": False, "fill_value": None},
+}
+
+def cli(mode):
+    print(f"{mode = }")
+    if mode == "multi":
+        interp_multi(da, dims_coords, interp_kwargs=interp_kwargs)
+
+    elif mode == "seq":
+        interp_seq(da, dims_coords, interp_kwargs=interp_kwargs)
+
+    else:
+        raise ValueError(mode)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", help="Interpolation mode: 'multi' or 'seq'")
+    args = parser.parse_args()
+    cli(args.mode)
+```
+
+</details>
+
+Timings look like this (averaged over 10 runs; all using Python 3.12, numpy 2.2.3 and scipy 1.15.2 on macOS):
+
+Mode    | 2024.11 | 2026.1
+------- | ------- | ------
+`multi` | 0.8s    | 0.9s
+`seq`   | 0.8s    | 4.0s
+
+Is there an alternative other than reimplementing something like the 2024.11 algorithm myself?
+
+**@ianhi** (2026-01-30):
+
+I remember from looking into this that in https://github.com/pydata/xarray/pull/9881#discussion_r1883377901 there is a a possibilty of adding another path to that function that would allow for catchigni this slowed down case. PRs welcome if you can parse out the correct logic to add back a happy path for this case.
+
+**@dcherian** (2026-01-30):
+
+I spent a while on the "proper" solution and it was quite hard (we basically have to dump apply_ufunc and rewrite a bunch of it; or find some clever way to stitch together apply_ufunc's primitives). I support adding a workaround that is triggered when `.chunks is None`
+
+**@leroyvn** (2026-02-04):
+
+for what it's worth, I wrote [some workaround code](https://github.com/eradiate/axsdb/blob/36dd43667dff0e710b92bea7409b0d41e4008f83/src/axsdb/interpolation.py) that mixes calls to a custom Numba gufunc and Scipy's `interpn()` function. The performance of that approach compares to what xarray's `interp()` achieves (actually a bit better), but it's tailored to my use case so I'm not sure how relevant that would be to solve the general issue.

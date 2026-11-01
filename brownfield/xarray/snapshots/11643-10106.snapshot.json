@@ -1,0 +1,22 @@
+{
+  "pr": 11643,
+  "issue": 10106,
+  "tStar": "2026-09-30T04:13:47Z",
+  "title": "load after close automatically reopens, but doesn't close everything",
+  "issueAuthor": "Huite",
+  "body": "### What happened?\n\nCalling `.close`, then `.load` works, and keeps the file closed (so it can be overwritten or removed). However, it doesn't work if e.g. a copy is made. The file is apparently kept in an open state by the copy.\n\n(Apologies in advance if this is a duplicate, I've searched for load and close, but it yields many many results; #4131 is topical, but is closed.)\n\n### What did you expect to happen?\n\nEither loading after close should raise an error (see #4131), or the file should be closed consistently, everywhere.\n\nCurrently, it's somewhat easy to accidentally end up in a situation where there's no way to close a file.\nBecause the first `.close()` sets the `._close` attribute to None, there doesn't seem to be a way to get it back, unless you've stored a reference to it beforehand -- see the workaround below.\n\n### Minimal Complete Verifiable Example\n\n```Python\n# This'll run without a problem:\n\nimport xarray as xr\nimport os\n\npath = \"tmp1.nc\"\nxr.Dataset({\"var1\": (\"x\", [1, 2, 3])}).to_netcdf(path)\nds = xr.open_dataset(path)\nds.close()\nds.load()\nos.remove(path)\n\n# This errors:\n\npath = \"tmp2.nc\"\nxr.Dataset({\"var1\": (\"x\", [1, 2, 3])}).to_netcdf(path)\nds = xr.open_dataset(path)\nds2 = ds.copy()\nds.close()\nds.load()\nds.close()  # does nothing since ds._close is currently None\nds2.close()  # does nothing\nos.remove(path)  # PermissionError\n\n# Workaround\n\npath = \"tmp3.nc\"\nxr.Dataset({\"var1\": (\"x\", [1, 2, 3])}).to_netcdf(path)\nds = xr.open_dataset(path)\nclose_func = ds._close\nds2 = ds.copy()\nds.close()\nds.load()\nclose_func()\nos.remove(path)\n```\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\n\n```\n\n### Anything else we need to know?\n\n_No response_\n\n### Environment\n\n<details>\n\n```\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.12.8 | packaged by conda-forge | (main, Dec  5 2024, 14:06:27) [MSC v.1942 64 bit (AMD64)]\npython-bits: 64\nOS: Windows\nOS-release: 11\nmachine: AMD64\nprocessor: Intel64 Family 6 Model 191 Stepping 2, GenuineIntel\nbyteorder: little\nLC_ALL: None\nLANG: None\nLOCALE: ('Dutch_Netherlands', '1252')\nlibhdf5: 1.14.4\nlibnetcdf: 4.9.2\n\nxarray: 2025.1.2\npandas: 2.2.3\nnumpy: 2.1.3\nscipy: 1.15.1\nnetCDF4: 1.7.2\npydap: None\nh5netcdf: None\nh5py: None\nzarr: 3.0.2\ncftime: 1.6.4\nnc_time_axis: None\niris: None\nbottleneck: None\ndask: 2025.1.0\ndistributed: 2025.1.0\nmatplotlib: 3.10.0\ncartopy: None\nseaborn: None\nnumbagg: None\nfsspec: 2025.2.0\ncupy: None\npint: None\nsparse: None\nflox: None\nnumpy_groupies: None\nsetuptools: 75.8.0\npip: 25.0\nconda: None\npytest: 8.3.4\nmypy: None\nIPython: 8.32.0\nsphinx: 8.1.3\n```\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2026-09-30T04:07:50Z",
+      "author": "nightcityblade",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Hi, I'd like to work on this. I'll reproduce the file-handle lifecycle issue and submit a focused fix with regression coverage shortly.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    }
+  ]
+}

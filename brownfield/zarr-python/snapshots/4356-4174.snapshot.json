@@ -1,0 +1,32 @@
+{
+  "pr": 4356,
+  "issue": 4174,
+  "tStar": "2026-07-29T15:10:29Z",
+  "title": "set_coordinate_selection runs out-of-memory for large arrays",
+  "issueAuthor": "sehoffmann",
+  "body": "### Zarr version\n\nv3.2.1\n\n### Numcodecs version\n\nv0.16.5\n\n### Python Version\n\n3.12.11\n\n### Operating System\n\nLinux\n\n### Installation\n\nuv .venv\n\n### Description\n\nCause is the `np.bincount` call which will allocate a very large array even if we only set a handful of indices:\n```\nTraceback (most recent call last):\n  File \"bug.py\", line 29, in <module>\n    arr.set_coordinate_selection((rows, cols), vals)  # set_coordinate_selection: MemoryError\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"site-packages/zarr/core/array.py\", line 3584, in set_coordinate_selection\n    indexer = CoordinateIndexer(selection, self.shape, self._chunk_grid)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"site-packages/zarr/core/indexing.py\", line 1252, in __init__\n    chunk_nitems = np.bincount(chunks_raveled_indices, minlength=nchunks)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy._core._exceptions._ArrayMemoryError: Unable to allocate 1.01 TiB for an array with shape (138540000000,) and data type int64\n```\nIt makes scaling O(chunks) as well\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\nimport numpy as np\n\n# chunks = 10_000_000 * 13_854\narr = zarr.create_array(\n    zarr.storage.MemoryStore(),\n    shape=(10_000_000, 13_854),\n    chunks=(1, 1),\n    dtype='int32',\n    fill_value=0,\n)\n\n# we write 3 points\nrows = np.array([0, 1, 2])\ncols = np.array([5, 5, 5])\nvals = np.array([1, 2, 3], dtype='int32')\n\narr[0, 5] = 1                                     # set_basic_selection: OK\narr.set_orthogonal_selection((rows, 5), vals)     # set_orthogonal_selection: OK\narr.set_coordinate_selection((rows, cols), vals)  # set_coordinate_selection: MemoryError\n```\n\n### Additional output\n\n_No response_",
+  "comments": [
+    {
+      "at": "2026-07-22T12:31:48Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "thanks for this report, i'm sure there's something more efficient than bincount here. I'll look into getting a fix up shortly",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    },
+    {
+      "at": "2026-07-22T12:40:50Z",
+      "author": "sehoffmann",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Thanks! \n\n`arr.get_coordinate_selection((rows, cols))` is also affected and results in the same issue.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    }
+  ]
+}

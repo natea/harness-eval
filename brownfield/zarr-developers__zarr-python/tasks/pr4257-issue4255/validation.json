@@ -1,0 +1,47 @@
+{
+  "pr": 4257,
+  "merged": "2026-08-12",
+  "issues": [
+    {
+      "n": 4255,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "changes/4257.bugfix.md",
+    "src/zarr/core/chunk_grids.py"
+  ],
+  "testFiles": [
+    "tests/test_api.py",
+    "tests/test_chunk_grids.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_api.py::test_create",
+    "tests/test_chunk_grids.py::test_normalize_chunks",
+    "tests/test_chunk_grids.py::test_normalize_chunks_1d_errors"
+  ],
+  "counts": {
+    "f2p": 8,
+    "p2p": 29,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_api::test_create",
+    "tests.test_chunk_grids::test_normalize_chunks[chunks20-shape20-expected20]",
+    "tests.test_chunk_grids::test_normalize_chunks[chunks21-shape21-expected21]",
+    "tests.test_chunk_grids::test_normalize_chunks[chunks22-shape22-expected22]",
+    "tests.test_chunk_grids::test_normalize_chunks[chunks23-shape23-expected23]",
+    "tests.test_chunk_grids::test_normalize_chunks[chunks24-shape24-expected24]",
+    "tests.test_chunk_grids::test_normalize_chunks_1d_errors[zero-uniform-numpy]",
+    "tests.test_chunk_grids::test_normalize_chunks_1d_errors[non-iterable-scalar]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

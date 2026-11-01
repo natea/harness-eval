@@ -1,0 +1,48 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 9ef02397..72f00020 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -509,6 +509,11 @@ Bug Fixes
+   variables, the ``netCDF4`` engine silently returned a wrongly-sized array, and
+   ``pydap`` raised ``ValueError`` (:issue:`9075`, :issue:`11625`, :pull:`11626`).
+   By `Aniruddha Adak <https://github.com/aniruddhaadak80>`_.
++- :py:meth:`~xarray.DataArray.isin` and :py:meth:`~xarray.Dataset.isin` now
++  accept sets, frozensets and other set-like objects such as ``dict.keys()``.
++  Previously these were turned into a 0-dimensional object array by numpy, so
++  the result was ``False`` everywhere (:issue:`10022`).
++  By `Chandan P <https://github.com/NoiceHax>`_.
+ 
+ .. _`pandas-dev/pandas#64793`: https://github.com/pandas-dev/pandas/pull/64793
+ 
+diff --git a/xarray/core/common.py b/xarray/core/common.py
+index f3b099c0..3dda1634 100644
+--- a/xarray/core/common.py
++++ b/xarray/core/common.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ import datetime
+ import warnings
+ from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping
++from collections.abc import Set as AbstractSet
+ from contextlib import suppress
+ from html import escape
+ from textwrap import dedent
+@@ -1379,7 +1380,7 @@ class DataWithCoords(AttrAccessMixin):
+ 
+         Parameters
+         ----------
+-        test_elements : array_like
++        test_elements : array_like or set_like
+             The values against which to test each value of `element`.
+             This argument is flattened if an array or array_like.
+             See numpy notes for behavior with non-array-like parameters.
+@@ -1410,6 +1411,10 @@ class DataWithCoords(AttrAccessMixin):
+             raise TypeError(
+                 f"isin() argument must be convertible to an array: {test_elements}"
+             )
++        elif isinstance(test_elements, AbstractSet):
++            # numpy converts a set to a 0d object array, which never compares
++            # equal to any element, so convert it to a sequence first
++            test_elements = list(test_elements)
+         elif isinstance(test_elements, Variable | DataArray):
+             # need to explicitly pull out data to support dask arrays as the
+             # second argument

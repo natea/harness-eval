@@ -1,0 +1,83 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 038d991d..dd09d91b 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -42,6 +42,11 @@ New Features
+   type defaults to ``Hashable``, so a bare ``Variable`` annotation means
+   ``Variable[Hashable]`` and keeps its previous meaning (:pull:`11677`).
+   By `Michael Niklas <https://github.com/headtr1ck>`_.
++- The ``in`` operator on :py:class:`DataTree` now accepts the same unix-like
++  paths as indexing, so ``key in tree`` is ``True`` exactly when ``tree[key]``
++  succeeds, e.g. ``"group/subgroup" in tree`` or ``"/group/var" in tree``.
++  Previously only names in the current node were found (:issue:`9354`, :pull:`11701`).
++  By `Yagnik Trivedi <https://github.com/Yagnik-Trivedi>`_.
+ - The HTML representation can show or hide the attributes and data of all
+   variables of a section at once, and shows the expanded attributes and data
+   more compactly and indented below their variable (:pull:`11284`).
+@@ -109,6 +114,14 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Indexing a :py:class:`DataTree` with a path that continues past a variable,
++  e.g. ``tree["group/var/x"]``, now raises ``KeyError`` instead of
++  ``AttributeError`` (:issue:`9354`, :pull:`11701`).
++  By `Yagnik Trivedi <https://github.com/Yagnik-Trivedi>`_.
++- :py:class:`DataTree` paths starting with exactly two slashes, e.g.
++  ``tree["//a"]``, now refer to the root like ``"/a"`` and ``"///a"`` instead of
++  raising ``ValueError`` (:pull:`11701`).
++  By `Yagnik Trivedi <https://github.com/Yagnik-Trivedi>`_.
+ - ``get_chunked_array_type`` no longer raises ``TypeError`` when a ``Dataset`` holds
+   several chunked array types that one chunk manager recognizes. Arrays are now grouped
+   by the chunk manager that claims them rather than by their type, so the error is
+diff --git a/xarray/core/datatree.py b/xarray/core/datatree.py
+index 5d2129a0..41bb4eb4 100644
+--- a/xarray/core/datatree.py
++++ b/xarray/core/datatree.py
+@@ -880,8 +880,19 @@ class DataTree(
+     def __contains__(self, key: object) -> bool:
+         """The 'in' operator will return true or false depending on whether
+         'key' is either an array stored in the datatree or a child node, or neither.
++
++        String keys may be unix-like paths to a node or variable anywhere in the
++        tree, so ``key in tree`` is true exactly when ``tree[key]`` succeeds.
+         """
+-        return key in self.variables or key in self.children
++        if key in self.variables or key in self.children:
++            return True
++        if isinstance(key, str) and ("/" in key or key in ("", ".", "..")):
++            try:
++                self._get_item(key)
++            except KeyError:
++                return False
++            return True
++        return False
+ 
+     def __bool__(self) -> bool:
+         return bool(self._data_variables) or bool(self._children)
+diff --git a/xarray/core/treenode.py b/xarray/core/treenode.py
+index 2c2868d2..a06d0fae 100644
+--- a/xarray/core/treenode.py
++++ b/xarray/core/treenode.py
+@@ -24,6 +24,12 @@ class NodePath(PurePosixPath):
+     """Represents a path from one node to another within a tree."""
+ 
+     def __init__(self, *pathsegments):
++        # POSIX keeps exactly two leading slashes as a distinct root ("//a"),
++        # which has no meaning in a tree, so treat it like "/" as "///a" is
++        pathsegments = tuple(
++            "/" + s.lstrip("/") if isinstance(s, str) and s.startswith("//") else s
++            for s in pathsegments
++        )
+         super().__init__(*pathsegments)
+         if self.drive:
+             raise ValueError("NodePaths cannot have drives")
+@@ -546,6 +552,9 @@ class TreeNode:
+             parts = list(path.parts)
+ 
+         for part in parts:
++            if not isinstance(current_node, TreeNode):
++                # the path continues past a variable, which has no children
++                raise KeyError(f"Could not find node at {path}")
+             if part == "..":
+                 if current_node.parent is None:
+                     raise KeyError(f"Could not find node at {path}")

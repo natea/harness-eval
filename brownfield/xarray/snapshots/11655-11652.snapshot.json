@@ -1,0 +1,9 @@
+{
+  "pr": 11655,
+  "issue": 11652,
+  "tStar": "2026-10-01T08:01:40Z",
+  "title": "⚠️ Nightly upstream-dev CI failed ⚠️",
+  "issueAuthor": "github-actions",
+  "body": "[Workflow Run URL](https://github.com/pydata/xarray/actions/runs/36796519768)\n\n<details><summary>Python 3.13 Test Summary</summary>\n\n```\nxarray/tests/test_indexes.py::TestPandasMultiIndex::test_sel: KeyError: 'Key length (3) exceeds index depth (2)'\n```\n\n</details>\n",
+  "comments": []
+}

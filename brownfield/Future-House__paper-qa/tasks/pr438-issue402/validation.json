@@ -1,0 +1,17 @@
+{
+  "pr": 438,
+  "merged": "2024-09-18",
+  "issues": [
+    {
+      "n": 402,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 2,
+  "srcFiles": [
+    ".pre-commit-config.yaml",
+    "README.md"
+  ],
+  "testFiles": [],
+  "verdict": "skip:no-src-code-change"
+}

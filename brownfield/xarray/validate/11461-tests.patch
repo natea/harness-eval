@@ -1,0 +1,47 @@
+diff --git a/xarray/tests/test_dataset.py b/xarray/tests/test_dataset.py
+index d1934ebb..a7178bba 100644
+--- a/xarray/tests/test_dataset.py
++++ b/xarray/tests/test_dataset.py
+@@ -6518,12 +6518,6 @@ class TestDataset:
+         ):
+             x.rank("invalid_dim")
+ 
+-    def test_rank_use_bottleneck(self) -> None:
+-        ds = Dataset({"a": ("x", [0, np.nan, 2]), "b": ("y", [4, 6, 3, 4])})
+-        with xr.set_options(use_bottleneck=False):
+-            with pytest.raises(RuntimeError):
+-                ds.rank("x")
+-
+     def test_count(self) -> None:
+         ds = Dataset({"x": ("a", [np.nan, 1]), "y": 0, "z": np.nan})
+         expected = Dataset({"x": 1, "y": 1, "z": 0})
+diff --git a/xarray/tests/test_rolling.py b/xarray/tests/test_rolling.py
+index 05f65d24..26068cdb 100644
+--- a/xarray/tests/test_rolling.py
++++ b/xarray/tests/test_rolling.py
+@@ -460,7 +460,7 @@ class TestDataArrayRolling:
+             .rolling(t=72, min_periods=72, center=center)
+         )
+ 
+-        with set_options(use_numbagg=False):
++        with set_options(use_numbagg=False, use_bottleneck=True):
+             expected = getattr(unchunked, name)()
+             actual = getattr(chunked, name)()
+         actual_block = actual.data.blocks[0, 0].compute()
+diff --git a/xarray/tests/test_variable.py b/xarray/tests/test_variable.py
+index b493d943..c2bc73f7 100644
+--- a/xarray/tests/test_variable.py
++++ b/xarray/tests/test_variable.py
+@@ -2018,12 +2018,6 @@ class TestVariable(VariableSubclassobjects):
+         ):
+             v.rank("x")
+ 
+-    def test_rank_use_bottleneck(self):
+-        v = Variable(["x"], [3.0, 1.0, np.nan, 2.0, 4.0])
+-        with set_options(use_bottleneck=False):
+-            with pytest.raises(RuntimeError):
+-                v.rank("x")
+-
+     @requires_bottleneck
+     def test_rank(self):
+         import bottleneck as bn

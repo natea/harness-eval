@@ -1,0 +1,9 @@
+{
+  "pr": 11478,
+  "issue": 11462,
+  "tStar": "2026-07-27T05:33:05Z",
+  "title": "xr.polyval returns bogus values for NaT in timedelta arrays",
+  "issueAuthor": "RippleTester",
+  "body": "### What happened?\n\n`xr.polyval` returns a bogus value (`-1.84e+19`) for `NaT` entries in timedelta coordinate arrays, instead of propagating the missing value as `NaN`.\n\nOutput:\n```\n[ 1.00000000e+00 -1.84467441e+19  3.45601000e+05]\n```\n\nThe NaT position gives `-1.84e+19` instead of `NaN`.\n\nThis regression was introduced by PR #6599 (https://github.com/pydata/xarray/pull/6599) and still exists in the latest version.\n\n### What did you expect to happen?\n\n```\n[1.0, nan, 345601.0]\n```\n\nThe `NaT` position should produce `NaN`, similar to how arithmetic on `NaN` propagates `NaN`.\n\n### Minimal Complete Verifiable Example\n\n```python\nimport numpy as np\nimport xarray as xr\n\noffset = xr.DataArray(\n    np.array([0, \"NaT\", 2], dtype=\"timedelta64[D]\"),\n    dims=\"offset\",\n)\ncoefficients = xr.DataArray(\n    [2.0, 1.0],\n    dims=\"degree\",\n    coords={\"degree\": [1, 0]},\n)\n\nresult = xr.polyval(offset, coefficients)\nprint(result.values)\n# [ 1.00000000e+00 -1.84467441e+19  3.45601000e+05]\n# Expected: [1.0, nan, 345601.0]\n```\n\n### Environment\n\n- xarray 2026.7.0\n- numpy 2.4.6\n- Python 3.11.13\n- Linux",
+  "comments": []
+}

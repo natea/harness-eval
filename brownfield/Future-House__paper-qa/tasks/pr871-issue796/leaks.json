@@ -1,0 +1,62 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Unfortunately, PaperQA's `gen_answer` and `reset` tools have empty parameters.",
+      "rationale": "Reproduction and error; notes empty parameters cause failure, but no location or change in the fix.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Can we just drop the key `properties` when it's an empty object?",
+      "rationale": "Unconfirmed guess; the reference sets parameters to None, not just dropping properties, and this was shown not to work.",
+      "author": "vietvudanh",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I just tried removing `properties` like you suggest, so `\"parameters\": {\"type\": \"object\", \"required\": []},`, and still got the same `INVALID_ARGUMENT` error.",
+      "rationale": "Experimental result of a failed attempt; no fix revealed.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/settings.py"
+      ],
+      "evidence": "I mean to remove `\"parameters\"`.",
+      "rationale": "Proposes removing parameters entirely for tools with no args, which is what the reference does (parameters = None), though it doesn't say where.",
+      "author": "vietvudanh",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/agents/main.py",
+        "paperqa/settings.py"
+      ],
+      "evidence": "I made https://github.com/Future-House/aviary/pull/188 so we can create a workaround to clobber `parameters` manually in something like a callback.",
+      "rationale": "Describes workaround of clobbering tool parameters in a callback, matching the LDP callback and adjust_tools approach.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

@@ -1,0 +1,37 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "pandas.errors.InvalidIndexError: Reindexing only valid with uniquely valued Index objects",
+      "rationale": "Reproduction and traceback only; no root cause identified beyond the crashing stack.",
+      "author": "joshua-gould",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "git bisect shows https://github.com/pydata/xarray/pull/11239 as the root cause",
+      "rationale": "Points to a PR but gives no mechanism or location in the text itself; the fix is a new shuffle step, not a revert.",
+      "author": "headtr1ck",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "with xr.set_options(use_flox=False):",
+      "rationale": "Workaround that avoids flox without revealing the mechanism.",
+      "author": "headtr1ck",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

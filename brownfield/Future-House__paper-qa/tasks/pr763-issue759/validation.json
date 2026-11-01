@@ -1,0 +1,18 @@
+{
+  "pr": 763,
+  "merged": "2024-12-12",
+  "issues": [
+    {
+      "n": 759,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    ".pre-commit-config.yaml",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "testFiles": [],
+  "verdict": "skip:no-src-code-change"
+}

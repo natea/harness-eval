@@ -1,0 +1,47 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11735
+issues:
+  - 8820
+baseSha: 8da2d0d2fa93665c6ae73b86d268a6154460e7c9
+mergeSha: f1234b60ac2f2dfa5a856dfb315770eb4c0c0aea
+tStar: 2026-10-15T03:47:32Z
+issueCreatedAt: 2024-03-11T23:21:34Z
+prMergedAt: 2026-10-19T06:40:12Z
+verdict: fail:needs-gpu
+failToPass: []
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: null
+  comments: null
+cutBy: firstPrCommit
+env:
+  method: exclude-newer
+  digest: 032c911ee599b8930b778ec0a538ea730a78fd54e75ebd5f8040d3a564896210
+  python: "3.12"
+validationSelection: touched
+humanBaseline:
+  codingWindowMinutes: 13
+  reviewMinutes: 5925
+  reviewRounds: 2
+  commitsAfterFirstReview: 3
+  issueLifetimeMinutes: 1369879
+  humanDiff:
+    linesAdded: 20
+    linesRemoved: 9
+    filesTouched: 4
+provisional: false
+files:
+  issue/body+all.md: 860d476ed9611215bc64e1b0f8818e39f6dee7c9daea72bf6a14dcbbeef4fdc9
+  issue/body+human.md: 860d476ed9611215bc64e1b0f8818e39f6dee7c9daea72bf6a14dcbbeef4fdc9
+  issue/body.md: 0d1a233304342947268fc6fd4d87ae82013924b64534d258464c4f61e8d97388
+  reference.patch: 7aeaadc8c94c86d686ed9d592cada81cbbcd5a530663d4c5a5545a53b8b88f68
+  snapshot.json: 16b2173c762a5dabfb4bbdde54f88d42fd20d5d95a2e1295614544518917bfec
+  tests.patch: aba163fbb24bcde73e3acc62e32d16189c96b0167a4baf5c77f8229fcc3c3f4a
+  validation.json: 519fc2ae783d298c5fd5261f7d591073a3e5e0ee3745d39d364bb33e42e3801a

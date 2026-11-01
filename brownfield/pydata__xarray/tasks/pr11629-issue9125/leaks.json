@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I am getting a bunch (see the log) of different errors (or none) while running it.",
+      "rationale": "Reproduction and crash logs only; no root cause or location beyond tracebacks. Expects a graceful failure/warning, which is not the fix.",
+      "author": "ghost",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "the reason is that `netcdf4` is not thread-safe anymore since `netcdf4=1.6.1` (I think).",
+      "rationale": "General thread-safety guess and context. It doesn't point to the metadata locking, reentrant locks, or specific code the fix changes.",
+      "author": "keewis",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

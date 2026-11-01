@@ -1,0 +1,83 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4356
+issues:
+  - 4174
+baseSha: 3799b6486f52984e9d1fadb7cbab9d00980cb49f
+mergeSha: cd1e5b3aaabf969d5edef18b8d62bf98e3439beb
+tStar: 2026-07-29T15:10:29Z
+issueCreatedAt: 2026-07-22T12:28:00Z
+prMergedAt: 2026-09-28T17:17:21Z
+verdict: VALID
+failToPass:
+  - tests.test_common::test_ceildiv[0-0-0]
+  - tests.test_common::test_ceildiv[7-3-3]
+  - tests.test_common::test_ceildiv[7.5-2-4]
+  - tests.test_common::test_ceildiv[4611686018427387903-1-4611686018427387904]
+  - tests.test_common::test_ceildiv_int[zero]
+  - tests.test_common::test_ceildiv_int[round-up]
+  - tests.test_common::test_ceildiv_int[exact]
+  - tests.test_common::test_ceildiv_int[negative-numerator]
+  - tests.test_common::test_ceildiv_int[negative-divisor]
+  - tests.test_common::test_ceildiv_int[both-negative]
+  - tests.test_common::test_ceildiv_int[large-exact]
+  - tests.test_common::test_ceildiv_int[large-round-up]
+  - tests.test_common::test_ceildiv_int[large-low-bits]
+  - tests.test_common::test_ceildiv_int[numpy-signed]
+  - tests.test_common::test_ceildiv_int[numpy-signed-minimum]
+  - tests.test_common::test_ceildiv_int[numpy-unsigned-maximum]
+  - tests.test_common::test_ceildiv_int_zero_divisor[0]
+  - tests.test_common::test_ceildiv_int_zero_divisor[1]
+  - tests.test_common::test_product[data0]
+  - tests.test_common::test_product[data1]
+  - tests.test_common::test_product[data2]
+  - tests.test_indexing.TestAsync::test_async_invalid_indexer
+  - tests.test_indexing::test_coordinate_indexer_1d_sparse_selection_uses_general_path
+  - tests.test_indexing::test_coordinate_indexer_many_chunks
+  - tests.test_indexing::test_get_coordinate_selection_1d_irregular_grid
+  - tests.test_indexing::test_indexer_unknown_attribute[coordinate]
+  - tests.test_indexing::test_indexer_unknown_attribute[integer]
+  - tests.test_indexing::test_int_array_dim_indexer_many_chunks[increasing]
+  - tests.test_indexing::test_int_array_dim_indexer_many_chunks[decreasing]
+  - tests.test_indexing::test_int_array_dim_indexer_many_chunks[unordered]
+  - tests.test_indexing::test_iter_regions[True-lexicographic-domain_shape0-region_shape0-None-selection_shape0]
+  - tests.test_indexing::test_iter_regions[True-lexicographic-domain_shape1-region_shape1-origin1-selection_shape1]
+  - tests.test_indexing::test_iter_regions[True-lexicographic-domain_shape2-region_shape2-origin2-selection_shape2]
+  - tests.test_indexing::test_iter_regions[True-lexicographic-domain_shape3-region_shape3-origin3-selection_shape3]
+  - tests.test_indexing::test_iter_regions[True-lexicographic-domain_shape4-region_shape4-None-None]
+  - tests.test_indexing::test_iter_regions[True-lexicographic-domain_shape5-region_shape5-None-None]
+  - tests.test_indexing::test_iter_regions[False-lexicographic-domain_shape0-region_shape0-None-selection_shape0]
+  - tests.test_indexing::test_iter_regions[False-lexicographic-domain_shape1-region_shape1-origin1-selection_shape1]
+  - tests.test_indexing::test_iter_regions[False-lexicographic-domain_shape2-region_shape2-origin2-selection_shape2]
+  - tests.test_indexing::test_iter_regions[False-lexicographic-domain_shape3-region_shape3-origin3-selection_shape3]
+  - tests.test_indexing::test_iter_regions[False-lexicographic-domain_shape4-region_shape4-None-None]
+  - tests.test_indexing::test_iter_regions[False-lexicographic-domain_shape5-region_shape5-None-None]
+  - tests.test_indexing::test_lazy_dense_indexer_attributes[coordinate]
+  - tests.test_indexing::test_lazy_dense_indexer_attributes[coordinate-fast]
+  - tests.test_indexing::test_lazy_dense_indexer_attributes[integer]
+  - tests.test_indexing::test_lazy_dense_indexer_attributes[mask]
+  - tests.test_indexing::test_sparse_indexer_projection_reconstructs_coordinates
+  - tests.test_indexing::test_sparse_selections_on_arrays_with_many_chunks
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: d247c4b8dec8a4dc2aed8ecd794f63b94ca38df7aba837ffaf4b140eca2abafb
+  issue/body+human.md: d247c4b8dec8a4dc2aed8ecd794f63b94ca38df7aba837ffaf4b140eca2abafb
+  issue/body.md: 8df8552769bdeff3eb49e781f04b967852f59d37350e614fe11fe9d93b489ddf
+  leaks.json: a29e9eac9bf991581a66c87bff85578ccbdb98817eb6dd21e0183f5c1ae60734
+  reference.patch: c892f56fc81b972633a6ef7f0b62990a13a247fe1fdaac646fa012d797e94938
+  snapshot.json: a2a83c212b404494935e4a5bf43cb516a0f3f73bb666bd371cc2224ecb3f4081
+  tests.patch: e173213debbd073a8cb2fa33ef5f0e42ccbe968d2acfb2aa81c84ee285ec5470
+  validation.json: 26d71144fe0ba45706b4b8f09f6499c7563c8212a39c285ae4efc4100a00c8ed

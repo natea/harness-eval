@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "consistent behavior where each line that corresponds to the same hue has the same color (like in scatter)",
+      "rationale": "Describes the observed inconsistency and expected behavior with a repro. No root cause or code location given.",
+      "author": "ianhi",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "`plot.line` basically just calls `ax.plot` in a loop, which is trickier to match with `ax.scatter`.",
+      "rationale": "Gives general context and points to another PR. It mentions ax.plot, but the reference fix restyles lines after ax.plot rather than changing that call. It does not describe the change.",
+      "author": "Illviljan",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

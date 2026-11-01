@@ -1,0 +1,295 @@
+[
+  {
+    "pr": 1313,
+    "merged": "2026-03-11",
+    "issues": [
+      {
+        "n": 4903,
+        "repo": "{\"message\":\"Not"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "packages/paper-qa-docling/pyproject.toml",
+      "packages/paper-qa-docling/src/paperqa_docling/reader.py",
+      "packages/paper-qa-pymupdf/pyproject.toml",
+      "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+      "uv.lock"
+    ],
+    "testFiles": [],
+    "verdict": "skip:cross-repo-issue"
+  },
+  {
+    "pr": 1298,
+    "merged": "2026-02-21",
+    "issues": [
+      {
+        "n": 1273,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 2,
+    "srcFiles": [
+      "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+    ],
+    "testFiles": [
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 2,
+    "counts": {
+      "f2p": 1,
+      "p2p": 13,
+      "flaky": 0,
+      "envBroken": 1,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[non_png_re_encodes]"
+    ],
+    "flaky": [],
+    "broken": [
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_parse_pdf_to_pages"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1311,
+    "merged": "2026-03-04",
+    "issues": [
+      {
+        "n": 1310,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 2,
+    "srcFiles": [
+      "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+    ],
+    "testFiles": [
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 2,
+    "counts": {
+      "f2p": 1,
+      "p2p": 15,
+      "flaky": 0,
+      "envBroken": 1,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[cmyk_converts_to_rgb]"
+    ],
+    "flaky": [],
+    "broken": [
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_parse_pdf_to_pages"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1296,
+    "merged": "2026-02-20",
+    "issues": [
+      {
+        "n": 1274,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 2,
+    "srcFiles": [
+      "src/paperqa/agents/__init__.py"
+    ],
+    "testFiles": [
+      "tests/test_cli.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 2,
+    "counts": {
+      "f2p": 1,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 3,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_cli::test_settings_index_name_used_when_index_arg_is_default"
+    ],
+    "flaky": [],
+    "broken": [
+      "tests.test_cli::test_can_modify_settings",
+      "tests.test_cli::test_cli_ask",
+      "tests.test_cli::test_cli_can_build_and_search_index"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1260,
+    "merged": "2025-12-31",
+    "issues": [
+      {
+        "n": 1258,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+      "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+      "src/paperqa/utils.py"
+    ],
+    "testFiles": [
+      "packages/paper-qa-pymupdf/tests/test_paperqa_pymupdf.py",
+      "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 2,
+    "counts": {
+      "f2p": 19,
+      "p2p": 0,
+      "flaky": 0,
+      "envBroken": 2,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_page_range",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_page_size_limit_denial",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_invalid_pdf_is_denied",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_nonexistent_file_failure",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing_orphaned_surrogate",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_equation_parsing",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_page_range",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_page_size_limit_denial",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_invalid_pdf_is_denied",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_nonexistent_file_failure",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing_orphaned_surrogate",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_media_deduplication",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_equation_parsing",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_clustering",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf.TestMediaMode::test_same_member_is_equal",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf.TestMediaMode::test_individual_with_and_without_clustering",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf.TestMediaMode::test_different_members_different_values_are_not_equal"
+    ],
+    "flaky": [],
+    "broken": [
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_parse_pdf_to_pages",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_parse_pdf_to_pages"
+    ],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1251,
+    "merged": "2025-12-22",
+    "issues": [
+      {
+        "n": 1250,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 11,
+    "srcFiles": [
+      "src/paperqa/configs/clinical_trials.json",
+      "src/paperqa/configs/contracrow.json",
+      "src/paperqa/configs/high_quality.json",
+      "src/paperqa/configs/openreview.json",
+      "src/paperqa/configs/search_only_clinical_trials.json",
+      "src/paperqa/configs/tier2_limits.json",
+      "src/paperqa/configs/tier3_limits.json",
+      "src/paperqa/configs/tier4_limits.json",
+      "src/paperqa/configs/tier5_limits.json",
+      "src/paperqa/configs/wikicrow.json"
+    ],
+    "testFiles": [
+      "tests/test_configs.py"
+    ],
+    "verdict": "skip:no-src-code-change"
+  },
+  {
+    "pr": 1255,
+    "merged": "2025-12-23",
+    "issues": [
+      {
+        "n": 1254,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 5,
+    "srcFiles": [
+      "README.md",
+      "docs/tutorials/settings_tutorial.ipynb",
+      "docs/tutorials/settings_tutorial.md",
+      "src/paperqa/settings.py"
+    ],
+    "testFiles": [
+      "tests/test_configs.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 2,
+    "counts": {
+      "f2p": 1,
+      "p2p": 21,
+      "flaky": 0,
+      "envBroken": 0,
+      "goldRegress": 0
+    },
+    "f2p": [
+      "tests.test_configs::test_readme_settings_cheatsheet_accuracy"
+    ],
+    "flaky": [],
+    "broken": [],
+    "verdict": "VALID"
+  },
+  {
+    "pr": 1174,
+    "merged": "2025-11-04",
+    "issues": [
+      {
+        "n": 1172,
+        "repo": "Future-House/paper-qa"
+      }
+    ],
+    "files": 3,
+    "srcFiles": [
+      "src/paperqa/agents/search.py",
+      "src/paperqa/types.py"
+    ],
+    "testFiles": [
+      "tests/test_agents.py"
+    ],
+    "env": "uv.lock",
+    "envSecs": 1,
+    "counts": {
+      "f2p": 0,
+      "p2p": 8,
+      "flaky": 0,
+      "envBroken": 19,
+      "goldRegress": 0
+    },
+    "f2p": [],
+    "flaky": [],
+    "broken": [
+      "tests.test_agents::test_get_directory_index",
+      "tests.test_agents::test_resuming_crashed_index_build",
+      "tests.test_agents::test_get_directory_index_w_manifest",
+      "tests.test_agents::test_get_directory_index_w_no_citations",
+      "tests.test_agents::test_agent_types[gpt-4o-fake]",
+      "tests.test_agents::test_agent_types[gpt-4o-ToolSelector]",
+      "tests.test_agents::test_agent_types[gpt-4o-SimpleAgent]",
+      "tests.test_agents::test_agent_types[gemini/gemini-2.0-flash-lite-fake]",
+      "tests.test_agents::test_agent_types[gemini/gemini-2.0-flash-lite-ToolSelector]",
+      "tests.test_agents::test_agent_types[gemini/gemini-2.0-flash-lite-SimpleAgent]",
+      "tests.test_agents::test_successful_memory_agent",
+      "tests.test_agents::test_propagate_options",
+      "tests.test_agents::test_gather_evidence_rejects_empty_docs",
+      "tests.test_agents::test_agent_sharing_state[None]",
+      "tests.test_agents::test_agent_sharing_state[async]",
+      "tests.test_agents::test_clinical_tool_usage",
+      "tests.test_agents::test_search_pagination",
+      "tests.test_agents.TestClinicalTrialSearchTool::test_continuation",
+      "tests.test_agents::test_index_build_concurrency"
+    ],
+    "verdict": "fail:no-fail-to-pass"
+  }
+]

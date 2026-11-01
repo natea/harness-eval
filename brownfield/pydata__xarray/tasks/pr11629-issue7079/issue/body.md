@@ -1,0 +1,61 @@
+# open_mfdataset parallel=True failing with netcdf4 >= 1.6.1
+
+_Opened by @cefect_
+
+### What happened?
+
+When using the `parallel=True` key, `open_mfdataset` fails with `NetCDF: Unknown file format`. Running the same command again (with try+except), or with `parallel=False` executes as expected.
+
+works:
+```
+xr.open_mfdataset(dirpath +'\\*.nc', parallel=False)
+```
+
+works:
+```
+try:
+   xr.open_mfdataset(dirpath +'\\*.nc', parallel=True)
+except:
+   xr.open_mfdataset(dirpath +'\\*.nc', parallel=True)
+```
+
+fails:
+```
+xr.open_mfdataset(dirpath +'\\*.nc', parallel=True)
+
+[Errno -51] NetCDF: Unknown file format
+```
+
+all with ` engine='netcdf4'`
+any help is highly appreciated as I'm a bit lost how to investigate this further. 
+
+### What did you expect to happen?
+
+_No response_
+
+### Minimal Complete Verifiable Example
+
+_No response_
+
+### MVCE confirmation
+
+- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [X] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [X] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.
+
+### Relevant log output
+
+_No response_
+
+### Anything else we need to know?
+
+_No response_
+
+### Environment
+
+<details>
+
+
+
+</details>

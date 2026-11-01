@@ -1,0 +1,39 @@
+{
+  "pr": 11832,
+  "merged": "2026-10-31",
+  "issues": [
+    {
+      "n": 2078,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/computation/apply_ufunc.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_computation.py"
+  ],
+  "env": "exclude-newer 2026-10-31T08:13:45Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_computation.py::test_apply_dataset_error_mentions_variable_name",
+    "xarray/tests/test_computation.py::test_apply_missing_dims",
+    "xarray/tests/test_computation.py::test_apply_two_outputs"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_computation::test_apply_dataset_error_mentions_variable_name"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

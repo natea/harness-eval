@@ -1,4 +1,12 @@
 import { useEffect, useState } from "react";
+import {
+	ALL_APPS,
+	type AppRef,
+	appOptions,
+	effectiveApp,
+	matchesApp,
+	useAppParam,
+} from "../../app-filter";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -57,30 +65,33 @@ interface Row {
 	cost?: number;
 	link: boolean;
 	error?: string;
-	target?: { name: string; title: string } | null;
+	target?: AppRef | null;
 	/** Epoch ms parsed from the run id timestamp (for sorting), or null. */
 	ts: number | null;
 	/** Built-but-ungraded trials remain → show "Resume grading". */
 	regradable?: boolean;
 }
 
-const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> = {
-	running: "warn",
-	completed: "ok",
-	error: "danger",
-	cancelled: "outline",
-	interrupted: "danger",
-	unsupported: "outline",
-};
+const STATUS_VARIANT: Record<RowStatus, "warn" | "ok" | "danger" | "outline"> =
+	{
+		running: "warn",
+		completed: "ok",
+		error: "danger",
+		cancelled: "outline",
+		interrupted: "danger",
+		unsupported: "outline",
+	};
 
 /** Merge historical runs from disk (/api/runs) with this session's live jobs
  *  (/api/queue): disk runs seed the list; queue entries overlay live status. */
 function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 	const byId = new Map<string, Row>();
 	for (const r of disk) {
-		const cands = r.summary?.scores.map((s) => s.candidate) ?? [];
+		const scored = r.summary?.scores.map((s) => s.candidate) ?? [];
+		const cands = scored.length ? scored : (r.summary?.candidates ?? []);
 		const total = r.summary
-			? cands.length * r.summary.config.trialsPerCandidate
+			? (r.summary.trialCount ??
+				cands.length * r.summary.config.trialsPerCandidate)
 			: 0;
 		byId.set(r.runId, {
 			runId: r.runId,
@@ -138,7 +149,7 @@ export function Runs() {
 	const [queue, setQueue] = useState<QueueEntry[]>([]);
 	const [disk, setDisk] = useState<RunSummary[]>([]);
 	const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
-	const [appFilter, setAppFilter] = useState<string>("all");
+	const [rawApp, setApp] = useAppParam();
 	// Runs we've asked to cancel — shows "cancelling…" until the status flips
 	// (cancellation is cooperative; an in-flight build finishes its step first).
 	const [cancelling, setCancelling] = useState<Set<string>>(new Set());
@@ -222,17 +233,9 @@ export function Runs() {
 		return sortDir === "desc" ? bv - av : av - bv;
 	});
 	// Distinct apps present across runs, for the filter dropdown.
-	const apps = [
-		...new Map(
-			allRows
-				.filter((r) => r.target)
-				.map((r) => [r.target?.name as string, r.target?.title as string]),
-		).entries(),
-	].sort((a, b) => a[1].localeCompare(b[1]));
-	const rows =
-		appFilter === "all"
-			? allRows
-			: allRows.filter((r) => r.target?.name === appFilter);
+	const apps = appOptions(allRows.map((r) => r.target));
+	const appFilter = effectiveApp(rawApp, apps);
+	const rows = allRows.filter((r) => matchesApp(r.target, appFilter));
 
 	return (
 		<>
@@ -253,15 +256,15 @@ export function Runs() {
 				<>
 					<div className="mt-3 flex items-center gap-2 text-[13px]">
 						<span className="text-muted-foreground">App / PRD:</span>
-						<Select value={appFilter} onValueChange={setAppFilter}>
+						<Select value={appFilter} onValueChange={setApp}>
 							<SelectTrigger className="w-[300px]">
-								<SelectValue placeholder="All apps" />
+								<SelectValue placeholder="All" />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="all">All apps</SelectItem>
-								{apps.map(([name, title]) => (
-									<SelectItem key={name} value={name}>
-										{title} ({name})
+								<SelectItem value={ALL_APPS}>All</SelectItem>
+								{apps.map((o) => (
+									<SelectItem key={o.value} value={o.value}>
+										{o.label}
 									</SelectItem>
 								))}
 							</SelectContent>

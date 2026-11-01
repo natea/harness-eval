@@ -1,0 +1,66 @@
+diff --git a/xarray/tests/backends/test_plugins.py b/xarray/tests/backends/test_plugins.py
+index 8cdbc443..35bdb927 100644
+--- a/xarray/tests/backends/test_plugins.py
++++ b/xarray/tests/backends/test_plugins.py
+@@ -5,6 +5,7 @@ import subprocess
+ import sys
+ from importlib.metadata import EntryPoint, EntryPoints
+ from itertools import starmap
++from pathlib import Path
+ from unittest import mock
+ 
+ import pytest
+@@ -26,6 +27,23 @@ from xarray.tests import (
+ importlib_metadata_mock = "importlib.metadata"
+ 
+ 
++@requires_netCDF4
++@requires_zarr
++@pytest.mark.parametrize("zarr_format", [2, 3])
++@pytest.mark.parametrize("path_as_string", [False, True])
++def test_guess_engine_local_zarr_directory(
++    tmp_path: Path, zarr_format: int, path_as_string: bool
++) -> None:
++    expected = xr.Dataset({"temperature": ("time", [1.0, 2.0, 3.0])})
++    path = tmp_path / "example.zarr"
++    expected.to_zarr(path, zarr_format=zarr_format, consolidated=False)
++    store = str(path) if path_as_string else path
++
++    assert plugins.guess_engine(store) == "zarr"
++    with xr.open_dataset(store, consolidated=False) as actual:
++        xr.testing.assert_identical(actual, expected)
++
++
+ class DummyBackendEntrypointArgs(common.BackendEntrypoint):
+     def open_dataset(filename_or_obj, *args):  # type: ignore[override]
+         pass
+diff --git a/xarray/tests/test_utils.py b/xarray/tests/test_utils.py
+index 226348d8..d3e9da64 100644
+--- a/xarray/tests/test_utils.py
++++ b/xarray/tests/test_utils.py
+@@ -448,6 +448,25 @@ def test_try_read_magic_number_from_path_missing(tmp_path: Path) -> None:
+     assert try_read_magic_number_from_path(tmp_path / "missing.nc") is None
+ 
+ 
++def test_try_read_magic_number_from_directory(tmp_path: Path) -> None:
++    assert try_read_magic_number_from_path(tmp_path) is None
++    assert try_read_magic_number_from_path(str(tmp_path)) is None
++
++
++def test_try_read_magic_number_permission_error(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    path = tmp_path / "file.nc"
++    path.write_bytes(b"CDF")
++
++    def denied_open(*args: Any, **kwargs: Any) -> IO[Any]:
++        raise PermissionError("Access denied")
++
++    monkeypatch.setattr(utils, "open", denied_open, raising=False)
++    with pytest.raises(PermissionError, match="Access denied"):
++        try_read_magic_number_from_path(path)
++
++
+ def test_try_read_magic_number_from_path_unbuffered(
+     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+ ) -> None:

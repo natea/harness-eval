@@ -1,0 +1,41 @@
+{
+  "pr": 293,
+  "merged": "2024-06-25",
+  "issues": [
+    {
+      "n": 292,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "paperqa/utils.py",
+    "pyproject.toml"
+  ],
+  "testFiles": [
+    "tests/test_paperqa.py"
+  ],
+  "env": "exclude-newer 2024-06-21T15:35:24-07:00",
+  "envSecs": 13,
+  "selected": [
+    "tests/test_paperqa.py::test_chain_completion",
+    "tests/test_paperqa.py::test_llm_read_json",
+    "tests/test_paperqa.py::test_llm_read_json_newlines"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 4,
+    "flaky": 0,
+    "envBroken": 1,
+    "liveApi": 1,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_paperqa::test_llm_read_json_newlines"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_paperqa::test_chain_completion"
+  ],
+  "verdict": "VALID"
+}

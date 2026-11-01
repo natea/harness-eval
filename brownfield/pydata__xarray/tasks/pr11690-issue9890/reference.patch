@@ -1,0 +1,130 @@
+diff --git a/asv_bench/benchmarks/dataset_io.py b/asv_bench/benchmarks/dataset_io.py
+index b8afabe8..9b61d10f 100644
+--- a/asv_bench/benchmarks/dataset_io.py
++++ b/asv_bench/benchmarks/dataset_io.py
+@@ -620,17 +620,21 @@ class IOWriteNetCDFDaskDistributed:
+ 
+ 
+ class IOReadSingleFile(IOSingleNetCDF):
+-    def setup(self, *args, **kwargs):
++    def setup_cache(self):
++        # Write the files only once: asv re-runs `setup` before every timed call,
++        # and writing the files there makes the timed reads compete with the
++        # writeback of the files to disk, which made the timings very noisy.
+         self.make_ds()
+ 
+-        self.filepaths = {}
++        filepaths = {}
+         for engine in _ENGINES:
+-            self.filepaths[engine] = f"test_single_file_with_{engine}.nc"
+-            self.ds.to_netcdf(self.filepaths[engine], engine=engine)
++            filepaths[engine] = f"test_single_file_with_{engine}.nc"
++            self.ds.to_netcdf(filepaths[engine], engine=engine)
++        return filepaths
+ 
+     @parameterized(["engine", "chunks"], (_ENGINES, [None, {}]))
+-    def time_read_dataset(self, engine, chunks):
+-        xr.open_dataset(self.filepaths[engine], engine=engine, chunks=chunks)
++    def time_read_dataset(self, filepaths, engine, chunks):
++        xr.open_dataset(filepaths[engine], engine=engine, chunks=chunks)
+ 
+ 
+ class IOReadCustomEngine:
+diff --git a/asv_bench/benchmarks/unstacking.py b/asv_bench/benchmarks/unstacking.py
+index b3af5eac..81f2a71f 100644
+--- a/asv_bench/benchmarks/unstacking.py
++++ b/asv_bench/benchmarks/unstacking.py
+@@ -60,5 +60,5 @@ class UnstackingSparse(Unstacking):
+     def peakmem_unstack_to_sparse_3d(self):
+         self.da_eye_3d.unstack(sparse=True)
+ 
+-    def time_unstack_pandas_slow(self):
+-        pass
++    # pandas does not support sparse arrays, don't time an empty function
++    time_unstack_pandas_slow = None
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 7ce207e2..ed5fe83e 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -40,6 +40,9 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Don't warn that no index is created when reducing a :py:class:`Dataset`
++  grouped by a data variable without flox (:issue:`9890`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - Raise a :py:class:`ValueError` when :py:meth:`~xarray.indexes.RangeIndex.linspace`
+   receives a negative ``num`` instead of creating an index with a negative size.
+ - Fix computing a chunked coordinate backed by a :py:class:`~xarray.indexes.CoordinateTransformIndex`
+diff --git a/pixi.toml b/pixi.toml
+index 402a834b..c1a3109a 100644
+--- a/pixi.toml
++++ b/pixi.toml
+@@ -352,6 +352,45 @@ build-and-host-doc = [
+   { task = "host-static-doc" },
+ ]
+ 
++[feature.benchmark.dependencies]
++python = "3.13.*"
++asv = ">=0.6.6"
++py-rattler = "*"   # asv's "rattler" environment_type
++python-build = "*" # https://github.com/airspeed-velocity/asv/issues/1385
++
++[feature.benchmark.tasks]
++_asv-machine = { cmd = "asv machine --yes", cwd = "asv_bench" }
++
++[feature.benchmark.tasks.bench-compare]
++cmd = "asv continuous --split --show-stderr --factor 1.5 {{ base }} {{ contender }}"
++args = [
++  { arg = "base", default = "main" },
++  { arg = "contender", default = "HEAD" },
++]
++cwd = "asv_bench"
++env = { OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = "1", OMP_NUM_THREADS = "1" }
++depends-on = ["_asv-machine"]
++description = "Compare the asv benchmarks of two commits, by default main and HEAD."
++
++[feature.benchmark.tasks.bench-quick]
++cmd = "asv run --quick --show-stderr HEAD^!"
++cwd = "asv_bench"
++depends-on = ["_asv-machine"]
++description = "Run each asv benchmark once on HEAD, to check that they work."
++
++[feature.benchmark.tasks.bench-history]
++cmd = "mkdir -p .asv && git tag --list 'v*' --contains {{ since }} > .asv/releases.txt && asv run --skip-existing-commits --show-stderr HASHFILE:.asv/releases.txt"
++args = [{ arg = "since", default = "v2024.06.0" }]
++cwd = "asv_bench"
++env = { OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = "1", OMP_NUM_THREADS = "1" }
++depends-on = ["_asv-machine"]
++description = "Run the asv benchmarks for all releases since a tag (default v2024.06.0, the first with numpy 2 support), skipping existing results."
++
++[feature.benchmark.tasks.bench-publish]
++cmd = "asv publish && asv preview"
++cwd = "asv_bench"
++description = "Build the asv website with the performance history of the stored results and serve it locally."
++
+ [feature.numpydoc-lint.dependencies]
+ numpydoc = "*"
+ 
+@@ -484,6 +523,7 @@ default = { features = [
+ ] }
+ policy = { features = ["policy"], no-default-feature = true }
+ numpydoc-lint = { features = ["numpydoc-lint"] }
++benchmark = { features = ["benchmark"], no-default-feature = true }
+ tools = { features = ["tools"], no-default-feature = true }
+ build-package = { features = [
+   "build-package",
+diff --git a/xarray/core/groupby.py b/xarray/core/groupby.py
+index b7cf63a6..ae349158 100644
+--- a/xarray/core/groupby.py
++++ b/xarray/core/groupby.py
+@@ -1946,6 +1946,9 @@ class DatasetGroupByBase(GroupBy["Dataset"], DatasetGroupbyArithmetic):
+             coords="different",
+             compat="equals",
+             join="outer",
++            # the index is created by assigning the group coordinates below, and
++            # creating it here warns if the group is a data variable (GH9890)
++            create_index_for_new_dim=False,
+         )
+         combined = _maybe_reorder(combined, dim, positions, N=self.group1d.size)
+         # assign coord when the applied function does not return that coord

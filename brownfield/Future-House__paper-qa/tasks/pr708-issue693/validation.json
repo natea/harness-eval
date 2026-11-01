@@ -1,0 +1,60 @@
+{
+  "pr": 708,
+  "merged": "2024-11-19",
+  "issues": [
+    {
+      "n": 693,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 13,
+  "srcFiles": [
+    "paperqa/agents/task.py",
+    "paperqa/litqa.py",
+    "paperqa/prompts.py",
+    "pyproject.toml"
+  ],
+  "testFiles": [
+    "tests/cassettes/TestLitQAEvaluation.test_from_question.yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors0-the answer is 94107-correct-expected_dreturns0].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors1-the answer is 14004-incorrect-expected_dreturns1].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors2-the answer is 94106-incorrect-expected_dreturns2].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors3-Insufficient information-unsure-expected_dreturns3].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is the meaning of life--42-distractors5-14-incorrect-expected_dreturns5].yaml",
+    "tests/test_litqa.py",
+    "tests/test_task.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 8,
+  "selected": [
+    "tests/test_litqa.py::TestLitQAEvaluation",
+    "tests/test_litqa.py::TestLitQAEvaluation::test_consistent_mc_options",
+    "tests/test_litqa.py::TestLitQAEvaluation::test_creating_litqa_questions",
+    "tests/test_litqa.py::TestLitQAEvaluation::test_from_question",
+    "tests/test_task.py::TestTaskDataset::test_evaluation"
+  ],
+  "counts": {
+    "f2p": 7,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 2,
+    "liveApi": 2,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_litqa.TestLitQAEvaluation::test_consistent_mc_options",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors0-the answer is 94107-correct-expected_dreturns0]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors1-the answer is 14004-incorrect-expected_dreturns1]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors2-the answer is 94106-incorrect-expected_dreturns2]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors3-Insufficient information-unsure-expected_dreturns3]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is the meaning of life?-42-distractors5-14-incorrect-expected_dreturns5]"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_litqa.TestLitQAEvaluation::test_creating_litqa_questions",
+    "tests.test_task.TestTaskDataset::test_evaluation"
+  ],
+  "verdict": "VALID"
+}

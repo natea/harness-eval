@@ -1,0 +1,39 @@
+{
+  "pr": 11741,
+  "merged": "2026-10-15",
+  "issues": [
+    {
+      "n": 10325,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/missing.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_missing.py"
+  ],
+  "env": "exclude-newer 2026-10-15T14:00:07Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_missing.py::test_interpolate_dask_expected_dtype"
+  ],
+  "counts": {
+    "f2p": 3,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_missing::test_interpolate_dask_expected_dtype[float32-linear]",
+    "xarray.tests.test_missing::test_interpolate_dask_expected_dtype[float32-slinear]",
+    "xarray.tests.test_missing::test_interpolate_dask_expected_dtype[complex64-linear]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

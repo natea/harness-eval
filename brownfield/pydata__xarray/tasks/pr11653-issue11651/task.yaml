@@ -1,0 +1,34 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11653
+issues:
+  - 11651
+baseSha: 23c9dd138605ef46e59a7341a1c8e07821bf416f
+mergeSha: d0366c659b0b7209d8e4882353e1afb76d23cf0e
+tStar: 2026-10-01T06:56:28Z
+issueCreatedAt: 2026-09-30T20:31:00Z
+prMergedAt: 2026-10-02T16:03:05Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_groupby::test_dask_groupby_blockwise_interleaved_groups[median]
+  - xarray.tests.test_groupby::test_dask_groupby_blockwise_interleaved_groups[mean]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: 76041bdd80af5c1118af477c4af25fd073c8508252ce3b23a0f90596f550736e
+  issue/body+human.md: 76041bdd80af5c1118af477c4af25fd073c8508252ce3b23a0f90596f550736e
+  issue/body.md: 393c6271991c9475c0eee7f13492edd02af56ed322c6dbd3dc477a7fa014c5e6
+  leaks.json: 713a60976d166e58ba4c1f43d4b05bd762e3f2f9f38ce1167af22daf5e7c18d3
+  reference.patch: 0bd55456c8235db9e6117c45e3a08292398f10d6276b6607c6473ee8ab12f09a
+  snapshot.json: 1a4463f6e1e262d9d971c1d554b877b07097de63240cc12a7d2bea4a4bcf905b
+  tests.patch: 4e71ef2279b27387207fdf404b941ffdcec2182116f1daded57837b6e41d9832
+  validation.json: 9d19ac1aff7eed4d22052369193e8a172c5778df65d7f1bf7fd1600204be281c

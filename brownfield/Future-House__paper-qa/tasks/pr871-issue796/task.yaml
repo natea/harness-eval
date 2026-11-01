@@ -1,0 +1,38 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 871
+issues:
+  - 796
+baseSha: da424c79999941488e43ad79e67ca9981e80222d
+mergeSha: 99e4ccaa4e357f9f3035d77da2b119cf8468840f
+tStar: 2025-02-17T17:45:23Z
+issueCreatedAt: 2025-01-08T18:59:00Z
+prMergedAt: 2025-02-20T16:33:44Z
+verdict: fail:needs-live-api
+failToPass: []
+passToPass: []
+envBroken:
+  - tests.test_agents::test_agent_types[gpt-4o-fake]
+  - tests.test_agents::test_agent_types[gpt-4o-ToolSelector]
+  - tests.test_agents::test_agent_types[gpt-4o-SimpleAgent]
+  - tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-fake]
+  - tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-ToolSelector]
+  - tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-SimpleAgent]
+flaky: []
+testPaths:
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: abf6109f96a9b8d241674c0ddee8b7b2845ae0ff6c4f9030be5d61f4b2a54922
+  issue/body+human.md: abf6109f96a9b8d241674c0ddee8b7b2845ae0ff6c4f9030be5d61f4b2a54922
+  issue/body.md: 19e1b726728e9925ee8fb3267b1c7c1eac84de08a637afb4eda9cdef7b6530a0
+  leaks.json: 9dcd478bc4674d94d35be5c5552eb4444208f9373c6ae215496e1291c8521123
+  reference.patch: 7fd51872138bd68ff4e44a6184aa25020d9bea1f16bbb876069362efdc7cec62
+  snapshot.json: 6d2b9daf2881f2c1929695be69776c69a96a03b85bdff4d396297c0d888e05bb
+  tests.patch: 6d248c866e96d9365afafa8519fc21184cdd82cdeabd59f50594dadd04846778
+  validation.json: 63870a003488ad236353ff535ad5250592ab0944cb4c97133442620170c2a9e9

@@ -1,0 +1,73 @@
+{
+  "pr": 4116,
+  "issue": 3558,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0230746,
+  "prAuthor": "oldrobotdev",
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Reproduction and observed wrong output; no cause identified.",
+      "author": "dtonagel",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The problem seems to be on the write side",
+      "rationale": "Observation about chunk sizes; write side localization is broad.",
+      "author": "dtonagel",
+      "role": "issue author"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The memory layout of the two numpy arrays is different",
+      "rationale": "Reports strides/flags; observation only.",
+      "author": "dtonagel",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "looks definitely like a handling problem with the \"F\" memory layout",
+      "rationale": "Workaround and general pointer to F layout, no code location or mechanism.",
+      "author": "dtonagel",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "dtype=\"str\",  # Does work with \"int\" or \"float\", does not work with \"str\"",
+      "rationale": "Minimal reproduction; narrows to str dtype but no location.",
+      "author": "dtonagel",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/codecs/vlen_utf8.py"
+      ],
+      "evidence": "I'm guessing the culprit is some assumption in the [`vlen-utf8` codec]",
+      "rationale": "Points to vlen-utf8 codec, which the fix changes, with the mechanism being numcodecs' memory-layout assumption. It's a guess, but it names the right place.",
+      "author": "d-v-b",
+      "role": "other user"
+    }
+  ]
+}

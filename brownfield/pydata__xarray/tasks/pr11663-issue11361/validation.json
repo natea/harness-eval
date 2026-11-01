@@ -1,0 +1,50 @@
+{
+  "pr": 11663,
+  "merged": "2026-10-19",
+  "issues": [
+    {
+      "n": 11361,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/user-guide/io.md",
+    "doc/whats-new.rst",
+    "xarray/backends/zarr.py"
+  ],
+  "testFiles": [
+    "xarray/tests/backends/test_datatree.py"
+  ],
+  "env": "exclude-newer 2026-10-19T08:40:11+02:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/backends/test_datatree.py::TestZarrDatatreeIO::test_to_zarr",
+    "xarray/tests/backends/test_datatree.py::TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask"
+  ],
+  "counts": {
+    "f2p": 12,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_datatree-zarr_format=2]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_datatree-zarr_format=3]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_groups-zarr_format=2]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[True-open_groups-zarr_format=3]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_datatree-zarr_format=2]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_datatree-zarr_format=3]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_groups-zarr_format=2]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[False-open_groups-zarr_format=3]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_datatree-zarr_format=2]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_datatree-zarr_format=3]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_groups-zarr_format=2]",
+    "xarray.tests.backends.test_datatree.TestZarrDatatreeIO::test_use_zarr_fill_value_as_mask[None-open_groups-zarr_format=3]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

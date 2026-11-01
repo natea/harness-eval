@@ -1,0 +1,32 @@
+{
+  "pr": 4260,
+  "issue": 4237,
+  "tStar": "2026-08-13T09:18:22Z",
+  "title": "\"ValueError: Input array must be contiguous\" when *cast_value* codec next to *transpose* codec",
+  "issueAuthor": "raphaeljolivet",
+  "body": "### Zarr version\n\nv3.3.1.dev3+g976be695\n\n### Numcodecs version\n\nv0.16.5\n\n### Python Version\n\n3.12.11\n\n### Operating System\n\nDebian\n\n### Installation\n\nuv sync\n\n### Description\n\nWhen combined with the **transpose** codec **cast_value** fails because the array is not continugous.\n\nAccording to [the specification](https://zarr-specs.readthedocs.io/en/latest/v3/codecs/transpose/),\n the transpose codec is expected to produce \"views\".\n\nThus, it should be the responsibility of **every** codec to ensure it makes it contiguous, if needed.\n\nIf my interpretation is correct, I will prepare a PR to fix this, with proper unit test.\nI guess we should test the behavior on *every* other codec ... \n\n\n### Steps to reproduce\n\n```python\n\ndef test_enforce_contiguous_arrays() :\n    \"\"\"\n    Transpose codec produces non continguous arrays.\n    Ensure cast_value make them contiguous before processing.\n    \"\"\"\n    data = np.arange(20, dtype=np.float32).reshape(5, 2, 2)\n\n    def make_array(filters):\n        return zarr.create_array(\n            store=MemoryStore(),\n            shape=data.shape,\n            dtype=data.dtype,\n            chunks=data.shape,\n            filters=filters,\n            serializer=zarr.codecs.BytesCodec(endian=\"little\"),\n            compressors=None,\n            zarr_format=3,\n        )\n\n    # Cast before tranpose : may fail on read.\n    array = make_array([\n        zarr.codecs.CastValue(data_type=\"uint16\"),\n        zarr.codecs.TransposeCodec(order=(1, 2, 0)),\n    ])\n\n    # Write should be ok\n    array[:] = data\n\n    # Read may fail\n    assert_array_equal(array[:], data)\n\n    # Cast after tranpose : may fail on write\n    array = make_array([\n        zarr.codecs.TransposeCodec(order=(1, 2, 0)),\n        zarr.codecs.CastValue(data_type=\"uint16\"),\n    ])\n\n    # Write may fail\n    array[:] = data\n\n```\n    # Read should be ok\n    assert_array_equal(array[:], data)\n\n### Additional output\n\n_No response_",
+  "comments": [
+    {
+      "at": "2026-08-05T08:55:18Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "thanks for the report, this looks like a bug in cast_value. it should be changed to handle non-contiguous arrays.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": []
+    },
+    {
+      "at": "2026-08-05T09:17:30Z",
+      "author": "raphaeljolivet",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "I just did [a PR](https://github.com/zarr-developers/zarr-python/compare/main...raphaeljolivet:zarr-python:bugfix/4237-cast-value-transpose-input-aray-should-be-contiguous)\n\nThe \"lint\" CI fails while prek works fine locally.\nI am not sure why.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR"
+      ]
+    }
+  ]
+}

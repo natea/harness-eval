@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The NaT position gives `-1.84e+19` instead of `NaN`.",
+      "rationale": "Describes observed behavior and reproduction. It mentions PR #6599 as the regression source but gives no specific code location or mechanism, such as the astype(float) in _ensure_numeric.",
+      "author": "RippleTester",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

@@ -1,0 +1,30 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 1f9aa776..91784af5 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -48,6 +48,12 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Fix a bug where assigning a named ``pandas.Series`` as a coordinate
++  (e.g. ``da.assign_coords(new_coord=series)``) ignored the Series'
++  index name and used the keyword argument as the dimension instead,
++  causing a confusing ``CoordinateValidationError``
++  (:issue:`9284`, :pull:`11664`).
++  By `Anirban Mandal <https://github.com/CoderAnirban71>`_.
+ - Fix :py:class:`~xarray.Variable` methods with dimension names that are not
+   strings: :py:meth:`Variable.concat` failed for any such dimension, and
+   ``shift``, ``roll``, boolean ``isel`` and ``IndexVariable.to_index`` failed
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index 7c59673e..942f961f 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -191,6 +191,8 @@ def as_variable(obj: Any, name: Hashable = None, auto_convert: bool = True) -> V
+             ) from error
+     elif utils.is_scalar(obj):
+         obj = Variable([], obj)
++    elif isinstance(obj, pd.Series) and obj.index.name is not None:
++        obj = Variable((obj.index.name,), obj)
+     elif isinstance(obj, pd.Index | IndexVariable) and obj.name is not None:
+         obj = Variable((obj.name,), obj)
+     elif isinstance(obj, Coordinates):

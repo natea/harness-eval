@@ -1,0 +1,20 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/litqa.py",
+        "paperqa/agents/task.py"
+      ],
+      "evidence": "We should simplify the logic to use as much `aviary` code as possible and not overload the StrEnum so much.",
+      "rationale": "Proposes the general change the reference made: replace LitQAEvaluation StrEnum logic with aviary's MultipleChoiceQuestion/Evaluation. It is high-level but points to the litqa code and the direction of the fix.",
+      "author": "whitead",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "noise"
+}

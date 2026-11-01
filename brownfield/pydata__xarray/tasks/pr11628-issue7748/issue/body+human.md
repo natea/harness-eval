@@ -1,0 +1,129 @@
+# diff('non existing dimension') does not raise exception
+
+_Opened by @LunarLanding_
+
+### What happened?
+
+Calling xr.DataArray.diff with a non-existing dimension does not raise an exception.
+
+### What did you expect to happen?
+
+An exception to be raised.
+
+### Minimal Complete Verifiable Example
+
+```Python
+import xarray as xr; import numpy as np; xr.DataArray(np.arange(10),dims=('a',)).diff('b')
+```
+
+
+### MVCE confirmation
+
+- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [X] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [X] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.
+
+### Relevant log output
+
+_No response_
+
+### Anything else we need to know?
+
+_No response_
+
+### Environment
+
+<details>
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.10.9 | packaged by conda-forge | (main, Feb  2 2023, 20:20:04) [GCC 11.3.0]
+python-bits: 64
+OS: Linux
+OS-release: 5.10.0-21-amd64
+machine: x86_64
+processor:
+byteorder: little
+LC_ALL: None
+LANG: en_US.UTF-8
+LOCALE: ('en_US', 'UTF-8')
+libhdf5: 1.12.2
+libnetcdf: 4.8.1
+
+xarray: 2023.3.0
+pandas: 1.5.3
+numpy: 1.23.5
+scipy: 1.10.1
+netCDF4: 1.6.2
+pydap: None
+h5netcdf: 1.1.0
+h5py: 3.8.0
+Nio: None
+zarr: 2.14.2
+cftime: 1.6.2
+nc_time_axis: None
+PseudoNetCDF: None
+rasterio: None
+cfgrib: None
+iris: None
+bottleneck: None
+dask: 2023.3.1
+distributed: 2023.3.1
+matplotlib: 3.7.1
+cartopy: None
+seaborn: 0.12.2
+numbagg: None
+fsspec: 2023.3.0
+cupy: None
+pint: None
+sparse: 0.14.0
+flox: 0.6.9
+numpy_groupies: 0.9.20
+setuptools: 67.6.0
+pip: 23.0.1
+conda: 23.1.0
+pytest: 7.2.2
+mypy: 1.1.1
+IPython: 8.11.0
+sphinx: 6.1.3
+</details>
+
+---
+
+## Discussion
+
+**@headtr1ck** (2023-04-13):
+
+Not sure what the correct way would be.
+
+If you consider that `d f(x) / d y = 0`, maybe all zeros could be considered correct as well.
+The same result can be obtained if one considers that the array might be broadcast to the y-dim.
+
+Also we have to check that happens in Datasets if one of the variables does not contain this dimension, do we raise an error as well?
+
+**@headtr1ck** (2023-04-13):
+
+See also somewhat related discussion here https://github.com/pydata/xarray/issues/6749
+
+**@LunarLanding** (2023-04-13):
+
+My user story is that I had up to some point a DataArray with index 'a', at some point code changed and I used as index 'b', but some code was still operating on 'a'; and I expected that code to error on accessing 'a'.
+
+If I do np.diff(x,axis=(some non-existent axis)), numpy errors. 
+
+I might be generalizing, please correct me if I'm wrong, but afaik broadcasting happens in operations with 2 or more arrays, and the resulting dimensions are the union of the dimensions of each input array; the dimensions operated on are always at least in one of the involved arrays. 
+Broadcasting does not happen if the arrays have the same shape, as it is for the diff operation.
+
+So by following the same logic, when using an unary operator on a Dataset, an error should be thrown if none of the contained variables have the requested dimension. 
+Since xarray allows scalar-sized dimensions (where the index shape is () ), those could be used to keep current behavior.
+
+I read the linked issue. imho, the operation on a DataArray should error if the dimension is not there; on a Dataset the operation should be applied to each DataArray that contains the dimension, and if there are none, an error should be thrown. i.e. (set of dimensions allowed as arguments to operators on a set of containers) = ( union of the dimensions in each container).
+
+**@nathanredmond** (2024-04-21):
+
+This is my first time attempting to contribute to an open-source project, so please bear with me as I ask a few questions that I feel weren't entirely covered in the contribution documentation/share the method for the proposed implementation. I know I don't have to ask for permission to submit a PR, but I just thought some general feedback to guide me in future contributions would be great. I'm here to learn.
+
+The proposed implementation functions as @LunarLanding described, raising a KeyError when diff('X') is called on a DataSet where none of the contained DataArrays have 'X' as a valid dimension. Thus, when diff('X') is called on a DataArray with dim=('X') or an extension of this, diff() will perform as expected. Otherwise the KeyError is raised. By extension, for a DataSet, diff() will only calculate the dimensional difference along 'X' for member DataArrays containing said dimension. If the dimension does not exist in any of the DataArrays, then the KeyError is raised. This is more consistent with how numpy handles such a query and in my opinion is more intuitive.
+
+It should go without saying that this will break some test cases. Notably, when running PyTest, I see that xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n1 and xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n2 fail. How should this be handled? I'm using a Deprecation warning now, but this means that any tests I created will fail since the KeyError is not actually invoked. Should I commit under the assumption that failing tests will be modified in the future to accommodate the KeyError? And should I commit the tests I created under the assumption that the KeyError will be raised in future versions (as opposed to deprecation warning)?

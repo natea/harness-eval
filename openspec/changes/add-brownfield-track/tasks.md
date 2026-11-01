@@ -4,50 +4,61 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 ## 1. Task bundle format + miner
 
-- [ ] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, dates, leak strata; hash verification
-- [ ] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test / dependency-change with reasons (from `validate.ts` screens)
-- [ ] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
-- [ ] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
-- [ ] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
-- [ ] 1.6 Human baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, human diff size; unit tests for reviewed and unreviewed PRs
+- [x] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, `testPaths`, `appEgress` allowlist, dates, leak strata; hash verification
+- [x] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test / dependency-change with reasons (from `validate.ts` screens)
+- [x] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
+- [x] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
+- [x] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
+- [x] 1.6 Original PR baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, original PR diff size; unit tests for reviewed and unreviewed PRs
 
 ## 2. Studio task review (early — unblocks human labeling)
 
-- [ ] 2.1 Read-only routes listing bundles and serving one bundle (issue variants, snapshot, patches, validation, leak strata)
-- [ ] 2.2 Review view: side-by-side issue / reference patch / tests patch; keyboard leak labels per item; test-fairness verdict; bot tags visible
-- [ ] 2.3 Blind mode: LLM labels withheld until submit; append-only `review/labels.jsonl` endpoint (the only new write)
-- [ ] 2.4 Agreement summary: per-item diff, per-level agreement, Cohen's κ
-- [ ] 2.5 Import the spike's 37 paper-qa snapshots + LLM labels as provisional bundles so labeling can start before 3–4 land
-- [ ] 2.6 Human-label all paper-qa bodies and comments; record κ
+- [x] 2.1 Read-only routes listing bundles and serving one bundle (issue variants, snapshot, patches, validation, leak strata)
+- [x] 2.2 Review view: side-by-side issue / reference patch / tests patch; keyboard leak labels per item; test-fairness verdict; bot tags visible
+- [x] 2.3 Blind mode: LLM labels withheld until submit; append-only `review/labels.jsonl` endpoint (the only new write)
+- [x] 2.4 Agreement summary: per-item diff, per-level agreement, Cohen's κ
+- [x] 2.5 Import the spike snapshots + LLM labels as provisional bundles (paper-qa 37, xarray 53 valid, zarr 19 valid; `brownfield/<repo>/{snapshots,leaks}`) so labeling can start before 3–4 land
+- [x] 2.6 Human-label all paper-qa bodies and comments; record κ
 
 ## 3. Sealed repo + environment + validation
 
-- [ ] 3.1 Sealed repo builder at merge^1 (single branch, no tags/remotes/reflog) with absence checks (`cat-file`, `log --all`, `fsck --lost-found`)
-- [ ] 3.2 Env builder: `uv sync --frozen` + package reinstall; `--exclude-newer` fallback; record env digest
-- [ ] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
-- [ ] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons
-- [ ] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
-- [ ] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
+- [x] 3.1 Sealed repo builder at merge^1 (single branch, no tags/remotes/reflog) with absence checks (`cat-file`, `log --all`, `fsck --lost-found`)
+- [x] 3.2 Env builder: `uv sync --frozen` + package reinstall; `--exclude-newer` fallback; record env digest
+- [x] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
+- [ ] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons. Touched mode (tests the PR's test patch touches) is implemented and backs all 111 bundles. Full mode is implemented but unverified: on zarr #4557 every pass hit the 30-min wall clock (2026-11-01). Fixed: the wall clock now kills pytest's whole process group (`uv run` did not forward the kill). Still open for full mode: localhost egress under `NO_PROXY=""` breaks moto-based S3 tests, an S3 hang with localhost bypassed (suspected AWS metadata lookup), a longer wall clock, and partial results from killed runs. Deferred to the cloud orchestrator
+- [x] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
+- [x] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
+- [ ] 3.7 Classify `needs-live-api` (blocked/unauthenticated provider calls in gold, no other FAIL_TO_PASS); recovery per D17 — record affected tests at mining time with a budget-capped key, seal recordings in tests.patch, re-validate offline, reject cassette-miss-only before-failures. Depends on 4.3/4.7 recording + 5.1 cassette-miss detection; paper-qa targets: #138, #512, #515, #717, #871, #1174
+- [x] 3.8 Validator verdicts from the spike: `deps-touched` flag with `dependency-change` decided by gold-in-base-env (D5); `needs-gpu` for module-level hardware skips; capture pytest stderr so crashes are never silent
 
 ## 4. Brownfield trials
 
-- [ ] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
-- [ ] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
-- [ ] 4.3 Model gateway outside the sandbox: credential injection (placeholder in sandbox), forward only to the run's model, reject provider-side tool requests, request log; per-harness endpoint override (`ANTHROPIC_BASE_URL`, Codex `model_providers`); network lockdown (egress only to the gateway) per provider, starting with docker/worktree
-- [ ] 4.4 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
-- [ ] 4.5 Capture candidate patch at trial end
-- [ ] 4.6 Clean per-trial home/config: no operator MCP servers, plugins/skills, memory, global instructions, or prior-trial state
-- [ ] 4.7 Application egress: `appEgress: none` default (recorded fixtures only); `appEgress: gateway` opt-in with separate budget-capped credential and logging
+- [x] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`. Progress 2026-11-01: per-task trial images done (`brownfield image`, `src/brownfield/image.ts`: trial image + sealed repo on `work` + env built in-container with the validation recipe; verified offline on paper-qa #1311: F2P fails at base, passes with the reference); open: trial-runner hooks (issue file, patch capture), CLI flags
+- [x] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
+- [x] 4.3 Spike: Claude Code against an `ANTHROPIC_BASE_URL` proxy that injects (a) an API key and (b) a subscription OAuth token; record the required headers and whether (b) works and is permitted; outcome decides the gateway's default credential (API key until (b) is verified). Done 2026-11-01: (a) and (b) both work technically; operator chose the API key (2026-11-01), so the gateway injects only an API key (design D11)
+- [ ] 4.4 Model gateway outside the sandbox: API-key injection (placeholder in sandbox; no OAuth), forward only to the run's model, reject provider-side tool requests, request log; same-protocol endpoint override per harness (`ANTHROPIC_BASE_URL`, Codex `model_providers`), refuse protocol mismatches; pin all Claude Code model slots via `resolveClaudeCodeEnv`; network lockdown (egress only to the gateway) per provider, starting with docker/worktree. Progress 2026-11-01: gateway core + Claude Code env done and smoke-tested (`src/gateway/anthropic.ts`); docker egress lock done and verified (`src/providers/egress.ts`: per-run `--internal` network + relay to the host gateway; opt-in test `HE_DOCKER_TESTS=1`); run wiring done (per-trial keys, `egress` step in `runTrial`, fail-closed leak probes, `provenance.flags`; real Docker trial verified); protocol-mismatch refusal done for the trial step; open: Codex (OpenAI-protocol gateway), worktree/cloud egress, CLI run config (4.1)
+- [x] 4.5 Gateway preflight: extend `model probe` beyond the claude-code transport; one probe request per candidate through the gateway before dispatch; fail the run before spend on rejection, naming candidate and reason
+- [x] 4.6 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
+- [x] 4.7 Capture candidate patch at trial end
+- [x] 4.8 Trial isolation (all trials, MODIFIED requirement): fresh home/config per trial with no operator MCP servers, plugins/skills, memory, or global instructions; test on the worktree provider
+- [ ] 4.9 Application egress: empty `appEgress` default (recorded fixtures only); per-task allowlist of provider endpoints and models (paper-qa: `gpt-4o`, `text-embedding-3-*`) forwarded through the gateway with a separate budget-capped credential and logging
+
+- [x] 4.10 Framework entry routing for auto-engaging frameworks (help-first step, identical across frameworks, names no command; skipped for own-command frameworks and `bare`; `--no-routing`) (`src/brownfield/router.ts`). Motivation 2026-11-01: superpowers on pr293 loaded 15 skills and its startup hook fired, but the model invoked none and wrote no tests
+- [x] 4.11 Post-install harness check: plugins + skills/commands visible to Claude Code recorded in provenance; framework candidates with nothing visible fail before spend (`src/brownfield/harness-check.ts`)
 
 ## 5. Grading + audit + reporting
 
-- [ ] 5.1 Hidden-test grading: restore test infrastructure (test dirs, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; record `cassette-miss`
-- [ ] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
-- [ ] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
-- [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason
+- [x] 5.1 Hidden-test grading: restore test infrastructure (bundle `testPaths`, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; detect `cassette-miss` (vcrpy replay-only exception or offline-proxy `APIConnectionError`/`ProxyError`) → unresolved + flagged
+- [x] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
+- [x] 5.5 Code-quality comparison vs the merged PR: blind A/B, position-balanced samples, per-criterion medians for both sides, majority preference; `brownfield quality <run-dir> --judge <profile>` and automatic with `run --brownfield --judge` (`src/brownfield/quality.ts`). First result (pr293, Opus 4.6 judge, 3 samples, $0.29): harness 83 vs original PR 73, harness preferred 3/0
+- [x] 5.6 Dashboard: brownfield run and trial views (task links, verdict, quality comparison, diffs side by side, hidden tests, audit, transcript) and a light/dark toggle (results-dashboard)
+- [x] 5.7 Harness activity per trial from the session log (plugins, available skills/commands, commands run, skills invoked, subagents → engaged / not engaged / no framework) in the report and dashboard (`src/brownfield/activity.ts`)
+- [ ] 5.8 Audit framework engagement for every candidate (gsd, compound-engineering, agent-skills, gstack, ruflo, superpowers): does each engage when invoked as configured, or does the model fall back to plain Claude Code?
+- [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
+- [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the original PR baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 
 ## 6. Pilot
 
-- [ ] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
-- [ ] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
-- [ ] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants
+- [x] 6.1 Adversarial smoke: one trial instructed to "find the upstream fix" must fail to reach it and be caught by the audit; include a direct call to the model API with provider-side web search enabled, which the gateway must reject
+- [x] 6.2 n=1 smoke on one paper-qa task with one candidate (real spend)
+- [x] 6.3 Pilot matrix on validated paper-qa tasks × 2 candidates × variants

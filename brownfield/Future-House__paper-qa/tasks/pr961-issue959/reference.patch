@@ -1,0 +1,119 @@
+diff --git a/.gitignore b/.gitignore
+index b24816d..0e699d1 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -308,6 +308,7 @@ tests/*html
+ tests/test_index/*
+ tests/example.*
+ tests/example2.*
++!tests/stub_data/.DS_Store
+ 
+ # Client data
+ paperqa/clients/client_data/retractions.csv
+diff --git a/paperqa/readers.py b/paperqa/readers.py
+index 27704f3..a12c562 100644
+--- a/paperqa/readers.py
++++ b/paperqa/readers.py
+@@ -224,12 +224,16 @@ def chunk_code_text(
+     texts: list[Text] = []
+     last_line = 0
+ 
+-    if not isinstance(parsed_text.content, list):
++    if not isinstance(parsed_text.content, str | list):
+         raise NotImplementedError(
+-            f"ParsedText.content must be a `list`, not {type(parsed_text.content)}."
++            f"Didn't yet handle ParsedText.content of type {type(parsed_text.content)}."
+         )
+ 
+-    for i, line in enumerate(parsed_text.content):
++    for i, line in enumerate(
++        [parsed_text.content]
++        if isinstance(parsed_text.content, str)
++        else parsed_text.content
++    ):
+         split += line
+         while len(split) > chunk_chars:
+             texts.append(
+@@ -256,50 +260,52 @@ def chunk_code_text(
+ async def read_doc(
+     path: str | os.PathLike,
+     doc: Doc,
+-    parsed_text_only: Literal[False],
+-    include_metadata: Literal[False],
++    parsed_text_only: Literal[True],
++    include_metadata: Literal[True],
+     chunk_chars: int = ...,
+     overlap: int = ...,
+     page_size_limit: int | None = ...,
+-) -> list[Text]: ...
+-
+-
++) -> ParsedText: ...
+ @overload
+ async def read_doc(
+     path: str | os.PathLike,
+     doc: Doc,
+-    parsed_text_only: Literal[False] = ...,
++    parsed_text_only: Literal[True],
+     include_metadata: Literal[False] = ...,
+     chunk_chars: int = ...,
+     overlap: int = ...,
+     page_size_limit: int | None = ...,
+-) -> list[Text]: ...
+-
+-
++) -> ParsedText: ...
+ @overload
+ async def read_doc(
+     path: str | os.PathLike,
+     doc: Doc,
+-    parsed_text_only: Literal[True],
+-    include_metadata: bool = ...,
++    parsed_text_only: Literal[False],
++    include_metadata: Literal[True],
+     chunk_chars: int = ...,
+     overlap: int = ...,
+     page_size_limit: int | None = ...,
+-) -> ParsedText: ...
+-
+-
++) -> tuple[list[Text], ParsedMetadata]: ...
+ @overload
+ async def read_doc(
+     path: str | os.PathLike,
+     doc: Doc,
+-    parsed_text_only: Literal[False],
++    parsed_text_only: Literal[False] = ...,
++    include_metadata: Literal[False] = ...,
++    chunk_chars: int = ...,
++    overlap: int = ...,
++    page_size_limit: int | None = ...,
++) -> list[Text]: ...
++@overload
++async def read_doc(
++    path: str | os.PathLike,
++    doc: Doc,
++    *,
+     include_metadata: Literal[True],
+     chunk_chars: int = ...,
+     overlap: int = ...,
+     page_size_limit: int | None = ...,
+ ) -> tuple[list[Text], ParsedMetadata]: ...
+-
+-
+ async def read_doc(
+     path: str | os.PathLike,
+     doc: Doc,
+diff --git a/paperqa/settings.py b/paperqa/settings.py
+index a103507..0709abe 100644
+--- a/paperqa/settings.py
++++ b/paperqa/settings.py
+@@ -430,7 +430,7 @@ class IndexSettings(BaseModel):
+             " directory."
+         ),
+     )
+-    files_filter: Callable[[anyio.Path], bool] = Field(
++    files_filter: Callable[[anyio.Path | pathlib.Path], bool] = Field(
+         default=lambda f: f.suffix in {".txt", ".pdf", ".html", ".md"},
+         exclude=True,
+         description=(

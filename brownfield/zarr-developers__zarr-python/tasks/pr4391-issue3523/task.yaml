@@ -1,0 +1,63 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4391
+issues:
+  - 3523
+baseSha: c79f7360f7024bfc8b9bb2a1b876168dc5f6a2bd
+mergeSha: 9677081eca164bd86c2dbfba74903393b7407f31
+tStar: 2026-09-24T01:52:24Z
+issueCreatedAt: 2025-10-15T07:15:00Z
+prMergedAt: 2026-09-30T08:43:29Z
+verdict: VALID
+failToPass:
+  - tests.test_group.TestGroupMetadata::test_extra_fields_survive_rewrite
+  - tests.test_group.TestGroupMetadata::test_from_dict_extra_fields
+  - tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[value0]
+  - tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[value1]
+  - tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[not
+    an object]
+  - tests.test_group.TestGroupMetadata::test_from_dict_v3_disallowed_extra_fields[1]
+  - tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[value0]
+  - tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[value1]
+  - tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[not an
+    object]
+  - tests.test_group.TestGroupMetadata::test_init_disallowed_extra_fields[1]
+  - tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[attributes]
+  - tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[consolidated_metadata]
+  - tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[node_type]
+  - tests.test_group.TestGroupMetadata::test_init_extra_fields_collision[zarr_format]
+  - tests.test_group.TestGroupMetadata::test_init_extra_fields_v2
+  - tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields0]
+  - tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields1]
+  - tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields2]
+  - tests.test_group.TestGroupMetadata::test_v3_extra_fields_round_trip[extra_fields3]
+  - tests.test_group.TestInfo::test_info
+  - tests.test_metadata.test_v3::test_array_metadata_extra_fields_rejected[must_understand_true]
+  - tests.test_metadata.test_v3::test_array_metadata_extra_fields_rejected[non_dict_extra_field]
+  - tests.test_metadata.test_v3::test_init_extra_fields_collision
+  - tests.test_metadata.test_v3::test_init_extra_fields_disallowed[value0]
+  - tests.test_metadata.test_v3::test_init_extra_fields_disallowed[value1]
+  - tests.test_metadata.test_v3::test_init_extra_fields_disallowed[42]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: diagnosis
+provisional: true
+files:
+  issue/body+all.md: fef884ff33b2d6305f88bfa136ed5979542808bf08bfc8c77c825eca3ce6acf4
+  issue/body+human.md: fef884ff33b2d6305f88bfa136ed5979542808bf08bfc8c77c825eca3ce6acf4
+  issue/body.md: 11b08ff60c7eef1b31836924a2ee5f9265d36cebd4be75f858fd3a2844e07718
+  leaks.json: 4ed53c3b0e02a0eaac8f8cbb224d1e38fa35ee27f013206bf02c29622fff4b0b
+  reference.patch: 9153aa95b3d0652fb7dabda04e205393061b212b1d0d775b529aa6ea3f3fb280
+  snapshot.json: f32be9c47f825e95915ec6e78a16b82d5ef830457f98589afdde3c4d1ca43025
+  tests.patch: b6da1fea6f40d364aac113e7310346c2c15f4217d7772f85e0462373a64daa4e
+  validation.json: 1c5fb3ceea4c72c8c59c497c0ce3a394150d0a1ef0cc7eced6439c5bde23a720

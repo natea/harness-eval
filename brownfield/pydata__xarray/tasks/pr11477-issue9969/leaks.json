@@ -1,0 +1,61 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "KeyError: 'stacked_level_0'",
+      "rationale": "Reproduction and traceback naming create_variables; does not identify the falsy-name root cause in the fix location.",
+      "author": "gusostow",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Should we even be allowing a dim named `\"\"` though?",
+      "rationale": "Questions design, no technical content on fix.",
+      "author": "TomNicholas",
+      "role": "maintainer"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "this seems niche, and I'm guessing it breaks for non-string hashables too?",
+      "rationale": "Joking and speculation, no diagnosis.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c3",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/indexes.py"
+      ],
+      "evidence": "`\"\"` is falseish, as are the hashables `False`, `None` and `()` and will break as well.",
+      "rationale": "Identifies the falsy-name root cause in indexes.py, where the `or` expression is changed.",
+      "author": "Illviljan",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/indexes.py"
+      ],
+      "evidence": "It might be fine to explicitly check for `None` instead of using `or` in that case, though.",
+      "rationale": "Proposes exactly the reference change: an explicit None check instead of `or`.",
+      "author": "keewis",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

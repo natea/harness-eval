@@ -1,0 +1,745 @@
+diff --git a/changes/4363.bugfix.md b/changes/4363.bugfix.md
+new file mode 100644
+index 00000000..fbccb109
+--- /dev/null
++++ b/changes/4363.bugfix.md
+@@ -0,0 +1,8 @@
++Removed every `assert` statement from runtime code and enabled ruff's `S101`
++rule to keep them out. Asserts are stripped under `python -O`, and two of them
++were load-bearing: `GroupMetadata.from_dict` asserted on `node_type` and the
++array-to-group fallback in `zarr.open` relied on catching the resulting
++`AssertionError`, and `make_store` asserted on `mode` before the real
++validation. Both now raise proper errors (`NodeTypeValidationError` and
++`ValueError`). Redundant asserts were deleted, type-narrowing asserts were
++restructured so mypy narrows without them, and the rest became explicit raises.
+diff --git a/pyproject.toml b/pyproject.toml
+index 57443aed..4f256c0c 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -361,6 +361,7 @@ extend-select = [
+     "RET",  # flake8-return
+     "RSE",  # flake8-raise
+     "RUF",
++    "S101", # flake8-bandit: no assert in runtime code
+     "SIM",  # flake8-simplify
+     "SLOT", # flake8-slots
+     "TC",  # flake8-type-checking
+@@ -395,6 +396,14 @@ ignore = [
+ 
+ [tool.ruff.lint.extend-per-file-ignores]
+ "tests/**" = ["ANN001", "ANN201", "RUF029", "SIM117", "SIM300"]
++# S101 (no assert) is for runtime code only. Tests, examples, and test-support
++# packages (store conformance suite, hypothesis strategies) assert on purpose.
++# The globs cover the root package and every package under packages/.
++"**/tests/**" = ["S101"]
++"**/examples/**" = ["S101"]
++"**/testing/**" = ["S101"]
++# zarr-indexing still has asserts in runtime code; tracked as a separate change.
++"packages/zarr-indexing/src/**" = ["S101"]
+ 
+ [tool.mypy]
+ files = ["src", "tests"]
+diff --git a/src/zarr/__init__.py b/src/zarr/__init__.py
+index cdf3840c..f305245f 100644
+--- a/src/zarr/__init__.py
++++ b/src/zarr/__init__.py
+@@ -39,7 +39,10 @@ from zarr.core.config import config
+ from zarr.core.group import AsyncGroup, Group
+ 
+ # in case setuptools scm screw up and find version to be 0.0.0
+-assert not __version__.startswith("0.0.0")
++if __version__.startswith("0.0.0"):
++    raise RuntimeError(
++        f"zarr resolved its own version to {__version__!r}; the build metadata is broken."
++    )
+ 
+ _logger = logging.getLogger(__name__)
+ 
+diff --git a/src/zarr/api/asynchronous.py b/src/zarr/api/asynchronous.py
+index 3bdc254e..1fc10cdd 100644
+--- a/src/zarr/api/asynchronous.py
++++ b/src/zarr/api/asynchronous.py
+@@ -403,7 +403,7 @@ async def open(
+                 return AsyncArray(
+                     store_path=store_path, metadata=_metadata_dict, config=kwargs.get("config")
+                 )
+-        except (AssertionError, FileNotFoundError, NodeTypeValidationError):
++        except (FileNotFoundError, NodeTypeValidationError):
+             pass
+         return await open_group(store=store_path, zarr_format=zarr_format, mode=mode, **kwargs)
+ 
+diff --git a/src/zarr/codecs/bytes.py b/src/zarr/codecs/bytes.py
+index fae762fd..622161c4 100644
+--- a/src/zarr/codecs/bytes.py
++++ b/src/zarr/codecs/bytes.py
+@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, ClassVar, Final, Literal
+ 
+ from zarr.abc.codec import ArrayBytesCodec
+ from zarr.codecs._deprecated_enum import _coerce_enum_input, _DeprecatedStrEnumMeta
+-from zarr.core.buffer import Buffer, NDBuffer
+ from zarr.core.common import JSON, parse_named_configuration
+ from zarr.core.dtype.common import HasEndianness
+ from zarr.core.dtype.npy.structured import Struct
+@@ -16,6 +15,7 @@ if TYPE_CHECKING:
+     from typing import Self
+ 
+     from zarr.core.array_spec import ArraySpec
++    from zarr.core.buffer import Buffer, NDBuffer
+ 
+ 
+ EndianLiteral = Literal["little", "big"]
+@@ -142,7 +142,6 @@ class BytesCodec(ArrayBytesCodec):
+         chunk_array: NDBuffer,
+         chunk_spec: ArraySpec,
+     ) -> Buffer | None:
+-        assert isinstance(chunk_array, NDBuffer)
+         if chunk_array.dtype.itemsize > 1 and self.endian is not None:
+             # Compare full dtypes rather than the top-level byteorder: numpy reports
+             # byteorder '|' for structured dtypes even when their fields are
+diff --git a/src/zarr/codecs/cast_value.py b/src/zarr/codecs/cast_value.py
+index b19a10c8..629b4e7a 100644
+--- a/src/zarr/codecs/cast_value.py
++++ b/src/zarr/codecs/cast_value.py
+@@ -311,7 +311,9 @@ class CastValue(ArrayArrayCodec):
+         target_zdtype: ZDType[TBaseDType, TBaseScalar],
+     ) -> None:
+         """Validate that scalar map entries are compatible with source/target dtypes."""
+-        assert self.scalar_map is not None
++        scalar_map = self.scalar_map
++        if scalar_map is None:
++            return
+         # For encode: keys are source values, values are target values.
+         # For decode: keys are target values, values are source values.
+         direction_dtypes: dict[
+@@ -321,9 +323,9 @@ class CastValue(ArrayArrayCodec):
+             "decode": (target_zdtype, source_zdtype),
+         }
+         for direction, (key_zdtype, val_zdtype) in direction_dtypes.items():
+-            if direction not in self.scalar_map:
++            if direction not in scalar_map:
+                 continue
+-            sub_map = self.scalar_map[direction]  # type: ignore[literal-required]
++            sub_map = scalar_map[direction]  # type: ignore[literal-required]
+             for k, v in sub_map.items():
+                 _check_representable(k, key_zdtype, f"scalar_map {direction} key")
+                 _check_representable(v, val_zdtype, f"scalar_map {direction} value")
+diff --git a/src/zarr/codecs/sharding.py b/src/zarr/codecs/sharding.py
+index bd0760f7..3d5057ce 100644
+--- a/src/zarr/codecs/sharding.py
++++ b/src/zarr/codecs/sharding.py
+@@ -160,9 +160,11 @@ class _ShardingByteGetter(ByteGetter):
+     def get_sync(
+         self, prototype: BufferPrototype | None = None, byte_range: ByteRequest | None = None
+     ) -> Buffer | None:
+-        assert prototype is None or prototype == default_buffer_prototype(), (
+-            f"prototype is not supported within shards currently. diff: {prototype} != {default_buffer_prototype()}"
+-        )
++        if prototype is not None and prototype != default_buffer_prototype():
++            raise ValueError(
++                "Non-default buffer prototypes are not supported within shards. "
++                f"Got {prototype}, expected {default_buffer_prototype()}."
++            )
+         value = self.shard_dict.get(self.chunk_coords)
+         if value is None:
+             return None
+@@ -193,7 +195,8 @@ class _ShardingByteSetter(_ShardingByteGetter, ByteSetter):
+         del self.shard_dict[self.chunk_coords]
+ 
+     async def set(self, value: Buffer, byte_range: ByteRequest | None = None) -> None:
+-        assert byte_range is None, "byte_range is not supported within shards"
++        if byte_range is not None:
++            raise NotImplementedError("byte_range is not supported within shards.")
+         self.set_sync(value)
+ 
+     async def delete(self) -> None:
+@@ -656,7 +659,8 @@ class ShardingCodec(
+         index_spec = self._get_index_chunk_spec(index.chunks_per_shard)
+         index_nd = get_ndbuffer_class().from_numpy_array(index.offsets_and_lengths)
+         result: Buffer | None = index_transform.encode_chunk(index_nd, index_spec)
+-        assert result is not None
++        if result is None:
++            raise RuntimeError("Encoding the shard index produced no bytes.")
+         return result
+ 
+     def _shard_reader_from_bytes_sync(
+@@ -1531,7 +1535,8 @@ class ShardingCodec(
+                 .decode([(index_bytes, self._get_index_chunk_spec(chunks_per_shard))])
+             )
+         )
+-        assert index_array is not None  # the bytes are already in hand
++        if index_array is None:
++            raise RuntimeError("Decoding the shard index produced no array.")
+         return _ShardIndex(chunks_per_shard, index_array.as_numpy_array())
+ 
+     async def _encode_shard_index(self, index: _ShardIndex) -> Buffer:
+@@ -1553,7 +1558,8 @@ class ShardingCodec(
+                 )
+             )
+         )
+-        assert index_bytes is not None
++        if index_bytes is None:
++            raise RuntimeError("Encoding the shard index produced no bytes.")
+         return index_bytes
+ 
+     def _shard_index_size(self, chunks_per_shard: tuple[int, ...]) -> int:
+diff --git a/src/zarr/codecs/vlen_utf8.py b/src/zarr/codecs/vlen_utf8.py
+index 078e6032..6433c80b 100644
+--- a/src/zarr/codecs/vlen_utf8.py
++++ b/src/zarr/codecs/vlen_utf8.py
+@@ -8,13 +8,13 @@ from numcodecs.vlen import VLenBytes, VLenUTF8
+ 
+ from zarr._compat import _reshape_view
+ from zarr.abc.codec import ArrayBytesCodec
+-from zarr.core.buffer import Buffer, NDBuffer
+ from zarr.core.common import JSON, parse_named_configuration
+ 
+ if TYPE_CHECKING:
+     from typing import Self
+ 
+     from zarr.core.array_spec import ArraySpec
++    from zarr.core.buffer import Buffer, NDBuffer
+ 
+ 
+ # can use a global because there are no parameters
+@@ -45,11 +45,8 @@ class VLenUTF8Codec(ArrayBytesCodec):
+         chunk_bytes: Buffer,
+         chunk_spec: ArraySpec,
+     ) -> NDBuffer:
+-        assert isinstance(chunk_bytes, Buffer)
+-
+         raw_bytes = chunk_bytes.as_array_like()
+         decoded = _vlen_utf8_codec.decode(raw_bytes)
+-        assert decoded.dtype == np.object_
+         decoded = _reshape_view(decoded, chunk_spec.shape)
+         as_string_dtype = decoded.astype(chunk_spec.dtype.to_native_dtype(), copy=False)
+         return chunk_spec.prototype.nd_buffer.from_numpy_array(as_string_dtype)
+@@ -66,7 +63,6 @@ class VLenUTF8Codec(ArrayBytesCodec):
+         chunk_array: NDBuffer,
+         chunk_spec: ArraySpec,
+     ) -> Buffer | None:
+-        assert isinstance(chunk_array, NDBuffer)
+         # numcodecs vlen codecs flatten with order="A", so an F-contiguous chunk
+         # would be encoded in transposed element order (gh-3558)
+         return chunk_spec.prototype.buffer.from_bytes(
+@@ -106,11 +102,8 @@ class VLenBytesCodec(ArrayBytesCodec):
+         chunk_bytes: Buffer,
+         chunk_spec: ArraySpec,
+     ) -> NDBuffer:
+-        assert isinstance(chunk_bytes, Buffer)
+-
+         raw_bytes = chunk_bytes.as_array_like()
+         decoded = _vlen_bytes_codec.decode(raw_bytes)
+-        assert decoded.dtype == np.object_
+         decoded = _reshape_view(decoded, chunk_spec.shape)
+         return chunk_spec.prototype.nd_buffer.from_numpy_array(decoded)
+ 
+@@ -126,7 +119,6 @@ class VLenBytesCodec(ArrayBytesCodec):
+         chunk_array: NDBuffer,
+         chunk_spec: ArraySpec,
+     ) -> Buffer | None:
+-        assert isinstance(chunk_array, NDBuffer)
+         # numcodecs vlen codecs flatten with order="A", so an F-contiguous chunk
+         # would be encoded in transposed element order (gh-3558)
+         return chunk_spec.prototype.buffer.from_bytes(
+diff --git a/src/zarr/core/array.py b/src/zarr/core/array.py
+index 047e7bb3..5a8d6bf5 100644
+--- a/src/zarr/core/array.py
++++ b/src/zarr/core/array.py
+@@ -158,6 +158,7 @@ if TYPE_CHECKING:
+     from zarr.abc.codec import CodecPipeline
+     from zarr.abc.store import Store
+     from zarr.codecs.sharding import IndexLocation, ShardingCodec
++    from zarr.core.buffer import Buffer
+     from zarr.core.dtype.wrapper import TBaseDType, TBaseScalar
+     from zarr.storage import StoreLike
+     from zarr.types import AnyArray, AnyAsyncArray, ArrayV2, ArrayV3, AsyncArrayV2, AsyncArrayV3
+@@ -282,6 +283,7 @@ async def get_array_metadata(
+                 f"{store_path.store!r} at path {store_path.path!r}."
+             )
+             raise ArrayNotFoundError(msg)
++        return _array_metadata_dict_v2(zarray_bytes, zattrs_bytes)
+     elif zarr_format == 3:
+         zarr_json_bytes = await (store_path / ZARR_JSON).get(prototype=cpu_buffer_prototype)
+         if zarr_json_bytes is None:
+@@ -290,6 +292,7 @@ async def get_array_metadata(
+                 f"{store_path.store!r} at path {store_path.path!r}."
+             )
+             raise ArrayNotFoundError(msg)
++        return _array_metadata_dict_v3(zarr_json_bytes)
+     elif zarr_format is None:
+         zarr_json_bytes, zarray_bytes, zattrs_bytes = await gather(
+             (store_path / ZARR_JSON).get(prototype=cpu_buffer_prototype),
+@@ -300,35 +303,34 @@ async def get_array_metadata(
+             # warn and favor v3
+             msg = f"Both zarr.json (Zarr format 3) and .zarray (Zarr format 2) metadata objects exist at {store_path}. Zarr v3 will be used."
+             warnings.warn(msg, category=ZarrUserWarning, stacklevel=1)
+-        if zarr_json_bytes is None and zarray_bytes is None:
+-            msg = (
+-                f"Neither Zarr V3 nor Zarr V2 array metadata documents "
+-                f"were found in store {store_path.store!r} at path {store_path.path!r}."
+-            )
+-            raise ArrayNotFoundError(msg)
+-        # set zarr_format based on which keys were found
++        # favor v3 when both are present
+         if zarr_json_bytes is not None:
+-            zarr_format = 3
+-        else:
+-            zarr_format = 2
++            return _array_metadata_dict_v3(zarr_json_bytes)
++        if zarray_bytes is not None:
++            return _array_metadata_dict_v2(zarray_bytes, zattrs_bytes)
++        msg = (
++            f"Neither Zarr V3 nor Zarr V2 array metadata documents "
++            f"were found in store {store_path.store!r} at path {store_path.path!r}."
++        )
++        raise ArrayNotFoundError(msg)
+     else:
+         msg = f"Invalid value for 'zarr_format'. Expected 2, 3, or None. Got '{zarr_format}'."  # type: ignore[unreachable]
+         raise MetadataValidationError(msg)
+ 
+-    metadata_dict: dict[str, JSON]
+-    if zarr_format == 2:
+-        # V2 arrays are comprised of a .zarray and .zattrs objects
+-        assert zarray_bytes is not None
+-        metadata_dict = buffer_to_json_object(zarray_bytes)
+-        zattrs_dict = buffer_to_json_object(zattrs_bytes) if zattrs_bytes is not None else {}
+-        metadata_dict["attributes"] = zattrs_dict
+-    else:
+-        # V3 arrays are comprised of a zarr.json object
+-        assert zarr_json_bytes is not None
+-        metadata_dict = buffer_to_json_object(zarr_json_bytes)
+ 
+-        parse_node_type_array(metadata_dict.get("node_type"))
++def _array_metadata_dict_v2(zarray_bytes: Buffer, zattrs_bytes: Buffer | None) -> dict[str, JSON]:
++    """Combine a `.zarray` document and an optional `.zattrs` document into one metadata dict."""
++    metadata_dict: dict[str, JSON] = buffer_to_json_object(zarray_bytes)
++    metadata_dict["attributes"] = (
++        buffer_to_json_object(zattrs_bytes) if zattrs_bytes is not None else {}
++    )
++    return metadata_dict
+ 
++
++def _array_metadata_dict_v3(zarr_json_bytes: Buffer) -> dict[str, JSON]:
++    """Parse a `zarr.json` document, checking that it describes an array."""
++    metadata_dict: dict[str, JSON] = buffer_to_json_object(zarr_json_bytes)
++    parse_node_type_array(metadata_dict.get("node_type"))
+     return metadata_dict
+ 
+ 
+@@ -5896,7 +5898,11 @@ async def _resize(
+         If False, the data in those chunks will be preserved.
+     """
+     new_shape = parse_shapelike(new_shape)
+-    assert len(new_shape) == len(array.metadata.shape)
++    if len(new_shape) != len(array.metadata.shape):
++        raise ValueError(
++            f"The new shape must have the same number of dimensions as the array. "
++            f"Got {len(new_shape)} dimension(s), expected {len(array.metadata.shape)}."
++        )
+ 
+     new_metadata = array.metadata.update_shape(new_shape)
+     new_chunk_grid = ChunkGrid.from_metadata(new_metadata)
+diff --git a/src/zarr/core/buffer/cpu.py b/src/zarr/core/buffer/cpu.py
+index 8994281b..f987ef9d 100644
+--- a/src/zarr/core/buffer/cpu.py
++++ b/src/zarr/core/buffer/cpu.py
+@@ -111,7 +111,6 @@ class Buffer(core.Buffer):
+         data = [np.asanyarray(self._data)]
+         for buf in others:
+             other_array = buf.as_array_like()
+-            assert other_array.dtype == np.dtype("B")
+             data.append(np.asanyarray(other_array))
+         return self.__class__(np.concatenate(data))
+ 
+diff --git a/src/zarr/core/buffer/gpu.py b/src/zarr/core/buffer/gpu.py
+index 86729423..6f0e4aec 100644
+--- a/src/zarr/core/buffer/gpu.py
++++ b/src/zarr/core/buffer/gpu.py
+@@ -111,7 +111,6 @@ class Buffer(core.Buffer):
+         data = [cp.asanyarray(self._data)]
+         for other in others:
+             other_array = other.as_array_like()
+-            assert other_array.dtype == np.dtype("B")
+             gpu_other = Buffer(other_array)
+             gpu_other_array = gpu_other.as_array_like()
+             data.append(cp.asanyarray(gpu_other_array))
+@@ -149,8 +148,8 @@ class NDBuffer(core.NDBuffer):
+                 "Cannot use zarr.buffer.gpu.NDBuffer without cupy. Please install cupy."
+             )
+ 
+-        # assert array.ndim > 0
+-        assert array.dtype != object
++        if array.dtype == object:
++            raise TypeError("zarr.buffer.gpu.NDBuffer does not support arrays with object dtype.")
+         self._data = array
+ 
+         if not hasattr(array, "__cuda_array_interface__"):
+diff --git a/src/zarr/core/codec_pipeline.py b/src/zarr/core/codec_pipeline.py
+index 597f338c..9ed16bc3 100644
+--- a/src/zarr/core/codec_pipeline.py
++++ b/src/zarr/core/codec_pipeline.py
+@@ -5,7 +5,7 @@ import threading
+ from concurrent.futures import ThreadPoolExecutor
+ from dataclasses import dataclass, field
+ from itertools import batched, chain, pairwise
+-from typing import TYPE_CHECKING, Any, cast
++from typing import TYPE_CHECKING, Any
+ from warnings import warn
+ 
+ from zarr.abc.codec import (
+@@ -397,9 +397,8 @@ async def _async_write_fallback(
+     sync IO / sync transform is unavailable).
+     """
+ 
+-    if use_sync := (
+-        isinstance(pipeline, FusedCodecPipeline) and pipeline.sync_transform is not None
+-    ):
++    sync_transform = pipeline.sync_transform if isinstance(pipeline, FusedCodecPipeline) else None
++    if sync_transform is not None:
+         # Read each chunk's existing bytes (skipping complete chunks) and decode
+         # as fetches complete, overlapping the sync decode with in-flight reads.
+         chunk_array_decoded: Iterable[NDBuffer | None] = await _fetch_and_decode_as_completed(
+@@ -407,7 +406,7 @@ async def _async_write_fallback(
+                 (None if is_complete_chunk else byte_setter, chunk_spec)
+                 for byte_setter, chunk_spec, _, _, is_complete_chunk in batch
+             ],
+-            pipeline.sync_transform,
++            sync_transform,
+         )
+     else:
+ 
+@@ -460,9 +459,7 @@ async def _async_write_fallback(
+         for chunk_array, (_, chunk_spec, *_) in zip(chunk_array_merged, batch, strict=False)
+     ]
+ 
+-    if use_sync:
+-        sync_transform = cast(FusedCodecPipeline, pipeline).sync_transform
+-        assert sync_transform is not None
++    if sync_transform is not None:
+         await _encode_and_write_as_completed(
+             [
+                 (byte_setter, chunk_array, chunk_spec)
+@@ -709,9 +706,12 @@ class BatchedCodecPipeline(CodecPipeline):
+         self,
+         batch_info: Iterable[tuple[ByteGetter, SelectorTuple, ArraySpec]],
+     ) -> Iterable[NDBuffer | None]:
+-        assert self.supports_partial_decode
+-        assert isinstance(self.array_bytes_codec, ArrayBytesCodecPartialDecodeMixin)
+-        return await self.array_bytes_codec.decode_partial(batch_info)
++        codec = self.array_bytes_codec
++        if not self.supports_partial_decode or not isinstance(
++            codec, ArrayBytesCodecPartialDecodeMixin
++        ):
++            raise ValueError("This codec pipeline does not support partial decoding.")
++        return await codec.decode_partial(batch_info)
+ 
+     async def encode_batch(
+         self,
+@@ -744,9 +744,12 @@ class BatchedCodecPipeline(CodecPipeline):
+         self,
+         batch_info: Iterable[tuple[ByteSetter, NDBuffer, SelectorTuple, ArraySpec]],
+     ) -> None:
+-        assert self.supports_partial_encode
+-        assert isinstance(self.array_bytes_codec, ArrayBytesCodecPartialEncodeMixin)
+-        await self.array_bytes_codec.encode_partial(batch_info)
++        codec = self.array_bytes_codec
++        if not self.supports_partial_encode or not isinstance(
++            codec, ArrayBytesCodecPartialEncodeMixin
++        ):
++            raise ValueError("This codec pipeline does not support partial encoding.")
++        await codec.encode_partial(batch_info)
+ 
+     async def read_batch(
+         self,
+@@ -1117,8 +1120,12 @@ class FusedCodecPipeline(CodecPipeline):
+         the read selection. Otherwise the pipeline fetches the full
+         blob and decodes the whole chunk.
+         """
+-        assert self.sync_transform is not None
+         transform = self.sync_transform
++        if transform is None:
++            raise RuntimeError(
++                "This codec pipeline contains codecs without synchronous support; "
++                "use the async read/write path instead."
++            )
+ 
+         batch = list(batch_info)
+         if not batch:
+@@ -1193,8 +1200,12 @@ class FusedCodecPipeline(CodecPipeline):
+         the full write cycle — reading existing data, merging, encoding,
+         and writing — matching the async `BatchedCodecPipeline` path.
+         """
+-        assert self.sync_transform is not None
+         transform = self.sync_transform
++        if transform is None:
++            raise RuntimeError(
++                "This codec pipeline contains codecs without synchronous support; "
++                "use the async read/write path instead."
++            )
+ 
+         batch = list(batch_info)
+         if not batch:
+@@ -1294,9 +1305,9 @@ class FusedCodecPipeline(CodecPipeline):
+         # inner-chunk byte ranges (coalesced via get_ranges), matching
+         # BatchedCodecPipeline. Without this, the whole-shard _async_read_fallback
+         # below would over-read and diverge from the batched pipeline's IO.
+-        if self.supports_partial_decode:
+-            assert isinstance(self.array_bytes_codec, ArrayBytesCodecPartialDecodeMixin)
+-            chunk_array_batch = await self.array_bytes_codec.decode_partial(
++        codec = self.array_bytes_codec
++        if self.supports_partial_decode and isinstance(codec, ArrayBytesCodecPartialDecodeMixin):
++            chunk_array_batch = await codec.decode_partial(
+                 [
+                     (byte_getter, chunk_selection, chunk_spec)
+                     for byte_getter, chunk_spec, chunk_selection, *_ in batch
+diff --git a/src/zarr/core/group.py b/src/zarr/core/group.py
+index d061e1a5..d734e6b7 100644
+--- a/src/zarr/core/group.py
++++ b/src/zarr/core/group.py
+@@ -56,6 +56,7 @@ from zarr.errors import (
+     ContainsGroupError,
+     GroupNotFoundError,
+     MetadataValidationError,
++    NodeTypeValidationError,
+     ZarrUserWarning,
+ )
+ from zarr.storage import StoreLike, StorePath
+@@ -372,7 +373,11 @@ class GroupMetadata(Metadata):
+                     ZATTRS_JSON: self.attributes,
+                 }
+                 consolidated_metadata = self.consolidated_metadata.to_dict()["metadata"]
+-                assert isinstance(consolidated_metadata, dict)
++                if not isinstance(consolidated_metadata, dict):
++                    raise TypeError(
++                        "Expected consolidated metadata to serialize to a dict, "
++                        f"got {type(consolidated_metadata).__name__}."
++                    )
+                 for k, v in consolidated_metadata.items():
+                     attrs = v.pop("attributes", {})
+                     d[f"{k}/{ZATTRS_JSON}"] = attrs
+@@ -412,7 +417,11 @@ class GroupMetadata(Metadata):
+     @classmethod
+     def from_dict(cls, data: dict[str, Any]) -> GroupMetadata:
+         data = dict(data)
+-        assert data.pop("node_type", None) in ("group", None)
++        node_type = data.pop("node_type", None)
++        if node_type not in ("group", None):
++            raise NodeTypeValidationError(
++                f"Invalid value for 'node_type'. Expected 'group' or None. Got {node_type!r}."
++            )
+         consolidated_metadata = data.pop("consolidated_metadata", None)
+         if consolidated_metadata:
+             data["consolidated_metadata"] = ConsolidatedMetadata.from_dict(consolidated_metadata)
+@@ -583,8 +592,8 @@ class AsyncGroup:
+             raise MetadataValidationError(msg)
+ 
+         if zarr_format == 2:
+-            # this is checked above, asserting here for mypy
+-            assert zgroup_bytes is not None
++            if zgroup_bytes is None:
++                raise FileNotFoundError(store_path)
+ 
+             if use_consolidated and maybe_consolidated_metadata_bytes is None:
+                 # the user requested consolidated metadata, but it was missing
+@@ -600,7 +609,8 @@ class AsyncGroup:
+             )
+         else:
+             # V3 groups are comprised of a zarr.json object
+-            assert zarr_json_bytes is not None
++            if zarr_json_bytes is None:
++                raise FileNotFoundError(store_path)
+             if not isinstance(use_consolidated, bool | None):
+                 raise TypeError("use_consolidated must be a bool or None for Zarr format 3.")
+ 
+@@ -742,9 +752,6 @@ class AsyncGroup:
+         # Note that this is a regular def (non async) function.
+         # This shouldn't do any additional I/O.
+ 
+-        # the caller needs to verify this!
+-        assert self.metadata.consolidated_metadata is not None
+-
+         # we support nested getitems like group/subgroup/array
+         indexers = normalize_path(key).split("/")
+         indexers.reverse()
+@@ -1049,7 +1056,6 @@ class AsyncGroup:
+                     raise TypeError(
+                         f"Incompatible object ({item.__class__.__name__}) already exists"
+                     )
+-                assert isinstance(item, AsyncGroup)  # make mypy happy
+                 grp = item
+             except KeyError:
+                 grp = await self.create_group(name)
+diff --git a/src/zarr/core/sync.py b/src/zarr/core/sync.py
+index 724b31a4..16b1c577 100644
+--- a/src/zarr/core/sync.py
++++ b/src/zarr/core/sync.py
+@@ -149,7 +149,6 @@ def sync[T](
+     finished, unfinished = wait([future], return_when=asyncio.ALL_COMPLETED, timeout=timeout)
+     if len(unfinished) > 0:
+         raise TimeoutError(f"Coroutine {coro} failed to finish within {timeout} s")
+-    assert len(finished) == 1
+     return_result = next(iter(finished)).result()
+ 
+     if isinstance(return_result, BaseException):
+@@ -163,20 +162,21 @@ def _get_loop() -> asyncio.AbstractEventLoop:
+ 
+     The loop will be running on a separate thread.
+     """
+-    if loop[0] is None:
++    current = loop[0]
++    if current is None:
+         with _get_lock():
+             # repeat the check just in case the loop got filled between the
+             # previous two calls from another thread
+-            if loop[0] is None:
++            current = loop[0]
++            if current is None:
+                 logger.debug("Creating Zarr event loop")
+-                new_loop = asyncio.new_event_loop()
+-                loop[0] = new_loop
+-                iothread[0] = threading.Thread(target=new_loop.run_forever, name="zarr_io")
+-                assert iothread[0] is not None
+-                iothread[0].daemon = True
+-                iothread[0].start()
+-    assert loop[0] is not None
+-    return loop[0]
++                current = asyncio.new_event_loop()
++                loop[0] = current
++                thread = threading.Thread(target=current.run_forever, name="zarr_io")
++                thread.daemon = True
++                iothread[0] = thread
++                thread.start()
++    return current
+ 
+ 
+ async def _collect_aiterator[T](data: AsyncIterator[T]) -> tuple[T, ...]:
+diff --git a/src/zarr/storage/_common.py b/src/zarr/storage/_common.py
+index 72b5fc8a..df08968e 100644
+--- a/src/zarr/storage/_common.py
++++ b/src/zarr/storage/_common.py
+@@ -360,7 +360,8 @@ async def make_store(
+                 "'storage_options' is only used when the store is passed as an FSSpec URI string.",
+             )
+ 
+-    assert mode in (None, "r", "r+", "a", "w", "w-")
++    if mode is not None and mode not in ANY_ACCESS_MODE:
++        raise ValueError(f"Invalid mode: {mode}, expected one of {ANY_ACCESS_MODE}")
+     _read_only = mode == "r"
+ 
+     if isinstance(store_like, StorePath):
+diff --git a/src/zarr/storage/_local.py b/src/zarr/storage/_local.py
+index d6a3edcd..c34ca44c 100644
+--- a/src/zarr/storage/_local.py
++++ b/src/zarr/storage/_local.py
+@@ -255,7 +255,6 @@ class LocalStore(Store):
+         if prototype is None:
+             prototype = default_buffer_prototype()
+         self._ensure_open_sync()
+-        assert isinstance(key, str)
+         path = self.root / key
+         try:
+             return _get(path, prototype, byte_range)
+@@ -265,7 +264,6 @@ class LocalStore(Store):
+     def set_sync(self, key: str, value: Buffer) -> None:
+         self._ensure_open_sync()
+         self._check_writable()
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"LocalStore.set(): `value` must be a Buffer instance. "
+@@ -294,7 +292,6 @@ class LocalStore(Store):
+             prototype = default_buffer_prototype()
+         if not self._is_open:
+             await self._open()
+-        assert isinstance(key, str)
+         path = self.root / key
+ 
+         try:
+@@ -310,7 +307,6 @@ class LocalStore(Store):
+         # docstring inherited
+         args = []
+         for key, byte_range in key_ranges:
+-            assert isinstance(key, str)
+             path = self.root / key
+             args.append((_get, path, prototype, byte_range))
+         return await concurrent_map(args, asyncio.to_thread, limit=None)  # TODO: fix limit
+@@ -330,7 +326,6 @@ class LocalStore(Store):
+         if not self._is_open:
+             await self._open()
+         self._check_writable()
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"LocalStore.set(): `value` must be a Buffer instance. Got an instance of {type(value)} instead."
+diff --git a/src/zarr/storage/_memory.py b/src/zarr/storage/_memory.py
+index f42c38df..3bece0e8 100644
+--- a/src/zarr/storage/_memory.py
++++ b/src/zarr/storage/_memory.py
+@@ -118,7 +118,6 @@ class MemoryStore(Store):
+             prototype = default_buffer_prototype()
+         if not self._is_open:
+             self._is_open = True
+-        assert isinstance(key, str)
+         try:
+             value = self._store_dict[key]
+             start, stop = _normalize_byte_range_index(value, byte_range)
+@@ -130,7 +129,6 @@ class MemoryStore(Store):
+         self._check_writable()
+         if not self._is_open:
+             self._is_open = True
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"MemoryStore.set(): `value` must be a Buffer instance. Got an instance of {type(value)} instead."
+@@ -157,7 +155,6 @@ class MemoryStore(Store):
+             prototype = default_buffer_prototype()
+         if not self._is_open:
+             await self._open()
+-        assert isinstance(key, str)
+         try:
+             value = self._store_dict[key]
+             start, stop = _normalize_byte_range_index(value, byte_range)
+@@ -186,7 +183,6 @@ class MemoryStore(Store):
+         # docstring inherited
+         self._check_writable()
+         await self._ensure_open()
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"MemoryStore.set(): `value` must be a Buffer instance. Got an instance of {type(value)} instead."
+@@ -305,7 +301,6 @@ class GpuMemoryStore(MemoryStore):
+     async def set(self, key: str, value: Buffer, byte_range: tuple[int, int] | None = None) -> None:
+         # docstring inherited
+         self._check_writable()
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"GpuMemoryStore.set(): `value` must be a Buffer instance. Got an instance of {type(value)} instead."
+@@ -317,7 +312,6 @@ class GpuMemoryStore(MemoryStore):
+     def set_sync(self, key: str, value: Buffer) -> None:
+         # docstring inherited
+         self._check_writable()
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"GpuMemoryStore.set(): `value` must be a Buffer instance. Got an instance of {type(value)} instead."
+diff --git a/src/zarr/storage/_zip.py b/src/zarr/storage/_zip.py
+index 69ae18bc..6b9ebca5 100644
+--- a/src/zarr/storage/_zip.py
++++ b/src/zarr/storage/_zip.py
+@@ -271,7 +271,6 @@ class ZipStore(Store):
+         byte_range: ByteRequest | None = None,
+     ) -> Buffer | None:
+         # docstring inherited
+-        assert isinstance(key, str)
+ 
+         with self._lock:
+             return self._get(key, prototype=prototype, byte_range=byte_range)
+@@ -306,7 +305,6 @@ class ZipStore(Store):
+         self._check_writable()
+         if not self._is_open:
+             self._sync_open()
+-        assert isinstance(key, str)
+         if not isinstance(value, Buffer):
+             raise TypeError(
+                 f"ZipStore.set(): `value` must be a Buffer instance. Got an instance of {type(value)} instead."

@@ -1,0 +1,41 @@
+{
+  "pr": 11477,
+  "merged": "2026-07-30",
+  "issues": [
+    {
+      "n": 9969,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/indexes.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_indexes.py"
+  ],
+  "env": "exclude-newer 2026-07-29T16:57:32-06:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_indexes.py::TestPandasMultiIndex::test_stack",
+    "xarray/tests/test_indexes.py::TestPandasMultiIndex::test_stack_falsy_level_names",
+    "xarray/tests/test_indexes.py::TestPandasMultiIndex::test_stack_non_unique"
+  ],
+  "counts": {
+    "f2p": 3,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_indexes.TestPandasMultiIndex::test_stack_falsy_level_names[empty_str]",
+    "xarray.tests.test_indexes.TestPandasMultiIndex::test_stack_falsy_level_names[false]",
+    "xarray.tests.test_indexes.TestPandasMultiIndex::test_stack_falsy_level_names[zero]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -142,15 +142,21 @@ export async function archiveTrial(
 	sandbox: Sandbox,
 	trialDir: string,
 	transcripts: string[],
+	opts: { workspace?: boolean } = {},
 ): Promise<ArchiveResult> {
 	const workspaceDir = join(trialDir, "workspace");
 	const transcriptsDir = join(trialDir, "transcripts");
 	mkdirSync(transcriptsDir, { recursive: true });
 
-	await sandbox.copyOut(sandbox.workspacePath, workspaceDir);
-
 	const secretValues = collectSecretValues();
-	let redactions = redactDirectory(workspaceDir, secretValues);
+	let redactions = 0;
+	// Brownfield-on-docker skips this: the container's workspace holds the task's
+	// multi-GB env and `docker cp` can't filter it; the candidate's change is
+	// captured as candidate.patch instead.
+	if (opts.workspace !== false) {
+		await sandbox.copyOut(sandbox.workspacePath, workspaceDir);
+		redactions += redactDirectory(workspaceDir, secretValues);
+	}
 
 	const transcriptPaths: string[] = [];
 	for (const [i, transcript] of transcripts.entries()) {

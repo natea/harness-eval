@@ -1,0 +1,83 @@
+{
+  "pr": 11690,
+  "issue": 9890,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.0397106,
+  "prAuthor": "headtr1ck",
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Quite a few timeouts and warnings nowadays with the benchmarks, but it runs now at least.",
+      "rationale": "Link and CI logs showing timeouts and warnings; no cause or fix identified.",
+      "author": "Illviljan",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Rolling with dask is very slow now:",
+      "rationale": "Reports slow dask rolling with reproduction; the reference fix did not touch rolling benchmarks.",
+      "author": "Illviljan",
+      "role": "issue author"
+    },
+    {
+      "id": "c2",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/groupby.py"
+      ],
+      "evidence": "The warning shows up here:",
+      "rationale": "Gives a repro of groupby on a data variable with use_flox=False producing the no-index warning from concat, which the reference fix suppresses in groupby. It doesn't state the cause or fix, but it localizes the mechanism (groupby combine/concat).",
+      "author": "Illviljan",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The Dask slowdown is kind of expected.",
+      "rationale": "Explains the dask rolling slowdown, which the reference fix did not address.",
+      "author": "phofl",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "we should be setting `automatic_rechunk=False` though...",
+      "rationale": "A wrong guess about rolling that was retracted; not in the reference.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c5",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Can you elaborate? Only for this benchmark or generally for .reduce?",
+      "rationale": "A clarifying question with no technical content.",
+      "author": "phofl",
+      "role": "other user"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "We should update the benchmark.",
+      "rationale": "Says to update the rolling benchmark, which the reference didn't do. It's too vague to point to the actual changes.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ]
+}

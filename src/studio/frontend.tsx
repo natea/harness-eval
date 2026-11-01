@@ -6,6 +6,7 @@ import { BracketView } from "./views/BracketView";
 import { Configure } from "./views/Configure";
 import { InverseScaling } from "./views/InverseScaling";
 import { Leaderboard } from "./views/Leaderboard";
+import { AgreementView, ReviewList, TaskReview } from "./views/ReviewView";
 import { Runs } from "./views/Runs";
 import { RunView } from "./views/RunView";
 import { TrialView } from "./views/TrialView";
@@ -18,15 +19,18 @@ const BRAND = "CodingHarness";
 /** Map the current path to a human page name for the document title. Mirrors the
  *  routing in Routed() + Nav(). */
 function pageTitle(path: string): string {
-	if (path === "/configure") return "Configure";
-	if (path === "/inverse-scaling") return "Inverse-scaling";
-	if (path === "/bracket") return "Bracket";
+	if (path === "/configure") return "New Run";
+	if (path === "/inverse-scaling") return "Trends";
+	if (path === "/bracket") return "Tournament";
 	if (path === "/runs") return "Runs";
+	if (path === "/review/agreement") return "Review agreement";
+	if (path.startsWith("/review/")) return "Review task";
+	if (path === "/review") return "Review";
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[2]) return `Trial ${trial[2]}`;
 	const run = path.match(/^\/runs\/([^/]+)$/);
 	if (run?.[1]) return `Run ${run[1]}`;
-	return "Review";
+	return "Leaderboard";
 }
 
 /** Path-based routing: / → leaderboard, /configure → configure, /runs → queue,
@@ -37,6 +41,11 @@ function Routed() {
 	if (path === "/inverse-scaling") return <InverseScaling />;
 	if (path === "/bracket") return <BracketView />;
 	if (path === "/runs") return <Runs />;
+	if (path === "/review") return <ReviewList />;
+	if (path === "/review/agreement") return <AgreementView />;
+	const review = path.match(/^\/review\/([^/]+)\/([^/]+)$/);
+	if (review?.[1] && review[2])
+		return <TaskReview repoDir={review[1]} id={review[2]} />;
 	const trial = path.match(/^\/runs\/([^/]+)\/trials\/([^/]+)$/);
 	if (trial?.[1] && trial[2])
 		return <TrialView runId={trial[1]} trialId={trial[2]} />;
@@ -105,11 +114,12 @@ function Nav() {
 	return (
 		<nav className="mb-4 flex items-center gap-1 border-b border-border pb-2">
 			<Logo />
-			{tab("/", "Review", path === "/")}
-			{tab("/configure", "Configure", path === "/configure")}
-			{tab("/inverse-scaling", "Inverse-scaling", path === "/inverse-scaling")}
-			{tab("/bracket", "Bracket", path === "/bracket")}
+			{tab("/", "Leaderboard", path === "/")}
+			{tab("/configure", "New Run", path === "/configure")}
+			{tab("/inverse-scaling", "Trends", path === "/inverse-scaling")}
+			{tab("/bracket", "Tournament", path === "/bracket")}
 			{tab("/runs", "Runs", path === "/runs")}
+			{tab("/review", "Review", path.startsWith("/review"))}
 			<ThemeToggle />
 		</nav>
 	);

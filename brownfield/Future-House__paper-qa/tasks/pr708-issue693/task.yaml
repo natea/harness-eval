@@ -1,0 +1,51 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 708
+issues:
+  - 693
+baseSha: 6828cde70bcff97fc240c98fb6782aff7cc82601
+mergeSha: 11f2727266b17678209eda5d662b40cae9fd6d08
+tStar: 2024-11-19T18:47:29Z
+issueCreatedAt: 2024-11-15T18:58:00Z
+prMergedAt: 2024-11-19T23:37:19Z
+verdict: VALID
+failToPass:
+  - tests.test_litqa.TestLitQAEvaluation::test_consistent_mc_options
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's
+    zip code?-94107-distractors0-the answer is 94107-correct-expected_dreturns0]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's
+    zip code?-94107-distractors1-the answer is
+    14004-incorrect-expected_dreturns1]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's
+    zip code?-94107-distractors2-the answer is
+    94106-incorrect-expected_dreturns2]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's
+    zip code?-94107-distractors3-Insufficient
+    information-unsure-expected_dreturns3]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's
+    zip code?-94107-distractors4-the answer is 94106 or
+    94107-incorrect-expected_dreturns4]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[What is the meaning
+    of life?-42-distractors5-14-incorrect-expected_dreturns5]
+passToPass: []
+envBroken:
+  - tests.test_litqa.TestLitQAEvaluation::test_creating_litqa_questions
+  - tests.test_task.TestTaskDataset::test_evaluation
+flaky: []
+testPaths:
+  - tests
+depsTouched: true
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 21caa05e481285cba43b548305e0f4109c7f5a0121d209c093608c75c9fc67a5
+  issue/body+human.md: 21caa05e481285cba43b548305e0f4109c7f5a0121d209c093608c75c9fc67a5
+  issue/body.md: 21caa05e481285cba43b548305e0f4109c7f5a0121d209c093608c75c9fc67a5
+  leaks.json: f7458f4fc30e1e3938c2da36c8525c961e7830be88060e14907467d733756f68
+  reference.patch: a62144f3b4aa742dea48c292385fc2a7f92ba6e4bb4cb56a811bde3e4cddf6a0
+  snapshot.json: 1dc2ba94ae82fa535bbdd486904f4f55ddb5aa032c4c41c2bab2494c2026961a
+  tests.patch: ce05b9164de878119cb75d0ddbd5f94394149e90384c6746d3b08a284cc3e906
+  validation.json: 1bbdd3e3e76182135f88a9df19969db46375abd0bdd023f0857745c67e42b463

@@ -1,0 +1,60 @@
+{
+  "pr": 4465,
+  "merged": "2026-10-26",
+  "issues": [
+    {
+      "n": 4404,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 9,
+  "srcFiles": [
+    "changes/4404.feature.md",
+    "changes/4539.bugfix.md",
+    "docs/user-guide/config.md",
+    "pyproject.toml",
+    "src/zarr/codecs/_v2.py",
+    "src/zarr/core/config.py",
+    "src/zarr/errors.py"
+  ],
+  "testFiles": [
+    "tests/test_config.py",
+    "tests/test_v2.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_config.py::test_config_defaults_set",
+    "tests/test_v2.py::test_other_dtype_roundtrip",
+    "tests/test_v2.py::test_pickle_codec_read_disabled_by_default",
+    "tests/test_v2.py::test_pickle_codec_read_does_not_unpickle",
+    "tests/test_v2.py::test_pickle_codec_read_enabled_via_config",
+    "tests/test_v2.py::test_pickle_codec_read_enabled_via_env_var",
+    "tests/test_v2.py::test_pickle_codec_zarr_opt_in_does_not_bypass_numcodecs",
+    "tests/test_v2.py::test_pickle_opt_in_does_not_affect_other_codecs"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 4,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_config::test_config_defaults_set",
+    "tests.test_v2::test_other_dtype_roundtrip[no_fill]",
+    "tests.test_v2::test_other_dtype_roundtrip[fill]",
+    "tests.test_v2::test_pickle_codec_read_disabled_by_default",
+    "tests.test_v2::test_pickle_codec_read_does_not_unpickle",
+    "tests.test_v2::test_pickle_opt_in_does_not_affect_other_codecs"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_v2::test_pickle_codec_read_enabled_via_config",
+    "tests.test_v2::test_pickle_codec_read_enabled_via_env_var[True-True]",
+    "tests.test_v2::test_pickle_codec_read_enabled_via_env_var[false-False]",
+    "tests.test_v2::test_pickle_codec_zarr_opt_in_does_not_bypass_numcodecs"
+  ],
+  "verdict": "VALID"
+}

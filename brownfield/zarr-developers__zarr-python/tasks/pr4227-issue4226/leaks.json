@@ -1,0 +1,17 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Consolidated metadata does not respect case-sensitivity, it seems?",
+      "rationale": "Reports behavior and a traceback from _getitem_consolidated; the case-sensitivity guess is wrong (real cause is itertools.groupby on non-adjacent keys). No root cause or fix location identified.",
+      "author": "ilan-gold",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "noise"
+}

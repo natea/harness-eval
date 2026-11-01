@@ -1,0 +1,147 @@
+# Stacking doesn't work on dims named `""`
+
+_Opened by @gusostow_
+
+### What happened?
+
+Stacking a dataset on a dimensions named `""` raises a KeyError.
+
+### What did you expect to happen?
+
+No exception.
+
+### Minimal Complete Verifiable Example
+
+```Python
+import xarray as xr
+
+# Create a simple dataset with an empty string dimension name
+data = {
+    "foo": (("",), [1]),
+    "bar": (("",), [2]),
+}
+
+# Create the dataset
+ds = xr.Dataset(data)
+
+# KeyError: '__pred_level_0'
+ds.stack({"stacked": ("",)})
+```
+
+### MVCE confirmation
+
+- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [x] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.
+- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.
+
+### Relevant log output
+
+```Python
+Traceback (most recent call last):
+  File "/home/aostow/projects/xarray2024/empty-dim-name.py", line 13, in <module>
+    ds.stack({"stacked": ("",)})
+  File "PREFIX/lib/python3.10/site-packages/xarray/util/deprecation_helpers.py", line 143, in wrapper
+    return func(*args, **kwargs)
+  File "PREFIX/lib/python3.10/site-packages/xarray/core/dataset.py", line 5540, in stack
+    result = result._stack_once(dims, new_dim, index_cls, create_index)
+  File "PREFIX/lib/python3.10/site-packages/xarray/core/dataset.py", line 5478, in _stack_once
+    idx_vars = idx.create_variables(product_vars)
+  File "PREFIX/lib/python3.10/site-packages/xarray/core/indexes.py", line 1175, in create_variables
+    dtype = self.level_coords_dtype[name]  # type: ignore[index]  # TODO: are Hashables ok?
+KeyError: 'stacked_level_0'
+```
+
+### Anything else we need to know?
+
+ I bisected the regression to https://github.com/pydata/xarray/commit/3ead17ea. 
+
+### Environment
+
+<details>
+
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:40:32) [GCC 12.3.0]
+python-bits: 64
+OS: Linux
+OS-release: 4.18.0-477.67.1.el8_8.x86_64
+machine: x86_64
+processor: x86_64
+byteorder: little
+LC_ALL: en_US.UTF-8
+LANG: en_US.UTF-8
+LOCALE: ('en_US', 'UTF-8')
+libhdf5: 1.10.6
+libnetcdf: None
+
+xarray: 2025.1.1
+pandas: 2.2.3
+numpy: 1.26.4
+scipy: 1.10.1
+netCDF4: None
+pydap: None
+h5netcdf: None
+h5py: 3.6.0
+zarr: 2.13.3
+cftime: None
+nc_time_axis: None
+iris: None
+bottleneck: 1.3.2.dev0
+dask: 2023.6.0
+distributed: 2023.6.0
+matplotlib: 3.5.3
+cartopy: None
+seaborn: 0.11.2
+numbagg: installed
+fsspec: 2024.3.1
+cupy: None
+pint: 0.24.3
+sparse: 0.15.4
+flox: None
+numpy_groupies: None
+setuptools: 65.5.0
+pip: 23.0.1
+conda: None
+pytest: 7.4.4
+mypy: 1.10.0
+IPython: 7.31.1
+sphinx: 7.3.7
+
+
+</details>
+
+---
+
+## Discussion
+
+**@TomNicholas** (2025-01-23):
+
+Thanks for raising.
+
+Should we even be allowing a dim named `""` though? @max-sixty as the representative of all things `Hashable` 😁
+
+**@max-sixty** (2025-01-23):
+
+@TomNicholas as the representative of strings, I'd imagine you would be eager to support `""` — a valid string!
+
+(jokes aside, yeah, this seems niche, and I'm guessing it breaks for non-string hashables too?)
+
+**@Illviljan** (2025-01-25):
+
+The bug happens here:
+https://github.com/pydata/xarray/blob/1c7ee65d560fa3067dc4424c672393839fa972d3/xarray/core/indexes.py#L950
+
+`""` is falseish, as are the hashables `False`, `None` and `()` and will break as well.
+
+Not sure what the case `f"{dim}_level_{i}"` is fixing. I suppose it's not possible to just simplify and accept `idx.name `only?
+
+**@keewis** (2025-01-26):
+
+> Not sure what the case `f"{dim}_level_{i}"` is fixing.
+
+given the context I would assume `"{dim}_level_{i}"` has to do with (unnamed?) `MultiIndex` levels. It might be fine to explicitly check for `None` instead of using `or` in that case, though.
+
+(MultiIndex levels without associated coordinates have been deprecated for a while now – not sure how long, though, but it must be at least two years – so we might also choose to complete the deprecation cycle and remove that part of the code)

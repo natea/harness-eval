@@ -1,0 +1,128 @@
+# ObjectStore.list_dir("g") raises ValueError when an object keyed "g/" exists
+
+_Opened by @blinkybool_
+
+### Zarr version
+
+3.2.1
+
+### Numcodecs version
+
+v0.16.5
+
+### Python Version
+
+3.14
+
+### Operating System
+
+Mac
+
+### Installation
+
+uv
+
+### Description
+
+I hit this while using zarr.ObjectStore to walk a S3/R2 looking for zarr stores in a bucket that also contains directory-marker keys. Walking the hierarchy with list_dir raises at any directory that has a marker. 
+
+Concretely, `list_dir("g")` (or `"g/"` — the argument is `rstrip("/")`-ed) raises whenever an object keyed "g/" exists. obstore lists with prefix "g/", and the marker keyed "g/" is returned as an object that obstore reports as path "g". That entry is then run through `_transform_list_dir` / `_relativize_path` (zarr/storage/_obstore.py, zarr/storage/_utils.py):
+
+```py
+async def _transform_list_dir(
+    list_result_coroutine: Coroutine[Any, Any, ListResult[Sequence[ObjectMeta]]], prefix: str
+) -> AsyncGenerator[str, None]:
+    list_result = await list_result_coroutine
+    prefix = prefix.rstrip("/")
+    for path in chain(
+        list_result["common_prefixes"], map(itemgetter("path"), list_result["objects"])
+    ):
+        yield _relativize_path(path=path, prefix=prefix)
+
+
+def _relativize_path(*, path: str, prefix: str) -> str:
+    if prefix == "":
+        return path
+    else:
+        _prefix = f"{prefix}/"
+        if not path.startswith(_prefix):
+            raise ValueError(f"The first component of {path} does not start with {prefix}.")
+        return path.removeprefix(_prefix)
+```
+
+With path="g" and prefix="g", `"g".startswith("g/")` is false, so it raises instead of skipping the entry. (For prefix == "" it returns early, so only non-root listings are affected.)
+
+Reproduced on Python 3.14.4, zarr 3.2.1, obstore 0.10.0. The key cannot be written through obstore, which strips the trailing slash on put, so the repro creates it with boto3. LocalStore and MemoryStore cannot reproduce this: a filesystem cannot hold both a file "g" and a directory "g/", and obstore's MemoryStore strips the trailing slash on put.
+
+### Steps to reproduce
+
+```python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "zarr==3.2.1",
+#     "obstore==0.10.0",
+#     "boto3==1.43.22",
+#     "moto[server]==5.2.1",
+# ]
+# ///
+import asyncio, boto3, obstore.store
+from moto.server import ThreadedMotoServer
+from zarr.storage import ObjectStore
+
+server = ThreadedMotoServer(port=0)
+server.start()
+host, port = server.get_host_and_port()
+endpoint = f"http://{host}:{port}"
+
+s3 = boto3.client("s3", endpoint_url=endpoint, region_name="us-east-1",
+                  aws_access_key_id="x", aws_secret_access_key="x")
+s3.create_bucket(Bucket="bucket")
+s3.put_object(Bucket="bucket", Key="g/", Body=b"")  # directory-placeholder object
+
+store = ObjectStore(obstore.store.S3Store(
+    bucket="bucket", endpoint=endpoint, region="us-east-1",
+    access_key_id="x", secret_access_key="x",
+    client_options={"allow_http": True}, virtual_hosted_style_request=False,
+))
+
+
+async def main():
+    # ValueError: The first component of g does not start with g.
+    return [name async for name in store.list_dir("g")]
+
+
+print(asyncio.run(main()))
+```
+
+
+### Additional output
+
+```
+Starting a new Thread with MotoServer running on 0.0.0.0:0...
+127.0.0.1 - - [04/Jun/2026 13:34:36] "PUT /bucket HTTP/1.1" 200 -
+127.0.0.1 - - [04/Jun/2026 13:34:36] "PUT /bucket/g/ HTTP/1.1" 200 -
+127.0.0.1 - - [04/Jun/2026 13:34:36] "GET /bucket?delimiter=/&list-type=2&prefix=g/ HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/tmp/repro.py", line 36, in <module>
+    print(asyncio.run(main()))
+          ~~~~~~~~~~~^^^^^^^^
+  File "/Users/billy/.local/share/uv/python/cpython-3.14.4-macos-aarch64-none/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Users/billy/.local/share/uv/python/cpython-3.14.4-macos-aarch64-none/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/billy/.local/share/uv/python/cpython-3.14.4-macos-aarch64-none/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/repro.py", line 33, in main
+    return [name async for name in store.list_dir("g")]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/billy/.cache/uv/environments-v2/repro-f019c5f27b4e421e/lib/python3.14/site-packages/zarr/storage/_obstore.py", line 270, in _transform_list_dir
+    yield _relativize_path(path=path, prefix=prefix)
+          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/billy/.cache/uv/environments-v2/repro-f019c5f27b4e421e/lib/python3.14/site-packages/zarr/storage/_utils.py", line 272, in _relativize_path
+    raise ValueError(f"The first component of {path} does not start with {prefix}.")
+ValueError: The first component of g does not start with g.
+```

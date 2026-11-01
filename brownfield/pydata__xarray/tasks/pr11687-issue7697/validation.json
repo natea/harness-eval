@@ -1,0 +1,42 @@
+{
+  "pr": 11687,
+  "merged": "2026-10-08",
+  "issues": [
+    {
+      "n": 7697,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/utils.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_utils.py"
+  ],
+  "env": "exclude-newer 2026-10-08T20:15:56+02:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_utils.py::test_attempt_import",
+    "xarray/tests/test_utils.py::test_read_magic_number_from_file_short_reads",
+    "xarray/tests/test_utils.py::test_try_read_magic_number_from_path",
+    "xarray/tests/test_utils.py::test_try_read_magic_number_from_path_missing",
+    "xarray/tests/test_utils.py::test_try_read_magic_number_from_path_unbuffered"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 4,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_utils::test_read_magic_number_from_file_short_reads",
+    "xarray.tests.test_utils::test_try_read_magic_number_from_path_unbuffered"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -1,0 +1,57 @@
+{
+  "pr": 11338,
+  "merged": "2026-08-19",
+  "issues": [
+    {
+      "n": 10135,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "pyproject.toml",
+    "xarray/core/dataarray.py"
+  ],
+  "testFiles": [
+    "xarray/tests/__init__.py",
+    "xarray/tests/test_dataarray.py"
+  ],
+  "env": "exclude-newer 2026-08-19T14:10:35-06:00",
+  "envSecs": 6,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_arrow_schema_fields",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_arrow_schema_metadata",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_dask_dataarray",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_data_array_unnamed_variable",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_polars_dataframe_1d",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_polars_dataframe_2d",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_polars_pyarrow_consistent",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_1d",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_2d",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_curvilinear_coords",
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_transposed_coords",
+    "xarray/tests/test_dataarray.py::test_unstack_index_var"
+  ],
+  "counts": {
+    "f2p": 8,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_arrow_schema_fields",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_arrow_schema_metadata",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_dask_dataarray",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_data_array_unnamed_variable",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_1d",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_2d",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_curvilinear_coords",
+    "xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_transposed_coords"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

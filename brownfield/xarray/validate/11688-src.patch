@@ -1,0 +1,175 @@
+diff --git a/asv_bench/benchmarks/unstacking.py b/asv_bench/benchmarks/unstacking.py
+index 81f2a71f..196021a8 100644
+--- a/asv_bench/benchmarks/unstacking.py
++++ b/asv_bench/benchmarks/unstacking.py
+@@ -23,6 +23,27 @@ class Unstacking:
+         self.df_missing.unstack()
+ 
+ 
++class UnstackingExtraDim:
++    def setup(self):
++        # large enough that index-sized temporaries and copying the data both
++        # show up in the peak memory
++        data = np.random.default_rng(0).random((2000, 2000, 4), dtype=np.float32)
++        self.da_full = xr.DataArray(data, dims=list("abc")).stack(flat_dim=["a", "b"])
++        self.da_missing = self.da_full[..., :-1]
++
++    def time_unstack_fast(self):
++        self.da_full.unstack("flat_dim")
++
++    def time_unstack_slow(self):
++        self.da_missing.unstack("flat_dim")
++
++    def peakmem_unstack_fast(self):
++        self.da_full.unstack("flat_dim")
++
++    def peakmem_unstack_slow(self):
++        self.da_missing.unstack("flat_dim")
++
++
+ class UnstackingDask(Unstacking):
+     def setup(self, *args, **kwargs):
+         requires_dask()
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index d5957c23..1f9aa776 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -147,6 +147,13 @@ Performance
+   ones instead of sorting them. This avoids copying the data before
+   interpolating (:issue:`9758`, :pull:`11658`).
+   By `Bhaskar Gurram <https://github.com/bhaskargurram-ai>`_.
++- :py:meth:`Dataset.unstack` and :py:meth:`DataArray.unstack` reshape the data
++  instead of copying it when the MultiIndex contains every combination of its
++  levels in order, e.g. after :py:meth:`Dataset.stack`. The unstacked data is
++  then a view of the original data. In that case, the expensive cleaning and
++  uniqueness checks of the MultiIndex are skipped as well (:issue:`11455`,
++  :pull:`11688`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - Guessing the engine of a local file in :py:func:`open_dataset` and
+   :py:func:`open_mfdataset` now only reads its magic number, instead of a
+   whole buffer of the size of the filesystem block size. This speeds up opening
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index 60433390..ce1d751b 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -66,6 +66,7 @@ from xarray.core.indexes import (
+     assert_no_index_corrupted,
+     create_default_index_implicit,
+     filter_indexes_from_coords,
++    is_full_ordered_product,
+     isel_indexes,
+     remove_unused_levels_categories,
+     roll_indexes,
+@@ -5558,6 +5559,7 @@ class Dataset(
+ 
+         new_indexes, clean_index = index.unstack()
+         indexes.update(new_indexes)
++        full_product = is_full_ordered_product(clean_index)
+ 
+         for idx in new_indexes.values():
+             variables.update(idx.create_variables(index_vars))
+@@ -5575,6 +5577,7 @@ class Dataset(
+                         dim=dim,
+                         fill_value=fill_value_,
+                         sparse=sparse,
++                        full_product=full_product,
+                     )
+                 else:
+                     variables[name] = var
+diff --git a/xarray/core/indexes.py b/xarray/core/indexes.py
+index fb80f06d..a1d15656 100644
+--- a/xarray/core/indexes.py
++++ b/xarray/core/indexes.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ import collections.abc
+ import copy
+ import inspect
++import math
+ from collections import defaultdict
+ from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping, Sequence
+ from typing import TYPE_CHECKING, Any, TypeVar, cast, overload, override
+@@ -1037,6 +1038,23 @@ def remove_unused_levels_categories[T_PDIndex: pd.Index](index: T_PDIndex) -> T_
+     return index
+ 
+ 
++def is_full_ordered_product(index: pd.MultiIndex) -> bool:
++    """Whether index contains every combination of its levels' values in
++    C order, i.e. whether its codes are those of ``MultiIndex.from_product``."""
++    shape = tuple(len(level) for level in index.levels)
++    if len(index) != math.prod(shape):
++        return False
++    # compare each level's codes with those of a product along its axis,
++    # avoiding temporaries larger than a boolean array of the index's size
++    for axis, (codes, size) in enumerate(zip(index.codes, shape, strict=True)):
++        expected = np.arange(size, dtype=codes.dtype).reshape(
++            [size if i == axis else 1 for i in range(len(shape))]
++        )
++        if not (np.asarray(codes).reshape(shape) == expected).all():
++            return False
++    return True
++
++
+ class PandasMultiIndex(PandasIndex):
+     """Wrap a pandas.MultiIndex as an xarray compatible index."""
+ 
+@@ -1166,9 +1184,16 @@ class PandasMultiIndex(PandasIndex):
+ 
+     @override
+     def unstack(self) -> tuple[dict[Hashable, Index], pd.MultiIndex]:
+-        clean_index = remove_unused_levels_categories(self.index)
++        if is_full_ordered_product(self.index) and not any(
++            isinstance(level, pd.CategoricalIndex) for level in self.index.levels
++        ):
++            # every level value is used exactly once per combination: the index
++            # has no unused levels and is unique, skip the expensive checks
++            clean_index = self.index
++        else:
++            clean_index = remove_unused_levels_categories(self.index)
+ 
+-        if not clean_index.is_unique:
++        if clean_index is not self.index and not clean_index.is_unique:
+             raise ValueError(
+                 "Cannot unstack MultiIndex containing duplicates. Make sure entries "
+                 f"are unique, e.g., by  calling ``.drop_duplicates('{self.dim}')``, "
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index 4e3f76ce..7c59673e 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -30,6 +30,7 @@ from xarray.computation.arithmetic import VariableArithmetic
+ from xarray.core import common, dtypes, duck_array_ops, indexing, nputils, utils
+ from xarray.core.common import AbstractArray
+ from xarray.core.extension_array import PandasExtensionArray
++from xarray.core.indexes import is_full_ordered_product
+ from xarray.core.indexing import (
+     BasicIndexer,
+     CoordinateTransformIndexingAdapter,
+@@ -1696,10 +1697,14 @@ class Variable(
+         dim: DimType_co,  # type: ignore[misc]
+         fill_value=dtypes.NA,
+         sparse: bool = False,
++        full_product: bool | None = None,
+     ) -> Variable:
+         """
+         Unstacks this variable given an index to unstack and the name of the
+         dimension to which the index refers.
++
++        ``full_product`` is the result of ``is_full_ordered_product(index)``,
++        which is computed if not given.
+         """
+ 
+         reordered = self.transpose(..., dim)
+@@ -1713,6 +1718,14 @@ class Variable(
+         new_shape = tuple(list(reordered.shape[: len(other_dims)]) + new_dim_sizes)
+         new_dims = reordered.dims[: len(other_dims)] + tuple(new_dim_names)
+ 
++        if full_product is None:
++            full_product = is_full_ordered_product(index)
++        if not sparse and full_product:
++            # every combination of labels is present in order: a reshape is
++            # enough and avoids allocating and filling a new array
++            data = duck_array_ops.reshape(reordered.data, new_shape)
++            return self.to_base_variable()._replace(dims=new_dims, data=data)
++
+         create_template: Callable
+         if fill_value is dtypes.NA:
+             is_missing_values = math.prod(new_shape) > math.prod(self.shape)

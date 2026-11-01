@@ -1,0 +1,63 @@
+# pydantic validation Error - running in colab
+
+_Opened by @kirillkoncha_
+
+Hi!
+
+I am trying to get familiar with paper-qa in Google Colab and using this [tutorial](https://github.com/Future-House/paper-qa/blob/main/docs/tutorials/querying_with_clinical_trials.md) for it:
+
+Install the library:
+```
+!pip install paperqa>=5
+```
+
+Code I try to run:
+```
+from paperqa import Settings, agent_query
+import os
+
+os.environ["OPENAI_API_KEY"] = "..."
+answer_response = await agent_query(
+    query="What drugs have been found to effectively treat Ulcerative Colitis?",
+    settings=Settings.from_name("search_only_clinical_trials"),
+)
+
+print(answer_response.session.answer)
+```
+
+Unfortunately, this results in the following error:
+```
+---------------------------------------------------------------------------
+ValidationError                           Traceback (most recent call last)
+[/tmp/ipython-input-4015278062.py](https://kgrpvjq2iq9-496ff2e9c6d22116-0-colab.googleusercontent.com/outputframe.html?vrz=colab-external_20251217-060051_RC00_845688750#) in <cell line: 1>()
+      5 answer_response = await agent_query(
+      6     query="What drugs have been found to effectively treat Ulcerative Colitis?",
+----> 7     settings=Settings.from_name("search_only_clinical_trials"),
+      8 )
+      9 
+
+1 frames
+[/usr/local/lib/python3.12/dist-packages/paperqa/settings.py](https://kgrpvjq2iq9-496ff2e9c6d22116-0-colab.googleusercontent.com/outputframe.html?vrz=colab-external_20251217-060051_RC00_845688750#) in from_name(cls, config_name, cli_source)
+    900             # then dump it
+    901             # going json.loads directly will not get types correct
+--> 902             tmp = Settings.model_validate_json(json_path.read_text())
+    903             return Settings(
+    904                 **(tmp.model_dump()),
+
+[/usr/local/lib/python3.12/dist-packages/pydantic/main.py](https://kgrpvjq2iq9-496ff2e9c6d22116-0-colab.googleusercontent.com/outputframe.html?vrz=colab-external_20251217-060051_RC00_845688750#) in model_validate_json(cls, json_data, strict, extra, context, by_alias, by_name)
+    764             )
+    765 
+--> 766         return cls.__pydantic_validator__.validate_json(
+    767             json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name
+    768         )
+
+ValidationError: 2 validation errors for Settings
+parsing.chunk_size
+  Extra inputs are not permitted [type=extra_forbidden, input_value=9000, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+parsing.overlap
+  Extra inputs are not permitted [type=extra_forbidden, input_value=750, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+```
+
+Any ideas how to overcome this?

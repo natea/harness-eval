@@ -1,0 +1,200 @@
+{
+  "pullRequest": {
+    "number": 370,
+    "title": "Updates to retraction status checker",
+    "createdAt": "2024-09-11T17:15:15Z",
+    "mergedAt": "2024-09-11T22:08:40Z",
+    "url": "https://github.com/Future-House/paper-qa/pull/370",
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "0c8ebcae4d81925ca9fc4786aa2f2c8cfc7b0326",
+            "authoredDate": "2024-09-04T21:36:49Z",
+            "committedDate": "2024-09-04T21:36:49Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "bd244064e49b04be966f1d9173231611cd6923d7",
+            "authoredDate": "2024-09-05T20:20:50Z",
+            "committedDate": "2024-09-05T20:20:50Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "9381296a4720f61e41c873dd9182aceeaecad5fc",
+            "authoredDate": "2024-09-05T20:24:50Z",
+            "committedDate": "2024-09-05T20:24:50Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "26cdad5fcf6479ed65d1ad5068442efabfe5895b",
+            "authoredDate": "2024-09-07T00:01:29Z",
+            "committedDate": "2024-09-07T00:01:29Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "f3ee3d10a645e3b5958f9d692b4dcb10756972a4",
+            "authoredDate": "2024-09-09T15:37:28Z",
+            "committedDate": "2024-09-09T15:37:28Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "e7b1441ea3201fcca4a8611847712dc70fa65539",
+            "authoredDate": "2024-09-09T23:38:48Z",
+            "committedDate": "2024-09-09T23:38:48Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "d9edda0f64a1d02e777e73d3a5cf5990bade8800",
+            "authoredDate": "2024-09-10T00:07:13Z",
+            "committedDate": "2024-09-10T00:07:13Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "71a1623329ac720f4b8312fb5afe03c00afab4b5",
+            "authoredDate": "2024-09-10T02:19:23Z",
+            "committedDate": "2024-09-10T02:19:23Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "5fb3b716466e94d046c9e42f6e925779b1608605",
+            "authoredDate": "2024-09-10T03:32:57Z",
+            "committedDate": "2024-09-10T03:32:57Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "ccb984f6523e69b72fef7c64e955d864b3342602",
+            "authoredDate": "2024-09-10T17:32:15Z",
+            "committedDate": "2024-09-10T17:32:15Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "3b38f25e27c76b15a9003a475a5c288ecee1baaa",
+            "authoredDate": "2024-09-11T00:12:30Z",
+            "committedDate": "2024-09-11T00:12:30Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "f6199d359f32730803c5c3456d7e92e344968ea0",
+            "authoredDate": "2024-09-11T15:37:47Z",
+            "committedDate": "2024-09-11T15:37:47Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "84b22d6d04fa8e32fd8c27642e3d4d5ee3a880f9",
+            "authoredDate": "2024-09-11T17:10:33Z",
+            "committedDate": "2024-09-11T17:10:33Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "461279766cdcf606e8135e5a2876ee334fc84787",
+            "authoredDate": "2024-09-11T18:55:48Z",
+            "committedDate": "2024-09-11T18:55:48Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "4024778ab45b25238ae7cad9b3c77f104a9c72c5",
+            "authoredDate": "2024-09-11T19:31:20Z",
+            "committedDate": "2024-09-11T19:31:20Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "e3613aa01ce4a57493a43102281fcea51ba9de98",
+            "authoredDate": "2024-09-11T19:32:37Z",
+            "committedDate": "2024-09-11T19:32:37Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "a6925ddd6ce48bc12f1db5a00016d7cd39fd31bf",
+            "authoredDate": "2024-09-11T19:42:33Z",
+            "committedDate": "2024-09-11T19:42:33Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "06cfc99376f2c348617a6fb22a20ac3b2915882e",
+            "authoredDate": "2024-09-11T20:22:40Z",
+            "committedDate": "2024-09-11T20:22:40Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "8eab0285bca17bd14258a6df7ee7d469e0ce3acb",
+            "authoredDate": "2024-09-11T21:02:40Z",
+            "committedDate": "2024-09-11T21:02:40Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "2b6f7caed0ce4063ef20fdd9620ecf6ec1711a7c",
+            "authoredDate": "2024-09-11T21:38:29Z",
+            "committedDate": "2024-09-11T21:38:29Z"
+          }
+        }
+      ]
+    }
+  },
+  "issue": {
+    "number": 366,
+    "title": "Make sure citations are none in retraction notice",
+    "body": "# https://github.com/Future-House/paper-qa/blob/e1a8dadb9cfd2c7a5193734c9f3a9fda7c09e7b7/paperqa/types.py#L552",
+    "createdAt": "2024-09-11T15:36:59Z",
+    "url": "https://github.com/Future-House/paper-qa/issues/366",
+    "state": "CLOSED",
+    "author": {
+      "login": "geemi725"
+    },
+    "userContentEdits": {
+      "nodes": []
+    },
+    "comments": {
+      "nodes": []
+    },
+    "timelineItems": {
+      "nodes": [
+        {
+          "__typename": "AssignedEvent",
+          "createdAt": "2024-09-11T15:37:02Z",
+          "assignee": {
+            "login": "geemi725"
+          }
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2024-09-11T17:18:48Z",
+          "source": {
+            "__typename": "PullRequest",
+            "number": 370
+          }
+        },
+        {
+          "__typename": "LabeledEvent",
+          "createdAt": "2024-09-11T18:04:21Z",
+          "label": {
+            "name": "bug"
+          }
+        },
+        {
+          "__typename": "ClosedEvent",
+          "createdAt": "2024-09-11T22:08:41Z"
+        }
+      ]
+    }
+  }
+}

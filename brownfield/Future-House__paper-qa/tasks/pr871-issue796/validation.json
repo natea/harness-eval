@@ -1,0 +1,44 @@
+{
+  "pr": 871,
+  "merged": "2025-02-20",
+  "issues": [
+    {
+      "n": 796,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    ".github/workflows/tests.yml",
+    "README.md",
+    "paperqa/agents/main.py",
+    "paperqa/settings.py"
+  ],
+  "testFiles": [
+    "tests/test_agents.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 7,
+  "selected": [
+    "tests/test_agents.py::test_agent_types"
+  ],
+  "counts": {
+    "f2p": 0,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 6,
+    "liveApi": 6,
+    "goldRegress": 0
+  },
+  "f2p": [],
+  "flaky": [],
+  "broken": [
+    "tests.test_agents::test_agent_types[gpt-4o-fake]",
+    "tests.test_agents::test_agent_types[gpt-4o-ToolSelector]",
+    "tests.test_agents::test_agent_types[gpt-4o-SimpleAgent]",
+    "tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-fake]",
+    "tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-ToolSelector]",
+    "tests.test_agents::test_agent_types[gemini/gemini-1.5-flash-SimpleAgent]"
+  ],
+  "verdict": "fail:needs-live-api"
+}

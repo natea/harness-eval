@@ -1,0 +1,74 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4277
+issues:
+  - 4271
+baseSha: addcc93da4c8ee5ae559868acb1f97ac6c72e9a0
+mergeSha: 5b5f3a3e690c9e74cebf86952606c8bb21ac2dfa
+tStar: 2026-08-20T05:35:51Z
+issueCreatedAt: 2026-08-18T07:25:00Z
+prMergedAt: 2026-08-30T14:31:31Z
+verdict: VALID
+failToPass:
+  - tests.test_config::test_warning_on_missing_codec_config
+  - tests.test_registry::test_get_codec_class_unknown_raises_with_package_hint
+  - tests.test_registry::test_get_codec_class_unknown_raises_without_package_hint
+  - tests.test_registry::test_get_codec_class_with_unregistered_config_pin_raises_bad_config_error
+  - tests.test_registry::test_get_numcodec_does_not_relabel_a_bad_configuration
+  - tests.test_registry::test_get_numcodec_does_not_relabel_a_missing_inner_codec[zarr]
+  - tests.test_registry::test_get_numcodec_does_not_relabel_a_missing_inner_codec[numcodecs]
+  - tests.test_registry::test_get_numcodec_known_codec_still_works
+  - tests.test_registry::test_get_numcodec_non_mapping_input_still_raises_value_error[abc]
+  - tests.test_registry::test_get_numcodec_non_mapping_input_still_raises_value_error[data1]
+  - tests.test_registry::test_get_numcodec_unknown_points_at_numcodecs_registry
+  - tests.test_registry::test_get_numcodec_unknown_raises_with_package_hint
+  - tests.test_registry::test_get_numcodec_without_an_id_keeps_the_numcodecs_error
+  - tests.test_registry::test_imagecodecs_prefix_does_not_over_match_in_zarr_format_3
+  - tests.test_registry::test_mapping_does_not_shadow_builtin_codecs
+  - tests.test_registry::test_missing_codec_message_for_zarr_format_2
+  - tests.test_registry::test_missing_codec_message_with_known_packages
+  - tests.test_registry::test_missing_codec_message_without_known_packages
+  - tests.test_registry::test_no_prefix_shadows_another_prefix
+  - tests.test_registry::test_open_array_with_missing_v2_codec_reports_package
+  - tests.test_registry::test_open_array_with_missing_v3_codec_reports_package
+  - tests.test_registry::test_packages_for_codec_is_format_specific
+  - tests.test_registry::test_packages_for_codec_v3[n5_default-expected0]
+  - tests.test_registry::test_packages_for_codec_v3[gribberish-expected1]
+  - tests.test_registry::test_packages_for_codec_v3[imagecodecs_jpeg2k-expected2]
+  - tests.test_registry::test_packages_for_codec_v3[omfiles.pfor-expected3]
+  - tests.test_registry::test_packages_for_codec_v3[any-numcodecs.array-array-expected4]
+  - tests.test_registry::test_packages_for_codec_v3[totally-made-up-expected5]
+  - tests.test_registry::test_packages_for_numcodec_v2[wavpack-expected0]
+  - tests.test_registry::test_packages_for_numcodec_v2[grib-expected1]
+  - tests.test_registry::test_packages_for_numcodec_v2[zfpy-expected2]
+  - tests.test_registry::test_packages_for_numcodec_v2[crc32c-expected3]
+  - tests.test_registry::test_packages_for_numcodec_v2[gribscan.rawgrib-expected4]
+  - tests.test_registry::test_packages_for_numcodec_v2[imagecodecs_jpeg2k-expected5]
+  - tests.test_registry::test_packages_for_numcodec_v2[totally-made-up-expected6]
+  - tests.test_registry::test_parse_codecs_converts_keyerror_from_from_dict
+  - tests.test_registry::test_parse_codecs_with_unregistered_config_pin_raises_bad_config_error
+  - tests.test_registry::test_resolve_codec_reports_missing_codec
+  - tests.test_registry::test_unknown_codec_error_is_exported
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 93695416328d39fa3ac9f307515685cfaeab5caf410d2f696c52fa12c88a0467
+  issue/body+human.md: 93695416328d39fa3ac9f307515685cfaeab5caf410d2f696c52fa12c88a0467
+  issue/body.md: 93695416328d39fa3ac9f307515685cfaeab5caf410d2f696c52fa12c88a0467
+  leaks.json: eef4c6ed41a514328470fede97ee46de45dc2b72b00848628b8eedeff364f0af
+  reference.patch: 6f24e83149012ed6ea2311ce6385015e5f8ef539cee6242d26608a525630ae05
+  snapshot.json: dc014bd0b1a99f2ce3c47cf8698a4ab8a47ec8557cddb2a0047f881a85631119
+  tests.patch: 80c0daee0acd16c1f68dffc6ccf55ee014f48d5fc138d5de98716ff8ef933339
+  validation.json: 42494deb7bfd7e7be0e90bf2ce6eb6024a2385f60e6f6bceb9f456bb77fa1608

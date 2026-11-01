@@ -1,0 +1,44 @@
+{
+  "pr": 11628,
+  "merged": "2026-09-28",
+  "issues": [
+    {
+      "n": 7748,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/dataset.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py",
+    "xarray/tests/test_dataset.py"
+  ],
+  "env": "exclude-newer 2026-09-28T21:46:04Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestDataArray::test_coordinate_diff",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_dataarray_diff_exception_invalid_dim",
+    "xarray/tests/test_dataarray.py::TestDataArray::test_dataarray_diff_n1",
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_exception_invalid_dim",
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_exception_label_str",
+    "xarray/tests/test_dataset.py::TestDataset::test_shift"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 7,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray.TestDataArray::test_dataarray_diff_exception_invalid_dim",
+    "xarray.tests.test_dataset.TestDataset::test_dataset_diff_exception_invalid_dim"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

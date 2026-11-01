@@ -1,0 +1,44 @@
+{
+  "pr": 4270,
+  "merged": "2026-08-28",
+  "issues": [
+    {
+      "n": 4254,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "src/zarr/codecs/gzip.py"
+  ],
+  "testFiles": [
+    "tests/test_codecs/test_gzip.py",
+    "tests/test_fused_pipeline.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 3,
+  "selected": [
+    "tests/test_codecs/test_gzip.py::test_gzip_codec_sync_roundtrip",
+    "tests/test_codecs/test_gzip.py::test_gzip_streams_equal_except_mtime",
+    "tests/test_fused_pipeline.py::test_async_chunk_transform_matches_sync"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_codecs.test_gzip::test_gzip_codec_sync_roundtrip",
+    "tests.test_codecs.test_gzip::test_gzip_streams_equal_except_mtime",
+    "tests.test_fused_pipeline::test_async_chunk_transform_matches_sync[bytes-only]",
+    "tests.test_fused_pipeline::test_async_chunk_transform_matches_sync[bb]",
+    "tests.test_fused_pipeline::test_async_chunk_transform_matches_sync[aa]",
+    "tests.test_fused_pipeline::test_async_chunk_transform_matches_sync[aa+ab+bb]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

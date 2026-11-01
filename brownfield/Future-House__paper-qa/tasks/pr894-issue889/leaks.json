@@ -1,0 +1,41 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/settings.py"
+      ],
+      "evidence": "default=pqa_directory(\"indexes\"),",
+      "rationale": "Identifies that index_directory's default is evaluated at class definition/import time via pqa_directory, so PQA_HOME set later is ignored. This is the exact root cause the fix addresses with default_factory. No fix proposed.",
+      "author": "lingyaochu",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/settings.py"
+      ],
+      "evidence": "the `index_directory` is initialized when the module is imported, and it uses the `pqa_directory` function to determine the path",
+      "rationale": "Restates the import-time evaluation root cause; the suggested workaround is only a patch.dict around the import, not the fix.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I recommend adding some instructions to the documentation",
+      "rationale": "Suggests a docs change only, with no technical content about the fix.",
+      "author": "lingyaochu",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "diagnosis"
+}

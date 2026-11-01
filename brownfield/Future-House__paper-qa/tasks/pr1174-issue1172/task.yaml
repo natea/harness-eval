@@ -1,0 +1,54 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 1174
+issues:
+  - 1172
+baseSha: 470c9fbc219726cdf6506e639ca42e1ea86ffd27
+mergeSha: 9e2d26da5ed9619275bbdfff8a687eaec0932421
+tStar: 2025-11-03T22:48:15Z
+issueCreatedAt: 2025-11-02T13:31:00Z
+prMergedAt: 2025-11-04T01:01:12Z
+verdict: fail:needs-live-api
+failToPass: []
+passToPass: []
+envBroken:
+  - tests.test_agents::test_propagate_options
+flaky: []
+testPaths:
+  - packages/paper-qa-docling/tests
+  - packages/paper-qa-pymupdf/tests
+  - packages/paper-qa-pypdf/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: null
+  comments: null
+cutBy: firstPrCommit
+env:
+  method: uv.lock
+  digest: 5916dfce48ea81b156a14a64ae6ef7f09596a17d65fa33758caf86fb4c745149
+  python: "3.12"
+validationSelection: touched
+humanBaseline:
+  codingWindowMinutes: 0
+  reviewMinutes: 120
+  reviewRounds: 3
+  commitsAfterFirstReview: 2
+  issueLifetimeMinutes: 2130
+  humanDiff:
+    linesAdded: 6
+    linesRemoved: 1
+    filesTouched: 2
+provisional: false
+files:
+  issue/assets/07c40f3784fa.svg: 07c40f3784fa749eed82bc2ee44fa1810fb00d3ccb7dbf0c3141bc4fa2a23bdc
+  issue/assets/40b384e75d82.svg: 40b384e75d821266cf135e95507704f42c8ed9329e75bdd6dfe1acc516c1d86a
+  issue/assets/58edc5b4256c.svg: 58edc5b4256c23a8e45f07f9395b24291b6b756416b3af6f7abc5bc33bb5012e
+  issue/body+all.md: 8063d3d0856b9cc20be5e3c835aba731519918a6ce6c10a7240040eb327f2d9b
+  issue/body+human.md: fc8c0e7c4341dc6c0104ceec46ab55aa9f76bc8cfedae1d88cae2ed3baef54f8
+  issue/body.md: 6c2bf5843259e9d825886db97384841c1acf11106c801a6dcd57c58aca94671a
+  reference.patch: 77249175f49e6265139f55d755bb357647fd073a7fec3ead9baaecb186fe0333
+  snapshot.json: 634c5d86e0173201b92f4a9dd9df4dd290300bda33e8234816c36474d7d8cb9f
+  tests.patch: 1ab220493af96821609dffc76daecff4d9bb49ba0c4d1db007166de6a0eaeb04
+  validation.json: f0cf377d584ab10ead19a52df6549df60e5722efdfbf5401a43e9d8aeaa87fc1

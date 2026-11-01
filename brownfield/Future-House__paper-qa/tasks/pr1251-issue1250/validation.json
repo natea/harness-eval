@@ -1,0 +1,27 @@
+{
+  "pr": 1251,
+  "merged": "2025-12-22",
+  "issues": [
+    {
+      "n": 1250,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 11,
+  "srcFiles": [
+    "src/paperqa/configs/clinical_trials.json",
+    "src/paperqa/configs/contracrow.json",
+    "src/paperqa/configs/high_quality.json",
+    "src/paperqa/configs/openreview.json",
+    "src/paperqa/configs/search_only_clinical_trials.json",
+    "src/paperqa/configs/tier2_limits.json",
+    "src/paperqa/configs/tier3_limits.json",
+    "src/paperqa/configs/tier4_limits.json",
+    "src/paperqa/configs/tier5_limits.json",
+    "src/paperqa/configs/wikicrow.json"
+  ],
+  "testFiles": [
+    "tests/test_configs.py"
+  ],
+  "verdict": "skip:no-src-code-change"
+}

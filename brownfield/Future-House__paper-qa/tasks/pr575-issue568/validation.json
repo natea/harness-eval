@@ -1,0 +1,19 @@
+{
+  "pr": 575,
+  "merged": "2024-10-11",
+  "issues": [
+    {
+      "n": 568,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "paperqa/agents/helpers.py",
+    "paperqa/agents/main.py",
+    "paperqa/agents/models.py",
+    "paperqa/llms.py"
+  ],
+  "testFiles": [],
+  "verdict": "skip:no-test-change"
+}

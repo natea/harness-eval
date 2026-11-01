@@ -1,0 +1,34 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11628
+issues:
+  - 7748
+baseSha: 84b9d3d7bfeb8b0bc3b041074ab69e79181539a2
+mergeSha: ad79ed8ee9d9d5d35cb4aea2dd743f6754f68df4
+tStar: 2026-09-28T17:49:57Z
+issueCreatedAt: 2023-04-12T09:29:00Z
+prMergedAt: 2026-09-28T22:37:22Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestDataArray::test_dataarray_diff_exception_invalid_dim
+  - xarray.tests.test_dataset.TestDataset::test_dataset_diff_exception_invalid_dim
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: 3de6aa89d7bf08a58bc795eafa5bf1f5ef8b0746e84f47e907a125299e2f690c
+  issue/body+human.md: 3de6aa89d7bf08a58bc795eafa5bf1f5ef8b0746e84f47e907a125299e2f690c
+  issue/body.md: 8aadfb80e68aaadd839927a2862f4c941b2a4cd48eb322702927e4b357f6e1a8
+  leaks.json: cedf663e6ad135be4112317e594ba0a774b1c97359767e9cd1f4512804f98877
+  reference.patch: 127465ce5e9c2407c2f1fe1c1db402a06612e3e93b1b0e1e98df3ac6e5aee943
+  snapshot.json: bddfeba2273537eaea052c2b4287e26717232294170e85526a1326f5279f1e13
+  tests.patch: ee3f612e5b0dd1e43dce2076f1c457845ca24d2d98e5b8921e64fb5fc3c7cc06
+  validation.json: f44bb98ee360deda45f0ca62af3081645a8a7ab03ed61229ebdda3b2b3075694

@@ -1,0 +1,39 @@
+{
+  "pr": 11620,
+  "merged": "2026-10-07",
+  "issues": [
+    {
+      "n": 9490,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/treenode.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_datatree.py"
+  ],
+  "env": "exclude-newer 2026-10-07T07:57:54+02:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_datatree.py::TestNames::test_child_gets_named_on_attach",
+    "xarray/tests/test_datatree.py::TestNames::test_child_names_cannot_contain_slashes",
+    "xarray/tests/test_datatree.py::TestNames::test_dataset_containing_slashes"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_datatree.TestNames::test_child_names_cannot_contain_slashes"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

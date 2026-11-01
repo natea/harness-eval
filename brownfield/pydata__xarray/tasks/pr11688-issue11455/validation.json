@@ -1,0 +1,58 @@
+{
+  "pr": 11688,
+  "merged": "2026-10-08",
+  "issues": [
+    {
+      "n": 11455,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 7,
+  "srcFiles": [
+    "asv_bench/benchmarks/unstacking.py",
+    "doc/whats-new.rst",
+    "xarray/core/dataset.py",
+    "xarray/core/indexes.py",
+    "xarray/core/variable.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataset.py",
+    "xarray/tests/test_indexes.py"
+  ],
+  "env": "exclude-newer 2026-10-08T20:17:01+02:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_dataset.py::TestDataset::test_stack_unstack_slow",
+    "xarray/tests/test_dataset.py::TestDataset::test_to_stacked_array_invalid_sample_dims",
+    "xarray/tests/test_dataset.py::TestDataset::test_unstack_full_product_is_view",
+    "xarray/tests/test_dataset.py::TestDataset::test_unstack_not_full_product",
+    "xarray/tests/test_indexes.py::test_is_full_ordered_product",
+    "xarray/tests/test_indexes.py::test_set_xindex_factory_method_pattern"
+  ],
+  "counts": {
+    "f2p": 13,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataset.TestDataset::test_stack_unstack_slow",
+    "xarray.tests.test_dataset.TestDataset::test_to_stacked_array_invalid_sample_dims",
+    "xarray.tests.test_dataset.TestDataset::test_unstack_full_product_is_view[stacked-first]",
+    "xarray.tests.test_dataset.TestDataset::test_unstack_full_product_is_view[stacked-last]",
+    "xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[unsorted-levels]",
+    "xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[reversed]",
+    "xarray.tests.test_dataset.TestDataset::test_unstack_not_full_product[missing]",
+    "xarray.tests.test_indexes::test_is_full_ordered_product[product]",
+    "xarray.tests.test_indexes::test_is_full_ordered_product[product-unsorted-levels]",
+    "xarray.tests.test_indexes::test_is_full_ordered_product[reversed]",
+    "xarray.tests.test_indexes::test_is_full_ordered_product[missing]",
+    "xarray.tests.test_indexes::test_is_full_ordered_product[nan-label]",
+    "xarray.tests.test_indexes::test_set_xindex_factory_method_pattern"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

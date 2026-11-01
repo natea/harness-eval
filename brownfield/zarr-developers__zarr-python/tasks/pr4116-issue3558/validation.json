@@ -1,0 +1,49 @@
+{
+  "pr": 4116,
+  "merged": "2026-07-06",
+  "issues": [
+    {
+      "n": 3558,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "changes/4116.bugfix.md",
+    "src/zarr/codecs/numcodecs/_codecs.py",
+    "src/zarr/codecs/vlen_utf8.py"
+  ],
+  "testFiles": [
+    "tests/test_codecs/test_numcodecs.py",
+    "tests/test_codecs/test_vlen.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 20,
+  "selected": [
+    "tests/test_codecs/test_numcodecs.py::test_generic_filter",
+    "tests/test_codecs/test_numcodecs.py::test_generic_filter_bitround",
+    "tests/test_codecs/test_numcodecs.py::test_generic_filter_f_contiguous",
+    "tests/test_codecs/test_vlen.py::test_vlen_bytes_f_contiguous",
+    "tests/test_codecs/test_vlen.py::test_vlen_string",
+    "tests/test_codecs/test_vlen.py::test_vlen_string_f_contiguous",
+    "tests/test_codecs/test_vlen.py::test_vlen_utf8_codec_supports_sync"
+  ],
+  "counts": {
+    "f2p": 5,
+    "p2p": 64,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_codecs.test_numcodecs::test_generic_filter_f_contiguous[delta]",
+    "tests.test_codecs.test_numcodecs::test_generic_filter_f_contiguous[fixedscaleoffset]",
+    "tests.test_codecs.test_numcodecs::test_generic_filter_f_contiguous[packbits]",
+    "tests.test_codecs.test_vlen::test_vlen_bytes_f_contiguous[chunks0-memory]",
+    "tests.test_codecs.test_vlen::test_vlen_string_f_contiguous[chunks0-memory]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

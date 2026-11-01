@@ -1,0 +1,31 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index ae294644..5b815ec6 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -211,6 +211,9 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- Errors raised by :py:func:`apply_ufunc` on :py:class:`Dataset` inputs now
++  include a note naming the data variable being processed (:issue:`2078`).
++  By `Abderrahmane El Aoudi <https://github.com/A2ELAOUDI>`_.
+ - :py:func:`open_dataset` can detect local Zarr directories on Windows without
+   raising ``PermissionError`` while checking file-based backends. Permission
+   errors for ordinary files still propagate (:issue:`11799`, :pull:`11802`).
+diff --git a/xarray/computation/apply_ufunc.py b/xarray/computation/apply_ufunc.py
+index 2b73b4a0..4160f3ea 100644
+--- a/xarray/computation/apply_ufunc.py
++++ b/xarray/computation/apply_ufunc.py
+@@ -444,7 +444,11 @@ def apply_dict_of_variables_vfunc(
+     for name, variable_args in zip(names, grouped_by_name, strict=True):
+         core_dim_present = _check_core_dims(signature, variable_args, name)
+         if core_dim_present is True:
+-            result_vars[name] = func(*variable_args)
++            try:
++                result_vars[name] = func(*variable_args)
++            except Exception as e:
++                e.add_note(f"Raised while applying function to variable {name!r}")
++                raise
+         elif on_missing_core_dim == "raise":
+             raise ValueError(core_dim_present)
+         elif on_missing_core_dim == "copy":

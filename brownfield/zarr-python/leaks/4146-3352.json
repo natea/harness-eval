@@ -1,0 +1,24 @@
+{
+  "pr": 4146,
+  "issue": 3352,
+  "model": "claude-sonnet-5-5",
+  "cost": 0.009650599999999999,
+  "prAuthor": "goutamadwant",
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/zarr/api/asynchronous.py",
+        "open_like"
+      ],
+      "evidence": "it attempts to invoke `open_array` without passing a `mode` keyword argument, which errors.",
+      "rationale": "Identifies the root cause in open_like: no mode passed to open_array, so it defaults to read-only behavior. The reference fix sets mode to \"a\" by default. It does not explicitly propose the fix, only the mechanism.",
+      "author": "d-v-b",
+      "role": "issue author"
+    }
+  ]
+}

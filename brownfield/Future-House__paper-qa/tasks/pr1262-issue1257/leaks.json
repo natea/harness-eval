@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "RuntimeError: Index pqa_index_52dd7ee09926ac3c121157bc4635769c was empty, please rebuild it.",
+      "rationale": "Describes observed behavior only, with no cause or location.",
+      "author": "rosegarden-coder",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the index directory name is generated from the absolute path of your paper directory and key settings like embedding model, chunk size, and chunking algorithm",
+      "rationale": "It gives a generic guess about the index hash inputs and does not identify the parse_pdf string problem. The advice points away from the reference fix.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/settings.py"
+      ],
+      "evidence": "`parse_pdf` is getting its hex code interpreted, breaking our cache key across Python invocations",
+      "rationale": "It names the root cause: str(parse_pdf) includes a memory address, which changes the index-name hash. The reference fix replaces that string in settings.py. It does not describe the fix itself.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis"
+}

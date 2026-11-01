@@ -1,0 +1,214 @@
+diff --git a/README.md b/README.md
+index acc1812..0b56399 100644
+--- a/README.md
++++ b/README.md
+@@ -994,7 +994,6 @@ will return much faster than the first query and we'll be certain the authors ma
+ | `verbosity`                                  | `0`                                    | Integer verbosity level for logging (0-3). 3 = all LLM/Embeddings calls logged.                                               |
+ | `custom_context_serializer`                  | `None`                                 | Custom async function (see typing for signature) to override the default answer context serialization.                        |
+ | `answer.evidence_k`                          | `10`                                   | Number of evidence pieces to retrieve.                                                                                        |
+-| `answer.evidence_detailed_citations`         | `True`                                 | Include detailed citations in summaries.                                                                                      |
+ | `answer.evidence_retrieval`                  | `True`                                 | Use retrieval vs processing all docs.                                                                                         |
+ | `answer.evidence_summary_length`             | `"about 100 words"`                    | Length of evidence summary.                                                                                                   |
+ | `answer.evidence_skip_summary`               | `False`                                | Whether to skip summarization.                                                                                                |
+@@ -1021,17 +1020,21 @@ will return much faster than the first query and we'll be certain the authors ma
+ | `parsing.enrichment_llm_config`              | `None`                                 | Optional configuration for `enrichment_llm`.                                                                                  |
+ | `parsing.enrichment_page_radius`             | `1`                                    | Page radius for context text in enrichment.                                                                                   |
+ | `parsing.enrichment_prompt`                  | `image_enrichment_prompt_template`     | Prompt template for enriching media.                                                                                          |
+-| `prompt.summary`                             | `summary_prompt`                       | Template for summarizing text, must contain variables matching `summary_prompt`.                                              |
+-| `prompt.qa`                                  | `qa_prompt`                            | Template for QA, must contain variables matching `qa_prompt`.                                                                 |
+-| `prompt.select`                              | `select_paper_prompt`                  | Template for selecting papers, must contain variables matching `select_paper_prompt`.                                         |
+-| `prompt.pre`                                 | `None`                                 | Optional pre-prompt templated with just the original question to append information before a qa prompt.                       |
+-| `prompt.post`                                | `None`                                 | Optional post-processing prompt that can access PQASession fields.                                                            |
+-| `prompt.system`                              | `default_system_prompt`                | System prompt for the model.                                                                                                  |
+-| `prompt.use_json`                            | `True`                                 | Whether to use JSON formatting.                                                                                               |
+-| `prompt.summary_json`                        | `summary_json_prompt`                  | JSON-specific summary prompt.                                                                                                 |
+-| `prompt.summary_json_system`                 | `summary_json_system_prompt`           | System prompt for JSON summaries.                                                                                             |
+-| `prompt.context_outer`                       | `CONTEXT_OUTER_PROMPT`                 | Prompt for how to format all contexts in generate answer.                                                                     |
+-| `prompt.context_inner`                       | `CONTEXT_INNER_PROMPT`                 | Prompt for how to format a single context in generate answer. Must contain 'name' and 'text' variables.                       |
++| `parsing.citation_prompt`                    | `citation_prompt`                      | Prompt to create citation from peeking one chunk.                                                                             |
++| `parsing.structured_citation_prompt`         | `structured_citation_prompt`           | Prompt to create a citation (in JSON) from peeking one chunk.                                                                 |
++| `parsing.disable_doc_valid_check`            | `False`                                | Flag to disable checking if a document looks like text (was parsed correctly).                                                |
++| `prompts.summary`                            | `summary_prompt`                       | Template for summarizing text, must contain variables matching `summary_prompt`.                                              |
++| `prompts.qa`                                 | `qa_prompt`                            | Template for QA, must contain variables matching `qa_prompt`.                                                                 |
++| `prompts.select`                             | `select_paper_prompt`                  | Template for selecting papers, must contain variables matching `select_paper_prompt`.                                         |
++| `prompts.pre`                                | `None`                                 | Optional pre-prompt templated with just the original question to append information before a qa prompt.                       |
++| `prompts.post`                               | `None`                                 | Optional post-processing prompt that can access PQASession fields.                                                            |
++| `prompts.system`                             | `default_system_prompt`                | System prompt for the model.                                                                                                  |
++| `prompts.use_json`                           | `True`                                 | Whether to use JSON formatting.                                                                                               |
++| `prompts.summary_json`                       | `summary_json_prompt`                  | JSON-specific summary prompt.                                                                                                 |
++| `prompts.summary_json_system`                | `summary_json_system_prompt`           | System prompt for JSON summaries.                                                                                             |
++| `prompts.context_outer`                      | `CONTEXT_OUTER_PROMPT`                 | Prompt for how to format all contexts in generate answer.                                                                     |
++| `prompts.context_inner`                      | `CONTEXT_INNER_PROMPT`                 | Prompt for how to format a single context in generate answer. Must contain 'name' and 'text' variables.                       |
++| `prompts.answer_iteration_prompt`            | `answer_iteration_prompt_template`     | Prompt to inject existing prior answers to allow iteration. Default injects no prior answers.                                 |
+ | `agent.agent_llm`                            | `"gpt-4o-2024-11-20"`                  | LLM inside the agent making tool selections.                                                                                  |
+ | `agent.agent_llm_config`                     | `None`                                 | Optional configuration for `agent_llm`.                                                                                       |
+ | `agent.agent_type`                           | `"ToolSelector"`                       | Type of agent to use.                                                                                                         |
+@@ -1043,6 +1046,9 @@ will return much faster than the first query and we'll be certain the authors ma
+ | `agent.timeout`                              | `500.0`                                | Timeout on agent execution (seconds).                                                                                         |
+ | `agent.tool_names`                           | `None`                                 | Optional override on tools to provide the agent.                                                                              |
+ | `agent.max_timesteps`                        | `None`                                 | Optional upper limit on environment steps.                                                                                    |
++| `agent.agent_evidence_n`                     | `1`                                    | Top n ranked evidences shown to the agent after gathering evidence.                                                           |
++| `agent.rebuild_index`                        | `True`                                 | Flag to rebuild the index at the start of agent runners.                                                                      |
++| `agent.callbacks`                            | `{}`                                   | Named lists of callables to be invoked with environment state.                                                                |
+ | `agent.index.name`                           | `None`                                 | Optional name of the index.                                                                                                   |
+ | `agent.index.paper_directory`                | `Current working directory`            | Directory containing papers to be indexed.                                                                                    |
+ | `agent.index.manifest_file`                  | `None`                                 | Path to manifest CSV with document attributes.                                                                                |
+@@ -1051,6 +1057,7 @@ will return much faster than the first query and we'll be certain the authors ma
+ | `agent.index.recurse_subdirectories`         | `True`                                 | Whether to recurse into subdirectories when indexing.                                                                         |
+ | `agent.index.concurrency`                    | `5`                                    | Number of concurrent filesystem reads.                                                                                        |
+ | `agent.index.sync_with_paper_directory`      | `True`                                 | Whether to sync index with paper directory on load.                                                                           |
++| `agent.index.batch_size`                     | `1`                                    | Number of files to process before committing to the index.                                                                    |
+ | `agent.index.files_filter`                   | `lambda f: f.suffix in {...}`          | Filter function to mark files in the paper directory to index.                                                                |
+ 
+ ## Where do I get papers?
+diff --git a/docs/tutorials/settings_tutorial.ipynb b/docs/tutorials/settings_tutorial.ipynb
+index 6dc470d..02dce98 100644
+--- a/docs/tutorials/settings_tutorial.ipynb
++++ b/docs/tutorials/settings_tutorial.ipynb
+@@ -173,12 +173,8 @@
+     "    temperature=0.1,\n",
+     "    batch_size=1,\n",
+     "    verbosity=1,\n",
+-    "    manifest_file=None,\n",
+-    "    paper_directory=pathlib.Path.cwd().joinpath(\"papers\"),\n",
+-    "    index_directory=pathlib.Path.cwd().joinpath(\"papers/index\"),\n",
+     "    answer=AnswerSettings(\n",
+     "        evidence_k=10,\n",
+-    "        evidence_detailed_citations=True,\n",
+     "        evidence_retrieval=True,\n",
+     "        evidence_summary_length=\"about 100 words\",\n",
+     "        evidence_skip_summary=False,\n",
+@@ -188,8 +184,7 @@
+     "        max_concurrent_requests=10,\n",
+     "    ),\n",
+     "    parsing=ParsingSettings(\n",
+-    "        chunk_size=5000,\n",
+-    "        overlap=250,\n",
++    "        reader_config={\"chunk_chars\": 5000, \"overlap\": 250},\n",
+     "        citation_prompt=citation_prompt,\n",
+     "        structured_citation_prompt=structured_citation_prompt,\n",
+     "    ),\n",
+@@ -226,6 +221,7 @@
+     "        search_count=8,\n",
+     "        index=IndexSettings(\n",
+     "            paper_directory=pathlib.Path.cwd().joinpath(\"papers\"),\n",
++    "            manifest_file=None,\n",
+     "            index_directory=pathlib.Path.cwd().joinpath(\"papers/index\"),\n",
+     "        ),\n",
+     "    ),\n",
+@@ -332,6 +328,7 @@
+     "    },\n",
+     "    index=IndexSettings(\n",
+     "        paper_directory=pathlib.Path.cwd().joinpath(\"papers\"),\n",
++    "        manifest_file=None,\n",
+     "        index_directory=pathlib.Path.cwd().joinpath(\"papers/index\"),\n",
+     "    ),\n",
+     ")\n",
+@@ -345,9 +342,11 @@
+    "cell_type": "markdown",
+    "metadata": {},
+    "source": [
+-    "Now the agent is able to use `Anthropic` models only and although we don't have a valid `OPENAI_API_KEY`, the question is answered because the agent will not use `OpenAI` models. See that we also changed the `embedding` because it was using `text-embedding-3-small` by default, which is a `OpenAI` model. `Paperqa` implements a few embedding models. Please refer to the [documentation](https://github.com/Future-House/paper-qa?tab=readme-ov-file#embedding-model) for more information.\n",
+-    "\n",
+-    "Notice that we redefined `settings.agent.paper_directory` and `settings.agent.index` settings. `Paperqa` actually uses the setting from `settings.agent`. However, for convenience, we implemented an alias in `settings.paper_directory` and `settings.index_directory`.\n",
++    "Now the agent is able to use `Anthropic` models only and although we don't have a valid `OPENAI_API_KEY`,\n",
++    "the question is answered because the agent will not use `OpenAI` models.\n",
++    "See that we also changed the `embedding` because it was using `text-embedding-3-small` by default,\n",
++    "which is a `OpenAI` model. `Paperqa` implements a few embedding models.\n",
++    "Please refer to the [documentation](https://github.com/Future-House/paper-qa?tab=readme-ov-file#embedding-model) for more information.\n",
+     "\n",
+     "In addition, notice that this is a very verbose example for the sake of clarity. We could have just set only the llms names and used default settings for the rest:\n",
+     "\n",
+@@ -367,6 +366,7 @@
+     "    agent_llm_config=llm_anthropic_config,\n",
+     "    index=IndexSettings(\n",
+     "        paper_directory=pathlib.Path.cwd().joinpath(\"papers\"),\n",
++    "        manifest_file=None,\n",
+     "        index_directory=pathlib.Path.cwd().joinpath(\"papers/index\"),\n",
+     "    ),\n",
+     ")\n",
+diff --git a/docs/tutorials/settings_tutorial.md b/docs/tutorials/settings_tutorial.md
+index 933d6e8..f59f8c2 100644
+--- a/docs/tutorials/settings_tutorial.md
++++ b/docs/tutorials/settings_tutorial.md
+@@ -146,12 +146,8 @@ settings = Settings(
+     temperature=0.1,
+     batch_size=1,
+     verbosity=1,
+-    manifest_file=None,
+-    paper_directory=pathlib.Path.cwd().joinpath("papers"),
+-    index_directory=pathlib.Path.cwd().joinpath("papers/index"),
+     answer=AnswerSettings(
+         evidence_k=10,
+-        evidence_detailed_citations=True,
+         evidence_retrieval=True,
+         evidence_summary_length="about 100 words",
+         evidence_skip_summary=False,
+@@ -161,8 +157,7 @@ settings = Settings(
+         max_concurrent_requests=10,
+     ),
+     parsing=ParsingSettings(
+-        chunk_size=5000,
+-        overlap=250,
++        reader_config={"chunk_chars": 5000, "overlap": 250},
+         citation_prompt=citation_prompt,
+         structured_citation_prompt=structured_citation_prompt,
+     ),
+@@ -199,6 +194,7 @@ settings = Settings(
+         search_count=8,
+         index=IndexSettings(
+             paper_directory=pathlib.Path.cwd().joinpath("papers"),
++            manifest_file=None,
+             index_directory=pathlib.Path.cwd().joinpath("papers/index"),
+         ),
+     ),
+@@ -270,6 +266,7 @@ settings.agent = AgentSettings(
+     },
+     index=IndexSettings(
+         paper_directory=pathlib.Path.cwd().joinpath("papers"),
++        manifest_file=None,
+         index_directory=pathlib.Path.cwd().joinpath("papers/index"),
+     ),
+ )
+@@ -280,9 +277,11 @@ response = ask(
+ ```
+ 
+ <!-- #region -->
+-Now the agent is able to use `Anthropic` models only and although we don't have a valid `OPENAI_API_KEY`, the question is answered because the agent will not use `OpenAI` models. See that we also changed the `embedding` because it was using `text-embedding-3-small` by default, which is a `OpenAI` model. `Paperqa` implements a few embedding models. Please refer to the [documentation](https://github.com/Future-House/paper-qa?tab=readme-ov-file#embedding-model) for more information.
+-
+-Notice that we redefined `settings.agent.paper_directory` and `settings.agent.index` settings. `Paperqa` actually uses the setting from `settings.agent`. However, for convenience, we implemented an alias in `settings.paper_directory` and `settings.index_directory`.
++Now the agent is able to use `Anthropic` models only and although we don't have a valid `OPENAI_API_KEY`,
++the question is answered because the agent will not use `OpenAI` models.
++See that we also changed the `embedding` because it was using `text-embedding-3-small` by default,
++which is a `OpenAI` model. `Paperqa` implements a few embedding models.
++Please refer to the [documentation](https://github.com/Future-House/paper-qa?tab=readme-ov-file#embedding-model) for more information.
+ 
+ In addition, notice that this is a very verbose example for the sake of clarity. We could have just set only the llms names and used default settings for the rest:
+ 
+@@ -302,6 +301,7 @@ settings.agent = AgentSettings(
+     agent_llm_config=llm_anthropic_config,
+     index=IndexSettings(
+         paper_directory=pathlib.Path.cwd().joinpath("papers"),
++        manifest_file=None,
+         index_directory=pathlib.Path.cwd().joinpath("papers/index"),
+     ),
+ )
+diff --git a/src/paperqa/settings.py b/src/paperqa/settings.py
+index 5b76ca1..91a5fec 100644
+--- a/src/paperqa/settings.py
++++ b/src/paperqa/settings.py
+@@ -256,12 +256,12 @@ class ParsingSettings(BaseModel):
+     )
+     citation_prompt: str = Field(
+         default=citation_prompt,
+-        description="Prompt that tries to create citation from peeking one page.",
++        description="Prompt that tries to create citation from peeking one chunk.",
+     )
+     structured_citation_prompt: str = Field(
+         default=structured_citation_prompt,
+         description=(
+-            "Prompt that tries to creates a citation in JSON from peeking one page."
++            "Prompt that tries to creates a citation in JSON from peeking one chunk."
+         ),
+     )
+     disable_doc_valid_check: bool = Field(

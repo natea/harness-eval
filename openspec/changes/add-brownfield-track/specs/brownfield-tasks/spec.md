@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Task mining from merged PRs
-The miner SHALL enumerate merged pull requests of a configured repository that close at least one issue (via closing-issue references) and SHALL produce one candidate per PR ↔ same-repository issue pair. Candidates whose closing issue belongs to another repository, whose PR changes no non-test code, whose PR changes no test code, or whose PR changes the dependency lockfile or dependency declarations SHALL be rejected with a recorded reason.
+The miner SHALL enumerate merged pull requests of a configured repository that close at least one issue (via closing-issue references) and SHALL produce one candidate per PR ↔ same-repository issue pair. Candidates whose closing issue belongs to another repository, whose PR changes no non-test code, or whose PR changes no test code SHALL be rejected with a recorded reason.
 
 #### Scenario: Cross-repository issue rejected
 - **WHEN** a merged PR's closing reference points at an issue in a different repository
@@ -13,12 +13,19 @@ The miner SHALL enumerate merged pull requests of a configured repository that c
 - **WHEN** a merged PR changes only documentation or only test files
 - **THEN** the candidate is rejected with reason `no-src-code-change` or `no-test-change`
 
+### Requirement: Dependency changes decided by validation
+A PR that changes the dependency lockfile or dependency declarations SHALL be flagged `deps-touched`, and SHALL be rejected as `dependency-change` only if the reference patch fails validation in the base environment.
+
 #### Scenario: Dependency-changing PR rejected
-- **WHEN** a merged PR modifies the lockfile or adds, removes, or re-pins a dependency
+- **WHEN** a merged PR adds a dependency the base environment lacks and the gold runs fail there
 - **THEN** the candidate is rejected with reason `dependency-change`, because the offline base environment cannot install the new dependency
 
-### Requirement: Human baseline timings
-For each accepted task the miner SHALL record, from the PR's commits, reviews, and timeline: the coding window (T* to the last PR commit before the first submitted review, or before merge if the PR was never reviewed), the review time (PR creation to merge), the number of submitted reviews, the number of commits after the first review, the issue lifetime (issue creation to merge), and the non-test size of the human diff (lines added, lines removed, files touched).
+#### Scenario: Dependency touched but not needed
+- **WHEN** a merged PR tightens a pin or edits the lockfile, and the gold runs pass in the base environment
+- **THEN** the candidate stays eligible and is flagged `deps-touched` for review
+
+### Requirement: Original PR baseline timings
+For each accepted task the miner SHALL record, from the PR's commits, reviews, and timeline: the coding window (T* to the last PR commit before the first submitted review, or before merge if the PR was never reviewed), the review time (PR creation to merge), the number of submitted reviews, the number of commits after the first review, the issue lifetime (issue creation to merge), and the non-test size of the original PR diff (lines added, lines removed, files touched).
 
 #### Scenario: Reviewed PR
 - **WHEN** a PR received its first review after three commits and two more commits followed
@@ -105,6 +112,21 @@ The validator SHALL run the task's test command once at base plus the test patch
 - **WHEN** a test passes before but fails under the reference patch
 - **THEN** the task is rejected
 
+### Requirement: Live-API task classification and recovery
+A task with no FAIL_TO_PASS test whose env-broken tests fail in gold on blocked or unauthenticated provider calls SHALL be rejected as `needs-live-api`, reported separately as recoverable. Recovery SHALL record the affected tests' provider responses once at mining time, add the recordings to the sealed test patch, and re-validate offline; a test whose before-run fails only on a missing recording SHALL NOT count as FAIL_TO_PASS.
+
+#### Scenario: Live-API task classified
+- **WHEN** a task's only fail→pass candidates fail in gold with connection or authentication errors to a provider API
+- **THEN** it is rejected as `needs-live-api`, not `no-fail-to-pass`
+
+#### Scenario: Recovered task
+- **WHEN** recordings captured at mining time make the tests pass offline under the reference patch and the before-run fails for a reason other than a missing recording
+- **THEN** the task is accepted with the recordings sealed in its test patch
+
+#### Scenario: Ambiguous before-failure
+- **WHEN** after recording, a test's before-run fails only because a request has no recording
+- **THEN** that test is not counted as FAIL_TO_PASS
+
 ### Requirement: Solution-leak classification
 The miner SHALL label the body and every retained comment against the reference patch as `noise`, `symptom`, `diagnosis`, `fix_sketch`, or `fix_code`, recording verbatim evidence, reference files revealed, consistency with the reference fix, author role, classifier model, and prompt hash. Content inconsistent with the reference SHALL be labeled no higher than `symptom`.
 
@@ -124,7 +146,7 @@ The body leak level SHALL be recorded as a difficulty stratum and SHALL NOT by i
 - **THEN** run validation fails until the labels are regenerated with a different model
 
 ### Requirement: Frozen task bundle
-Each accepted task SHALL be frozen as a bundle containing a manifest with the SHA-256 of every bundle file, the base commit, T*, issue and PR dates, environment digest, test command, and test lists. Runs SHALL record bundle hashes in provenance and SHALL fail before dispatch if any hash mismatches. Bundles SHALL NOT be re-fetched from GitHub at run time.
+Each accepted task SHALL be frozen as a bundle containing a manifest with the SHA-256 of every bundle file, the base commit, T*, issue and PR dates, environment digest, test command, test paths (every directory holding the repository's tests), and test lists. Runs SHALL record bundle hashes in provenance and SHALL fail before dispatch if any hash mismatches. Bundles SHALL NOT be re-fetched from GitHub at run time.
 
 #### Scenario: Tampered bundle
 - **WHEN** a bundle file's content no longer matches its recorded hash

@@ -1,0 +1,45 @@
+{
+  "pr": 11020,
+  "merged": "2026-10-14",
+  "issues": [
+    {
+      "n": 11019,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/computation/weighted.py",
+    "xarray/core/dataset.py",
+    "xarray/core/datatree.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataset.py",
+    "xarray/tests/test_weighted.py"
+  ],
+  "env": "exclude-newer 2026-10-14T10:53:59+02:00",
+  "envSecs": 21,
+  "selected": [
+    "xarray/tests/test_dataset.py::TestDataset::test_apply_pending_deprecated_map",
+    "xarray/tests/test_dataset.py::TestDataset::test_map_non_dataarray_outputs",
+    "xarray/tests/test_dataset.py::TestDataset::test_map_preserves_function_attrs",
+    "xarray/tests/test_weighted.py::test_weighted_bad_dim",
+    "xarray/tests/test_weighted.py::test_weighted_mean_keep_attrs_ds",
+    "xarray/tests/test_weighted.py::test_weighted_operations_drop_coord_attrs"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 13,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataset.TestDataset::test_map_preserves_function_attrs"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

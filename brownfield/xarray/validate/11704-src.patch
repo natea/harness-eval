@@ -1,0 +1,61 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index c04a009d..1b1f9908 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -65,6 +65,12 @@ Deprecations
+ 
+ Bug Fixes
+ ~~~~~~~~~
++- :py:meth:`Dataset.diff` and :py:meth:`DataArray.diff` no longer raise a
++  ``RecursionError`` for an order ``n`` close to the recursion limit, and are
++  faster for ``n > 1``. They also label the result correctly for ``n > 1`` with
++  ``label="lower"``, which used the upper labels for all but the first difference
++  (:issue:`11702`, :pull:`11704`).
++  By `Michael Niklas <https://github.com/headtr1ck>`_.
+ - The indices returned by ``argmin`` and ``argmax`` of :py:class:`~computation.rolling.DataArrayRolling`
+   and :py:class:`~computation.rolling.DatasetRolling` no longer count the padding of windows
+   that extend beyond the array, but start at the first value of the window within
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index d113c520..9a61d24b 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -8075,11 +8075,11 @@ class Dataset(
+         slice_start = {dim: slice(None, -1)}
+         slice_end = {dim: slice(1, None)}
+ 
+-        # prepare new coordinate
++        # the coordinates of the n-th differences are the upper or lower n labels
+         if label == "upper":
+-            slice_new = slice_end
++            slice_new = {dim: slice(n, None)}
+         elif label == "lower":
+-            slice_new = slice_start
++            slice_new = {dim: slice(None, -n)}
+         else:
+             raise ValueError("The 'label' argument has to be either 'upper' or 'lower'")
+ 
+@@ -8091,18 +8091,17 @@ class Dataset(
+                 variables[name] = index_vars[name]
+             elif dim in var.dims:
+                 if name in self.data_vars:
+-                    variables[name] = var.isel(slice_end) - var.isel(slice_start)
++                    # loop instead of recursing over the whole dataset, which hits
++                    # the recursion limit for large n
++                    for _ in range(n):
++                        var = var.isel(slice_end) - var.isel(slice_start)
++                    variables[name] = var
+                 else:
+                     variables[name] = var.isel(slice_new)
+             else:
+                 variables[name] = var
+ 
+-        difference = self._replace_with_new_dims(variables, indexes=indexes)
+-
+-        if n > 1:
+-            return difference.diff(dim, n - 1)
+-        else:
+-            return difference
++        return self._replace_with_new_dims(variables, indexes=indexes)
+ 
+     def shift(
+         self,

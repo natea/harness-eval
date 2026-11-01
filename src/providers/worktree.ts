@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import type {
 	ExecOptions,
@@ -10,6 +10,14 @@ import type {
 } from "./types";
 
 const execFileAsync = promisify(execFile);
+
+/** Rebuildable, large dirs that never belong in an archived workspace. */
+const NON_ARCHIVE_DIRS = new Set([
+	".venv",
+	".pytest_cache",
+	"__pycache__",
+	".ruff_cache",
+]);
 
 /**
  * Local fallback isolation. Each trial gets:
@@ -40,6 +48,40 @@ export class WorktreeProvider implements SandboxProvider {
 	}
 }
 
+/** Host vars a trial inherits; all others (credentials, proxies) are dropped. */
+const INHERITED_ENV = [
+	"PATH",
+	"LANG",
+	"LC_ALL",
+	"LC_CTYPE",
+	"TERM",
+	"TZ",
+	"SHELL",
+	"TMPDIR",
+];
+
+function trialEnv(
+	home: string,
+	claudeConfigDir: string,
+	extra?: Record<string, string>,
+) {
+	const env: Record<string, string> = {};
+	for (const key of INHERITED_ENV) {
+		const v = process.env[key];
+		if (v !== undefined) env[key] = v;
+	}
+	return {
+		...env,
+		HOME: home,
+		CLAUDE_CONFIG_DIR: claudeConfigDir,
+		npm_config_prefix: join(home, ".npm-global"),
+		XDG_CONFIG_HOME: join(home, ".config"),
+		XDG_CACHE_HOME: join(home, ".cache"),
+		XDG_DATA_HOME: join(home, ".local", "share"),
+		...extra,
+	};
+}
+
 class WorktreeSandbox implements Sandbox {
 	readonly id: string;
 
@@ -54,20 +96,29 @@ class WorktreeSandbox implements Sandbox {
 	}
 
 	async exec(command: string, opts: ExecOptions = {}): Promise<ExecResult> {
-		const env = {
-			...process.env,
-			HOME: this.home,
-			CLAUDE_CONFIG_DIR: this.claudeConfigDir,
-			npm_config_prefix: join(this.home, ".npm-global"),
-			...opts.env,
-		};
+		const env: Record<string, string | undefined> = trialEnv(
+			this.home,
+			this.claudeConfigDir,
+			opts.env,
+		);
 		try {
-			const { stdout, stderr } = await execFileAsync("zsh", ["-c", command], {
-				cwd: opts.cwd ?? this.workspacePath,
-				env,
-				timeout: opts.timeoutMs,
-				maxBuffer: 64 * 1024 * 1024,
-			});
+			// /etc/zshenv (always sourced, even with -f) may rebuild PATH from scratch
+			// (nix-darwin does), and the per-trial HOME skips the operator's own
+			// rc files that would add e.g. ~/.local/bin back. Re-prepend the PATH we
+			// deliberately passed so the harness binary stays resolvable.
+			const inherited = env.PATH
+				? `export PATH=${shellQuote(env.PATH)}:"$PATH"; `
+				: "";
+			const { stdout, stderr } = await execFileAsync(
+				"zsh",
+				["-c", inherited + command],
+				{
+					cwd: opts.cwd ?? this.workspacePath,
+					env,
+					timeout: opts.timeoutMs,
+					maxBuffer: 64 * 1024 * 1024,
+				},
+			);
 			return { exitCode: 0, stdout, stderr };
 		} catch (err) {
 			const e = err as {
@@ -88,7 +139,24 @@ class WorktreeSandbox implements Sandbox {
 			? sandboxPath
 			: join(this.workspacePath, sandboxPath);
 		mkdirSync(hostDest, { recursive: true });
-		cpSync(src, hostDest, { recursive: true });
+		// Environment dirs are rebuildable and gigabytes each (paper-qa: ~8 GB);
+		// archiving them costs minutes and fills the disk. The candidate patch is
+		// captured separately, so the archive never needs them.
+		cpSync(src, hostDest, {
+			recursive: true,
+			filter: (p) => !NON_ARCHIVE_DIRS.has(basename(p)),
+		});
+	}
+
+	async copyIn(hostSrc: string, sandboxPath: string): Promise<void> {
+		const dest = isAbsolute(sandboxPath)
+			? sandboxPath
+			: join(this.workspacePath, sandboxPath);
+		mkdirSync(dest, { recursive: true });
+		// Merge the source's *contents* into dest (mirrors copyOut), so a sealed
+		// repo's `.git` lands directly in the workspace, not a nested directory.
+		for (const entry of readdirSync(hostSrc))
+			cpSync(join(hostSrc, entry), join(dest, entry), { recursive: true });
 	}
 
 	async writeFile(sandboxPath: string, content: string): Promise<void> {
@@ -104,3 +172,5 @@ class WorktreeSandbox implements Sandbox {
 		rmSync(this.root, { recursive: true, force: true });
 	}
 }
+
+const shellQuote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;

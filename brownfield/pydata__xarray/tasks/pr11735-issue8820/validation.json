@@ -1,0 +1,32 @@
+{
+  "verdict": "fail:needs-gpu",
+  "failToPass": [],
+  "passToPass": [],
+  "flaky": [],
+  "envBroken": [],
+  "liveApi": [],
+  "goldRegress": [],
+  "gpuSkipped": [
+    "::xarray.tests.test_cupy"
+  ],
+  "selection": "touched",
+  "targets": [
+    "xarray/tests/test_cupy.py::test_isel_0d_cupy_indexer",
+    "xarray/tests/test_cupy.py::test_where",
+    "xarray/tests/test_dask.py::test_conjugate",
+    "xarray/tests/test_dask.py::test_isel_0d_dask_indexer_with_outer_indexer",
+    "xarray/tests/test_indexing.py::test_create_mask_outer_indexer",
+    "xarray/tests/test_indexing.py::test_outer_indexer_consistency_with_broadcast_indexes_vectorized",
+    "xarray/tests/test_indexing.py::test_outer_to_vectorized_indexer_0d_duck_array",
+    "xarray/tests/test_variable.py::TestVariable::test_broadcast_indexes_0d_duck_array",
+    "xarray/tests/test_variable.py::TestVariable::test_detect_indexer_type",
+    "xarray/tests/test_variable.py::TestVariable::test_indexer_type"
+  ],
+  "env": {
+    "ok": true,
+    "method": "exclude-newer",
+    "digest": "032c911ee599b8930b778ec0a538ea730a78fd54e75ebd5f8040d3a564896210",
+    "seconds": 4
+  },
+  "sealProblems": []
+}

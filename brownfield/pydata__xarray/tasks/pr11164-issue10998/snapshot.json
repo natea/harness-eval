@@ -1,0 +1,19 @@
+{
+  "pr": 11164,
+  "issue": 10998,
+  "tStar": "2026-02-13T14:27:51Z",
+  "title": "Inconsistent behavior for `hue` between scatter and line",
+  "issueAuthor": "ianhi",
+  "body": "### What happened?\n\nThe behavior of `hue` results in different colors `ds.plot.scatter` vs `ds.plot.line`\n\nBoth docstrings describe hue as:\n\n> hue (Hashable, optional) – Dimension or coordinate for which you want multiple lines plotted. If plotting against a 2D coordinate, hue must be a dimension.\n\nWhich they both faithfully do, but despite being named `hue` they have inconsistent color behavior.\n\n### What did you expect to happen?\n\nconsistent behavior where each line that corresponds to the same hue has the same color (like in scatter). What I actually got is:\n\n<img width=\"866\" height=\"390\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/fa2db1f6-f3e4-4f68-a31d-af6c4b86927c\" />\n\n### Minimal Complete Verifiable Example\n\n```Python\n# /// script\n# requires-python = \">=3.11\"\n# dependencies = [\n#   \"xarray[complete]==2025.10.0\"\n# ]\n# ///\n\nimport matplotlib.pyplot as plt\n\nimport xarray as xr\n\nxr.show_versions()\n# your reproducer code ...\n\n\nimport numpy as np\n\nT = np.linspace(0, 2 * np.pi, 50)\ndata = np.sin(np.ones([6, 50]) * T)\n# data = np.sin(T)\n# data =data[None, :], (6,50)\nfor i in range(6):\n    data[i, :] += i\n\ncategories = [\"a\", \"a\", \"b\", \"b\", \"c\", \"c\"]\nda = xr.DataArray(data, dims=(\"category\", \"T\"), coords={\"category\": categories, \"T\": T})\nfig, axs = plt.subplots(1, 2, figsize=(10, 4))\nda.plot.scatter(hue=\"category\", ax=axs[0])\n\nda.plot.line(hue=\"category\", ax=axs[1])\naxs[0].set_title(\"scatter\")\naxs[1].set_title(\"line\")\nplt.show()\n```\n\n### Steps to reproduce\n\n`uv run` above script\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\n\n```\n\n### Anything else we need to know?\n\nI think this is related to, but distinct from https://github.com/pydata/xarray/issues/10674\n\n### Environment\n\n<details>\n\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.13.0 (main, Oct 16 2024, 08:05:40) [Clang 18.1.8 ]\npython-bits: 64\nOS: Darwin\nOS-release: 24.6.0\nmachine: arm64\nprocessor: arm\nbyteorder: little\nLC_ALL: None\nLANG: en_US.UTF-8\nLOCALE: ('en_US', 'UTF-8')\nlibhdf5: 1.14.6\nlibnetcdf: 4.9.3\n\nxarray: 2025.9.2.dev1+geed12c498\npandas: 2.3.3\nnumpy: 2.3.5\nscipy: 1.16.3\nnetCDF4: 1.7.3\npydap: 3.5.8\nh5netcdf: 1.7.3\nh5py: 3.15.1\nzarr: 3.1.5\ncftime: 1.6.5\nnc_time_axis: 1.4.1\niris: None\nbottleneck: 1.6.0\ndask: 2025.11.0\ndistributed: 2025.11.0\nmatplotlib: 3.10.7\ncartopy: 0.25.0\nseaborn: 0.13.2\nnumbagg: 0.9.3\nfsspec: 2025.12.0\ncupy: None\npint: None\nsparse: 0.17.0\nflox: 0.10.7\nnumpy_groupies: 0.11.3\nsetuptools: None\npip: None\nconda: None\npytest: None\nmypy: None\nIPython: None\nsphinx: None\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2025-12-08T23:54:27Z",
+      "author": "Illviljan",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "There is https://github.com/pydata/xarray/pull/7173 that will work in similar fashion as plot.scatter.\n\n`plot.line` basically just calls `ax.plot` in a loop, which is trickier to match with `ax.scatter`.",
+      "source": "edit@2025-12-08T23:55:03Z"
+    }
+  ]
+}

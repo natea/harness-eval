@@ -1,0 +1,36 @@
+{
+  "pr": 11653,
+  "issue": 11651,
+  "tStar": "2026-10-01T06:56:28Z",
+  "title": "Group by median fails with dask arrays with xarray==2026.9.0",
+  "issueAuthor": "joshua-gould",
+  "body": "### What happened?\n\nUnable to perform groupby and median aggregation with latest xarray and flox\n\n### What did you expect to happen?\n\n_No response_\n\n### Minimal Complete Verifiable Example\n\n```Python\n# /// script\n# requires-python = \">=3.11\"\n# dependencies = [\n#   \"xarray[complete]@git+https://github.com/pydata/xarray.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of xarray to check for issues.\n# Please delete this header if you have _not_ tested this script with `uv run`!\n\nimport xarray as xr\nimport dask.array as da\n\nxr.show_versions()\n\n\nxr.DataArray(\n    da.arange(8, chunks=(1,)).reshape((4, 2)),\n    dims=(\"x\", \"y\"), coords={\"x\": ['1', '2', '1', '2']}, name='').groupby(\"x\").median()\n```\n\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\n                                                       \n  File \"python3.13/site-packages/xarray/core/_aggregations.py\", line 8046, in median\n    return self._flox_reduce(\n           ~~~~~~~~~~~~~~~~~^\n        func=\"median\",\n        ^^^^^^^^^^^^^^\n    ...<4 lines>...\n        **kwargs,\n        ^^^^^^^^^\n    )\n    ^\n  File \"python3.13/site-packages/xarray/core/groupby.py\", line 1157, in _flox_reduce\n    result = xarray_reduce(\n        obj.drop_vars(non_numeric.keys()),\n    ...<5 lines>...\n        **kwargs,\n    )\n  File \"python3.13/site-packages/flox/xarray.py\", line 416, in xarray_reduce\n    actual = xr.apply_ufunc(\n        wrapper,\n    ...<27 lines>...\n        },\n    )\n  File \"python3.13/site-packages/xarray/computation/apply_ufunc.py\", line 1279, in apply_ufunc\n    return apply_dataset_vfunc(\n        variables_vfunc,\n    ...<7 lines>...\n        on_missing_core_dim=on_missing_core_dim,\n    )\n  File \"python3.13/site-packages/xarray/computation/apply_ufunc.py\", line 527, in apply_dataset_vfunc\n    result_vars = apply_dict_of_variables_vfunc(\n        func,\n    ...<4 lines>...\n        on_missing_core_dim=on_missing_core_dim,\n    )\n  File \"python3.13/site-packages/xarray/computation/apply_ufunc.py\", line 452, in apply_dict_of_variables_vfunc\n    result_vars[name] = func(*variable_args)\n                        ~~~~^^^^^^^^^^^^^^^^\n  File \"python3.13/site-packages/xarray/computation/apply_ufunc.py\", line 820, in apply_variable_ufunc\n    result_data = func(*input_data)\n  File \"python3.13/site-packages/flox/xarray.py\", line 373, in wrapper\n    result, *groups = groupby_reduce(array, *by, func=func, **kwargs)\n                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"python3.13/site-packages/flox/core.py\", line 1196, in groupby_reduce\n    result = reindex_(\n             ~~~~~~~~^\n        result,\n        ^^^^^^^\n    ...<3 lines>...\n        array_type=ReindexArrayType.AUTO,  # just reindex the received array\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ).reshape(result.shape[:-1] + grp_shape)\n    ^\n  File \"python3.13/site-packages/flox/reindex.py\", line 213, in reindex_\n    reindexed = reindex_numpy(array, from_, to, fill_value, new_dtype, axis)\n  File \"python3.13/site-packages/flox/reindex.py\", line 93, in reindex_numpy\n    idx = from_.get_indexer(to)\n  File \"python3.13/site-packages/pandas/core/indexes/base.py\", line 3892, in get_indexer\n    raise InvalidIndexError(self._requires_unique_msg)\npandas.errors.InvalidIndexError: Reindexing only valid with uniquely valued Index objects\n```\n\n\n### Environment\n\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.13.15 | packaged by conda-forge | (main, Aug 10 2026, 13:01:04) [Clang 19.1.7 ]\npython-bits: 64\nOS: Darwin\nOS-release: 27.0.0\nmachine: arm64\nprocessor: arm\nbyteorder: little\nLC_ALL: None\nLANG: C.UTF-8\nLOCALE: ('C', 'UTF-8')\nlibhdf5: 1.14.6\nlibnetcdf: None\nxarray: 2026.9.0\npandas: 2.3.3\nnumpy: 2.5.3\nscipy: 1.18.1\nnetCDF4: None\npydap: None\nh5netcdf: None\nh5py: 3.14.0\nzarr: 3.4.0\ncftime: None\nnc_time_axis: None\niris: None\nbottleneck: None\ndask: 2026.7.1\ndistributed: 2026.7.1\nmatplotlib: 3.11.2\ncartopy: None\nseaborn: 0.13.2\nnumbagg: None\nfsspec: 2026.9.0\ncupy: None\npint: 0.26.1\nsparse: 0.19.2\nflox: 0.11.2\nnumpy_groupies: 0.11.3\nsetuptools: 84.0.0\npip: 26.2.1\nconda: None\npytest: 9.1.1\nmypy: None\nIPython: 9.17.1\nsphinx: 9.1.0\n",
+  "comments": [
+    {
+      "at": "2026-10-01T06:39:55Z",
+      "author": "headtr1ck",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "git bisect shows https://github.com/pydata/xarray/pull/11239 as the root cause",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions PR",
+        "fix language"
+      ]
+    },
+    {
+      "at": "2026-10-01T06:53:24Z",
+      "author": "headtr1ck",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "text": "Until this is fixed you can use the following workaround:\n```python\nwith xr.set_options(use_flox=False):\n    result = arr.groupby(\"x\").median()\n```",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language",
+        "code block"
+      ]
+    }
+  ]
+}

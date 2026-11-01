@@ -1,0 +1,13 @@
+# DataTree.__contains__ should support pathlike syntax
+
+_Opened by @TomNicholas_
+
+### What is your issue?
+
+Summarizing https://github.com/xarray-contrib/datatree/issues/240#issue-1671753316:
+
+Basically `DataTree.__getitem__` will currently return more things than `DataTree.__contains__` will actually tell you are "`in`" the tree, which can be confusing.
+
+To fix this `__contains__` should support path-like syntax. 
+
+> I also think that it's convenient that we can separate the "is this key in the local node's variables" question from the "is this path in the tree anywhere" question. In the former case the key will never have a `/` character and the latter case it will always have one, so we could perhaps think of this like overloading the `__contains__` method to behave slightly differently for `str` vs `PathLike` types.

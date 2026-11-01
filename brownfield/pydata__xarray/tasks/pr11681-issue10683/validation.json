@@ -1,0 +1,68 @@
+{
+  "pr": 11681,
+  "merged": "2026-10-27",
+  "issues": [
+    {
+      "n": 10683,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 10,
+  "srcFiles": [
+    "asv_bench/benchmarks/interp.py",
+    "doc/conf.py",
+    "doc/examples/apply_ufunc_vectorize_1d.ipynb",
+    "doc/gallery.rst",
+    "doc/gallery.yml",
+    "doc/whats-new.rst",
+    "xarray/computation/apply_ufunc.py",
+    "xarray/core/missing.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_computation.py",
+    "xarray/tests/test_interp.py"
+  ],
+  "env": "exclude-newer 2026-10-27T13:57:54Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_computation.py::test_corr_only_dataarray",
+    "xarray/tests/test_computation.py::test_vectorize_dims",
+    "xarray/tests/test_computation.py::test_vectorize_dims_dataset",
+    "xarray/tests/test_computation.py::test_vectorize_dims_empty",
+    "xarray/tests/test_computation.py::test_vectorize_dims_empty_loop",
+    "xarray/tests/test_computation.py::test_vectorize_dims_invalid",
+    "xarray/tests/test_computation.py::test_vectorize_dims_loop_order",
+    "xarray/tests/test_computation.py::test_vectorize_dims_missing_on_some_inputs",
+    "xarray/tests/test_computation.py::test_vectorize_dims_multiple_outputs",
+    "xarray/tests/test_computation.py::test_vectorize_exclude_dims_dask",
+    "xarray/tests/test_interp.py::test_dataset_interp_datetime_dask",
+    "xarray/tests/test_interp.py::test_interp_empty_new_coords",
+    "xarray/tests/test_interp.py::test_interp_vectorized_empty_dim"
+  ],
+  "counts": {
+    "f2p": 13,
+    "p2p": 8,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_computation::test_vectorize_dims[numpy-vectorize0-expected_shapes0]",
+    "xarray.tests.test_computation::test_vectorize_dims[numpy-t-expected_shapes1]",
+    "xarray.tests.test_computation::test_vectorize_dims[numpy-vectorize2-expected_shapes2]",
+    "xarray.tests.test_computation::test_vectorize_dims[dask-vectorize0-expected_shapes0]",
+    "xarray.tests.test_computation::test_vectorize_dims[dask-t-expected_shapes1]",
+    "xarray.tests.test_computation::test_vectorize_dims[dask-vectorize2-expected_shapes2]",
+    "xarray.tests.test_computation::test_vectorize_dims_empty_loop",
+    "xarray.tests.test_computation::test_vectorize_dims_invalid",
+    "xarray.tests.test_computation::test_vectorize_dims_loop_order",
+    "xarray.tests.test_interp::test_interp_empty_new_coords[linear]",
+    "xarray.tests.test_interp::test_interp_empty_new_coords[nearest]",
+    "xarray.tests.test_interp::test_interp_vectorized_empty_dim[numpy]",
+    "xarray.tests.test_interp::test_interp_vectorized_empty_dim[dask]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

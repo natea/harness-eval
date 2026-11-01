@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Are there setup instructions for developing the package, e.g., `pip install -e .`?",
+      "rationale": "A question about missing dev setup docs; no fix details.",
+      "author": "griff4692",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "pip install -e . -e packages/gsm8k -e packages/hotpotqa",
+      "rationale": "Bot answer with generic install commands, partly irrelevant; does not propose creating CONTRIBUTING.md or README change.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "CONTRIBUTING.md"
+      ],
+      "evidence": "we should make a `CONTRIBUTING.md`, I can set one up. We use `uv` for dev, so you will just run `uv sync` to install everything",
+      "rationale": "States the change: add CONTRIBUTING.md with uv sync instructions, matching the reference fix.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

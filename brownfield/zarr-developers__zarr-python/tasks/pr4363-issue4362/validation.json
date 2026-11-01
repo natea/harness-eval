@@ -1,0 +1,66 @@
+{
+  "pr": 4363,
+  "merged": "2026-09-16",
+  "issues": [
+    {
+      "n": 4362,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 21,
+  "srcFiles": [
+    "changes/4363.bugfix.md",
+    "pyproject.toml",
+    "src/zarr/__init__.py",
+    "src/zarr/api/asynchronous.py",
+    "src/zarr/codecs/bytes.py",
+    "src/zarr/codecs/cast_value.py",
+    "src/zarr/codecs/sharding.py",
+    "src/zarr/codecs/vlen_utf8.py",
+    "src/zarr/core/array.py",
+    "src/zarr/core/buffer/cpu.py",
+    "src/zarr/core/buffer/gpu.py",
+    "src/zarr/core/codec_pipeline.py",
+    "src/zarr/core/group.py",
+    "src/zarr/core/sync.py",
+    "src/zarr/storage/_common.py",
+    "src/zarr/storage/_local.py",
+    "src/zarr/storage/_memory.py",
+    "src/zarr/storage/_zip.py"
+  ],
+  "testFiles": [
+    "tests/test_array.py",
+    "tests/test_group.py",
+    "tests/test_store/test_core.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_array.py::TestInfo::test_info_complete_async",
+    "tests/test_array.py::test_resize_1d",
+    "tests/test_array.py::test_resize_wrong_ndim_raises",
+    "tests/test_group.py::test_asyncgroup_from_dict",
+    "tests/test_group.py::test_asyncgroup_open_wrong_format",
+    "tests/test_group.py::test_group_metadata_from_dict_wrong_node_type_raises",
+    "tests/test_store/test_core.py::test_make_store_invalid_mode_raises",
+    "tests/test_store/test_core.py::test_make_store_path_invalid",
+    "tests/test_store/test_core.py::test_store_path_invalid_mode_raises"
+  ],
+  "counts": {
+    "f2p": 4,
+    "p2p": 19,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_array::test_resize_wrong_ndim_raises[zarr2-memory]",
+    "tests.test_array::test_resize_wrong_ndim_raises[zarr3-memory]",
+    "tests.test_group::test_group_metadata_from_dict_wrong_node_type_raises",
+    "tests.test_store.test_core::test_make_store_invalid_mode_raises"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

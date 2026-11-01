@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11524
+issues:
+  - 10305
+baseSha: 63b61d37ab4f77b7804f076c025480dbc791e678
+mergeSha: b1c1dc549b62bdfc8de0bdded24f56464cf0db1a
+tStar: 2026-08-14T23:24:42Z
+issueCreatedAt: 2025-05-09T19:44:00Z
+prMergedAt: 2026-08-19T20:48:32Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_conventions.TestEncodeCFVariable::test_missing_fillvalue_coordinate_variable
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: true
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: ca45bb81ff897b8bbaeb2653d6c8d71bf6f6a7dd63536db84427b3863835ba90
+  issue/body+human.md: ca45bb81ff897b8bbaeb2653d6c8d71bf6f6a7dd63536db84427b3863835ba90
+  issue/body.md: 8acea494ecd7852dc79a519fe8af1d8341c89f1b6f610b586293ca56d25e645e
+  leaks.json: d16366623386b1b944c366638fdd44e9d2842c0dcfdd0c3f4bdefd8dbdaf1db5
+  reference.patch: da6119569ab6a6fcd903043612b150c2504b87c480fa6595c1fe7cdae70127bd
+  snapshot.json: 2d0374abd5f8e61b10236b10fa524b1cb1e94fb5e9fc512211ae62a023a24a84
+  tests.patch: 3fd0310f6a33c63e8d0888c7b0989aa68d605ce88160da72e462bc23d9f0eafc
+  validation.json: 603fd73a8a920f295e125da38b90c12acd4589392736a59d1b174a402e706d79

@@ -1,0 +1,53 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 0e74ca1e..2df83a0c 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -69,6 +69,11 @@ Bug Fixes
+   for zarr writes. Existing zarr stores written with the old ``int8`` encoding
+   are still read correctly. (:issue:`2937`, :pull:`11318`)
+   By `Evan Lyall <https://github.com/elyall>`_.
++- Raise an informative ``TypeError`` when a :py:class:`~xarray.Coordinates` object is
++  passed as a coordinate value, e.g. ``ds.assign_coords({"x": coords})``, instead
++  of silently creating a broken coordinate. Pass the object directly with
++  ``ds.assign_coords(coords)`` (:issue:`10194`).
++  By `NoiceHex <https://github.com/NoiceHax>`_.
+ 
+ 
+ Documentation
+diff --git a/pyproject.toml b/pyproject.toml
+index 828bee18..6fad5ada 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -424,6 +424,7 @@ Claus = "Claus"
+ Celles = "Celles"
+ slowy = "slowy"
+ Commun = "Commun"
++Noice = "Noice"
+ 
+ # Tests
+ Ome = "Ome"
+diff --git a/xarray/core/variable.py b/xarray/core/variable.py
+index ed262fe4..0ece498c 100644
+--- a/xarray/core/variable.py
++++ b/xarray/core/variable.py
+@@ -127,6 +127,7 @@ def as_variable(
+         The newly created variable.
+ 
+     """
++    from xarray.core.coordinates import Coordinates
+     from xarray.core.dataarray import DataArray
+ 
+     # TODO: consider extending this method to automatically handle Iris and
+@@ -160,6 +161,12 @@ def as_variable(
+         obj = Variable([], obj)
+     elif isinstance(obj, pd.Index | IndexVariable) and obj.name is not None:
+         obj = Variable(obj.name, obj)
++    elif isinstance(obj, Coordinates):
++        raise TypeError(
++            f"Variable {name!r}: Using a Coordinates object to construct a variable is "
++            "ambiguous, please pass the Coordinates object directly instead, e.g., "
++            "`obj.assign_coords(coords)` instead of `obj.assign_coords({name: coords})`."
++        )
+     elif isinstance(obj, set | dict):
+         raise TypeError(f"variable {name!r} has invalid type {type(obj)!r}")
+     elif name is not None:

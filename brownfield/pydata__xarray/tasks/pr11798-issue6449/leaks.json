@@ -1,0 +1,29 @@
+{
+  "model": "claude-sonnet-5-5",
+  "promptHash": "0b74132edbf3523b626339d2177f5c481c0ff523cf38f7e74f5d9d039f9214ae",
+  "costUsd": 0.0189222,
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "y.query(index='a==0') #error",
+      "rationale": "Reproduction and traceback showing pd.eval in Dataset.query with resolvers=[self]; no root cause identified beyond traceback.",
+      "author": "LunarLanding",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "ds.set_coords(['a','b']).query(x=\"a > 2\")\n\n# fails",
+      "rationale": "Another reproduction showing failure when all variables are coords; no mechanism or fix given.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    }
+  ]
+}

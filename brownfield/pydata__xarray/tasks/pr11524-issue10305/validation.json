@@ -1,0 +1,41 @@
+{
+  "pr": 11524,
+  "merged": "2026-08-19",
+  "issues": [
+    {
+      "n": 10305,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "pyproject.toml",
+    "xarray/coding/variables.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_conventions.py"
+  ],
+  "env": "exclude-newer 2026-08-19T14:47:00-06:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_conventions.py::TestEncodeCFVariable::test_missing_fillvalue",
+    "xarray/tests/test_conventions.py::TestEncodeCFVariable::test_missing_fillvalue_coordinate_variable",
+    "xarray/tests/test_conventions.py::TestEncodeCFVariable::test_missing_fillvalue_non_coordinate_variable",
+    "xarray/tests/test_conventions.py::TestEncodeCFVariable::test_multidimensional_coordinates"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_conventions.TestEncodeCFVariable::test_missing_fillvalue_coordinate_variable"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

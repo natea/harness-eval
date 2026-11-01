@@ -1,0 +1,29 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I get a `DeprecationWarning` stating that I should pass it to `paperqa.settings.AgentSettings()`",
+      "rationale": "Describes the misleading warning and the error with repro; does not identify the code location or propose a fix.",
+      "author": "gdurif",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/settings.py"
+      ],
+      "evidence": "The deprecation warning is misleading: while it says to move paper_directory to AgentSettings, AgentSettings does not accept this field directly",
+      "rationale": "Identifies that the warning message wrongly names AgentSettings and the field belongs in IndexSettings, which is exactly what the fix changes in the message. It does not explicitly propose editing the message, so it is diagnosis rather than fix_sketch.",
+      "author": "dosubot",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis"
+}

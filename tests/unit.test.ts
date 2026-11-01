@@ -639,3 +639,158 @@ test("provider quota errors classify as infra failures", () => {
 		),
 	).toBe(true);
 });
+
+describe("scheduler: model gateway egress hook (brownfield D11)", () => {
+	const setup = async () => {
+		const { EgressLockError } = await import("../src/gateway/run");
+		const registry = loadRegistry("config/registry.yaml");
+		const first = registry.candidates[0];
+		if (!first) throw new Error("missing registry fixture candidate");
+		const candidate = {
+			...first,
+			harnesses: {
+				"claude-code": {
+					install: ["install-harness"],
+					session: [{ prompt: "do {{BASE_PROMPT}}", newSession: false }],
+					continuation: { allowlist: [], maxContinuations: 0 },
+				},
+			},
+		};
+		const config = RunConfig.parse({
+			candidates: [candidate.id],
+			trialsPerCandidate: 1,
+			provider: "worktree",
+			model: "run-model",
+			infraRetryLimit: 2,
+		});
+		const order: string[] = [];
+		const seen: { env?: Record<string, string>; model?: string } = {};
+		const deps = (egress: unknown) => ({
+			provider: new MemoryProvider(),
+			registry: { ...registry, basePrompt: "task", candidates: [candidate] },
+			runDir: join(tmp, `egress-${Math.random().toString(36).slice(2)}`),
+			prdContent: "# PRD",
+			prdSha256: "p",
+			testPlanSha256: null,
+			harnessVersion: "v",
+			workerEnv: { CLAUDE_CODE_OAUTH_TOKEN: "real-token" },
+			egress: egress as never,
+			executeScript: (async (
+				sandbox: MemorySandbox,
+				opts: { env?: Record<string, string>; model: string },
+			) => {
+				order.push(
+					`agent(after ${sandbox.execs.map((e) => e.command).join(",")})`,
+				);
+				seen.env = opts.env;
+				seen.model = opts.model;
+				return {
+					records: [],
+					transcripts: [],
+					status: "completed",
+					cappedBy: null,
+					notes: [],
+				};
+			}) as never,
+			archive: async () => ({
+				workspaceDir: "",
+				transcriptPaths: [],
+				redactions: 0,
+			}),
+		});
+		return { EgressLockError, candidate, config, order, seen, deps };
+	};
+
+	test("locks after install and before the agent, swaps in the gateway env, flags rejections", async () => {
+		const { candidate, config, order, seen, deps } = await setup();
+		let exits = 0;
+		const egress = {
+			async enter(trialId: string, harness: string, sandbox: MemorySandbox) {
+				order.push(
+					`enter(${trialId},${harness},after ${sandbox.execs.map((e) => e.command).join(",")})`,
+				);
+				return {
+					env: { ANTHROPIC_API_KEY: "sk-ant-api03-hegw-x" },
+					modelFlag: "run-model",
+				};
+			},
+			exit() {
+				exits++;
+				return [
+					"gateway-rejected: provider-side tools not allowed: web_search_20250305:web_search",
+				];
+			},
+		};
+		const trial = await runTrial(
+			{ trialId: "c-t1", candidate, trialIndex: 0 },
+			config,
+			deps(egress),
+			new RunLedger(10),
+		);
+		expect(order).toEqual([
+			"enter(c-t1,claude-code,after install-harness)",
+			"agent(after install-harness)",
+		]);
+		expect(seen.env).toEqual({ ANTHROPIC_API_KEY: "sk-ant-api03-hegw-x" });
+		expect(seen.env?.CLAUDE_CODE_OAUTH_TOKEN).toBeUndefined();
+		expect(seen.model).toBe("run-model");
+		expect(trial.provenance.flags).toEqual([
+			"gateway-rejected: provider-side tools not allowed: web_search_20250305:web_search",
+		]);
+		expect(exits).toBeGreaterThanOrEqual(1);
+	});
+
+	test("a lock that doesn't hold fails the trial without retry and the agent never runs", async () => {
+		const { EgressLockError, candidate, config, order, deps } = await setup();
+		let enters = 0;
+		const egress = {
+			async enter() {
+				enters++;
+				throw new EgressLockError(
+					"egress lock did not hold: `curl https://pypi.org` succeeded (sandbox)",
+				);
+			},
+			exit: () => [],
+		};
+		const trial = await runTrial(
+			{ trialId: "c-t1", candidate, trialIndex: 0 },
+			config,
+			deps(egress),
+			new RunLedger(10),
+		);
+		expect(enters).toBe(1);
+		expect(order).toEqual([]);
+		expect(trial.provenance.status).toBe("infra-failed");
+		expect(trial.provenance.notes.join(" ")).toContain("did not hold");
+	});
+});
+
+describe("harnessNeverStarted", () => {
+	test("only a missing harness binary with no session result counts", async () => {
+		const { harnessNeverStarted } = await import(
+			"../src/orchestrator/scheduler"
+		);
+		const missing = [
+			"step 0 failed: Error: no result message in session output (exit 127); last 500 chars: zsh:1: command not found: claude",
+		];
+		expect(
+			harnessNeverStarted({ status: "error", records: [], notes: missing }),
+		).toBe(true);
+		// Ran and crashed: the candidate's result, still graded.
+		expect(
+			harnessNeverStarted({
+				status: "error",
+				records: [],
+				notes: [
+					"step 0 failed: Error: no result message in session output (exit 1)",
+				],
+			}),
+		).toBe(false);
+		expect(
+			harnessNeverStarted({ status: "error", records: [{}], notes: missing }),
+		).toBe(false);
+		expect(
+			harnessNeverStarted({ status: "completed", records: [], notes: missing }),
+		).toBe(false);
+	});
+});

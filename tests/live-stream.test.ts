@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { LiveTurnStream, type LineReader, sandboxLineReader } from "../src/live/tap";
+import { trialIdFromSandbox } from "../src/live/registry";
 import { parseTranscript } from "../src/report/transcript-render";
 import type { ExecOptions, ExecResult, Sandbox } from "../src/providers/types";
 
@@ -129,4 +130,29 @@ describe("live-build-stream: sandboxLineReader is read-only", () => {
 		expect(execs[0]).toMatch(/^tail -n \+1 /);
 		expect(execs[0]).not.toMatch(/tail -f/); // short-lived; never holds stdout
 	});
+});
+
+/**
+ * Canonical trial id derivation (fix-live-stream-trial-id). The live-source
+ * registry keys pointers by `trialIdFromSandbox(sandbox.id)`, and the studio's
+ * SSE endpoint looks them up by the canonical trial id (e.g. `gsd-t1`). These
+ * MUST match for every provider or a building trial's stream is never found and
+ * the UI hangs on "waiting for the agent to start…". Each provider stamps the
+ * trial id as the LAST colon segment; CLI-container providers (docker / macos-vz)
+ * additionally prefix the container name with `he-`.
+ */
+describe("trialIdFromSandbox", () => {
+	const cases: Array<[string, string]> = [
+		["worktree:gsd-t1", "gsd-t1"], // host worktree — single colon
+		["docker:he-gsd-t1", "gsd-t1"], // CLI-container `he-` name prefix
+		["macos-vz:he-gsd-t1", "gsd-t1"], // same prefix, hyphenated provider id
+		["daytona:5844937e-feac-4e8b-b533-b9a080c12750:superpowers-t1", "superpowers-t1"], // extra VM segment
+		["e2b:sb_abc123:agent-skills-t1", "agent-skills-t1"], // extra sandbox segment
+		["gsd-t1", "gsd-t1"], // no namespace at all
+	];
+	for (const [sandboxId, expected] of cases) {
+		test(`${sandboxId} → ${expected}`, () => {
+			expect(trialIdFromSandbox(sandboxId)).toBe(expected);
+		});
+	}
 });

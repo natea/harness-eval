@@ -1,0 +1,35 @@
+{
+  "pr": 11524,
+  "issue": 10305,
+  "tStar": "2026-08-14T23:24:42Z",
+  "title": "SerializationWarning for coordinate variables goes against CF conventions",
+  "issueAuthor": "djhoese",
+  "body": "### What happened?\n\nWhen saving a variable as a NetCDF coordinate variable (in the CF sense a variable with the same name as its dimension) you get a serialization warning:\n\n```\nSerializationWarning: saving variable x with floating point data as an integer dtype without any _FillValue to use for NaNs\n```\n\n\nCF coordinate variables are not supposed to have a _FillValue defined:\n\nhttps://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.html#missing-data\n\n> Missing data is not allowed in coordinate variables.\n\n### What did you expect to happen?\n\nFor variables that are CF coordinate variables I expect no warning. Or if I explicitly set the `_FillValue` to `None` then I would expect no warning.\n\n### Minimal Complete Verifiable Example\n\n```Python\nimport xarray as xr\nimport numpy as np\n\ndata = xr.DataArray(np.zeros((2,), dtype=np.float32), dims=(\"x\",))\ndata.encoding[\"scale_factor\"] = 1.0\ndata.encoding[\"add_offset\"] = 0.0\ndata.encoding[\"dtype\"] = \"uint16\"\ndata.encoding[\"_FillValue\"] = 0.0\n\nx = xr.DataArray(np.arange(2, dtype=np.float32), dims=(\"x\",))\nx.encoding[\"scale_factor\"] = 1.0\nx.encoding[\"add_offset\"] = 0.0\nx.encoding[\"dtype\"] = \"uint16\"\nx.encoding[\"_FillValue\"] = None\n\nds = xr.Dataset({\n    \"data\": data,\n    \"x\": x,\n})\nds.to_netcdf(\"test.nc\")\n```\n\n### MVCE confirmation\n\n- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\n- [x] Complete example — the example is self-contained, including all data and the text of any traceback.\n- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\n- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.\n- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.\n\n### Relevant log output\n\n```Python\nSerializationWarning: saving variable x with floating point data as an integer dtype without any _FillValue to use for NaNs\n```\n\n### Anything else we need to know?\n\n@kmuehlbauer added this check in #7719\n\nThis stackoverflow answer says I can set fill value to None to not have a fill value for the variable, but it doesn't seem to change anything regarding the warning:\n\nhttps://stackoverflow.com/a/45696423/433202\n\n### Environment\n\n<details>\n\n\nINSTALLED VERSIONS\n------------------\ncommit: None\npython: 3.12.8 | packaged by conda-forge | (main, Dec  5 2024, 14:24:40) [GCC 13.3.0]\npython-bits: 64\nOS: Linux\nOS-release: 6.12.10-76061203-generic\nmachine: x86_64\nprocessor: x86_64\nbyteorder: little\nLC_ALL: None\nLANG: en_US.UTF-8\nLOCALE: ('en_US', 'UTF-8')\nlibhdf5: 1.14.3\nlibnetcdf: 4.9.2\n\nxarray: 2025.4.0\npandas: 2.2.3\nnumpy: 2.2.5\nscipy: 1.15.2\nnetCDF4: 1.7.2\npydap: None\nh5netcdf: 1.6.1\nh5py: 3.13.0\nzarr: 2.18.7\ncftime: 1.6.4\nnc_time_axis: None\niris: None\nbottleneck: 1.4.2\ndask: 2025.4.1\ndistributed: 2025.4.1\nmatplotlib: 3.10.1\ncartopy: 0.24.0\nseaborn: None\nnumbagg: None\nfsspec: 2025.3.2\ncupy: None\npint: 0.24.4\nsparse: None\nflox: None\nnumpy_groupies: None\nsetuptools: 80.1.0\npip: 25.1\nconda: 25.3.1\npytest: 8.3.5\nmypy: 1.15.0\nIPython: 9.2.0\nsphinx: 8.2.3\n\n\n\n</details>\n",
+  "comments": [
+    {
+      "at": "2025-05-12T07:03:48Z",
+      "author": "kmuehlbauer",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Hi @djhoese, thanks for the well written report.\n\nFirst, although I've committed the changes in #7719, this has merely been a refactor of already existing code. This behaviour has been around for almost 10 years now, dating back to @shoyer's PR #494. \n\nI agree, that a warning in the case of CF coordinate variable is not needed (and is probably misleading in that sense). As a simple check for coordinate in `NonStringCoder` we could test if the variable name is the same as the variables only dimensions.\n\nFor the case of `x.encoding[\"_FillValue\"] = None` this isn't as trivial as it might seem. In that case any `nan` would be converted to whatever `astype` returns in that case (which might different on different architectures). I'm not sure what's the best way forward here. We could catch any `invalid cast` RuntimeWarning and re-raise with added information. Thoughts?",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "mentions #N",
+        "mentions PR"
+      ]
+    },
+    {
+      "at": "2025-05-12T14:50:11Z",
+      "author": "djhoese",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "text": "Oh I see. Thanks. It is possible I updated my code to fix a warning from a CF checker (remove the fill value) and then ignored the warnings created by xarray for not having the fill value.",
+      "source": "no-edits",
+      "editedAfter": 0,
+      "flags": [
+        "fix language"
+      ]
+    }
+  ]
+}

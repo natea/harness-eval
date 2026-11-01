@@ -1,0 +1,37 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "We should error and tell the user to use `ds.assign_coords(coords)` instead",
+      "rationale": "Proposes raising an error with a message pointing to assign_coords(coords), matching the fix's behavior, but does not name the location (as_variable).",
+      "author": "dcherian",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "we can easily detect when such case happens",
+      "rationale": "Agreement only, no specific technical content.",
+      "author": "benbovy",
+      "role": "maintainer"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "ValueError: conflicting sizes for dimension 'x': length 1 on 'x' and length 3 on {'x': 'foo'}",
+      "rationale": "Reports current behavior and a traceback through calculate_dimensions, which the fix does not change.",
+      "author": "gcaria",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "symptom"
+}

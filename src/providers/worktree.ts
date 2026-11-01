@@ -96,14 +96,29 @@ class WorktreeSandbox implements Sandbox {
 	}
 
 	async exec(command: string, opts: ExecOptions = {}): Promise<ExecResult> {
-		const env = trialEnv(this.home, this.claudeConfigDir, opts.env);
+		const env: Record<string, string | undefined> = trialEnv(
+			this.home,
+			this.claudeConfigDir,
+			opts.env,
+		);
 		try {
-			const { stdout, stderr } = await execFileAsync("zsh", ["-c", command], {
-				cwd: opts.cwd ?? this.workspacePath,
-				env,
-				timeout: opts.timeoutMs,
-				maxBuffer: 64 * 1024 * 1024,
-			});
+			// /etc/zshenv (always sourced, even with -f) may rebuild PATH from scratch
+			// (nix-darwin does), and the per-trial HOME skips the operator's own
+			// rc files that would add e.g. ~/.local/bin back. Re-prepend the PATH we
+			// deliberately passed so the harness binary stays resolvable.
+			const inherited = env.PATH
+				? `export PATH=${shellQuote(env.PATH)}:"$PATH"; `
+				: "";
+			const { stdout, stderr } = await execFileAsync(
+				"zsh",
+				["-c", inherited + command],
+				{
+					cwd: opts.cwd ?? this.workspacePath,
+					env,
+					timeout: opts.timeoutMs,
+					maxBuffer: 64 * 1024 * 1024,
+				},
+			);
 			return { exitCode: 0, stdout, stderr };
 		} catch (err) {
 			const e = err as {
@@ -157,3 +172,5 @@ class WorktreeSandbox implements Sandbox {
 		rmSync(this.root, { recursive: true, force: true });
 	}
 }
+
+const shellQuote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;

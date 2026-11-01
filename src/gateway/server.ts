@@ -139,9 +139,15 @@ export function startGateway(opts: GatewayOptions): Gateway {
 			);
 			entry.status = upstream.status;
 			log(entry);
+			// Bun's fetch already decompressed the body; forwarding
+			// `content-encoding` makes the client decompress it again
+			// (BrotliDecompressionError in Claude Code).
+			const outHeaders = new Headers(upstream.headers);
+			for (const h of ["content-encoding", "content-length", "transfer-encoding"])
+				outHeaders.delete(h);
 			return new Response(upstream.body, {
 				status: upstream.status,
-				headers: upstream.headers,
+				headers: outHeaders,
 			});
 		},
 	});

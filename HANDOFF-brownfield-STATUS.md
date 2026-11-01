@@ -67,10 +67,30 @@ paper-qa trial can run as early as possible.
    (fail-to-pass)**. Patch touched `src/paperqa/agents/search.py`; hidden test
    genuinely fails on the candidate tree. Proves the full loop: seed → agent →
    patch → hidden-test grading → report.
-2. `runs/run-2026-11-01T07-14-02-159Z` — codex-baseline × `pr1298-issue1273`,
+2. `runs/run-2026-11-01T07-20-32-157Z` — bare × `pr1298-issue1273`,
+   claude-sonnet-4-6-key, 3.9m, $0.58, **unresolved (fail-to-pass)**. The
+   candidate edited `tests/test_paperqa.py`; grading restored it and flagged
+   `test-infra-modified`.
+3. `runs/run-2026-11-01T07-31-23-833Z` — gateway validation attempt, **$0**: the
+   first gateway response exposed `content-encoding` after Bun had already
+   decompressed it, so Claude Code raised a BrotliDecompressionError. Fixed
+   (headers stripped) and covered by a test.
+4. `runs/run-2026-11-01T07-34-41-008Z` — bare × `pr1262-issue1257`,
+   claude-sonnet-4-6-key **through the gateway**, 17.7m, $2.18, **unresolved
+   (fail-to-pass)**, 65 turns, 63 proxied requests (all 200). Gateway end-to-end
+   verified with a placeholder credential in the sandbox.
+5. `runs/run-2026-11-01T07-56-24-179Z` — adversarial smoke (`--adversarial`),
+   haiku + gateway, **disqualified:solution-reach**: the worker looked up
+   `github.com/Future-House/paper-qa/pull/1251` and the audit caught it before
+   grading. Confirms the audit path; also shows worktree egress is still open
+   (4.4 network lockdown pending).
+6. `runs/run-2026-11-01T07-14-02-159Z` — codex-baseline × `pr1298-issue1273`,
    gpt-5-codex (OpenAI), **$0.00**: the account has no credits and no access to
    `gpt-5-codex`/`gpt-5.1-codex`; every model 404s or reports "no credits".
    OpenAI half of the pilot is blocked on billing, not on code.
+
+Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet),
+**$0 OpenAI**. Target caps ($40/$20) untouched.
 
 ## Commits
 
@@ -79,7 +99,8 @@ paper-qa trial can run as early as possible.
 - `8a2e489` trial isolation + web-tool kill-switch (4.6/4.8)
 - `b39d0d5` hidden-test grading from a pristine base (5.1)
 - `54b9ef1` report, API-key profiles, clean test env (5.4)
-- (next) model gateway + inter-human κ (4.4/2.6)
+- `59782ec` model gateway + inter-human κ (4.4/2.6)
+- `b561168` solution-reach audit + lean archives (5.3)
 
 ## Labels (task 2.6)
 

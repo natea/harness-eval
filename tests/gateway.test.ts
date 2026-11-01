@@ -25,7 +25,12 @@ async function fakeUpstream() {
 				auth: req.headers.get("authorization") ?? "",
 				body: req.method === "GET" ? "" : await req.text(),
 			});
-			return Response.json({ ok: true });
+			return new Response(JSON.stringify({ ok: true }), {
+				headers: {
+					"content-type": "application/json",
+					"content-encoding": "identity",
+				},
+			});
 		},
 	});
 	return { url: `http://127.0.0.1:${server.port}`, server, seen };
@@ -73,6 +78,8 @@ test("forwards the run model with the injected credential", async () => {
 			}),
 		});
 		expect(res.status).toBe(200);
+		expect(res.headers.get("content-encoding")).toBeNull();
+		expect(await res.json()).toEqual({ ok: true });
 		expect(up.seen[0]?.key).toBe("sk-real");
 		expect(up.seen[0]?.auth).toBe("Bearer sk-real");
 		expect(JSON.parse(up.seen[0]!.body).messages).toEqual([]);

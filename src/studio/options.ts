@@ -88,6 +88,8 @@ export interface StudioRunRequest {
 	grade?: boolean;
 	/** Concurrent trials; defaults per provider (1 on resource-capped daytona). */
 	concurrency?: number;
+	/** Optional per-trial wall-clock cap, matching CLI `--trial-minutes`. */
+	trialMinutes?: number;
 	/** Optional design-system selection (design-adherence). */
 	design?: string;
 	/** Explicit acknowledgement of the budget envelope — required for a real run. */
@@ -152,19 +154,6 @@ export function validateRunRequest(
 		}
 	}
 
-	// Harness/provider compatibility: these CLIs must come from the pinned trial
-	// image/snapshot, not the host's PATH.
-	const IMAGE_ONLY_HARNESSES = new Set(["codex", "zerocode"]);
-	if (
-		req.harness &&
-		IMAGE_ONLY_HARNESSES.has(req.harness) &&
-		req.provider === "worktree"
-	) {
-		errors.push(
-			`harness '${req.harness}' needs an image-based provider (docker, daytona, e2b, macos-vz) — the worktree provider runs on the host, which has no '${req.harness}' CLI. Build the trial image and select e.g. provider=docker.`,
-		);
-	}
-
 	// Worker + judge models must resolve (implicit claude-* or a declared profile),
 	// and the judge must differ from the worker (self-grading is disallowed — the
 	// same guardrail the CLI enforces). Cross-vendor judging is allowed.
@@ -175,6 +164,20 @@ export function validateRunRequest(
 			workerProfile = resolveProfile(req.workerModel, models);
 		} catch (e) {
 			errors.push(`workerModel: ${(e as Error).message}`);
+		}
+	}
+	// Harness/provider compatibility: Zerocode still requires the pinned trial
+	// image. Codex normally does too, but local OSS profiles are explicitly
+	// allowed on worktree because the model server is host-local and Codex's OSS
+	// provider uses the host's default local ports.
+	if (req.harness && req.provider === "worktree") {
+		const imageOnly =
+			req.harness === "zerocode" ||
+			(req.harness === "codex" && !workerProfile?.ossProvider);
+		if (imageOnly) {
+			errors.push(
+				`harness '${req.harness}' needs an image-based provider (docker, daytona, e2b, macos-vz) — the worktree provider runs on the host, outside the pinned trial image. Build the trial image and select e.g. provider=docker.`,
+			);
 		}
 	}
 	if (req.judgeModel) {
@@ -196,6 +199,16 @@ export function validateRunRequest(
 	}
 
 	// RunConfig parse mirrors trials>0, weights sum to 1, budget shape, etc.
+	const trialMinutes = req.trialMinutes;
+	if (trialMinutes !== undefined && !(Number(trialMinutes) > 0)) {
+		errors.push(`trialMinutes: must be a positive number, got ${trialMinutes}`);
+	}
+	const baseBudget =
+		(opts.defaults.budget as Record<string, unknown> | undefined) ?? {};
+	const budget =
+		trialMinutes !== undefined && Number(trialMinutes) > 0
+			? { ...baseBudget, trialWallClockMs: Number(trialMinutes) * 60_000 }
+			: baseBudget;
 	let config: RunConfig | undefined;
 	try {
 		config = RunConfig.parse({
@@ -207,7 +220,7 @@ export function validateRunRequest(
 			provider: req.provider,
 			concurrency: req.concurrency ?? defaultConcurrency(req.provider),
 			weights: req.weights,
-			...(opts.defaults.budget ? { budget: opts.defaults.budget } : {}),
+			...(Object.keys(budget).length ? { budget } : {}),
 		});
 	} catch (e) {
 		const msg = (e as { issues?: { message: string }[] }).issues
@@ -249,6 +262,8 @@ export function cliCommand(req: StudioRunRequest): string {
 		`--trials ${req.trials}`,
 		`--provider ${req.provider}`,
 	];
+	if (req.harness && req.harness !== "claude-code")
+		parts.push(`--harness ${req.harness}`);
 	if (req.workerModel && req.workerModel !== "claude-opus-4-6")
 		parts.push(`--worker-model ${req.workerModel}`);
 	if (req.judgeModel && req.judgeModel !== "claude-sonnet-4-6")
@@ -257,5 +272,7 @@ export function cliCommand(req: StudioRunRequest): string {
 	if (conc !== 2) parts.push(`--concurrency ${conc}`);
 	if (req.design) parts.push(`--design ${req.design}`);
 	if (req.grade) parts.push("--grade");
+	if (req.trialMinutes !== undefined)
+		parts.push(`--trial-minutes ${req.trialMinutes}`);
 	return parts.join(" ");
 }

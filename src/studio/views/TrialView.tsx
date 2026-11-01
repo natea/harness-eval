@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type * as React from "react";
-import type { TrialResult } from "../../types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Turn } from "../../report/transcript-render";
+import type { TrialResult } from "../../types";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -95,9 +95,8 @@ export function TrialView({
 	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
 	// Live jobs (this session's running runs) — used to show the live build stream
 	// for a trial whose run hasn't finished/indexed yet (live-build-stream).
-	const queue = useFetch<{ runId: string; status: string; stage?: string }[]>(
-		"/api/queue",
-	);
+	const queue =
+		useFetch<{ runId: string; status: string; stage?: string }[]>("/api/queue");
 	// Build-conversation state lifted here so a step row can command it: open it
 	// and jump to the turn that best explains the step's outcome.
 	const convo = useTranscript(runId, trialId);
@@ -158,6 +157,15 @@ export function TrialView({
 	}
 	const a = t.grades?.adherence;
 	const q = t.grades?.quality;
+	const samplesLabel = (c: {
+		samples: number[];
+		sampleDetails?: { usedFallback?: boolean }[];
+	}) =>
+		c.samples
+			.map((score, i) =>
+				c.sampleDetails?.[i]?.usedFallback ? `${score}*` : String(score),
+			)
+			.join(", ");
 	const integ = t.grades?.integration;
 	const tel = t.telemetry;
 
@@ -338,7 +346,7 @@ export function TrialView({
 								<TableRow key={`${i}-${c.criterion}`}>
 									<TableCell className="text-[13px]">{c.criterion}</TableCell>
 									<TableCell className="font-mono text-[12px]">
-										{c.samples.join(", ")}
+										{samplesLabel(c)}
 									</TableCell>
 									<TableCell className="font-mono text-[12px]">
 										{c.score}
@@ -394,17 +402,16 @@ export function TrialView({
 
 			<Conversation convo={convo} />
 
-			{t.provenance.status === "completed" &&
-				t.provenance.notes.length > 0 && (
-					<>
-						<h2 className="mt-7 text-base font-semibold">Notes</h2>
-						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
-							{t.provenance.notes.map((n, i) => (
-								<li key={`${i}-${n.slice(0, 32)}`}>{n}</li>
-							))}
-						</ul>
-					</>
-				)}
+			{t.provenance.status === "completed" && t.provenance.notes.length > 0 && (
+				<>
+					<h2 className="mt-7 text-base font-semibold">Notes</h2>
+					<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
+						{t.provenance.notes.map((n, i) => (
+							<li key={`${i}-${n.slice(0, 32)}`}>{n}</li>
+						))}
+					</ul>
+				</>
+			)}
 		</>
 	);
 }
@@ -479,7 +486,17 @@ function useTranscript(runId: string, trialId: string): TranscriptCtl {
 		);
 	}, []);
 
-	return { isOpen, data, busy, err, highlightId, open, toggle, load, highlight };
+	return {
+		isOpen,
+		data,
+		busy,
+		err,
+		highlightId,
+		open,
+		toggle,
+		load,
+		highlight,
+	};
 }
 
 /** Concatenated searchable text for a turn (used for step→conversation jumps). */
@@ -500,9 +517,30 @@ function turnText(t: Turn): string {
 
 // Words too common to be useful jump anchors.
 const STOP = new Set([
-	"the", "and", "for", "with", "that", "this", "from", "have", "test", "pass",
-	"fail", "check", "step", "output", "value", "values", "true", "false", "null",
-	"http", "json", "run", "log", "code",
+	"the",
+	"and",
+	"for",
+	"with",
+	"that",
+	"this",
+	"from",
+	"have",
+	"test",
+	"pass",
+	"fail",
+	"check",
+	"step",
+	"output",
+	"value",
+	"values",
+	"true",
+	"false",
+	"null",
+	"http",
+	"json",
+	"run",
+	"log",
+	"code",
 ]);
 
 /**
@@ -574,9 +612,19 @@ function buildOutline(sessions: TranscriptPayload["sessions"]): OutlineItem[] {
 		s.turns.forEach((turn, ti) => {
 			const id = `c-${si}-${ti}`;
 			if (turn.kind === "prompt")
-				items.push({ id, session: si, kind: "prompt", label: firstLine(turn.text) });
+				items.push({
+					id,
+					session: si,
+					kind: "prompt",
+					label: firstLine(turn.text),
+				});
 			else if (turn.kind === "assistant")
-				items.push({ id, session: si, kind: "chapter", label: firstLine(turn.text) });
+				items.push({
+					id,
+					session: si,
+					kind: "chapter",
+					label: firstLine(turn.text),
+				});
 			else if (turn.kind === "tool_result" && turn.isError)
 				items.push({
 					id,
@@ -601,7 +649,10 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 		() => (data ? buildOutline(data.sessions) : []),
 		[data],
 	);
-	const errors = useMemo(() => outline.filter((o) => o.kind === "error"), [outline]);
+	const errors = useMemo(
+		() => outline.filter((o) => o.kind === "error"),
+		[outline],
+	);
 	const [showOutline, setShowOutline] = useState(false);
 	const [errCursor, setErrCursor] = useState(0);
 
@@ -723,7 +774,10 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 									</div>
 								)}
 								{data.sessions.map((s, si) => (
-									<div key={`sess-block-${si}`} className={si > 0 ? "mt-5" : ""}>
+									<div
+										key={`sess-block-${si}`}
+										className={si > 0 ? "mt-5" : ""}
+									>
 										<p
 											id={`sess-${si}`}
 											className="mb-2 scroll-mt-24 font-mono text-[12px] font-semibold text-muted-foreground"
@@ -876,7 +930,8 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 
 	// Terminal with nothing to show → step aside (the page's archived Conversation,
 	// if any, stands in).
-	if ((state === "done" || state === "error") && turns.length === 0) return null;
+	if ((state === "done" || state === "error") && turns.length === 0)
+		return null;
 
 	const live =
 		state === "streaming" || state === "connecting" || state === "connected";
@@ -885,13 +940,13 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 			? "streaming"
 			: state === "remote"
 				? "remote run"
-			: state === "done"
-				? "✓ finished"
-				: state === "error"
-					? "stream ended"
-					: state === "connected"
-						? "waiting"
-						: "connecting…";
+				: state === "done"
+					? "✓ finished"
+					: state === "error"
+						? "stream ended"
+						: state === "connected"
+							? "waiting"
+							: "connecting…";
 
 	return (
 		<>
@@ -1090,13 +1145,19 @@ function Artifacts({ runId, trialId }: { runId: string; trialId: string }) {
 					<Demo runId={runId} trialId={trialId} web={inv.web} />
 
 					<div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[13px] sm:grid-cols-4">
-						<Stat label="Files" value={`${inv.files.length}${inv.truncated ? "+" : ""}`} />
+						<Stat
+							label="Files"
+							value={`${inv.files.length}${inv.truncated ? "+" : ""}`}
+						/>
 						<Stat label="Size" value={fmtBytes(inv.totalBytes)} />
 						<Stat
 							label="Cold-start"
 							value={`${inv.hasSetupScript ? "setup.sh" : "—"} / ${inv.hasStartScript ? "start.sh" : "—"}`}
 						/>
-						<Stat label="Blind copy" value={inv.blindCopyPresent ? "✓ scrubbed" : "—"} />
+						<Stat
+							label="Blind copy"
+							value={inv.blindCopyPresent ? "✓ scrubbed" : "—"}
+						/>
 					</div>
 
 					{inv.vendoredPresent.length > 0 && (

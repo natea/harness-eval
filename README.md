@@ -33,6 +33,10 @@ before implementation:
   **GLM via z.ai validated end-to-end**, a `model probe` connectivity check,
   and cross-vendor-judge + cost-basis caveats in results/scorecards.
   ([`add-pluggable-models`](https://github.com/natea/harness-eval/tree/main/openspec/changes/add-pluggable-models))
+- **Local model support** — Codex OSS workers for Ollama plus
+  OpenAI-compatible local/self-hosted judges. See
+  [docs/LOCAL-MODELS.md](docs/LOCAL-MODELS.md) for profiles and validation
+  commands. (`add-local-model-support`, in review)
 - **Pluggable providers/harnesses** — Docker, E2B, macOS Virtualization, and
   worktree providers share the same sandbox contract; harness registry entries
   are validated per implemented driver. See
@@ -143,6 +147,15 @@ bun run src/cli.ts report runs/<run-dir>    # (re)generate results + scorecard
 bun run src/cli.ts report runs/<run-dir> --weights 0.5,0.35,0.075,0.075
 ```
 
+Local model smoke, after starting Ollama and pulling the configured model:
+
+```sh
+bun run src/cli.ts model probe ollama-qwen3.6-35b
+bun run src/cli.ts run --target cli-tool --harness codex \
+  --provider worktree --candidates bare --trials 1 \
+  --worker-model ollama-qwen3.6-35b
+```
+
 Build the local trial image once: `docker build -t harness-eval-trial:zerocode infra/trial-image/`.
 Provider setup guides: [docs/MACOS-VZ-SETUP.md](docs/MACOS-VZ-SETUP.md),
 `infra/e2b-template/README.md`, `infra/daytona-snapshot` notes in the
@@ -209,7 +222,10 @@ once it reaches launch parity.)
 - **Pluggable LLM models**: a model-profile registry drives the worker (and
   judge) model from config; **GLM via z.ai** is implemented and validated
   end-to-end through Claude Code's Anthropic-compatible endpoint, with
-  cross-vendor-judge and cost-basis caveats recorded. Kimi/MiniMax/Qwen are
+  cross-vendor-judge and cost-basis caveats recorded. Local Ollama
+  workers use Codex OSS mode, and local Ollama OpenAI-compatible endpoints can
+  drive the blind code-quality judge; see
+  [docs/LOCAL-MODELS.md](docs/LOCAL-MODELS.md). Kimi/MiniMax/Qwen are
   config-only additions on the [roadmap](ROADMAP.md).
 - **OpenSpec-driven development**: every capability is specified before
   implementation under `openspec/` (proposal → design → spec deltas → tasks);

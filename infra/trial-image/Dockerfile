@@ -27,9 +27,10 @@ ARG CLAUDE_CODE_VERSION=2.1.170
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Codex CLI — PINNED. Keep in sync with config/harnesses.yaml (codex driver).
-ARG CODEX_VERSION=0.50.0
+ARG CODEX_VERSION=0.142.0
 RUN npm install -g @openai/codex@${CODEX_VERSION} \
-    && codex --version
+    && codex --version \
+    && codex exec --help | grep -E -- "--oss|--local-provider"
 
 # ZeroClaw (zerocode harness) — PINNED. The release tarball ships the `zeroclaw`
 # (daemon/ACP/CLI) and `zerocode` (TUI) binaries at its root, plus a web bundle.

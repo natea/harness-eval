@@ -4,9 +4,12 @@ import {
 	judgeWorkerRelation,
 	loadModels,
 	ModelError,
+	ModelProfile,
 	priceFromTokens,
 	resolveClaudeCodeEnv,
+	resolveOpenAICompatEnv,
 	resolveProfile,
+	resolveWorkerEnv,
 } from "../src/models";
 
 describe("model registry (add-pluggable-models)", () => {
@@ -52,7 +55,10 @@ describe("model registry (add-pluggable-models)", () => {
 			ZAI_API_KEY: "zai-tok",
 		} as NodeJS.ProcessEnv;
 
-		const native = resolveClaudeCodeEnv(resolveProfile("claude-opus-4-6", reg), lookup);
+		const native = resolveClaudeCodeEnv(
+			resolveProfile("claude-opus-4-6", reg),
+			lookup,
+		);
 		expect(native.env.CLAUDE_CODE_OAUTH_TOKEN).toBe("oauth-tok");
 		expect(native.env.ANTHROPIC_API_KEY).toBe("");
 		expect(native.modelFlag).toBe("claude-opus-4-6");
@@ -73,14 +79,19 @@ describe("model registry (add-pluggable-models)", () => {
 	test("resolveClaudeCodeEnv errors when the auth env var is unset", () => {
 		const reg = loadModels();
 		expect(() =>
-			resolveClaudeCodeEnv(resolveProfile("glm-4.7", reg), {} as NodeJS.ProcessEnv),
+			resolveClaudeCodeEnv(
+				resolveProfile("glm-4.7", reg),
+				{} as NodeJS.ProcessEnv,
+			),
 		).toThrow(/ZAI_API_KEY is not set/);
 	});
 
 	test("priceFromTokens uses profile pricing; null when absent", () => {
 		const reg = loadModels();
 		// none of the shipped profiles declare pricing yet
-		expect(priceFromTokens(resolveProfile("glm-4.7", reg), 1_000_000, 1_000_000)).toBeNull();
+		expect(
+			priceFromTokens(resolveProfile("glm-4.7", reg), 1_000_000, 1_000_000),
+		).toBeNull();
 		// a synthetic priced profile
 		const priced = {
 			...resolveProfile("glm-4.7", reg),
@@ -130,5 +141,149 @@ describe("model registry (add-pluggable-models)", () => {
 		// loadModels validates file profiles; emulate by importing the schema:
 		const { ModelProfile } = require("../src/models");
 		expect(ModelProfile.safeParse(bad).success).toBe(false);
+	});
+
+	test("authKind none parses without authEnv and non-none auth requires authEnv", () => {
+		const local = ModelProfile.parse({
+			name: "local-x",
+			provider: "ollama",
+			modelId: "qwen3-coder",
+			transport: "codex",
+			authKind: "none",
+		});
+		expect(local.authEnv).toBeUndefined();
+
+		const missingKey = ModelProfile.safeParse({
+			name: "needs-key",
+			provider: "openai",
+			modelId: "gpt-5-codex",
+			transport: "codex",
+			authKind: "api-key",
+		});
+		expect(missingKey.success).toBe(false);
+	});
+
+	test("ossProvider is Ollama-only and requires codex transport plus authKind none", () => {
+		const ok = ModelProfile.safeParse({
+			name: "ollama-x",
+			provider: "ollama",
+			modelId: "qwen3-coder",
+			transport: "codex",
+			authKind: "none",
+			ossProvider: "ollama",
+		});
+		expect(ok.success).toBe(true);
+
+		const lmstudio = ModelProfile.safeParse({
+			name: "lmstudio-x",
+			provider: "lmstudio",
+			modelId: "qwen/qwen3.6-35b-a3b",
+			transport: "codex",
+			authKind: "none",
+			ossProvider: "lmstudio",
+		});
+		expect(lmstudio.success).toBe(false);
+
+		const badTransport = ModelProfile.safeParse({
+			name: "bad1",
+			provider: "ollama",
+			modelId: "m",
+			transport: "anthropic-sdk",
+			authKind: "none",
+			ossProvider: "ollama",
+		});
+		expect(badTransport.success).toBe(false);
+
+		const badAuth = ModelProfile.safeParse({
+			name: "bad2",
+			provider: "ollama",
+			modelId: "m",
+			transport: "codex",
+			authKind: "api-key",
+			authEnv: "K",
+			ossProvider: "ollama",
+		});
+		expect(badAuth.success).toBe(false);
+	});
+
+	test("resolveWorkerEnv returns ossProvider and no auth env for a local profile", () => {
+		const p = ModelProfile.parse({
+			name: "ollama-x",
+			provider: "ollama",
+			modelId: "qwen3-coder",
+			transport: "codex",
+			authKind: "none",
+			ossProvider: "ollama",
+		});
+
+		const rw = resolveWorkerEnv(p, {});
+		expect(rw.ossProvider).toBe("ollama");
+		expect(rw.modelFlag).toBe("qwen3-coder");
+		expect(rw.env).toEqual({});
+		expect(rw.note).toContain("ollama");
+	});
+
+	test("openai-compat profiles resolve local baseUrl without auth", () => {
+		const local = ModelProfile.parse({
+			name: "local-judge",
+			provider: "ollama",
+			modelId: "llama3.1",
+			transport: "openai-compat",
+			baseUrl: "http://localhost:11434/v1",
+			authKind: "none",
+		});
+		expect(resolveOpenAICompatEnv(local, {})).toEqual({
+			baseUrl: "http://localhost:11434/v1",
+		});
+	});
+
+	test("openai-compat requires baseUrl and rejects credentialed profiles", () => {
+		expect(
+			ModelProfile.safeParse({
+				name: "bad-openai",
+				provider: "ollama",
+				modelId: "m",
+				transport: "openai-compat",
+				authKind: "none",
+			}).success,
+		).toBe(false);
+
+		expect(
+			ModelProfile.safeParse({
+				name: "bad-openai-auth",
+				provider: "ollama",
+				modelId: "m",
+				transport: "openai-compat",
+				baseUrl: "http://localhost:11434/v1",
+				authEnv: "TOKEN",
+				authKind: "oauth",
+			}).success,
+		).toBe(false);
+
+		expect(
+			ModelProfile.safeParse({
+				name: "bad-openai-remote",
+				provider: "remote-openai-compatible",
+				modelId: "remote-model",
+				transport: "openai-compat",
+				baseUrl: "https://models.example.com/v1",
+				authEnv: "REMOTE_TOKEN",
+				authKind: "api-key",
+			}).success,
+		).toBe(false);
+	});
+
+	test("local openai-compat judge versus cloud worker is cross-vendor", () => {
+		const reg = loadModels();
+		const worker = resolveProfile("claude-opus-4-6", reg);
+		const judge = ModelProfile.parse({
+			name: "local-judge",
+			provider: "ollama",
+			modelId: "llama3.1",
+			transport: "openai-compat",
+			baseUrl: "http://localhost:11434/v1",
+			authKind: "none",
+		});
+		expect(judgeWorkerRelation(worker, judge).crossVendor).toBe(true);
 	});
 });

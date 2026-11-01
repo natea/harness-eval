@@ -298,7 +298,11 @@ export async function judgeQualityCC(
 	const done = new Set(criteria.map((c) => c.criterion));
 	for (const criterion of CRITERIA) {
 		if (done.has(criterion.key)) continue;
-		const runs: { score: number; justification: string }[] = [];
+		const runs: {
+			score: number;
+			justification: string;
+			usedFallback: boolean;
+		}[] = [];
 		let retriesLeft = 2; // parse/transport failures are judge-infra, not artifact signal
 		for (let s = 0; s < samples; s++) {
 			const prompt = `You are a senior engineer reviewing an anonymous codebase implementing a daemon service against the spec at SPEC-REFERENCE.md in this directory.
@@ -339,12 +343,14 @@ Your FINAL message must end with exactly one JSON object on its own line:
 					score: 0,
 					justification:
 						"judge failed to produce a parseable score after retries",
+					usedFallback: false,
 				});
 				continue;
 			}
 			runs.push({
 				score: Math.max(0, Math.min(10, Number(parsed.score))),
 				justification: String(parsed.justification),
+				usedFallback: false,
 			});
 		}
 		const scores = runs.map((r) => r.score);
@@ -352,6 +358,7 @@ Your FINAL message must end with exactly one JSON object on its own line:
 		const scored: CriterionScore = {
 			criterion: criterion.key,
 			samples: scores,
+			sampleDetails: runs,
 			score: med,
 			justification: runs.find((r) => r.score === med)?.justification ?? "",
 		};

@@ -14,7 +14,7 @@ harnesses:
   - id: codex
     name: Codex CLI
     driver: codex
-    defaultVersion: 0.50.0
+    defaultVersion: 0.142.0
     reportsCost: false
 
   # ZeroClaw (zerocode) — Rust agent runtime; driven headlessly per trial via

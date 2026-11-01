@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import { mkdirSync, openSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { SchedulerDeps } from "../orchestrator/scheduler";
+import type { GradeDeps } from "../orchestrator/grade";
 import { createProvider } from "../providers/factory";
 import type { IsolationProviderId } from "../types";
 import {
@@ -133,6 +134,8 @@ export interface LaunchDeps {
 	) => ReturnType<typeof createProvider>;
 	/** Injectable session executor for tests (no real agent); presence ⇒ in-process. */
 	executeScript?: SchedulerDeps["executeScript"];
+	/** Injectable grading deps for tests (no real judge/evaluator calls). */
+	gradeDeps?: Partial<GradeDeps>;
 }
 
 /**
@@ -263,6 +266,7 @@ function runInProcess(
 			abortSignal: abort.signal,
 			executeScript: opts.executeScript,
 			makeProvider: opts.makeProvider,
+			gradeDeps: opts.gradeDeps,
 			onUpdate: (u) => {
 				applyToEntry(entry, u);
 				persist();

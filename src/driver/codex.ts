@@ -1,66 +1,74 @@
 import { type SessionRecord, TokenUsage } from "../types";
 import { SessionParseError } from "./claude";
+import type { PrintCliCommandContext } from "./print-cli";
 import { createPrintCliSessionRunner } from "./print-cli";
 import type { DriverResult, HarnessDriver } from "./types";
 
 /**
  * OpenAI Codex CLI driver. Codex is model-agnostic: the model + provider are
- * configured from the run's worker profile (built-in `openai`/`ollama`/`lmstudio`
- * or a custom `[model_providers.<id>]` block); `codex exec` runs one
+ * configured from the run's worker profile (built-in `openai`/`ollama` or a
+ * custom `[model_providers.<id>]` block); `codex exec` runs one
  * non-interactive turn. Output is the `--json` JSONL event stream, redirected to
  * a file (a started service must not hold the exec stream open) and read back.
  */
-const runCodexExec = createPrintCliSessionRunner({
-	buildCommand: (opts) => {
-		// Resume a prior rollout when continuing (gate continuations). The flag is
-		// `resume <SESSION_ID>`; absent on the first turn.
-		const resume = opts.resumeSessionId
-			? `resume ${JSON.stringify(opts.resumeSessionId)}`
+export function buildCodexCommand(opts: PrintCliCommandContext): string {
+	// Resume a prior rollout when continuing (gate continuations). The flag is
+	// `resume <SESSION_ID>`; absent on the first turn.
+	const resume = opts.resumeSessionId
+		? `resume ${JSON.stringify(opts.resumeSessionId)}`
+		: "";
+	// CODEX_HOME is the trial's own `$HOME/.codex`: per-trial isolated (the
+	// sandbox gives each trial a dedicated HOME) AND the same place a framework
+	// installer writes Codex skills/agents (e.g. GSD `--codex --scope=project`
+	// lands gsd-* skills + agents in `~/.codex`), so `codex exec` actually
+	// discovers them. Non-OSS auth modes, resolved per-run by the CLI via env:
+	//  - $CODEX_OAUTH_HOME set → ChatGPT OAuth: copy that login's auth.json in.
+	//  - else $OPENAI_API_KEY set → `codex login --with-api-key` (a bare key env
+	//    still 401s).
+	//  - else → an ambient sign-in already in the sandbox's CODEX_HOME.
+	// Local OSS providers need no login; the command uses Codex's built-in local
+	// provider defaults.
+	const codexHome = '"$HOME/.codex"';
+	// A ChatGPT account rejects an explicit `--model`; omit it for the account
+	// default (model "default"/empty) and pass it otherwise (API-key path).
+	const modelFlag =
+		opts.model && opts.model !== "default"
+			? `--model ${JSON.stringify(opts.model)}`
 			: "";
-		// CODEX_HOME is the trial's own `$HOME/.codex`: per-trial isolated (the
-		// sandbox gives each trial a dedicated HOME) AND the same place a framework
-		// installer writes Codex skills/agents (e.g. GSD `--codex --scope=project`
-		// lands gsd-* skills + agents in `~/.codex`), so `codex exec` actually
-		// discovers them. Three auth modes, resolved per-run by the CLI via env:
-		//  - $CODEX_OAUTH_HOME set → ChatGPT OAuth: copy that login's auth.json in.
-		//  - else $OPENAI_API_KEY set → `codex login --with-api-key` (a bare key env
-		//    still 401s).
-		//  - else → an ambient sign-in already in the sandbox's CODEX_HOME.
-		// auth.json lands only in the trial's (gitignored, torn-down) HOME, never in
-		// the archived workspace.
-		const codexHome = '"$HOME/.codex"';
-		// A ChatGPT account rejects an explicit `--model`; omit it for the account
-		// default (model "default"/empty) and pass it otherwise (API-key path).
-		const modelFlag =
-			opts.model && opts.model !== "default"
-				? `--model ${JSON.stringify(opts.model)}`
-				: "";
-		// `--skip-git-repo-check` so a non-repo workspace doesn't block; the trial
-		// sandbox is disposable, mirroring claude's --dangerously-skip-permissions.
-		const exec = [
-			"codex exec",
-			resume,
-			modelFlag,
-			"--json",
-			"--dangerously-bypass-approvals-and-sandbox",
-			"--skip-git-repo-check",
-			`- < ${opts.promptFile}`,
-			`> ${opts.outFile} 2>&1`,
-		]
-			.filter(Boolean)
-			.join(" ");
-		// Auth setup, `;`-joined before exec so exec always runs and captures any
-		// auth error in outFile. CODEX_HOME is exported for every mode so a
-		// framework's installed skills (in the same dir) are on codex's path.
-		const auth =
-			`export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; ` +
+	const oss = opts.ossProvider
+		? `--oss --local-provider ${opts.ossProvider}`
+		: "";
+	// `--skip-git-repo-check` so a non-repo workspace doesn't block; the trial
+	// sandbox is disposable, mirroring claude's --dangerously-skip-permissions.
+	const exec = [
+		"codex exec",
+		oss,
+		resume,
+		modelFlag,
+		"--json",
+		"--dangerously-bypass-approvals-and-sandbox",
+		"--skip-git-repo-check",
+		`- < ${opts.promptFile}`,
+		`> ${opts.outFile} 2>&1`,
+	]
+		.filter(Boolean)
+		.join(" ");
+	// Auth setup, `;`-joined before exec so exec always runs and captures any
+	// auth error in outFile. CODEX_HOME is exported for non-OSS modes so a
+	// framework's installed skills (in the same dir) are on codex's path.
+	const auth = opts.ossProvider
+		? ""
+		: `export CODEX_HOME=${codexHome}; mkdir -p ${codexHome}; ` +
 			`if [ -n "$CODEX_OAUTH_HOME" ]; then ` +
 			`cp -f "$CODEX_OAUTH_HOME/auth.json" ${codexHome}/auth.json 2>/dev/null; ` +
 			`elif [ -n "$OPENAI_API_KEY" ]; then ` +
 			`printenv OPENAI_API_KEY | codex login --with-api-key > /dev/null 2>&1 || true; ` +
 			`fi`;
-		return [auth, exec].join("; ");
-	},
+	return [auth, exec].filter(Boolean).join("; ");
+}
+
+const runCodexExec = createPrintCliSessionRunner({
+	buildCommand: buildCodexCommand,
 	parseOutput: parseCodexJsonl,
 });
 
@@ -93,6 +101,7 @@ export function parseCodexJsonl(
 	let cacheReadTokens = 0;
 	let resultText = "";
 	let sawTerminal = false;
+	let sawCompletedItem = false;
 	let streamError = false;
 
 	const lines = output.split("\n").filter((l) => l.trim().startsWith("{"));
@@ -110,10 +119,11 @@ export function parseCodexJsonl(
 			case "turn.started":
 				numTurns++;
 				break;
-			case "item.completed": {
-				const item = (obj.item ?? {}) as Record<string, unknown>;
-				if (item.type === "agent_message" && typeof item.text === "string") {
-					resultText = item.text; // last agent message wins (final answer)
+				case "item.completed": {
+					sawCompletedItem = true;
+					const item = (obj.item ?? {}) as Record<string, unknown>;
+					if (item.type === "agent_message" && typeof item.text === "string") {
+						resultText = item.text; // last agent message wins (final answer)
 				}
 				break;
 			}
@@ -136,14 +146,18 @@ export function parseCodexJsonl(
 					streamError = true;
 				}
 				break;
+			}
 		}
-	}
 
-	if (!sawTerminal && !streamError) {
-		throw new SessionParseError(
-			`no turn.completed/turn.failed in codex output (exit ${exitCode}); last 500 chars: ${output.slice(-500)}`,
-		);
-	}
+		if (!sawTerminal && !streamError && exitCode === 0 && sawCompletedItem) {
+			sawTerminal = true;
+		}
+
+		if (!sawTerminal && !streamError) {
+			throw new SessionParseError(
+				`no terminal/completed item in codex output (exit ${exitCode}); last 500 chars: ${output.slice(-500)}`,
+			);
+		}
 
 	const usage = TokenUsage.parse({
 		inputTokens,

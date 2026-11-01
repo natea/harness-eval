@@ -1,0 +1,329 @@
+{
+  "arm": "collective",
+  "task": "pr1029-issue1005",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "elif \"doc_id\" not in data or not data[\"doc_id\"]:  # keep user defined doc_ids\n      data[\"doc_id\"] = encode_id(uuid4())",
+      "rationale": "quorum: gold=diagnosis reader=symptom auditor=diagnosis",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Can you point out where one DOIs corresponds with two separate PDF papers?",
+      "rationale": "quorum: gold=noise(inconsistent) reader=symptom auditor=noise",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Nevermind to this, I should have read the full issue. I will get back to you on this shortly.",
+      "rationale": "quorum: gold=noise(inconsistent) reader=symptom auditor=noise",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "I guess what we can do is have the `doc_id` be a composite of fields from `paperqa.DocDetails`.",
+      "rationale": "quorum: gold=fix_sketch reader=symptom auditor=fix_sketch",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The one above is main text, below is supp.",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=symptom auditor=symptom",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "return None  #  ADDED BY ME",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=symptom auditor=symptom",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The md5sum of their contents differ a lot.",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=symptom auditor=symptom",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Link to the main text: [Main](https://pubs.acs.org/doi/pdf/10.1021/acscatal.1c04879)",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=symptom auditor=noise",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c8",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "I guess taking into account a content hash if `file_location` is populated is a decent idea",
+      "rationale": "quorum: gold=fix_sketch reader=symptom auditor=fix_sketch",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c9",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it used default settings ( it's Semantic Scholar, crossRef get timed out).",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=symptom auditor=symptom",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c10",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Query is: {'authors': ['Lu, Xiaoyun'], 'title': 'Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase'",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=symptom auditor=symptom",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c11",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "Yeah looks like we need to rely on a content hash, which we actually already have here: https://github.com/Future-House/paper-qa/blob/v5.25.0/paperqa/docs.py#L271",
+      "rationale": "quorum: gold=fix_sketch reader=symptom auditor=fix_sketch",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "fairness": {
+    "verdict": "unsure",
+    "reason": "test_auditor=unsure, gold_comparer=unsure"
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "The cassettes are recorded and replayed. The visible patch only re-records tests/cassettes/test_docs_lifecycle.yaml. The failing test's body isn't visible, so human review should confirm what it asserts. If it relies on cassettes, it should not need live network access.",
+    "advisory": true
+  },
+  "difficulty": "hard",
+  "overBudget": true,
+  "spendUsd": 0.43712070000000003,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727",
+      "round2": "fb47ab7e719421d34270bea50fae1aecc54434329ac91513986ff7ec1e1c1871"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0093607,
+        "inputManifest": [
+          "issue@T*:body+c1",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0105127,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0224847,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0227967,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0098327,
+        "inputManifest": [
+          "issue@T*:body+c1+c2",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "881513a1940cc0993ac738582d84abcb0aabd91fb2f9edb6cf348d4454c7e34f",
+        "costUsd": 0.0204543,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.009134699999999999,
+        "inputManifest": [
+          "issue@T*:body",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0281907,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0282127,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.0658085,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0293947,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "576a327981e6585da3d893eb0417305857f4baa61a1927ce8c6d1e3f8f148a31",
+        "costUsd": 0.0876835,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.030004700000000002,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8+c9",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0312327,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8+c9+c10",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.032016699999999995,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8+c9+c10+c11",
+          "file-list@base"
+        ]
+      }
+    ],
+    "ruleHash": "8a4f912be12874c2119577601c0a887448d6c7131ad8144ed954efe23fc8dd52"
+  }
+}

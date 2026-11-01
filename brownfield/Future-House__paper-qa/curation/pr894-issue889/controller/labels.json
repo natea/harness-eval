@@ -1,0 +1,98 @@
+{
+  "arm": "controller",
+  "task": "pr894-issue889",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Identifies that index_directory default is evaluated at import time via pqa_directory, which is the root cause; consistent with the fix of deferring default evaluation.",
+      "author": "lingyaochu",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Bot suggests setting PQA_HOME before import as workaround; inconsistent with the actual fix, so capped at symptom.",
+      "author": "dosubot",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Only recommends documentation improvements; no information about the fix.",
+      "author": "lingyaochu",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "The issue states the expected behavior (PQA_HOME set after import should be honored); the fix of deferring default evaluation follows naturally. Gold comparer found it fair."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.0227642,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "controller": "d4d73a850ba0d487b9f78d88222cf80d07ded3b170f977bb1b3b1fe4ad277069",
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "controller",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0087222,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.006378199999999999,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0076638,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      }
+    ]
+  },
+  "failed": false
+}

@@ -1,0 +1,36 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "paperqa/settings.py",
+        "paperqa/utils.py",
+        "paperqa/paths.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c1",
+      "files": [
+        "paperqa/settings.py",
+        "paperqa/utils.py",
+        "paperqa/paths.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c2",
+      "files": [
+        "paperqa/settings.py",
+        "paperqa/utils.py",
+        "paperqa/paths.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "src/paperqa/settings.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c1",
+      "files": [
+        "src/paperqa/settings.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

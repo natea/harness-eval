@@ -1,0 +1,88 @@
+{
+  "arm": "controller",
+  "task": "pr1311-issue1310",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Gold comparer shows the body includes the code that converts CMYK to RGB before saving as PNG, consistent with the reference fix.",
+      "author": "menyoung",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "The bot comment suggests converting images in unsupported modes to RGB before saving. This is consistent with the fix, but it is a sketch and not the exact fix.",
+      "author": "dosubot",
+      "role": "bot"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "The issue describes CMYK images failing to save as PNG and suggests converting to RGB, which matches the reference behavior. Tests likely check that CMYK images are handled without error."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.019925199999999997,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "controller": "d4d73a850ba0d487b9f78d88222cf80d07ded3b170f977bb1b3b1fe4ad277069",
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "controller",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0066488,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.006198599999999999,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0070778,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      }
+    ]
+  },
+  "failed": false
+}

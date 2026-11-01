@@ -1,0 +1,334 @@
+{
+  "arm": "collective",
+  "task": "pr1298-issue1273",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']",
+      "rationale": "quorum: gold=symptom reader=diagnosis auditor=symptom",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Are you able to share a PDF DOI or title, or the PDF itself that leads to this error?",
+      "rationale": "quorum: gold=noise reader=abstain auditor=noise",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "PaperQA extracts images from PDFs using PyMuPDF and stores them as raw pixmap bytes... Images extracted via PyPDF are always converted to PNG, so they don't trigger this issue",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=abstain auditor=fix_sketch",
+      "author": "dosubot",
+      "role": "bot"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "this is an example pdf with that warning: https://doi.org/10.1093/sleep/zsae048",
+      "rationale": "quorum: gold=symptom reader=abstain auditor=symptom",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "with `paper-qa[pypdf]==2026.01.05`, the below code works for me, including enrichment",
+      "rationale": "quorum: gold=symptom reader=abstain auditor=noise",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Skipping enrichment for media index 0 on page 1 with metadata {'type': 'picture', 'width': 1477, 'height': 563...",
+      "rationale": "quorum: gold=symptom reader=abstain auditor=symptom",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "pqa ... --parsing.parse_pdf \"paperqa_pypdf.parse_pdf_to_pages\" index pubs",
+      "rationale": "quorum: gold=symptom reader=abstain auditor=symptom",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "evidence": "Apparently in this individual media mode, the image read is not PNG it's something else (possibly JPEG 2000) 4. We are telling OpenAI the image is PNG, but it's some other type",
+      "rationale": "quorum: gold=diagnosis reader=abstain auditor=diagnosis",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c8",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "indeed no pdfplumber.",
+      "rationale": "quorum: gold=symptom reader=abstain auditor=symptom",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c9",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Let's keep this open until I fix this bug with `pdfplumber`",
+      "rationale": "quorum: gold=diagnosis reader=abstain auditor=noise",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c10",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You may want to try deleting the index `abcd_pubs` in `~/.pqa/indexes`",
+      "rationale": "quorum: gold=noise reader=abstain auditor=noise",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c11",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "re index and 0 docs, followed up in #1274",
+      "rationale": "quorum: gold=noise reader=abstain auditor=noise",
+      "author": "satra",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "test_auditor=fair, gold_comparer=fair"
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "The test is local and deterministic and needs no network. It uses PIL, which is presumably installed.",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": true,
+  "spendUsd": 0.5008973999999999,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727",
+      "round2": "fb47ab7e719421d34270bea50fae1aecc54434329ac91513986ff7ec1e1c1871"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0213027,
+        "inputManifest": [
+          "issue@T*:body+c1+c2",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0096067,
+        "inputManifest": [
+          "issue@T*:body",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0214987,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0101127,
+        "inputManifest": [
+          "issue@T*:body+c1",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "881513a1940cc0993ac738582d84abcb0aabd91fb2f9edb6cf348d4454c7e34f",
+        "costUsd": 0.0089403,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0315007,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0234227,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "576a327981e6585da3d893eb0417305857f4baa61a1927ce8c6d1e3f8f148a31",
+        "costUsd": 0.0495235,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0406187,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8+c9",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0388487,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0385847,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.0533165,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0412607,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8+c9+c10",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0410067,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0415767,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3+c4+c5+c6+c7+c8+c9+c10+c11",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0297767,
+        "inputManifest": [
+          "issue@T*:body+c1+c3+c4+c5+c6+c7+c8+c9+c10+c11",
+          "file-list@base"
+        ]
+      }
+    ],
+    "ruleHash": "8a4f912be12874c2119577601c0a887448d6c7131ad8144ed954efe23fc8dd52"
+  }
+}

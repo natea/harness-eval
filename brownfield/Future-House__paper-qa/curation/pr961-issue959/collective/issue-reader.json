@@ -1,0 +1,27 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "paperqa/readers.py",
+        "paperqa/docs.py",
+        "paperqa/utils.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c1",
+      "files": [
+        "paperqa/readers.py",
+        "paperqa/docs.py",
+        "paperqa/utils.py"
+      ],
+      "localizes": false
+    }
+  ],
+  "variants": {
+    "body": false,
+    "body+all": false,
+    "body+human": false
+  }
+}

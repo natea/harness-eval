@@ -1,0 +1,18 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "paperqa/litqa.py",
+        "paperqa/prompts.py",
+        "paperqa/agents/task.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

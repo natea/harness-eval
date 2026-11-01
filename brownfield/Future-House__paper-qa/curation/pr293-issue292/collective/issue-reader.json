@@ -1,0 +1,18 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "paperqa/utils.py",
+        "paperqa/docs.py",
+        "paperqa/llms.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

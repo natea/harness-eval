@@ -1,0 +1,134 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "src/paperqa/core.py",
+        "src/paperqa/types.py",
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c1",
+      "files": [
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+        "src/paperqa/core.py",
+        "src/paperqa/types.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c2",
+      "files": [
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+        "src/paperqa/core.py",
+        "src/paperqa/readers.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c3",
+      "files": [
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+        "src/paperqa/core.py",
+        "src/paperqa/types.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/readers.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c4",
+      "files": [
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "src/paperqa/core.py",
+        "src/paperqa/readers.py",
+        "src/paperqa/types.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c5",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py",
+        "src/paperqa/readers.py",
+        "src/paperqa/core.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c6",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py",
+        "src/paperqa/core.py",
+        "src/paperqa/readers.py",
+        "packages/paper-qa-pymupdf/src/paperqa_pymupdf/reader.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c7",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py",
+        "src/paperqa/types.py",
+        "src/paperqa/readers.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c8",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py",
+        "src/paperqa/types.py",
+        "src/paperqa/readers.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c9",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c10",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py",
+        "src/paperqa/types.py",
+        "src/paperqa/readers.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c11",
+      "files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/utils.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/types.py",
+        "src/paperqa/core.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

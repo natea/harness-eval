@@ -1,0 +1,130 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/clients/__init__.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c1",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c2",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/settings.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c3",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c4",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/clients/client_models.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c5",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c6",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/settings.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c7",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c8",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/clients/client_models.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c9",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/clients/client_models.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c10",
+      "files": [
+        "src/paperqa/types.py",
+        "src/paperqa/docs.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/clients/__init__.py",
+        "src/paperqa/clients/client_models.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c11",
+      "files": [
+        "src/paperqa/docs.py",
+        "src/paperqa/types.py",
+        "src/paperqa/utils.py"
+      ],
+      "localizes": false
+    }
+  ],
+  "variants": {
+    "body": false,
+    "body+all": false,
+    "body+human": false
+  }
+}

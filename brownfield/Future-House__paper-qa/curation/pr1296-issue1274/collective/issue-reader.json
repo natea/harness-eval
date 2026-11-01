@@ -1,0 +1,48 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "src/paperqa/settings.py",
+        "src/paperqa/agents/search.py",
+        "src/paperqa/agents/__init__.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c1",
+      "files": [
+        "src/paperqa/settings.py",
+        "src/paperqa/agents/search.py",
+        "src/paperqa/agents/__init__.py",
+        "src/paperqa/agents/main.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c2",
+      "files": [
+        "src/paperqa/settings.py",
+        "src/paperqa/agents/search.py",
+        "src/paperqa/agents/__init__.py",
+        "src/paperqa/agents/main.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c3",
+      "files": [
+        "src/paperqa/settings.py",
+        "src/paperqa/agents/search.py",
+        "src/paperqa/agents/__init__.py",
+        "src/paperqa/agents/main.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

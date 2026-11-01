@@ -1,0 +1,150 @@
+{
+  "arm": "collective",
+  "task": "pr1255-issue1254",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "evidence_detailed_citations\n  Extra inputs are not permitted [type=extra_forbidden, input_value=True, input_type=bool]",
+      "rationale": "quorum: gold=symptom reader=diagnosis auditor=symptom",
+      "author": "kirillkoncha",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "`evidence_detailed_citations` is a valid field in the current `AnswerSettings` model—so if you see it flagged as \"extra,\" it usually means your code and installed package are out of sync",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=abstain auditor=symptom",
+      "author": "dosubot",
+      "role": "bot"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "test_auditor=unfair, gold_comparer=unfair"
+  },
+  "eligibility": {
+    "excludeTests": [
+      "tests.test_configs::test_readme_settings_cheatsheet_accuracy"
+    ],
+    "appEgressNeeded": false,
+    "note": "The test reads README.md and requires a \"## Settings Cheatsheet\" section with a Markdown table that lists every leaf Settings field. That is documentation structure the issue never mentions. It needs no network access.",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.1929956,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727",
+      "round2": "fb47ab7e719421d34270bea50fae1aecc54434329ac91513986ff7ec1e1c1871"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0092467,
+        "inputManifest": [
+          "issue@T*:body",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "881513a1940cc0993ac738582d84abcb0aabd91fb2f9edb6cf348d4454c7e34f",
+        "costUsd": 0.0129803,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0191547,
+        "inputManifest": [
+          "issue@T*:body+c1",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.0438745,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "576a327981e6585da3d893eb0417305857f4baa61a1927ce8c6d1e3f8f148a31",
+        "costUsd": 0.0248255,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "a443c82eda11ff13fb4acc4e88436d0b2fe3ec5eb4f107c6e8570071417c6f8c",
+        "costUsd": 0.0233238,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation",
+          "record@round1"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "b2b17dc48ab6efe0283ccbffe991e67a9103968e3ca4c06895e9c4024a6d720b",
+        "costUsd": 0.0435252,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "record@round1"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "744496a909c182018a2878ef9b48c66b0ebebc4c2ffa72c351bfde4d4110b737",
+        "costUsd": 0.0160649,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)",
+          "record@round1"
+        ]
+      }
+    ],
+    "ruleHash": "8a4f912be12874c2119577601c0a887448d6c7131ad8144ed954efe23fc8dd52"
+  }
+}

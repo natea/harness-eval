@@ -1,0 +1,42 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "src/paperqa/agents/search.py",
+        "src/paperqa/agents/main.py",
+        "src/paperqa/settings.py",
+        "src/paperqa/agents/tools.py",
+        "src/paperqa/agents/env.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c1",
+      "files": [
+        "src/paperqa/agents/search.py",
+        "src/paperqa/settings.py",
+        "src/paperqa/agents/__init__.py",
+        "src/paperqa/agents/main.py",
+        "src/paperqa/agents/tools.py"
+      ],
+      "localizes": false
+    },
+    {
+      "id": "c2",
+      "files": [
+        "src/paperqa/settings.py",
+        "src/paperqa/utils.py",
+        "src/paperqa/agents/search.py",
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "src/paperqa/readers.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": false,
+    "body+all": true,
+    "body+human": true
+  }
+}

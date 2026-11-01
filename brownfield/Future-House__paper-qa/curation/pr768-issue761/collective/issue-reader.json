@@ -1,0 +1,20 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "paperqa/litqa.py",
+        "paperqa/agents/task.py",
+        "paperqa/agents/env.py",
+        "paperqa/agents/__init__.py",
+        "paperqa/_ldp_shims.py"
+      ],
+      "localizes": false
+    }
+  ],
+  "variants": {
+    "body": false,
+    "body+all": false,
+    "body+human": false
+  }
+}

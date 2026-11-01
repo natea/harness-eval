@@ -1,0 +1,173 @@
+{
+  "arm": "single",
+  "task": "pr1029-issue1005",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "if two papers have the same Doi and the user doesn't set the doc_id, they'll have the same dockey, leading to one paper unable to be found.",
+      "rationale": "It points to the doc_id/dockey derivation in DocDetails (lowercase_doi_and_populate_doc_id), which is the code the fix changes. It gives no remedy.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Can you point out where one DOIs corresponds with two separate PDF papers?",
+      "rationale": "This is a clarifying question with no technical content.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Nevermind to this, I should have read the full issue. I will get back to you on this shortly.",
+      "rationale": "Scheduling comment only.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "I guess what we can do is have the `doc_id` be a composite of fields from `paperqa.DocDetails`.",
+      "rationale": "Proposes a composite doc_id, which the reference implements as DOI plus content hash. The fields are not named, so it is vague.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "{'fb08e04d658a5521': DocDetails(docname='lu2022enzymaticdnasynthesis', dockey='fb08e04d658a5521', ...",
+      "rationale": "This is a data dump showing identical doc_ids.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [
+        "src/paperqa/clients/__init__.py"
+      ],
+      "evidence": "return None  #  ADDED BY ME ... which is nowhere near a good solution.",
+      "rationale": "A workaround that disables metadata lookup. It is not the fix.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "The md5sum of their contents differ a lot.",
+      "rationale": "Observed output with doc_ids differing once metadata is disabled. The remark that the md5sums differ is only a mild hint.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Link to the main text: [Main](https://pubs.acs.org/doi/pdf/10.1021/acscatal.1c04879)",
+      "rationale": "Links to the reproduction files.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c8",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/types.py"
+      ],
+      "evidence": "I guess taking into account a content hash if `file_location` is populated is a decent idea",
+      "rationale": "Suggests using a content hash in the doc identity, which matches the reference. The reference also populates the hash from file_location.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c9",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it used default settings ( it's Semantic Scholar, crossRef get timed out).",
+      "rationale": "Environment details.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c10",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Query is: {'authors': ['Lu, Xiaoyun'], 'title': 'Enzymatic DNA Synthesis by Engineering Terminal Deoxynucleotidyl Transferase', ...",
+      "rationale": "Debug output showing the same query for both papers.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c11",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "Yeah looks like we need to rely on a content hash, which we actually already have here: https://github.com/Future-House/paper-qa/blob/v5.25.0/paperqa/docs.py#L271",
+      "rationale": "States the approach (use the content hash) and points to the md5sum in Docs.aadd, which the reference threads through.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The issue describes only the doc_id/dockey collision for same-DOI papers. The reference fix adds a new public `content_hash` field to Doc/DocDetails, with specific autopopulation and merge semantics and a new doc_id formula. The F2P test `test_pdf_reader_match_doc_details` (the diff is truncated, so I'm inferring) most likely asserts on those new fields or exact values. An agent could fix the collision a different way and still fail. The cassette changes also show the test depends on recorded HTTP interactions."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.137142,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.137142,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

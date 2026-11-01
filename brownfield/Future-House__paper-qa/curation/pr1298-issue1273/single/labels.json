@@ -1,0 +1,165 @@
+{
+  "arm": "single",
+  "task": "pr1298-issue1273",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp']",
+      "rationale": "Error log only; no cause or location.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Are you able to share a PDF DOI or title, or the PDF itself that leads to this error?",
+      "rationale": "Request for reproducer.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "PaperQA extracts images from PDFs using PyMuPDF and stores them as raw pixmap bytes",
+      "rationale": "Wrong path (PyMuPDF); says PyPDF images are already PNG, which is incorrect. Generic PNG conversion idea but targeted at the wrong code.",
+      "author": "dosubot",
+      "role": "bot"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "this is an example pdf with that warning: https://doi.org/10.1093/sleep/zsae048",
+      "rationale": "Reproduction info.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "with `paper-qa[pypdf]==2026.01.05`, the below code works for me, including enrichment",
+      "rationale": "Non-repro attempt.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "here is the code: https://github.com/sensein/paperqa-test/blob/main/index_pdfs.py",
+      "rationale": "Repro and logs.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "pqa --agent.index.name abcd_pubs ... --parsing.parse_pdf \"paperqa_pypdf.parse_pdf_to_pages\" index pubs",
+      "rationale": "Repro with PyPDF parser and logs; mentions unrelated timeouts.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "evidence": "You don't have `pdfplumber` installed, which means `MediaMode.INDIVIDUAL` is being used\n3. Apparently in this individual media mode, the image read is not PNG it's something else (possibly JPEG 2000)",
+      "rationale": "Identifies the root cause: the individual media path in the PyPDF reader emits non-PNG image bytes labelled as PNG.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c8",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "indeed no pdfplumber.",
+      "rationale": "Confirms environment; workaround worked.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c9",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Let's keep this open until I fix this bug with `pdfplumber`",
+      "rationale": "Scheduling.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c10",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You may want to try deleting the index `abcd_pubs`",
+      "rationale": "Unrelated index advice.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c11",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "re index and 0 docs, followed up in #1274",
+      "rationale": "Unrelated.",
+      "author": "satra",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "The test checks that non-PNG images come out as PNG bytes in individual media mode, which follows from the issue and c7. The PNG passthrough case already passes before the fix, so it isn't a fail-to-pass test. The BMP case needs no particular function name or signature, only that the output is valid PNG."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.066318,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.066318,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

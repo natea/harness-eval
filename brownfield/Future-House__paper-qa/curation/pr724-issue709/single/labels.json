@@ -1,0 +1,53 @@
+{
+  "arm": "single",
+  "task": "pr724-issue709",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The LLM evaluation says:\n\n> The single letter answer is B.\n\nWhich gets converted to `\"T\"`, and declares it as `LitQAEvaluation.INCORRECT`.",
+      "rationale": "Describes the observed behavior and example inputs. It does not identify the prompt as the cause or say how to change it. The 'wrong reasons' remark hints at LLM extraction behavior but not at the fix.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "unsure",
+    "reason": "The F2P test (matched-several-options) depends on a recorded cassette made with the exact new prompt text. An agent that words the prompt differently will not match the cassette. The issue also never says that multiple matched options should produce '0' or what the prompt should say, so the test is tied to the exact wording. The expected result (INCORRECT) is the same either way, but the cassette match makes the test brittle."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": true,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.0570393,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.0570393,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "arm": "controller",
+  "task": "pr1260-issue1258",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Explains the root cause (orphaned UTF-16 surrogates from custom-font PDFs) without specifying the fix. Gold comparer and test auditor agree on diagnosis. The reference fix cleans text in readers, so the described crash location differs somewhat.",
+      "author": "hummat",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Suggests encoding with errors=\"replace\" in hexdigest. The reference fix instead adds a clean_invalid_unicode helper applied in the readers, so this suggestion is inconsistent with the actual fix and is capped at symptom.",
+      "author": "dosubot",
+      "role": "bot"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "Hidden tests import REPLACEMENT_CHAR from paperqa.utils and require sanitizing in both pypdf and pymupdf readers (including null bytes becoming replacement chars, changing earlier table-text expectations). The issue only describes the surrogate crash and suggests an errors=\"replace\" encoding in hexdigest, which would not satisfy these tests."
+  },
+  "eligibility": {
+    "excludeTests": [
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_equation_parsing",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_media_deduplication",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing"
+    ],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.0723624,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "controller": "d4d73a850ba0d487b9f78d88222cf80d07ded3b170f977bb1b3b1fe4ad277069",
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "controller",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0057418,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "881513a1940cc0993ac738582d84abcb0aabd91fb2f9edb6cf348d4454c7e34f",
+        "costUsd": 0.0060146,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0072838,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.002389,
+        "inputManifest": [
+          "issue@T*:body",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0028592,
+        "inputManifest": [
+          "issue@T*:body+c1",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 3,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0072918,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "576a327981e6585da3d893eb0417305857f4baa61a1927ce8c6d1e3f8f148a31",
+        "costUsd": 0.0083421,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 4,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.009029800000000001,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.007248500000000001,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 5,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.016161799999999997,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      }
+    ]
+  },
+  "failed": false
+}

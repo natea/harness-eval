@@ -1,0 +1,88 @@
+{
+  "arm": "controller",
+  "task": "pr961-issue959",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Describes read_doc crashing on .DS_Store; reports the failure without pointing to a cause or fix.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Notes that other files such as py.typed and .python-version also fail; this is more symptom and does not reveal the fix.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "fairness": {
+    "verdict": "unsure",
+    "reason": "Issue only reports read_doc crashing on files like .DS_Store; the reference changes chunk_code_text to accept str, type overloads, and files_filter type. Hidden tests likely check that .DS_Store reads without crashing, but the expected behavior is not specified."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.0189055,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "controller": "d4d73a850ba0d487b9f78d88222cf80d07ded3b170f977bb1b3b1fe4ad277069",
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "controller",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0077088,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.0042209,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.0069758,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      }
+    ]
+  },
+  "failed": false
+}

@@ -1,0 +1,3 @@
+{"agent":"controller","round":1,"decision":"tool_call","value":{"called":"issue_reader"},"evidence":""}
+{"agent":"controller","round":1,"decision":"tool_call","value":{"called":"test_auditor"},"evidence":""}
+{"agent":"controller","round":1,"decision":"tool_call","value":{"called":"gold_comparer"},"evidence":""}

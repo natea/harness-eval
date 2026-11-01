@@ -1,0 +1,2 @@
+{"agent":"controller","round":1,"decision":"tool_call","value":{"called":"history_agent"},"evidence":""}
+{"agent":"controller","round":1,"decision":"tool_call","value":{"called":"test_auditor"},"evidence":""}

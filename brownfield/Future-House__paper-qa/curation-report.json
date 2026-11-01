@@ -1,0 +1,281 @@
+{
+  "generatedAt": "2026-11-01T16:41:40.184Z",
+  "freeze": {
+    "frozenAt": "2026-11-01T16:38:56.526Z",
+    "capUsd": 0.234,
+    "quorumRuleHash": "8a4f912be12874c2119577601c0a887448d6c7131ad8144ed954efe23fc8dd52"
+  },
+  "labelers": [
+    "Justin"
+  ],
+  "bundlesLabeled": 14,
+  "bundlesShared": 11,
+  "exclusions": {
+    "single": [],
+    "controller": [],
+    "collective": [
+      "pr1029-issue1005 (over-budget)",
+      "pr1186-issue1165 (over-budget)",
+      "pr1298-issue1273 (over-budget)"
+    ]
+  },
+  "scores": [
+    {
+      "arm": "d9",
+      "bundles": 11,
+      "items": 22,
+      "unlabeled": 0,
+      "accuracy": 0.5454545454545454,
+      "kappa": 0.34911242603550285,
+      "weightedKappa": 0.3265306122448979,
+      "withinOne": 0.7272727272727273,
+      "fairnessAgreement": 0.2727272727272727,
+      "meanSpendUsd": 0.002422,
+      "accuracyPerDollar": 225.2083176938668,
+      "ci": {
+        "accuracy": [
+          0.3076923076923077,
+          0.7727272727272727
+        ],
+        "kappa": [
+          0.052631578947368474,
+          0.5940959409594095
+        ]
+      }
+    },
+    {
+      "arm": "single",
+      "bundles": 11,
+      "items": 22,
+      "unlabeled": 0,
+      "accuracy": 0.5454545454545454,
+      "kappa": 0.341317365269461,
+      "weightedKappa": 0.386617100371747,
+      "withinOne": 0.7727272727272727,
+      "fairnessAgreement": 0.36363636363636365,
+      "meanSpendUsd": 0.04909664545454546,
+      "accuracyPerDollar": 11.109812908898977,
+      "ci": {
+        "accuracy": [
+          0.3076923076923077,
+          0.7727272727272727
+        ],
+        "kappa": [
+          0.052631578947368474,
+          0.5862068965517242
+        ]
+      }
+    },
+    {
+      "arm": "controller",
+      "bundles": 11,
+      "items": 22,
+      "unlabeled": 0,
+      "accuracy": 0.6363636363636364,
+      "kappa": 0.4601226993865031,
+      "weightedKappa": 0.4136460554371001,
+      "withinOne": 0.8181818181818182,
+      "fairnessAgreement": 0.5454545454545454,
+      "meanSpendUsd": 0.03154462727272727,
+      "accuracyPerDollar": 20.17343970692027,
+      "ci": {
+        "accuracy": [
+          0.4444444444444444,
+          0.8333333333333334
+        ],
+        "kappa": [
+          0.2053231939163498,
+          0.680672268907563
+        ]
+      }
+    },
+    {
+      "arm": "collective",
+      "bundles": 11,
+      "items": 22,
+      "unlabeled": 0,
+      "accuracy": 0.5909090909090909,
+      "kappa": 0.39634146341463394,
+      "weightedKappa": 0.31517509727626447,
+      "withinOne": 0.7272727272727273,
+      "fairnessAgreement": 0.45454545454545453,
+      "meanSpendUsd": 0.16977147272727275,
+      "accuracyPerDollar": 3.4806147429630268,
+      "ci": {
+        "accuracy": [
+          0.3684210526315789,
+          0.8181818181818182
+        ],
+        "kappa": [
+          0.1206896551724137,
+          0.6428571428571428
+        ]
+      }
+    }
+  ],
+  "kappaDiffs": {
+    "collective - single": [
+      0.05502409814517295,
+      -0.029969262295082122,
+      0.2012224806620868
+    ],
+    "collective - controller": [
+      -0.06378123597186913,
+      -0.19354838709677413,
+      0.01701707873481717
+    ],
+    "controller - single": [
+      0.11880533411704208,
+      0,
+      0.29866823345084215
+    ]
+  },
+  "secondaryAllBundles": {
+    "scores": [
+      {
+        "arm": "d9",
+        "bundles": 14,
+        "items": 50,
+        "unlabeled": 0,
+        "accuracy": 0.52,
+        "kappa": 0.33774834437086076,
+        "weightedKappa": 0.3999999999999999,
+        "withinOne": 0.8,
+        "fairnessAgreement": 0.2857142857142857,
+        "meanSpendUsd": 0.001903,
+        "accuracyPerDollar": 273.2527588018918,
+        "ci": {
+          "accuracy": [
+            0.37209302325581395,
+            0.6666666666666666
+          ],
+          "kappa": [
+            0.17662682602921664,
+            0.4823434991974319
+          ]
+        }
+      },
+      {
+        "arm": "single",
+        "bundles": 14,
+        "items": 50,
+        "unlabeled": 0,
+        "accuracy": 0.5,
+        "kappa": 0.30594114380899484,
+        "weightedKappa": 0.4070796460176992,
+        "withinOne": 0.82,
+        "fairnessAgreement": 0.35714285714285715,
+        "meanSpendUsd": 0.06011265,
+        "accuracyPerDollar": 8.317716820003776,
+        "ci": {
+          "accuracy": [
+            0.34782608695652173,
+            0.6666666666666666
+          ],
+          "kappa": [
+            0.14698428788646745,
+            0.47390396659707734
+          ]
+        }
+      },
+      {
+        "arm": "controller",
+        "bundles": 14,
+        "items": 50,
+        "unlabeled": 0,
+        "accuracy": 0.54,
+        "kappa": 0.35610302351623735,
+        "weightedKappa": 0.41729323308270694,
+        "withinOne": 0.84,
+        "fairnessAgreement": 0.5714285714285714,
+        "meanSpendUsd": 0.03202265714285714,
+        "accuracyPerDollar": 16.863060351019325,
+        "ci": {
+          "accuracy": [
+            0.43636363636363634,
+            0.6944444444444444
+          ],
+          "kappa": [
+            0.24636275460717738,
+            0.5225334957369061
+          ]
+        }
+      },
+      {
+        "arm": "collective",
+        "bundles": 14,
+        "items": 50,
+        "unlabeled": 0,
+        "accuracy": 0.52,
+        "kappa": 0.3220338983050848,
+        "weightedKappa": 0.35272045028142585,
+        "withinOne": 0.8,
+        "fairnessAgreement": 0.5714285714285714,
+        "meanSpendUsd": 0.22205842857142852,
+        "accuracyPerDollar": 2.3417260193424,
+        "ci": {
+          "accuracy": [
+            0.39344262295081966,
+            0.6857142857142857
+          ],
+          "kappa": [
+            0.1982182628062359,
+            0.5066445182724253
+          ]
+        }
+      }
+    ],
+    "kappaDiffs": {
+      "collective - single": [
+        0.016092754496089934,
+        -0.05280291829600259,
+        0.13860099876264598
+      ],
+      "collective - controller": [
+        -0.03406912521115257,
+        -0.12003129890453845,
+        0.06442717103910767
+      ],
+      "controller - single": [
+        0.05016187970724251,
+        -0.05304836399426072,
+        0.17935026771444773
+      ]
+    }
+  },
+  "multiLabeled": [
+    "pr293-issue292"
+  ],
+  "roles": {
+    "issue_reader": {
+      "n": 29,
+      "accuracy": 0.4482758620689655,
+      "higher": 6,
+      "lower": 10
+    },
+    "gold_comparer_round1": {
+      "n": 50,
+      "accuracy": 0.48,
+      "higher": 13,
+      "lower": 13
+    },
+    "gold_comparer": {
+      "n": 50,
+      "accuracy": 0.48,
+      "higher": 13,
+      "lower": 13
+    },
+    "test_auditor": {
+      "n": 50,
+      "accuracy": 0.52,
+      "higher": 10,
+      "lower": 14
+    }
+  },
+  "variantLocalization": {
+    "body": 8,
+    "body+human": 9,
+    "body+all": 9,
+    "n": 14
+  }
+}

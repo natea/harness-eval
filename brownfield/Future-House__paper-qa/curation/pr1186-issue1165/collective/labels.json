@@ -1,0 +1,203 @@
+{
+  "arm": "collective",
+  "task": "pr1186-issue1165",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "One piece of context maybe counted 2 or even more times.",
+      "rationale": "quorum: gold=symptom(inconsistent) reader=diagnosis auditor=symptom",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Introducing a deduplication step before filtering would likely improve answer quality and prevent redundant citations.",
+      "rationale": "quorum: gold=fix_sketch(inconsistent) reader=abstain auditor=diagnosis",
+      "author": "dosubot",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "I guess we could deduplicate `Context` at add-time here, just to be safe: https://github.com/Future-House/paper-qa/blob/v5.29.1/src/paperqa/docs.py#L680",
+      "rationale": "quorum: gold=fix_sketch reader=abstain auditor=fix_sketch",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it's an issue in my customized version.",
+      "rationale": "quorum: gold=noise(inconsistent) reader=abstain auditor=noise",
+      "author": "lucky0218",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "test_auditor=unfair, gold_comparer=unfair"
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "The new test uses a recorded cassette (OpenAI embeddings), so live network access should not be needed. The test_context_comparison test checks behavior the issue does not describe, which makes the task questionable for this benchmark.",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": true,
+  "spendUsd": 0.30331369999999996,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727",
+      "round2": "fb47ab7e719421d34270bea50fae1aecc54434329ac91513986ff7ec1e1c1871"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0142087,
+        "inputManifest": [
+          "issue@T*:body+c1+c2",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0146307,
+        "inputManifest": [
+          "issue@T*:body+c1+c2+c3",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0129607,
+        "inputManifest": [
+          "issue@T*:body+c1",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0103247,
+        "inputManifest": [
+          "issue@T*:body+c2+c3",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0089247,
+        "inputManifest": [
+          "issue@T*:body",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "881513a1940cc0993ac738582d84abcb0aabd91fb2f9edb6cf348d4454c7e34f",
+        "costUsd": 0.0165843,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "c77682f3e79bf718fa7993e0de45029b14324216ab8863542393a1a7a4f3bdfd",
+        "costUsd": 0.0201865,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "576a327981e6585da3d893eb0417305857f4baa61a1927ce8c6d1e3f8f148a31",
+        "costUsd": 0.0777735,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation"
+        ]
+      },
+      {
+        "agent": "history_agent",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "744496a909c182018a2878ef9b48c66b0ebebc4c2ffa72c351bfde4d4110b737",
+        "costUsd": 0.0188689,
+        "inputManifest": [
+          "issue-title",
+          "git-log@base(touched files)",
+          "record@round1"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "a443c82eda11ff13fb4acc4e88436d0b2fe3ec5eb4f107c6e8570071417c6f8c",
+        "costUsd": 0.08335980000000001,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation",
+          "record@round1"
+        ]
+      },
+      {
+        "agent": "gold_comparer",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "b2b17dc48ab6efe0283ccbffe991e67a9103968e3ca4c06895e9c4024a6d720b",
+        "costUsd": 0.025491200000000002,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "record@round1"
+        ]
+      }
+    ],
+    "ruleHash": "8a4f912be12874c2119577601c0a887448d6c7131ad8144ed954efe23fc8dd52"
+  }
+}

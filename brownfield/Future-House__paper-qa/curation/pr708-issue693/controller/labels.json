@@ -1,0 +1,108 @@
+{
+  "arm": "controller",
+  "task": "pr708-issue693",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "The body describes the observed failure: the LM ignores the supplied answer `14` and answers directly, and the single-letter regex then returns `T`. It doesn't name the fix or point to the code that needs changing. The issue_reader found that the body alone covers only paperqa/litqa.py and misses some of the fix's files. The test_auditor also rated it symptom.",
+      "author": "sidnarayanan",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The tests replay VCR cassettes recorded against the exact prompt text, including \"Question: Q: ...\" and \"Answer: ...\" labels and the option order. The issue mentions none of these. The tests also cover test_consistent_mc_options and a changed from_question signature, which the issue doesn't describe. A correct fix that words the prompt differently would fail to match the cassettes."
+  },
+  "eligibility": {
+    "excludeTests": [
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors0-the answer is 94107-correct-expected_dreturns0]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors1-the answer is 14004-incorrect-expected_dreturns1]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors2-the answer is 94106-incorrect-expected_dreturns2]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors3-Insufficient information-unsure-expected_dreturns3]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is the meaning of life?-42-distractors5-14-incorrect-expected_dreturns5]"
+    ],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.042006800000000004,
+  "capUsd": 0.234,
+  "provenance": {
+    "promptHashes": {
+      "controller": "d4d73a850ba0d487b9f78d88222cf80d07ded3b170f977bb1b3b1fe4ad277069",
+      "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+      "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+      "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+      "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "controller",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.007589700000000001,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "issue_reader",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "93189a11a985d1e36b36c614492b6296979639b9a8c69a2e1c5591236795c5ee",
+        "costUsd": 0.0022755,
+        "inputManifest": [
+          "issue@T*:body",
+          "file-list@base"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 2,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.006531,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      },
+      {
+        "agent": "test_auditor",
+        "round": 1,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "576a327981e6585da3d893eb0417305857f4baa61a1927ce8c6d1e3f8f148a31",
+        "costUsd": 0.010006800000000001,
+        "inputManifest": [
+          "issue@T*",
+          "tests.patch",
+          "validation"
+        ]
+      },
+      {
+        "agent": "controller",
+        "round": 3,
+        "model": "claude-sonnet-5-5",
+        "promptHash": "d1fce7f5dcabee4bb11f2e57e74e4b868be0e4052a988285e82c57e7ef00f473",
+        "costUsd": 0.015603800000000001,
+        "inputManifest": [
+          "item-ids",
+          "tool-results"
+        ]
+      }
+    ]
+  },
+  "failed": false
+}

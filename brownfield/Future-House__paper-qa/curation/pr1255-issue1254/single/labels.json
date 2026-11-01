@@ -1,0 +1,63 @@
+{
+  "arm": "single",
+  "task": "pr1255-issue1254",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "ValidationError: 1 validation error for AnswerSettings\nevidence_detailed_citations\n  Extra inputs are not permitted",
+      "rationale": "Reports the error from using a removed field. It doesn't say the README and docs are stale or that the README cheatsheet needs updating.",
+      "author": "kirillkoncha",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "`evidence_detailed_citations` is a valid field in the current `AnswerSettings` model—so if you see it flagged as \"extra,\" it usually means your code and installed package are out of sync",
+      "rationale": "Wrong guess: the field was removed, so the claim that it is valid is false. It points toward version mismatch and positional-argument misuse, not the README or docs fix.",
+      "author": "dosubot",
+      "role": "bot"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The issue reports a user's error from a stale field in their own config. The hidden test checks that every README cheatsheet row exists in Settings and that every Settings leaf field is documented. Nothing in the issue says the README cheatsheet is out of sync, and the issue never mentions the new fields (agent_evidence_n, rebuild_index, callbacks, batch_size, parsing.citation_prompt, and others). It also never mentions the prompt to prompts rename. An agent can't tell from the issue that a README-sync test will be applied."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.06103,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.06103,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

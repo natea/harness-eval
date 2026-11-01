@@ -1,0 +1,63 @@
+{
+  "arm": "single",
+  "task": "pr961-issue959",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "read_doc(\".DS_Store\", ...)",
+      "rationale": "Only a reproduction showing a crash on .DS_Store; no cause or fix indicated.",
+      "author": "jamesbraza",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "We also choke on `py.typed` and/or `.python-version`",
+      "rationale": "Additional failing inputs only; no mechanism or location given.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The failing test reads tests/stub_data/.DS_Store, a binary file added by the test patch. It also asserts parse_type == \"txt\" and chunk_type == \"overlap_code_by_line\", and the issue doesn't specify either. The issue says only that it crashes and gives no expected behavior. A fix could instead skip these files or raise a clean error, and the test would then fail. The test also calls read_doc without parsed_text_only, which is consistent with the existing defaults."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.0349413,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.0349413,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

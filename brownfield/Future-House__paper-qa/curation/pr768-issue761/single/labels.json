@@ -1,0 +1,60 @@
+{
+  "arm": "single",
+  "task": "pr768-issue761",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/litqa.py",
+        "paperqa/agents/task.py"
+      ],
+      "evidence": "We should simplify the logic to use as much `aviary` code as possible and not overload the StrEnum so much.",
+      "rationale": "Gives the general direction (replace LitQAEvaluation StrEnum with aviary's MultipleChoice code), consistent with the reference. It names no specific API, such as make_discounted_returns, and no function signatures. It does point to the litqa evaluation code and to the referenced PRs.",
+      "author": "whitead",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The FAIL_TO_PASS tests call a new module-level function, `paperqa.litqa.make_discounted_returns(evaluation, num_steps=, discount=)`, using `aviary.utils.MultipleChoiceEvaluation`. The issue doesn't name this function or its signature. It only says to simplify and use aviary. An agent could reasonably implement this differently, for example by keeping the method on the enum or choosing another name or location. The tests therefore check interface details that the issue doesn't specify."
+  },
+  "eligibility": {
+    "excludeTests": [
+      "tests.test_litqa::test_make_discounted_returns[correct-expected_dreturns0]",
+      "tests.test_litqa::test_make_discounted_returns[incorrect-expected_dreturns1]",
+      "tests.test_litqa::test_make_discounted_returns[unsure-expected_dreturns2]"
+    ],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "hard",
+  "overBudget": false,
+  "spendUsd": 0.08811930000000001,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.08811930000000001,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

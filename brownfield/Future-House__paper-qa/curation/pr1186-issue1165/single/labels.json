@@ -1,0 +1,87 @@
+{
+  "arm": "single",
+  "task": "pr1186-issue1165",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "One piece of context maybe counted 2 or even more times. Not sure this is a feature or a bug.",
+      "rationale": "Reports duplicate contexts in aquery's filtering; points at aquery/filtering rather than where the reference fix goes (aget_evidence add-time dedup and Context hashing). Unconfirmed guess.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "Introducing a deduplication step before filtering would likely improve answer quality and prevent redundant citations.",
+      "rationale": "Vaguely suggests deduplicating text contexts; generic, does not name the location or the hash/equality mechanism. Roughly the idea of the fix but low specificity, and it places it before filtering in aquery.",
+      "author": "dosubot",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/docs.py"
+      ],
+      "evidence": "I guess we could deduplicate `Context` at add-time here, just to be safe: https://github.com/Future-House/paper-qa/blob/v5.29.1/src/paperqa/docs.py#L680",
+      "rationale": "Points to the exact line where session.contexts += ... is, and proposes dedup at add time, which is exactly the reference change in docs.py. Does not reveal the __hash__ in types.py.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it's an issue in my customized version.",
+      "rationale": "Author retracts; no technical content on the fix.",
+      "author": "lucky0218",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "unsure",
+    "reason": "The issue was retracted and never specifies behavior. Hidden tests (test_nonduplicate_contexts, test_context_comparison) likely require Context hashability/equality semantics (a __hash__ including extras) and dedup in aget_evidence. The add-time dedup is hinted at, but the hash behavior and the question=None id handling are not described. test_context_comparison probably checks hash details that an implementer could not infer."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.098054,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.098054,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

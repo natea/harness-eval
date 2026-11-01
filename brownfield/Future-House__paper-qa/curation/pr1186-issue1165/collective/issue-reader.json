@@ -1,0 +1,47 @@
+{
+  "prefixes": [
+    {
+      "id": "body",
+      "files": [
+        "src/paperqa/docs.py",
+        "src/paperqa/types.py",
+        "src/paperqa/agents/tools.py",
+        "src/paperqa/core.py",
+        "src/paperqa/settings.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c1",
+      "files": [
+        "src/paperqa/docs.py",
+        "src/paperqa/types.py",
+        "src/paperqa/core.py",
+        "src/paperqa/agents/tools.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c2",
+      "files": [
+        "src/paperqa/docs.py",
+        "src/paperqa/types.py",
+        "src/paperqa/agents/tools.py"
+      ],
+      "localizes": true
+    },
+    {
+      "id": "c3",
+      "files": [
+        "src/paperqa/docs.py",
+        "src/paperqa/types.py"
+      ],
+      "localizes": true
+    }
+  ],
+  "variants": {
+    "body": true,
+    "body+all": true,
+    "body+human": true
+  }
+}

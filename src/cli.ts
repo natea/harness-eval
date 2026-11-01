@@ -42,8 +42,15 @@ import {
 import { join } from "node:path";
 import { parse } from "yaml";
 import { auditFiles } from "./brownfield/audit";
-import { listBundleDirs, loadBundle, readText } from "./brownfield/bundle";
+import { assertClassifierIndependent } from "./brownfield/classify";
+import {
+	listBundleDirs,
+	loadBundle,
+	readSnapshot,
+	readText,
+} from "./brownfield/bundle";
 import { gradeCandidate, writeGrade } from "./brownfield/grade";
+import { judgeCandidate } from "./brownfield/judge";
 import {
 	loadPromptTemplate,
 	PROMPT_TEMPLATE_PATH,
@@ -497,6 +504,12 @@ async function cmdRunBrownfield(): Promise<void> {
 	);
 	const rw = resolveWorkerEnv(workerProfile);
 	const workerModelRef = toModelRef(workerProfile);
+	// Judge-based signal (5.2): opt-in (costs a model call per trial).
+	const judgeProfile = arg("judge")
+		? resolveProfile(arg("judge") as string, models)
+		: null;
+	if (judgeProfile)
+		assertClassifierIndependent(judgeProfile.modelId, workerProfile.modelId);
 
 	const bundles = selectBrownfieldTasks(spec);
 	assertTasksClassifierIndependent(bundles, workerProfile.modelId);
@@ -767,6 +780,37 @@ async function cmdRunBrownfield(): Promise<void> {
 		}
 	}
 
+	// Judge-based secondary signal (5.2): blind to the worker's verdict, run only
+	// where a patch exists and the trial was not disqualified.
+	if (judgeProfile) {
+		for (const trial of trials) {
+			const ref = trial.provenance.brownfield;
+			if (!ref || trial.resolution?.reason === "solution-reach") continue;
+			const bundle = byId.get(ref.taskId);
+			const trialDir = join(runDir, "trials", trial.provenance.trialId);
+			const patchPath = join(trialDir, "candidate.patch");
+			if (!bundle || !existsSync(patchPath)) continue;
+			const snapshot = readSnapshot(bundle.dir);
+			const judge = await judgeCandidate(
+				{
+					issueTitle: snapshot.title,
+					issueBody: snapshot.body,
+					referencePatch: readText(bundle.dir, "reference.patch") ?? "",
+					candidatePatch: readFileSync(patchPath, "utf8"),
+				},
+				{ model: judgeProfile.modelId },
+			);
+			writeFileSync(
+				join(trialDir, "judge.json"),
+				`${JSON.stringify({ ...judge, model: judgeProfile.modelId }, null, 2)}\n`,
+			);
+			trial.judge = { ...judge, model: judgeProfile.modelId };
+			console.log(
+				`judge ${trial.provenance.candidate} ${ref.taskId}: ${judge.quality} (${judge.resolvesIssue ? "resolves" : "does not resolve"})`,
+			);
+		}
+	}
+
 	const results = buildResults({
 		runId,
 		config,
@@ -820,8 +864,7 @@ async function probeGatewaySession(
 		.reverse()
 		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
 	if (code === 0 && line) return { ok: true, reason: "" };
-	const reason =
-		err.trim().split("\n").slice(-2).join(" ") || `exit ${code}`;
+	const reason = err.trim().split("\n").slice(-2).join(" ") || `exit ${code}`;
 	return { ok: false, reason: reason.slice(0, 300) };
 }
 

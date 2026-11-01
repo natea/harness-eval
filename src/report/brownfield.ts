@@ -153,6 +153,23 @@ export function renderBrownfieldReport(results: RunResults): string {
 		lines.push("");
 	}
 
+	const judged = trials.filter((t) => t.judge);
+	if (judged.length) {
+		const models = [...new Set(judged.map((t) => t.judge!.model))].join(", ");
+		lines.push(
+			`## Judge signal (${models}; blind to the hidden tests)`,
+			"",
+			"| Candidate | Task | Quality | Resolves issue | Notes |",
+			"| --- | --- | --- | --- | --- |",
+		);
+		for (const t of judged) {
+			lines.push(
+				`| ${t.provenance.candidate} | ${t.provenance.brownfield!.taskId} | ${t.judge!.quality} | ${t.judge!.resolvesIssue ? "yes" : "no"} | ${t.judge!.notes.replace(/\|/g, "/").slice(0, 120)} |`,
+			);
+		}
+		lines.push("");
+	}
+
 	lines.push(
 		"Human baseline is the recorded human coding + review time for the same task at merge time; it is shown beside the agent, not as a counterfactual.",
 		"",

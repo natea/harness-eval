@@ -46,7 +46,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 ## 5. Grading + audit + reporting
 
 - [x] 5.1 Hidden-test grading: restore test infrastructure (bundle `testPaths`, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; detect `cassette-miss` (vcrpy replay-only exception or offline-proxy `APIConnectionError`/`ProxyError`) → unresolved + flagged
-- [ ] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
+- [x] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
 - [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
 - [ ] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 

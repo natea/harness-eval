@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useState } from "react";
 import type { TrialResult } from "../types";
+import { alignPatches, type FileDiff } from "./brownfield-diff";
 
 function useJson<T>(url: string): T | undefined {
 	const [data, setData] = useState<T>();
@@ -394,6 +395,21 @@ function DiffBlock({ patch, empty }: { patch: string | null; empty: string }) {
 	);
 }
 
+const STATUS_LABEL: Record<FileDiff["status"], string> = {
+	added: "new file",
+	deleted: "deleted",
+	renamed: "renamed",
+	modified: "modified",
+};
+
+function FileHeading({ path, note }: { path: string; note?: string }) {
+	return (
+		<h3 className="mono diff-path">
+			{path} {note && <span className="badge">{note}</span>}
+		</h3>
+	);
+}
+
 /* ------------------------------------------------------------- transcript */
 
 /** Minimal markdown: headings, fenced code, paragraphs. */
@@ -495,6 +511,11 @@ export function BrownfieldTrialView({
 	const task = bf?.task;
 	const q = bf?.quality;
 	const g = bf?.grade;
+	const aligned = alignPatches(
+		bf?.candidatePatch,
+		bf?.referencePatch,
+		bf?.testsPatch,
+	);
 	return (
 		<>
 			<p>
@@ -683,35 +704,61 @@ export function BrownfieldTrialView({
 						</p>
 					)}
 					<div className="cols">
-						<div>
-							<h3>Harness ({t.provenance.candidate})</h3>
-							<DiffBlock
-								patch={bf?.candidatePatch ?? null}
-								empty="empty patch"
-							/>
-						</div>
-						<div>
-							<h3>
-								Original PR{" "}
-								{task && (
-									<a href={task.prUrl} target="_blank" rel="noreferrer">
-										#{task.pr}
-									</a>
-								)}
-							</h3>
-							<DiffBlock
-								patch={bf?.referencePatch ?? null}
-								empty="no reference patch"
-							/>
-							<details>
-								<summary>original PR's tests (hidden from the harness)</summary>
-								<DiffBlock
-									patch={bf?.testsPatch ?? null}
-									empty="no test patch"
-								/>
-							</details>
-						</div>
+						<h3>Harness ({t.provenance.candidate})</h3>
+						<h3>
+							Original PR{" "}
+							{task && (
+								<a href={task.prUrl} target="_blank" rel="noreferrer">
+									#{task.pr}
+								</a>
+							)}
+						</h3>
 					</div>
+					{aligned.rows.length === 0 && (
+						<p className="muted">no reference patch</p>
+					)}
+					{aligned.rows.map((r) => (
+						<div key={r.path}>
+							<FileHeading
+								path={r.path}
+								note={
+									r.hiddenTest
+										? "original's tests, hidden from the harness"
+										: undefined
+								}
+							/>
+							<div className="cols">
+								<div>
+									{r.harness ? (
+										<DiffBlock patch={r.harness.text} empty="empty patch" />
+									) : (
+										<p className="muted">harness didn't change this file</p>
+									)}
+								</div>
+								<div>
+									<DiffBlock patch={r.original.text} empty="empty patch" />
+								</div>
+							</div>
+						</div>
+					))}
+					{aligned.otherOriginalTests.length > 0 && (
+						<details>
+							<summary>
+								other tests from the original PR (hidden from the harness)
+							</summary>
+							{aligned.otherOriginalTests.map((f) => (
+								<div key={f.path}>
+									<FileHeading path={f.path} />
+									<DiffBlock patch={f.text} empty="empty patch" />
+								</div>
+							))}
+						</details>
+					)}
+					<p className="muted">
+						{aligned.harnessOnly.length > 0
+							? `${aligned.harnessOnly.length} more file(s) only the harness changed are at the bottom of this page.`
+							: "The harness changed no files beyond these."}
+					</p>
 
 					<h2>Audit</h2>
 					<p>
@@ -741,6 +788,18 @@ export function BrownfieldTrialView({
 							</li>
 						))}
 					</ul>
+				</>
+			)}
+			{aligned.harnessOnly.length > 0 && (
+				<>
+					<h2>Files only the harness changed</h2>
+					<p className="muted">The original PR did not change these files.</p>
+					{aligned.harnessOnly.map((f) => (
+						<div key={f.path}>
+							<FileHeading path={f.path} note={STATUS_LABEL[f.status]} />
+							<DiffBlock patch={f.text} empty="no text changes" />
+						</div>
+					))}
 				</>
 			)}
 		</>

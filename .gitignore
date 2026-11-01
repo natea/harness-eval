@@ -18,3 +18,4 @@ brownfield/**/validate/*.log
 brownfield/**/validate/*.xml
 brownfield/**/wt/
 brownfield/**/.venv/
+*.mp4

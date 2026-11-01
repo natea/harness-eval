@@ -615,12 +615,21 @@ async function cmdRunBrownfield(): Promise<void> {
 		),
 		budget,
 	});
+	// Frameworks with no entry command of their own get a routing step: consult
+	// the framework's help, pick its command/skill for this task, invoke it
+	// (src/brownfield/router.ts). Skip with --no-routing.
+	const { withRouting, needsRouting } = await import("./brownfield/router");
 	const candidates = resolveCandidates(
 		registry,
 		config.candidates,
 		config.harness,
 		harnesses,
-	);
+	).map((c) => (flag("no-routing") ? c : withRouting(c, config.harness)));
+	for (const c of candidates)
+		if (!flag("no-routing") && c.id !== "bare")
+			console.log(
+				`framework entry: ${c.name}: ${needsRouting(c, config.harness) ? "routed via its help" : "own command"}`,
+			);
 	const harness = resolveHarness(config.harness, harnesses);
 	assertWebToolKillSwitch(config.harness);
 	const models = loadModels();
@@ -881,6 +890,12 @@ async function cmdRunBrownfield(): Promise<void> {
 					);
 			},
 			sessionNetns,
+			verifyHarness: async (sandbox, plan) => {
+				const { verifyHarness } = await import("./brownfield/harness-check");
+				const note = await verifyHarness(sandbox, plan.candidate.id);
+				console.log(`${plan.trialId}: ${note}`);
+				return note;
+			},
 			capturePatch: async (sandbox, trialDir, plan) => {
 				const task = plan.task as NonNullable<typeof plan.task>;
 				writePatchCapture(trialDir, await captureCandidatePatch(sandbox, task));

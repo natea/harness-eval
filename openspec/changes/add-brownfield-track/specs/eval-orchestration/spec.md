@@ -71,6 +71,27 @@ The application's own outbound traffic during a brownfield trial (e.g. calls the
 - **WHEN** a task's `appEgress` allowlist lists `gpt-4o` and `text-embedding-3-small` on the OpenAI endpoint
 - **THEN** the application's calls to those models succeed through the gateway under the task's budget cap and appear in the gateway log, and a call to any other model is rejected
 
+### Requirement: Framework entry routing
+A brownfield candidate whose session starts with only the base prompt SHALL get a routing step first: consult the framework's own help or usage guidance, state which of its commands or skills fits the task, and invoke it. Candidates whose session starts with their own command, and candidates with no framework, SHALL NOT be routed.
+
+#### Scenario: Auto-engaging framework is routed
+- **WHEN** a framework relies on auto-engagement and its session is only the base prompt
+- **THEN** its first prompt begins with the routing step and the base prompt follows unchanged
+
+### Requirement: Routing text is neutral
+The routing text SHALL be identical for every framework apart from its name and SHALL NOT name any command, so the framework's own guidance chooses what fits the task.
+
+#### Scenario: Feature request, not a bug
+- **WHEN** the task is a new feature rather than a bug report
+- **THEN** the routing step does not steer the agent to a debugging command; the framework's guidance picks the command (for example a planning or design skill)
+
+### Requirement: Post-install harness check
+After a candidate's install steps and before the agent starts, the orchestrator SHALL check what the harness can see (installed and enabled plugins, and skills, commands or agents in the user and project configuration) and record it in provenance. A framework candidate with nothing visible SHALL fail the trial without retry and before any model spend.
+
+#### Scenario: Install left nothing visible
+- **WHEN** a framework candidate's install exits successfully but no plugin is enabled and no skills or commands exist
+- **THEN** the trial fails with the check's output before the agent starts
+
 ## MODIFIED Requirements
 
 ### Requirement: Trial isolation

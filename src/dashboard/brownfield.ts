@@ -4,6 +4,7 @@
  * the frozen task bundle; nothing is written.
  */
 
+import { activitySummary, trialActivity } from "../brownfield/activity";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -55,6 +56,14 @@ export function taskMeta(repoDir: string, taskId: string): TaskMeta | null {
 	}
 }
 
+function activityOf(trialDir: string, provenance: any) {
+	const a = trialActivity(
+		trialDir,
+		(provenance.sessionScript ?? []).map((s: { prompt: string }) => s.prompt),
+	);
+	return a ? { ...a, summary: activitySummary(a) } : null;
+}
+
 /** Per-trial summary rows for a brownfield run view. */
 export function brownfieldRunRows(
 	runDir: string,
@@ -94,6 +103,7 @@ export function brownfieldRunRows(
 							f1: s.localization.f1,
 						}
 					: null,
+				activity: activityOf(dir, t.provenance),
 				minutes: t.telemetry ? t.telemetry.agentDurationMs / 60000 : null,
 				costUsd: t.telemetry?.totalCostUsd ?? null,
 				flags: t.provenance.flags ?? [],
@@ -126,6 +136,7 @@ export function brownfieldTrialArtifacts(
 		signals: readJson(join(dir, "signals.json")),
 		audit: readJson(join(dir, "audit.json")),
 		quality: readJson(join(dir, "quality.json")),
+		activity: activityOf(dir, trial.provenance),
 	};
 }
 

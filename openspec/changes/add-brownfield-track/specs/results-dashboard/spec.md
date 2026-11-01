@@ -27,3 +27,11 @@ The results dashboard SHALL offer a light/dark theme toggle consistent with Stud
 #### Scenario: Theme persists
 - **WHEN** an operator switches to the light theme and reloads
 - **THEN** the dashboard renders in the light theme
+
+### Requirement: Harness activity
+Each trial SHALL show whether the framework was actually used: the framework plugins loaded, the framework skills and commands available, framework commands the session ran, framework skills the model invoked, and subagent use, summarised as engaged, not engaged, or no framework. The run view SHALL show this per trial.
+
+#### Scenario: Framework loaded but unused
+- **WHEN** a framework's plugin loaded but the model invoked none of its skills and the session ran none of its commands
+- **THEN** the trial is marked "not engaged", naming what was available
+

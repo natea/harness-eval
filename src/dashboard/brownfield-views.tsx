@@ -70,6 +70,33 @@ interface TaskMeta {
 	humanReviewRounds: number | null;
 	leakBody: string | null;
 }
+interface Activity {
+	summary: string;
+	engaged: boolean;
+	noFramework: boolean;
+	plugins: { name: string; version: string | null }[];
+	available: string[];
+	hookInjected: boolean;
+	skillCalls: string[];
+	commandsInvoked: string[];
+	subagents: number;
+	toolCounts: Record<string, number>;
+}
+
+function ActivityBadge({ a }: { a: Activity | null | undefined }) {
+	if (!a) return <span className="muted">—</span>;
+	if (a.noFramework) return <span className="badge">no framework</span>;
+	return a.engaged ? (
+		<span className="badge ok" title={a.summary}>
+			engaged
+		</span>
+	) : (
+		<span className="badge flag" title={a.summary}>
+			not engaged
+		</span>
+	);
+}
+
 interface Row {
 	trialId: string;
 	candidate: string;
@@ -87,6 +114,7 @@ interface Row {
 		votes: { harness: number; human: number; tie: number };
 	} | null;
 	signals: { candidateLines: number; humanLines: number; f1: number } | null;
+	activity: Activity | null;
 	minutes: number | null;
 	costUsd: number | null;
 	flags: string[];
@@ -130,6 +158,7 @@ interface Artifacts {
 			diffSizeRatio: number;
 		} | null;
 		audit: { verdict: string; findings: unknown[]; attempts: unknown[] } | null;
+		activity: Activity | null;
 		quality: {
 			judgeModel: string;
 			samples: number;
@@ -247,6 +276,7 @@ export function BrownfieldRunView({
 							<th>Candidate</th>
 							<th>Task</th>
 							<th>Verdict</th>
+							<th>Harness used</th>
 							<th>Quality: harness vs original</th>
 							<th>Lines: harness / original</th>
 							<th>File overlap</th>
@@ -272,6 +302,9 @@ export function BrownfieldRunView({
 								<td>
 									{verdictBadge(r.verdict, r.status)}
 									{r.reason && <div className="mono muted">{r.reason}</div>}
+								</td>
+								<td>
+									<ActivityBadge a={r.activity} />
 								</td>
 								<td className="mono">
 									{r.quality ? (
@@ -490,6 +523,40 @@ export function BrownfieldTrialView({
 				<p className="muted">loading…</p>
 			) : (
 				<>
+					<h2>
+						Harness activity: <ActivityBadge a={bf?.activity} />
+					</h2>
+					{bf?.activity ? (
+						<>
+							<p>{bf.activity.summary}</p>
+							{!bf.activity.noFramework && (
+								<p className="mono muted">
+									framework commands run:{" "}
+									{bf.activity.commandsInvoked.map((c) => `/${c}`).join(", ") ||
+										"none"}{" "}
+									· skills invoked:{" "}
+									{bf.activity.skillCalls.join(", ") || "none"} · subagents:{" "}
+									{bf.activity.subagents} · startup hook:{" "}
+									{bf.activity.hookInjected ? "fired" : "no"}
+								</p>
+							)}
+							<details>
+								<summary>
+									{bf.activity.available.length} framework skills/commands
+									available · tool calls{" "}
+									{Object.entries(bf.activity.toolCounts)
+										.map(([k, v]) => `${k} ${v}`)
+										.join(", ")}
+								</summary>
+								<p className="mono muted">
+									{bf.activity.available.join(", ") || "none"}
+								</p>
+							</details>
+						</>
+					) : (
+						<p className="muted">no session log archived</p>
+					)}
+
 					<h2>
 						Hidden tests:{" "}
 						{verdictBadge(g?.verdict ?? null, t.provenance.status)}{" "}

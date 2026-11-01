@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getHarnessDriver, type HarnessDriver } from "../driver";
+import { HarnessCheckError } from "../brownfield/harness-check";
 import { EgressLockError, type TrialEgress } from "../gateway/run";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
@@ -107,6 +108,11 @@ export interface SchedulerDeps {
 	 * task runs on its own prebuilt task image).
 	 */
 	providerFor?: (plan: TrialPlan) => SandboxProvider;
+	/**
+	 * After install, before the agent: confirm the framework is visible to the
+	 * harness; returns a provenance note, throws to fail the trial (no retry).
+	 */
+	verifyHarness?: (sandbox: Sandbox, plan: TrialPlan) => Promise<string>;
 	/** Brownfield: capture the candidate's patch after the session (task 4.7). */
 	capturePatch?: (
 		sandbox: Sandbox,
@@ -345,6 +351,8 @@ export async function runTrial(
 					);
 				}
 			}
+			if (deps.verifyHarness)
+				provenance.notes.push(await deps.verifyHarness(sandbox, plan));
 			const setupDurationMs = Date.now() - setupStart;
 
 			const script = renderSessionScript(
@@ -446,6 +454,7 @@ export async function runTrial(
 			// error: retrying can't fix it.
 			if (
 				!(err instanceof EgressLockError) &&
+				!(err instanceof HarnessCheckError) &&
 				isInfraFailure(err) &&
 				attempt < config.infraRetryLimit
 			) {

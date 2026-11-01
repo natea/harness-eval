@@ -43,12 +43,17 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 - [x] 4.8 Trial isolation (all trials, MODIFIED requirement): fresh home/config per trial with no operator MCP servers, plugins/skills, memory, or global instructions; test on the worktree provider
 - [ ] 4.9 Application egress: empty `appEgress` default (recorded fixtures only); per-task allowlist of provider endpoints and models (paper-qa: `gpt-4o`, `text-embedding-3-*`) forwarded through the gateway with a separate budget-capped credential and logging
 
+- [x] 4.10 Framework entry routing for auto-engaging frameworks (help-first step, identical across frameworks, names no command; skipped for own-command frameworks and `bare`; `--no-routing`) (`src/brownfield/router.ts`). Motivation 2026-11-01: superpowers on pr293 loaded 15 skills and its startup hook fired, but the model invoked none and wrote no tests
+- [x] 4.11 Post-install harness check: plugins + skills/commands visible to Claude Code recorded in provenance; framework candidates with nothing visible fail before spend (`src/brownfield/harness-check.ts`)
+
 ## 5. Grading + audit + reporting
 
 - [x] 5.1 Hidden-test grading: restore test infrastructure (bundle `testPaths`, `conftest.py`, pytest config) to base and flag `test-infra-modified`; apply tests.patch over candidate tree, run offline suite, resolution verdict; detect `cassette-miss` (vcrpy replay-only exception or offline-proxy `APIConnectionError`/`ProxyError`) → unresolved + flagged
 - [x] 5.2 Secondary signals: judge (issue + reference + candidate), localization P/R, diff-size ratio
 - [x] 5.5 Code-quality comparison vs the merged PR: blind A/B, position-balanced samples, per-criterion medians for both sides, majority preference; `brownfield quality <run-dir> --judge <profile>` and automatic with `run --brownfield --judge` (`src/brownfield/quality.ts`). First result (pr293, Opus 4.6 judge, 3 samples, $0.29): harness 83 vs original PR 73, harness preferred 3/0
 - [x] 5.6 Dashboard: brownfield run and trial views (task links, verdict, quality comparison, diffs side by side, hidden tests, audit, transcript) and a light/dark toggle (results-dashboard)
+- [x] 5.7 Harness activity per trial from the session log (plugins, available skills/commands, commands run, skills invoked, subagents → engaged / not engaged / no framework) in the report and dashboard (`src/brownfield/activity.ts`)
+- [ ] 5.8 Audit framework engagement for every candidate (gsd, compound-engineering, agent-skills, gstack, ruflo, superpowers): does each engage when invoked as configured, or does the model fall back to plain Claude Code?
 - [x] 5.3 Solution-reach audit over redacted transcripts → `disqualified:solution-reach`
 - [x] 5.4 Report: resolution by candidate, stratified by body leak level; paired variant comparison on tasks where variants differ; contamination flags per worker model; agent minutes and USD per resolved task beside the human baseline (no counterfactual merge-time claims); rejection counts by reason; resolution also shown excluding `cassette-miss` trials (eval-reporting)
 

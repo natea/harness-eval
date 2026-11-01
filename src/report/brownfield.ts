@@ -5,6 +5,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { activitySummary, trialActivity } from "../brownfield/activity";
 import { loadBundle } from "../brownfield/bundle";
 import {
 	originalPrWording,
@@ -56,13 +57,22 @@ export function writeBrownfieldReport(
 		if (existsSync(q))
 			quality.set(t.provenance.trialId, JSON.parse(readFileSync(q, "utf8")));
 	}
-	writeFileSync(path, renderBrownfieldReport(results, quality));
+	const activity = new Map<string, string>();
+	for (const t of results.trials) {
+		const a = trialActivity(
+			join(runDir, "trials", t.provenance.trialId),
+			t.provenance.sessionScript.map((x) => x.prompt),
+		);
+		if (a) activity.set(t.provenance.trialId, activitySummary(a));
+	}
+	writeFileSync(path, renderBrownfieldReport(results, quality, activity));
 	return path;
 }
 
 export function renderBrownfieldReport(
 	results: RunResults,
 	quality: Map<string, QualityComparison> = new Map(),
+	activity: Map<string, string> = new Map(),
 ): string {
 	const all = results.trials.filter((t) => t.provenance.brownfield);
 	// Trials that never got a fair attempt (harness missing, sandbox failure) are
@@ -209,6 +219,23 @@ export function renderBrownfieldReport(
 				`| ${t.provenance.candidate} | ${t.provenance.brownfield!.taskId} | ${t.judge!.quality} | ${t.judge!.resolvesIssue ? "yes" : "no"} | ${t.judge!.notes.replace(/\|/g, "/").slice(0, 120)} |`,
 			);
 		}
+		lines.push("");
+	}
+
+	const active = all.filter((t) => activity.has(t.provenance.trialId));
+	if (active.length) {
+		lines.push(
+			"## Harness activity",
+			"",
+			"Did the trial actually use the framework, or fall back to plain Claude Code? Read from the session log: framework skills the model invoked and framework commands the session ran.",
+			"",
+			"| Candidate | Task | Activity |",
+			"| --- | --- | --- |",
+		);
+		for (const t of active)
+			lines.push(
+				`| ${t.provenance.candidate} | ${t.provenance.brownfield!.taskId} | ${activity.get(t.provenance.trialId)!.replace(/\|/g, "/")} |`,
+			);
 		lines.push("");
 	}
 

@@ -1,5 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import {
+	ALL_APPS,
+	type AppRef,
+	appHasNoScores,
+	appOptions,
+	effectiveApp,
+	matchesApp,
+	NO_SCORES_MESSAGE,
+	useAppParam,
+} from "../app-filter";
 import { composite } from "../grading/scoring";
 import type { CandidateScore, TrialResult, Weights } from "../types";
 import {
@@ -33,6 +43,7 @@ interface RunSummary {
 		testPlanSha256: string | null;
 		candidates?: string[];
 		brownfieldTasks?: string[];
+		target?: AppRef | null;
 	};
 }
 
@@ -176,11 +187,19 @@ function Leaderboard() {
 	const runs = useFetch<RunSummary[]>("/api/runs");
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
+	const [rawApp, setApp] = useAppParam();
 	if (!runs) return <p className="muted">loading…</p>;
+
+	const options = appOptions(runs.map((r) => r.summary?.target));
+	const app = effectiveApp(rawApp, options);
+	const listed = runs.filter((r) => matchesApp(r.summary?.target, app));
+	const noScores = appHasNoScores(runs, app);
 
 	const supported = runs.filter((r) => r.supported && r.summary);
 	const active = supported.filter(
-		(r) => selected.size === 0 || selected.has(r.runId),
+		(r) =>
+			matchesApp(r.summary?.target, app) &&
+			(selected.size === 0 || selected.has(r.runId)),
 	);
 
 	// Aggregate: mean of per-run (re-weighted) composites per candidate/harness/model (design D3).
@@ -231,7 +250,28 @@ function Leaderboard() {
 	return (
 		<>
 			<h1>🏆 Coding-harness leaderboard</h1>
-			<WeightControls weights={weights} onChange={setWeights} />
+			<p>
+				<label>
+					App:{" "}
+					<select
+						className="app-select"
+						value={app}
+						onChange={(e) => setApp(e.currentTarget.value)}
+					>
+						<option value={ALL_APPS}>All</option>
+						{options.map((o) => (
+							<option key={o.value} value={o.value}>
+								{o.label}
+							</option>
+						))}
+					</select>
+				</label>{" "}
+				<span className="muted">
+					{listed.length} run{listed.length === 1 ? "" : "s"}
+				</span>
+			</p>
+			{!noScores && <WeightControls weights={weights} onChange={setWeights} />}
+			{noScores && <p className="muted">{NO_SCORES_MESSAGE}</p>}
 			{mixedSets && (
 				<p>
 					<span className="badge warn">
@@ -240,52 +280,56 @@ function Leaderboard() {
 					</span>
 				</p>
 			)}
-			<table>
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Candidate</th>
-						<th>Harness / model</th>
-						<Th label="Composite" />
-						{Object.values(DIM_LABELS).map((l) => (
-							<Th key={l} label={l} />
-						))}
-						<Th label="Trials" />
-						<th>Flags</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map((r, i) => (
-						<tr key={r.candidate}>
-							<td>{i + 1}</td>
-							<td>
-								<strong>{r.candidate}</strong>
-							</td>
-							<td className="muted mono">
-								{r.harness} / {r.model}
-							</td>
-							<td>
-								<Bar v={r.composite} />
-							</td>
-							{(Object.keys(DIM_LABELS) as (keyof Weights)[]).map((k) => (
-								<td key={k}>
-									<Bar v={r.dims[k]} />
-								</td>
+			{!noScores && (
+				<>
+					<table>
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Candidate</th>
+								<th>Harness / model</th>
+								<Th label="Composite" />
+								{Object.values(DIM_LABELS).map((l) => (
+									<Th key={l} label={l} />
+								))}
+								<Th label="Trials" />
+								<th>Flags</th>
+							</tr>
+						</thead>
+						<tbody>
+							{rows.map((r, i) => (
+								<tr key={`${r.candidate}|${r.harness}|${r.model}`}>
+									<td>{i + 1}</td>
+									<td>
+										<strong>{r.candidate}</strong>
+									</td>
+									<td className="muted mono">
+										{r.harness} / {r.model}
+									</td>
+									<td>
+										<Bar v={r.composite} />
+									</td>
+									{(Object.keys(DIM_LABELS) as (keyof Weights)[]).map((k) => (
+										<td key={k}>
+											<Bar v={r.dims[k]} />
+										</td>
+									))}
+									<td>{r.trials}</td>
+									<td>
+										{r.censored && (
+											<span className="badge flag">right-censored</span>
+										)}
+									</td>
+								</tr>
 							))}
-							<td>{r.trials}</td>
-							<td>
-								{r.censored && (
-									<span className="badge flag">right-censored</span>
-								)}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-			<p className="muted">
-				* speed and token spend are min-max normalized within each run's
-				candidate set.
-			</p>
+						</tbody>
+					</table>
+					<p className="muted">
+						* speed and token spend are min-max normalized within each run's
+						candidate set.
+					</p>
+				</>
+			)}
 
 			<h2>Runs</h2>
 			<table>
@@ -293,13 +337,14 @@ function Leaderboard() {
 					<tr>
 						<th />
 						<th>Run</th>
+						<th>App</th>
 						<th>Provider</th>
 						<th>Candidates</th>
 						<th>Status</th>
 					</tr>
 				</thead>
 				<tbody>
-					{runs.map((r) => (
+					{listed.map((r) => (
 						<tr key={r.runId}>
 							<td>
 								{r.supported && (
@@ -332,6 +377,7 @@ function Leaderboard() {
 									</span>
 								)}
 							</td>
+							<td className="muted">{r.summary?.target?.title ?? "—"}</td>
 							<td className="muted">{r.summary?.config.provider ?? "—"}</td>
 							<td className="muted">
 								{r.summary

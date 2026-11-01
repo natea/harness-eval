@@ -9,7 +9,7 @@
  *   bun run studio            # http://127.0.0.1:4871 (localhost-only)
  *   bun run studio --port N
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildBrackets } from "../bracket/bracket";
 import {
@@ -26,6 +26,7 @@ import {
 	trialInventory,
 } from "../preview/studio";
 import { buildInverseScaling } from "../report/inverse-scaling";
+import { runApp, targetBySha } from "../run-app";
 import { loadTarget } from "../targets";
 import index from "./index.html";
 import { cancelRun, getQueue, launchRun, regradeRun } from "./launcher";
@@ -56,46 +57,6 @@ interface RunTarget {
 	title: string;
 	/** Step id → description + concrete check (drill-down tooltips). */
 	steps: Record<string, string>;
-}
-
-/** PRD content hash → { name, title } for every target, built once. Lets any
- *  run be labelled with the app it built by matching its prdSha256 — the run
- *  itself doesn't record the target name. */
-let targetByShaCache: Map<string, { name: string; title: string }> | null =
-	null;
-function targetBySha(): Map<string, { name: string; title: string }> {
-	if (targetByShaCache) return targetByShaCache;
-	const m = new Map<string, { name: string; title: string }>();
-	for (const dir of readdirSync("targets")) {
-		if (!existsSync(join("targets", dir, "target.yaml"))) continue;
-		try {
-			const t = loadTarget(dir);
-			const title = t.prdContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? dir;
-			m.set(t.prdSha256, { name: dir, title });
-		} catch {
-			// skip unloadable target
-		}
-	}
-	targetByShaCache = m;
-	return m;
-}
-
-/** A brownfield run's "app": the repo it replayed, and its tasks. */
-function brownfieldTarget(
-	trials: {
-		provenance: { brownfield?: { repoDir: string; taskId: string } };
-	}[],
-): { name: string; title: string } | null {
-	const refs = trials.flatMap((t) =>
-		t.provenance.brownfield ? [t.provenance.brownfield] : [],
-	);
-	if (!refs.length) return null;
-	const repos = [...new Set(refs.map((r) => r.repoDir.replace("__", "/")))];
-	const tasks = [...new Set(refs.map((r) => r.taskId))];
-	return {
-		name: repos.join(", "),
-		title: `Brownfield: ${tasks.length > 2 ? `${tasks.length} tasks` : tasks.join(", ")}`,
-	};
 }
 
 /** Full target detail (incl. per-step checks) for a run, by prdSha256 match. */
@@ -324,9 +285,7 @@ const server = Bun.serve({
 								prdSha256: e.results.prdSha256,
 								// Which app/PRD this run built (resolved by content hash) so
 								// the runs listing isn't ambiguous about the target.
-								target:
-									targetBySha().get(e.results.prdSha256) ??
-									brownfieldTarget(e.results.trials),
+								target: runApp(e.results),
 								// Brownfield runs have no PRD scores; list who ran from the trials.
 								candidates: [
 									...new Set(

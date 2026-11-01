@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { runApp } from "../run-app";
 import { loadTarget } from "../targets";
 import {
 	brownfieldRunRows,
@@ -68,6 +69,7 @@ const server = Bun.serve({
 								startedAt: e.results.startedAt,
 								prdSha256: e.results.prdSha256,
 								testPlanSha256: e.results.testPlanSha256,
+								target: runApp(e.results),
 								// Brownfield runs have no PRD scores; list who ran from the trials.
 								candidates: [
 									...new Set(

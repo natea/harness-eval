@@ -1,7 +1,24 @@
 import { useState } from "react";
+import {
+	ALL_APPS,
+	appHasNoScores,
+	appOptions,
+	effectiveApp,
+	matchesApp,
+	NO_SCORES_MESSAGE,
+	useAppParam,
+	withAppParam,
+} from "../../app-filter";
 import type { CandidateScore, Weights } from "../../types";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "../components/ui/select";
 import {
 	Table,
 	TableBody,
@@ -33,11 +50,19 @@ export function Leaderboard() {
 	const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+	const [rawApp, setApp] = useAppParam();
 	if (!runs) return <p className="text-muted-foreground">loading…</p>;
+
+	const options = appOptions(runs.map((r) => r.summary?.target));
+	const app = effectiveApp(rawApp, options);
+	const listed = runs.filter((r) => matchesApp(r.summary?.target, app));
+	const noScores = appHasNoScores(runs, app);
 
 	const supported = runs.filter((r) => r.supported && r.summary);
 	const active = supported.filter(
-		(r) => selected.size === 0 || selected.has(r.runId),
+		(r) =>
+			matchesApp(r.summary?.target, app) &&
+			(selected.size === 0 || selected.has(r.runId)),
 	);
 
 	// Aggregate mean of per-run re-weighted composites per candidate/harness/model.
@@ -87,7 +112,7 @@ export function Leaderboard() {
 
 	// Runs table: newest-first (sortable), only a preview here — the full,
 	// filterable list lives on the Runs screen.
-	const sortedRuns = [...runs].sort((a, b) => {
+	const sortedRuns = [...listed].sort((a, b) => {
 		const av = runTs(a.runId) ?? -Infinity;
 		const bv = runTs(b.runId) ?? -Infinity;
 		return sortDir === "desc" ? bv - av : av - bv;
@@ -99,7 +124,31 @@ export function Leaderboard() {
 			<h1 className="text-xl font-bold tracking-tight">
 				🏆 Coding-harness leaderboard
 			</h1>
-			<WeightControls weights={weights} onChange={setWeights} />
+			<div className="mt-3 flex items-center gap-2 text-[13px]">
+				<span className="text-muted-foreground">App:</span>
+				<Select value={app} onValueChange={setApp}>
+					<SelectTrigger className="w-[300px]">
+						<SelectValue placeholder="All" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value={ALL_APPS}>All</SelectItem>
+						{options.map((o) => (
+							<SelectItem key={o.value} value={o.value}>
+								{o.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				<span className="text-muted-foreground">
+					{listed.length} run{listed.length === 1 ? "" : "s"}
+				</span>
+			</div>
+			{!noScores && <WeightControls weights={weights} onChange={setWeights} />}
+			{noScores && (
+				<p className="mb-2 text-[13px] text-muted-foreground">
+					{NO_SCORES_MESSAGE}
+				</p>
+			)}
 			{mixedSets && (
 				<p className="mb-2">
 					<Badge variant="warn">
@@ -109,56 +158,64 @@ export function Leaderboard() {
 				</p>
 			)}
 
-			<Card>
-				<CardContent className="px-2 pb-2 pt-2">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead className="w-8">#</TableHead>
-								<TableHead>Candidate</TableHead>
-								<TableHead>Harness / model</TableHead>
-								<ColHead label="Composite" />
-								{Object.values(DIM_LABELS).map((l) => (
-									<ColHead key={l} label={l} />
-								))}
-								<ColHead label="Trials" />
-								<TableHead>Flags</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{rows.map((r, i) => (
-								<TableRow key={`${r.candidate}|${r.harness}|${r.model}`}>
-									<TableCell className="text-muted-foreground">
-										{i + 1}
-									</TableCell>
-									<TableCell className="font-semibold">{r.candidate}</TableCell>
-									<TableCell className="font-mono text-[12px] text-muted-foreground">
-										{r.harness} / {r.model}
-									</TableCell>
-									<TableCell>
-										<Bar v={r.composite} />
-									</TableCell>
-									{DIM_KEYS.map((k) => (
-										<TableCell key={k}>
-											<Bar v={r.dims[k]} />
-										</TableCell>
+			{!noScores && (
+				<>
+					<Card>
+						<CardContent className="px-2 pb-2 pt-2">
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead className="w-8">#</TableHead>
+										<TableHead>Candidate</TableHead>
+										<TableHead>Harness / model</TableHead>
+										<ColHead label="Composite" />
+										{Object.values(DIM_LABELS).map((l) => (
+											<ColHead key={l} label={l} />
+										))}
+										<ColHead label="Trials" />
+										<TableHead>Flags</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{rows.map((r, i) => (
+										<TableRow key={`${r.candidate}|${r.harness}|${r.model}`}>
+											<TableCell className="text-muted-foreground">
+												{i + 1}
+											</TableCell>
+											<TableCell className="font-semibold">
+												{r.candidate}
+											</TableCell>
+											<TableCell className="font-mono text-[12px] text-muted-foreground">
+												{r.harness} / {r.model}
+											</TableCell>
+											<TableCell>
+												<Bar v={r.composite} />
+											</TableCell>
+											{DIM_KEYS.map((k) => (
+												<TableCell key={k}>
+													<Bar v={r.dims[k]} />
+												</TableCell>
+											))}
+											<TableCell className="font-mono text-[12px]">
+												{r.trials}
+											</TableCell>
+											<TableCell>
+												{r.censored && (
+													<Badge variant="warn">right-censored</Badge>
+												)}
+											</TableCell>
+										</TableRow>
 									))}
-									<TableCell className="font-mono text-[12px]">
-										{r.trials}
-									</TableCell>
-									<TableCell>
-										{r.censored && <Badge variant="warn">right-censored</Badge>}
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</CardContent>
-			</Card>
-			<p className="mt-2 text-[12px] text-muted-foreground">
-				* speed and token spend are min-max normalized within each run's
-				candidate set.
-			</p>
+								</TableBody>
+							</Table>
+						</CardContent>
+					</Card>
+					<p className="mt-2 text-[12px] text-muted-foreground">
+						* speed and token spend are min-max normalized within each run's
+						candidate set.
+					</p>
+				</>
+			)}
 
 			<h2 className="mt-7 text-base font-semibold">Runs</h2>
 			<Card className="mt-2">
@@ -267,10 +324,13 @@ export function Leaderboard() {
 					</Table>
 				</CardContent>
 			</Card>
-			{runs.length > RUNS_PREVIEW && (
+			{listed.length > RUNS_PREVIEW && (
 				<p className="mt-2 text-[13px]">
-					<a href="/runs" className="text-primary-hover hover:underline">
-						More… ({runs.length} runs total) →
+					<a
+						href={`/runs${withAppParam("", app)}`}
+						className="text-primary-hover hover:underline"
+					>
+						More… ({listed.length} runs total) →
 					</a>
 				</p>
 			)}

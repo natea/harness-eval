@@ -23,7 +23,7 @@ Studio's `/api/runs` resolves each run's app on the server: PRD targets by match
 
 **Filter composes with run checkboxes.** Leaderboard scores use runs that are both in the selected app and checked. Each page keeps its existing checkbox behaviour. Alternative considered: resetting checkboxes on app change, rejected because switching back would lose the operator's selection.
 
-**URL state.** Use an `?app=` query parameter with `history.replaceState`, read on load. It's independent per page; a link between pages doesn't carry it. Carrying it through navigation is a possible follow-up.
+**URL state.** Use an `?app=` query parameter with `history.replaceState`, read on load. It's independent per page: the main navigation doesn't carry it, though the leaderboard's "More…" link to the Runs page does, since it continues the same filtered list. Carrying it through the main navigation is a possible follow-up.
 
 **Unidentified runs.** Runs with no resolvable app (PRD re-frozen since the run, unsupported results) appear only under "All", matching the current Runs page. Labels never say "Unknown app" as an option, because there's nothing useful to compare within it.
 

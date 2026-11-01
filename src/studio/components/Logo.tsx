@@ -9,7 +9,7 @@ export function Logo() {
 		<a
 			href="/"
 			aria-label="CodingHarness — home"
-			className="mr-2 flex items-center gap-2 no-underline"
+			className="flex items-center gap-2 no-underline"
 		>
 			<svg
 				width="22"

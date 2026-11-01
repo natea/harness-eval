@@ -7,7 +7,9 @@
  */
 import { useState } from "react";
 import { Badge } from "../components/ui/badge";
+import { Card } from "../components/ui/card";
 import { useFetch } from "../lib/api";
+import { PageHeader } from "./shared";
 
 type Metric = "goals" | "quality";
 interface Breakdown {
@@ -339,7 +341,7 @@ function BracketSvg({ bracket }: { bracket: Bracket }) {
 					y={ROW_H / 2 + 4}
 					className="fill-foreground text-[12px] font-bold"
 				>
-					🏆 {bracket.champion ?? "—"}
+					Champion: {bracket.champion ?? "—"}
 				</text>
 			</g>
 		</svg>
@@ -352,15 +354,24 @@ export function BracketView() {
 	const data = useFetch<Bracket[]>("/api/bracket");
 	const [group, setGroup] = useState<string | null>(null);
 	const [metric, setMetric] = useState<Metric>("quality");
-	if (!data) return <p className="text-muted-foreground">loading…</p>;
+	if (!data)
+		return (
+			<p className="text-[13px] text-muted-foreground">Loading brackets…</p>
+		);
 	if (!data.length)
 		return (
 			<>
-				<h1 className="text-xl font-bold tracking-tight">🏆 Bracket bakeoff</h1>
-				<p className="mt-2 text-[13px] text-muted-foreground">
-					No bracketable target yet — a bracket needs ≥4 candidates graded on
-					the same target, harness, and model.
-				</p>
+				<PageHeader
+					title="Tournament"
+					description="Knockout brackets played from existing graded trials."
+				/>
+				<Card className="grid place-items-center gap-2 px-6 py-16 text-center">
+					<h2 className="m-0 text-[15px] font-semibold">No bracket yet</h2>
+					<p className="m-0 max-w-[52ch] text-[13.5px] text-muted-foreground">
+						A bracket needs at least four frameworks graded on the same target,
+						harness and model, including the no-framework baseline.
+					</p>
+				</Card>
 			</>
 		);
 	// unique groups in input order
@@ -377,20 +388,22 @@ export function BracketView() {
 
 	return (
 		<>
-			<h1 className="text-xl font-bold tracking-tight">🏆 Bracket bakeoff</h1>
-			<p className="mt-1 max-w-3xl text-[13px] text-muted-foreground">
+			<PageHeader
+				title="Tournament"
+				description="Knockout brackets played from existing graded trials. Every framework first has to beat the no-framework baseline."
+			/>
+			<p className="m-0 max-w-[80ch] text-[13px] text-muted-foreground">
 				Single-elimination gauntlet. <strong>Round 1</strong>: every framework
 				faces the <strong>no-framework baseline</strong> (bare) — beat it to
-				advance; losing to bare is an{" "}
-				<span className="text-warn">upset</span> that knocks the framework out.
-				The survivors play each other to a champion. Score by{" "}
-				<strong>goals</strong> (each
-				passed PRD step +1, fail −1, partial its credit) or by{" "}
-				<strong>code quality</strong> (blind-judge points) — higher advances,
-				ties broken by the other metric → efficiency → seed. Hover a scoreline
-				for the breakdown; the <span className="font-mono">N.Na</span> is the
-				absolute adherence. <span className="text-warn">Retrospective</span>:
-				matches are played from existing graded trials.
+				advance; losing to bare is an <span className="text-warn">upset</span>{" "}
+				that knocks the framework out. The survivors play each other to a
+				champion. Score by <strong>goals</strong> (each passed PRD step +1, fail
+				−1, partial its credit) or by <strong>code quality</strong> (blind-judge
+				points) — higher advances, ties broken by the other metric, then
+				efficiency, then seed. Hover a scoreline for the breakdown; the{" "}
+				<span className="font-mono">N.Na</span> is the absolute adherence.{" "}
+				<span className="text-warn">Retrospective</span>: matches are played
+				from existing graded trials.
 			</p>
 
 			<div className="mt-3 flex flex-wrap items-center gap-3">

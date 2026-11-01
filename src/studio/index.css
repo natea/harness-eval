@@ -1,74 +1,86 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
- * Theme tokens (studio-theming). Two palettes consumed by shadcn/ui via CSS
- * variables: light under :root, dark under .dark. The active palette is chosen
- * by toggling the `dark` class on <html> (see frontend.tsx + the pre-paint init
- * in index.html). `color-scheme` follows so native controls/scrollbars match.
- * GitHub-Primer-derived; success/warn/danger keep contrast on both backgrounds.
+ * Theme tokens (studio-theming). Light under :root, dark under .dark; the active
+ * palette is chosen by toggling `dark` on <html> (frontend.tsx + the pre-paint
+ * init in index.html). shadcn/ui components consume these variables.
+ *
+ * Canon eval-dashboard palette: cool neutrals that differ by lightness, one blue
+ * accent for data marks / primary action / focus, and semantic outcome colours
+ * (success / warn / danger) used only for pass / partial / fail and run state.
  * ------------------------------------------------------------------------- */
 :root {
 	color-scheme: light;
 	--background: #ffffff;
-	--foreground: #1f2328;
-	--card: #f6f8fa;
-	--card-foreground: #1f2328;
+	--foreground: #111318;
+	--sidebar: #f8f9fa;
+	--card: #ffffff;
+	--card-foreground: #111318;
 	--popover: #ffffff;
-	--popover-foreground: #1f2328;
-	--primary: #0969da;
+	--popover-foreground: #111318;
+	--primary: #2f6fed;
 	--primary-foreground: #ffffff;
-	--primary-hover: #0550ae;
-	--secondary: #eaeef2;
-	--secondary-foreground: #1f2328;
-	--muted: #f6f8fa;
-	--muted-foreground: #636c76;
-	--accent: #eaeef2;
-	--accent-foreground: #1f2328;
-	--destructive: #ffebe9;
-	--destructive-foreground: #cf222e;
-	--border: #d0d7de;
-	--input: #d0d7de;
-	--ring: #0969da;
+	--primary-hover: #1f58cc;
+	--primary-soft: #e8effd;
+	--secondary: #f2f3f5;
+	--secondary-foreground: #111318;
+	--muted: #f6f7f9;
+	--muted-foreground: #5f6672;
+	--accent: #f2f3f5;
+	--accent-foreground: #111318;
+	--destructive: #fdecec;
+	--destructive-foreground: #c4291f;
+	--border: #e7e9ed;
+	--input: #d9dce2;
+	--ring: #2f6fed;
 	--radius: 0.5rem;
-	/* semantic status — dark text on a tinted bg for light mode */
-	--success: #1a7f37;
-	--success-bg: #dafbe1;
-	--warn: #9a6700;
-	--warn-bg: #fff8c5;
-	--danger: #cf222e;
-	--danger-bg: #ffebe9;
+	--success: #15803d;
+	--success-bg: #e8f6ed;
+	--success-mark: #22a55b;
+	--warn: #a15c07;
+	--warn-bg: #fdf5e6;
+	--warn-mark: #e0a00f;
+	--danger: #c4291f;
+	--danger-bg: #fdecec;
+	--danger-mark: #e5484d;
+	--span-setup: #b7bdc7;
 }
 
 .dark {
 	color-scheme: dark;
-	--background: #0d1117;
-	--foreground: #e6edf3;
-	--card: #161b22;
-	--card-foreground: #e6edf3;
-	--popover: #1c2128;
-	--popover-foreground: #e6edf3;
-	--primary: #2f81f7;
-	--primary-foreground: #ffffff;
-	--primary-hover: #539bf7;
-	--secondary: #21262d;
-	--secondary-foreground: #e6edf3;
-	--muted: #161b22;
-	--muted-foreground: #8b949e;
-	--accent: #1c2128;
-	--accent-foreground: #e6edf3;
-	--destructive: #4a1d1d;
-	--destructive-foreground: #ff9b9b;
-	--border: #21262d;
-	--input: #30363d;
-	--ring: #2f81f7;
+	--background: #0b0c0e;
+	--foreground: #ececee;
+	--sidebar: #0f1013;
+	--card: #111317;
+	--card-foreground: #ececee;
+	--popover: #17191e;
+	--popover-foreground: #ececee;
+	--primary: #5b8def;
+	--primary-foreground: #0b0c0e;
+	--primary-hover: #7fa6f3;
+	--primary-soft: #18233a;
+	--secondary: #1a1c21;
+	--secondary-foreground: #ececee;
+	--muted: #15171b;
+	--muted-foreground: #8e949e;
+	--accent: #1a1c21;
+	--accent-foreground: #ececee;
+	--destructive: #3a1717;
+	--destructive-foreground: #ff9b94;
+	--border: #23262c;
+	--input: #2e3138;
+	--ring: #5b8def;
 	--radius: 0.5rem;
-	/* semantic status — bright text on a deep bg for dark mode */
-	--success: #9bffb0;
-	--success-bg: #1d4a2a;
-	--warn: #f0c674;
-	--warn-bg: #5a3e00;
-	--danger: #ff9b9b;
-	--danger-bg: #4a1d1d;
+	--success: #6fdc97;
+	--success-bg: #13281b;
+	--success-mark: #3fbf6e;
+	--warn: #f3c164;
+	--warn-bg: #2d2210;
+	--warn-mark: #e0a00f;
+	--danger: #ff9b94;
+	--danger-bg: #3a1717;
+	--danger-mark: #ef5b55;
+	--span-setup: #4a4f58;
 }
 
 /* Expose the CSS variables as Tailwind v4 theme tokens so utilities like
@@ -76,6 +88,7 @@
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
+	--color-sidebar: var(--sidebar);
 	--color-card: var(--card);
 	--color-card-foreground: var(--card-foreground);
 	--color-popover: var(--popover);
@@ -83,6 +96,7 @@
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--primary-foreground);
 	--color-primary-hover: var(--primary-hover);
+	--color-primary-soft: var(--primary-soft);
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
@@ -96,20 +110,29 @@
 	--color-ring: var(--ring);
 	--color-success: var(--success);
 	--color-success-bg: var(--success-bg);
+	--color-success-mark: var(--success-mark);
 	--color-warn: var(--warn);
 	--color-warn-bg: var(--warn-bg);
+	--color-warn-mark: var(--warn-mark);
 	--color-danger: var(--danger);
 	--color-danger-bg: var(--danger-bg);
+	--color-danger-mark: var(--danger-mark);
+	--color-span-setup: var(--span-setup);
 	--radius-sm: calc(var(--radius) - 2px);
 	--radius-md: var(--radius);
 	--radius-lg: calc(var(--radius) + 4px);
-	--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-	--font-mono: ui-mono, ui-monospace, SFMono-Regular, Menlo, monospace;
+	--font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+		sans-serif;
+	--font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @layer base {
 	* {
 		border-color: var(--border);
+	}
+	html,
+	body {
+		height: 100%;
 	}
 	body {
 		background-color: var(--background);
@@ -118,5 +141,39 @@
 		font-size: 14px;
 		line-height: 1.5;
 		margin: 0;
+		-webkit-font-smoothing: antialiased;
+	}
+	::selection {
+		background: var(--primary-soft);
+		color: var(--foreground);
+	}
+	:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.font-mono,
+	code,
+	pre,
+	td {
+		font-variant-numeric: tabular-nums;
+	}
+	h1,
+	h2,
+	h3 {
+		text-wrap: balance;
+	}
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: var(--input) transparent;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			/* biome-ignore lint/complexity/noImportantStyles: reduced motion must override utility animations */
+			animation-duration: 0.01ms !important;
+			/* biome-ignore lint/complexity/noImportantStyles: reduced motion must override utility transitions */
+			transition-duration: 0.01ms !important;
+		}
 	}
 }

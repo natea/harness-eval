@@ -1,3 +1,9 @@
+import {
+	ArrowDownRight,
+	ArrowUpRight,
+	ChevronRight,
+	Minus,
+} from "lucide-react";
 import { Fragment, useState } from "react";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
@@ -10,6 +16,7 @@ import {
 	TableRow,
 } from "../components/ui/table";
 import { useFetch } from "../lib/api";
+import { PageHeader } from "./shared";
 
 // Type-only mirror of src/report/inverse-scaling.ts — NOT imported (that module
 // pulls in node:fs and must not enter the browser bundle).
@@ -67,10 +74,13 @@ function Delta({ v }: { v: number | null }) {
 		: v > 0
 			? "text-success"
 			: "text-danger";
-	const arrow = flat ? "→" : v > 0 ? "▲" : "▼";
+	const Icon = flat ? Minus : v > 0 ? ArrowUpRight : ArrowDownRight;
 	return (
-		<span className={`font-mono text-base font-bold tabular-nums ${cls}`}>
-			{arrow} {v > 0 ? "+" : ""}
+		<span
+			className={`inline-flex items-center gap-0.5 font-mono text-[13.5px] font-semibold tabular-nums ${cls}`}
+		>
+			<Icon aria-hidden="true" className="size-3.5" />
+			{v > 0 ? "+" : ""}
 			{f1(v)}
 		</span>
 	);
@@ -90,7 +100,7 @@ function Move({
 		<div className="flex items-center gap-2 whitespace-nowrap">
 			<span className="font-mono text-[13px] text-muted-foreground tabular-nums">
 				{base == null ? "—" : f1(base)}
-				<span className="mx-1 opacity-50">→</span>
+				<span className="mx-1 opacity-50">to</span>
 				<span className="text-foreground">{fwk == null ? "—" : f1(fwk)}</span>
 			</span>
 			<Delta v={delta} />
@@ -148,7 +158,7 @@ function TrialList({
 }) {
 	return (
 		<div className="min-w-[16rem]">
-			<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+			<div className="mb-1 text-[12px] font-medium text-muted-foreground">
 				{heading}
 			</div>
 			{trials.length === 0 ? (
@@ -212,114 +222,138 @@ export function InverseScaling() {
 
 	return (
 		<>
-			<h1 className="text-xl font-bold tracking-tight">
-				📉 Inverse-scaling — marginal harness gain
-			</h1>
-			<p className="mt-1 max-w-3xl text-[13px] text-muted-foreground">
-				For each target × model, every framework is compared against the{" "}
-				<span className="font-semibold">no-framework baseline</span> on the same
-				harness. The numbers are the absolute graded scores; the bold colored
-				delta is what a framework adds (or removes) over running bare — on
-				adherence (does it meet the spec) and code quality.
-				Composite/speed/spend are deliberately excluded (not comparable across
-				runs).
-			</p>
+			<PageHeader
+				title="Trends"
+				description={
+					<>
+						What each framework adds over running the same harness and model
+						with no framework, on absolute adherence and code quality.
+						Composite, speed and spend are left out because they do not compare
+						across runs.
+					</>
+				}
+			/>
 
-			<div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 				<FitBadge fit={data.fits?.adherenceAll ?? null} axis="Adherence axis" />
 				<FitBadge fit={data.fits?.qualityAll ?? null} axis="Quality axis" />
 			</div>
 
-			<Card className="mt-3">
-				<CardContent className="px-2 pb-2 pt-2">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Target</TableHead>
-								<TableHead>Framework</TableHead>
-								<TableHead>Model</TableHead>
-								<TableHead>Adherence (bare → framework)</TableHead>
-								<TableHead>Code quality (bare → framework)</TableHead>
-								<TableHead>n</TableHead>
-								<TableHead>Flags</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{rows.map((r) => {
-								const key = `${r.target}|${r.harness}|${r.model}|${r.framework}`;
-								const isOpen = expanded.has(key);
-								return (
-								<Fragment key={key}>
-								<TableRow
-									onClick={() => toggle(key)}
-									className="cursor-pointer"
-									aria-expanded={isOpen}
-									title="Click to see the trials behind this cell"
-								>
-									<TableCell className="font-mono text-[12px]">
-										<span className="mr-1 inline-block w-3 text-muted-foreground">
-											{isOpen ? "▾" : "▸"}
-										</span>
-										{r.target}
-									</TableCell>
-									<TableCell className="font-semibold">{r.framework}</TableCell>
-									<TableCell className="font-mono text-[12px] text-muted-foreground">
-										{r.model}
-									</TableCell>
-									<TableCell>
-										<Move base={r.baselineAdh} fwk={r.adhF} delta={r.adhGain} />
-									</TableCell>
-									<TableCell>
-										<Move base={r.qualB} fwk={r.qualF} delta={r.qualGain} />
-									</TableCell>
-									<TableCell
-										className="font-mono text-[12px] text-muted-foreground"
-										title={
-											r.runIds?.length
-												? `assembled from ${r.runIds.length} run(s):\n${r.runIds.join("\n")}`
-												: undefined
-										}
-									>
-										{r.nF} / {r.nB}
-										{(r.runIds?.length ?? 0) > 1 && (
-											<span className="ml-1 opacity-60" aria-hidden>
-												⊕
-											</span>
-										)}
-									</TableCell>
-									<TableCell>
-										{r.flags?.length ? (
-											<Badge variant="warn">{r.flags.join(" ")}</Badge>
-										) : (
-											<span className="text-muted-foreground">—</span>
-										)}
-									</TableCell>
+			{rows.length === 0 ? (
+				<Card className="mt-6 grid place-items-center gap-2 px-6 py-16 text-center">
+					<h2 className="m-0 text-[15px] font-semibold">
+						No baseline pairs yet
+					</h2>
+					<p className="m-0 max-w-[56ch] text-[13.5px] text-muted-foreground">
+						A trend row needs a framework and the no-framework baseline graded
+						on the same target, harness and model. Add the{" "}
+						<span className="font-mono text-[12.5px]">bare</span> candidate to a
+						run to start one.
+					</p>
+				</Card>
+			) : (
+				<Card className="mt-6 overflow-hidden">
+					<CardContent className="p-0">
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Target</TableHead>
+									<TableHead>Framework</TableHead>
+									<TableHead>Model</TableHead>
+									<TableHead>Adherence, bare to framework</TableHead>
+									<TableHead>Code quality, bare to framework</TableHead>
+									<TableHead>n</TableHead>
+									<TableHead>Flags</TableHead>
 								</TableRow>
-								{isOpen && (
-									<TableRow className="hover:bg-transparent">
-										<TableCell colSpan={7} className="bg-secondary/40">
-											<div className="flex flex-wrap gap-8 px-2 py-2">
-												<TrialList
-													heading={`Framework — ${r.framework}`}
-													trials={r.frameworkTrials ?? []}
-												/>
-												<TrialList
-													heading={`Baseline — ${r.baselineCandidate}`}
-													trials={r.baselineTrials ?? []}
-												/>
-											</div>
-										</TableCell>
-									</TableRow>
-								)}
-								</Fragment>
-								);
-							})}
-						</TableBody>
-					</Table>
-				</CardContent>
-			</Card>
+							</TableHeader>
+							<TableBody>
+								{rows.map((r) => {
+									const key = `${r.target}|${r.harness}|${r.model}|${r.framework}`;
+									const isOpen = expanded.has(key);
+									return (
+										<Fragment key={key}>
+											<TableRow
+												onClick={() => toggle(key)}
+												className="cursor-pointer"
+												aria-expanded={isOpen}
+												title="Click to see the trials behind this cell"
+											>
+												<TableCell className="font-mono text-[12px]">
+													<ChevronRight
+														aria-hidden="true"
+														className={`mr-1 inline size-3.5 align-[-2px] text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`}
+													/>
+													{r.target}
+												</TableCell>
+												<TableCell className="font-semibold">
+													{r.framework}
+												</TableCell>
+												<TableCell className="font-mono text-[12px] text-muted-foreground">
+													{r.model}
+												</TableCell>
+												<TableCell>
+													<Move
+														base={r.baselineAdh}
+														fwk={r.adhF}
+														delta={r.adhGain}
+													/>
+												</TableCell>
+												<TableCell>
+													<Move
+														base={r.qualB}
+														fwk={r.qualF}
+														delta={r.qualGain}
+													/>
+												</TableCell>
+												<TableCell
+													className="font-mono text-[12px] text-muted-foreground"
+													title={
+														r.runIds?.length
+															? `assembled from ${r.runIds.length} run(s):\n${r.runIds.join("\n")}`
+															: undefined
+													}
+												>
+													{r.nF} / {r.nB}
+													{(r.runIds?.length ?? 0) > 1 && (
+														<span className="ml-1 opacity-60" aria-hidden>
+															⊕
+														</span>
+													)}
+												</TableCell>
+												<TableCell>
+													{r.flags?.length ? (
+														<Badge variant="warn">{r.flags.join(" ")}</Badge>
+													) : (
+														<span className="text-muted-foreground">—</span>
+													)}
+												</TableCell>
+											</TableRow>
+											{isOpen && (
+												<TableRow className="hover:bg-transparent">
+													<TableCell colSpan={7} className="bg-secondary/40">
+														<div className="flex flex-wrap gap-8 px-2 py-2">
+															<TrialList
+																heading={`Framework — ${r.framework}`}
+																trials={r.frameworkTrials ?? []}
+															/>
+															<TrialList
+																heading={`Baseline — ${r.baselineCandidate}`}
+																trials={r.baselineTrials ?? []}
+															/>
+														</div>
+													</TableCell>
+												</TableRow>
+											)}
+										</Fragment>
+									);
+								})}
+							</TableBody>
+						</Table>
+					</CardContent>
+				</Card>
+			)}
 
-			<p className="mt-2 text-[12px] text-muted-foreground">
+			<p className="mt-3 text-[12px] text-muted-foreground">
 				{rows.length} complete cell(s) across {data.runsScanned ?? 0} runs · n
 				shown as framework/baseline trials · ⊕ = assembled across multiple runs
 				(hover for which) · <span className="text-warn">warn</span> flags mark

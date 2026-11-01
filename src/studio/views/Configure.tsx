@@ -1,14 +1,17 @@
+import { Check, Copy, Play } from "lucide-react";
+import type * as React from "react";
 import { useEffect, useState } from "react";
 import type { Weights } from "../../types";
-import { Badge } from "../components/ui/badge";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "../components/ui/card";
+import { Card } from "../components/ui/card";
 import { DEFAULT_WEIGHTS, useFetch } from "../lib/api";
-import { WeightControls } from "./shared";
+import { cn } from "../lib/utils";
+import {
+	btn,
+	Callout,
+	PageHeader,
+	SectionTitle,
+	WeightControls,
+} from "./shared";
 
 interface TargetOption {
 	name: string;
@@ -44,7 +47,32 @@ interface Validation {
 }
 
 const selectCls =
-	"rounded-md border border-input bg-card px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+	"h-8 w-full rounded-md border border-border bg-background px-2.5 text-[13px] text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+/** Labelled form field with optional hint line. */
+function Field({
+	id,
+	label,
+	hint,
+	children,
+}: {
+	id?: string;
+	label: string;
+	hint?: React.ReactNode;
+	children: React.ReactNode;
+}) {
+	return (
+		<div className="grid gap-1.5">
+			<label htmlFor={id} className="text-[13px] font-medium">
+				{label}
+			</label>
+			{children}
+			{hint && (
+				<p className="m-0 text-[12.5px] text-muted-foreground">{hint}</p>
+			)}
+		</div>
+	);
+}
 
 export function Configure() {
 	const opts = useFetch<Options>("/api/options");
@@ -154,287 +182,347 @@ export function Configure() {
 		grade,
 	]);
 
-	if (!opts) return <p className="text-muted-foreground">loading…</p>;
+	if (!opts)
+		return (
+			<p className="text-[13px] text-muted-foreground">Loading options…</p>
+		);
 
 	const toggleCandidate = (id: string) =>
 		setCandidates((cs) =>
 			cs.includes(id) ? cs.filter((x) => x !== id) : [...cs, id],
 		);
+	const meta = opts.targetCatalog?.find((c) => c.name === target);
+	const runnable = !!vr?.command && !(vr.errors && vr.errors.length > 0);
 
 	return (
 		<>
-			<h1 className="text-xl font-bold tracking-tight">Configure a run</h1>
-			<p className="mt-1 text-[13px] text-muted-foreground">
-				Build a valid run from the live registries, then launch a real run, a
-				zero-spend dry run, or copy the equivalent CLI command.
-			</p>
+			<PageHeader
+				title="New run"
+				description="Choose what varies. Everything else is held fixed, and the spec and test plan are hash-frozen when the run starts."
+			/>
 
-			<div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-				<Card>
-					<CardHeader className="pb-1">
-						<CardTitle className="text-[13px]">Target & axes</CardTitle>
-					</CardHeader>
-					<CardContent className="grid grid-cols-[7rem_1fr] items-center gap-x-3 gap-y-2.5">
-						<label htmlFor="target" className="text-[13px]">
-							Eval target
-						</label>
-						<select
+			<div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+				<div className="grid min-w-0 grid-cols-1 content-start gap-6">
+					<Card className="grid gap-5 p-5">
+						<SectionTitle className="mb-0">Target</SectionTitle>
+						<Field
 							id="target"
-							className={selectCls}
-							value={target}
-							onChange={(e) => setTarget(e.target.value)}
-						>
-							{opts.targets.map((t) => (
-								<option key={t} value={t}>
-									{t}
-								</option>
-							))}
-						</select>
-
-						{(() => {
-							const meta = opts.targetCatalog?.find((c) => c.name === target);
-							if (!meta) return null;
-							return (
-								<>
-									<span />
-									<p className="text-[12px] text-muted-foreground">
+							label="Spec to build"
+							hint={
+								meta ? (
+									<>
 										{meta.summary}{" "}
-										<span className="text-muted-foreground/70">
-											[{meta.shape}, ui:{meta.expectedUI}]
+										<span className="font-mono text-[11.5px]">
+											{meta.shape} · ui: {meta.expectedUI}
 										</span>
-									</p>
-								</>
-							);
-						})()}
-
-						<label htmlFor="harness" className="text-[13px]">
-							Harness
-						</label>
-						<select
-							id="harness"
-							className={selectCls}
-							value={harness}
-							onChange={(e) => setHarness(e.target.value)}
+									</>
+								) : undefined
+							}
 						>
-							{opts.harnesses.map((h) => (
-								<option key={h} value={h}>
-									{h}
-								</option>
-							))}
-						</select>
-
-						<label htmlFor="model" className="text-[13px]">
-							Worker model
-						</label>
-						<select
-							id="model"
-							className={selectCls}
-							value={workerModel}
-							onChange={(e) => setWorkerModel(e.target.value)}
-						>
-							{opts.models.map((m) => (
-								<option key={m.name} value={m.name}>
-									{m.name} ({m.provider})
-								</option>
-							))}
-						</select>
-
-						<label htmlFor="judge" className="text-[13px]">
-							Grader model
-						</label>
-						<span className="flex flex-wrap items-center gap-2">
 							<select
-								id="judge"
+								id="target"
 								className={selectCls}
-								value={judgeModel}
-								onChange={(e) => setJudgeModel(e.target.value)}
+								value={target}
+								onChange={(e) => setTarget(e.target.value)}
 							>
-								{opts.models.map((m) => (
-									<option key={m.name} value={m.name}>
-										{m.name} ({m.provider})
+								{opts.targets.map((t) => (
+									<option key={t} value={t}>
+										{t}
 									</option>
 								))}
 							</select>
-							{judgeModel === workerModel && (
-								<span className="text-[12px] text-warn">
-									judge must differ from worker (no self-grading)
-								</span>
-							)}
-						</span>
+						</Field>
+					</Card>
 
-						<label htmlFor="provider" className="text-[13px]">
-							Provider
-						</label>
-						<select
-							id="provider"
-							className={selectCls}
-							value={provider}
-							onChange={(e) => setProvider(e.target.value)}
-						>
-							{opts.providers.map((p) => {
-								const st = opts.providerStatus?.find((s) => s.id === p);
-								const unconfigured = st ? !st.configured : false;
+					<Card className="overflow-hidden">
+						<div className="px-5 pt-4">
+							<SectionTitle
+								aside={`${candidates.length} selected · identical prompt for each`}
+							>
+								Frameworks
+							</SectionTitle>
+						</div>
+						<div className="grid border-t border-border sm:grid-cols-2">
+							{opts.candidates.map((c) => {
+								const supported = c.harnesses.includes(harness);
+								const on = candidates.includes(c.id);
 								return (
-									<option key={p} value={p} disabled={unconfigured}>
-										{p}
-										{unconfigured ? ` — missing ${st?.requires}` : ""}
-									</option>
+									<label
+										key={c.id}
+										className={cn(
+											"flex cursor-pointer items-center gap-3 border-b border-border px-5 py-3 transition-colors sm:odd:border-r",
+											on ? "bg-primary-soft/50" : "hover:bg-muted/60",
+											!supported && "cursor-not-allowed opacity-50",
+										)}
+									>
+										<input
+											type="checkbox"
+											className="size-4 accent-[var(--primary)]"
+											disabled={!supported}
+											checked={on}
+											onChange={() => toggleCandidate(c.id)}
+										/>
+										<span className="min-w-0">
+											<span className="block truncate text-[13.5px] font-medium">
+												{c.name || c.id}
+											</span>
+											<span className="block truncate font-mono text-[11.5px] text-muted-foreground">
+												{supported ? c.id : `no ${harness} support`}
+											</span>
+										</span>
+									</label>
 								);
 							})}
-						</select>
+						</div>
+					</Card>
 
-						<label htmlFor="trials" className="text-[13px]">
-							Trials / candidate
-						</label>
-						<input
-							id="trials"
-							type="number"
-							min={1}
-							className={`${selectCls} w-20`}
-							value={trials}
-							onChange={(e) => setTrials(Number(e.target.value))}
-						/>
-
-						<label htmlFor="concurrency" className="text-[13px]">
-							Concurrency
-						</label>
-						<span className="flex items-center gap-2">
-							<input
-								id="concurrency"
-								type="number"
-								min={1}
-								className={`${selectCls} w-20`}
-								value={concurrency}
-								onChange={(e) =>
-									setConcurrency(Math.max(1, Number(e.target.value)))
-								}
-							/>
-							{provider === "daytona" && concurrency > 1 && (
-								<span className="text-[12px] text-warn">
-									daytona free tier is ~1 — higher may be reclaimed
-								</span>
-							)}
-						</span>
-
-						<span className="text-[13px]">Grade</span>
-						<label className="flex items-center gap-2 text-[13px] text-muted-foreground">
-							<input
-								type="checkbox"
-								checked={grade}
-								onChange={(e) => setGrade(e.target.checked)}
-							/>
-							run evaluator + judge after build (extra spend)
-						</label>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className="pb-1">
-						<CardTitle className="text-[13px]">
-							Frameworks{" "}
-							<span className="font-normal text-muted-foreground">
-								(every candidate gets the identical prompt)
-							</span>
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="flex flex-col gap-1.5">
-						{opts.candidates.map((c) => {
-							const supported = c.harnesses.includes(harness);
-							return (
-								<label
-									key={c.id}
-									className={`flex items-center gap-2 text-sm ${supported ? "" : "opacity-50"}`}
+					<Card className="grid gap-5 p-5">
+						<SectionTitle className="mb-0">Environment</SectionTitle>
+						<div className="grid gap-5 sm:grid-cols-2">
+							<Field id="harness" label="Harness">
+								<select
+									id="harness"
+									className={selectCls}
+									value={harness}
+									onChange={(e) => setHarness(e.target.value)}
 								>
+									{opts.harnesses.map((h) => (
+										<option key={h} value={h}>
+											{h}
+										</option>
+									))}
+								</select>
+							</Field>
+							<Field id="provider" label="Sandbox provider">
+								<select
+									id="provider"
+									className={selectCls}
+									value={provider}
+									onChange={(e) => setProvider(e.target.value)}
+								>
+									{opts.providers.map((p) => {
+										const st = opts.providerStatus?.find((s) => s.id === p);
+										const unconfigured = st ? !st.configured : false;
+										return (
+											<option key={p} value={p} disabled={unconfigured}>
+												{p}
+												{unconfigured ? ` (missing ${st?.requires})` : ""}
+											</option>
+										);
+									})}
+								</select>
+							</Field>
+							<Field id="model" label="Worker model">
+								<select
+									id="model"
+									className={selectCls}
+									value={workerModel}
+									onChange={(e) => setWorkerModel(e.target.value)}
+								>
+									{opts.models.map((m) => (
+										<option key={m.name} value={m.name}>
+											{m.name} ({m.provider})
+										</option>
+									))}
+								</select>
+							</Field>
+							<Field
+								id="judge"
+								label="Judge model"
+								hint={
+									judgeModel === workerModel ? (
+										<span className="text-warn">
+											Must differ from the worker. A model never grades its own
+											work.
+										</span>
+									) : (
+										"Scores code quality on a copy scrubbed of framework markers."
+									)
+								}
+							>
+								<select
+									id="judge"
+									className={selectCls}
+									value={judgeModel}
+									onChange={(e) => setJudgeModel(e.target.value)}
+								>
+									{opts.models.map((m) => (
+										<option key={m.name} value={m.name}>
+											{m.name} ({m.provider})
+										</option>
+									))}
+								</select>
+							</Field>
+						</div>
+					</Card>
+
+					<Card className="grid gap-5 p-5">
+						<SectionTitle className="mb-0">Trials and grading</SectionTitle>
+						<div className="grid gap-5 sm:grid-cols-3">
+							<Field
+								id="trials"
+								label="Trials per framework"
+								hint="3+ makes a ranking separable more often."
+							>
+								<input
+									id="trials"
+									type="number"
+									min={1}
+									className={selectCls}
+									value={trials}
+									onChange={(e) => setTrials(Number(e.target.value))}
+								/>
+							</Field>
+							<Field
+								id="concurrency"
+								label="Concurrency"
+								hint={
+									provider === "daytona" && concurrency > 1 ? (
+										<span className="text-warn">
+											Daytona's free tier allows about 1.
+										</span>
+									) : undefined
+								}
+							>
+								<input
+									id="concurrency"
+									type="number"
+									min={1}
+									className={selectCls}
+									value={concurrency}
+									onChange={(e) =>
+										setConcurrency(Math.max(1, Number(e.target.value)))
+									}
+								/>
+							</Field>
+							<div className="grid gap-1.5">
+								<span className="text-[13px] font-medium">Grading</span>
+								<label className="flex h-8 items-center gap-2 text-[13px]">
 									<input
 										type="checkbox"
-										disabled={!supported}
-										checked={candidates.includes(c.id)}
-										onChange={() => toggleCandidate(c.id)}
+										className="size-4 accent-[var(--primary)]"
+										checked={grade}
+										onChange={(e) => setGrade(e.target.checked)}
 									/>
-									<span className="font-medium">{c.id}</span>
-									{!supported && (
-										<Badge variant="outline">no {harness} section</Badge>
-									)}
+									Grade after build
 								</label>
-							);
-						})}
-					</CardContent>
-				</Card>
-			</div>
-
-			<WeightControls weights={weights} onChange={setWeights} />
-
-			{/* Validation + output */}
-			{vr?.errors && vr.errors.length > 0 ? (
-				<Card className="border-danger-bg">
-					<CardContent className="pt-3">
-						<p className="mb-1 text-[13px] font-semibold text-danger">
-							Not runnable yet:
-						</p>
-						<ul className="text-[13px] text-muted-foreground">
-							{vr.errors.map((e) => (
-								<li key={e}>• {e}</li>
-							))}
-						</ul>
-					</CardContent>
-				</Card>
-			) : vr?.command ? (
-				<Card>
-					<CardContent className="pt-3">
-						{vr.budget && (
-							<p className="mb-2 text-[13px]">
-								<Badge variant="warn" className="mr-2">
-									{vr.budget.totalTrials} trial(s) · up to $
-									{vr.budget.maxCostUsd.toFixed(0)} · ≤
-									{vr.budget.wallClockHours.toFixed(1)}h
-								</Badge>
-								<span className="text-muted-foreground">{vr.budget.note}</span>
-							</p>
-						)}
-						<div className="flex items-start gap-2">
-							<pre className="flex-1 overflow-x-auto rounded-md bg-muted p-3 font-mono text-[12px] text-foreground">
-								{vr.command}
-							</pre>
-							<button
-								type="button"
-								className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-								onClick={() => {
-									navigator.clipboard?.writeText(vr.command ?? "");
-									setCopied(true);
-									setTimeout(() => setCopied(false), 1500);
-								}}
-							>
-								{copied ? "copied" : "copy"}
-							</button>
+								<p className="m-0 text-[12.5px] text-muted-foreground">
+									Evaluator + judge. Extra spend.
+								</p>
+							</div>
 						</div>
-						<div className="mt-3 flex flex-wrap items-center gap-3">
+					</Card>
+
+					<Card className="overflow-hidden">
+						<div className="px-5 pt-4">
+							<SectionTitle aside="Used for the composite in this run's report">
+								Scoring weights
+							</SectionTitle>
+						</div>
+						<WeightControls inline weights={weights} onChange={setWeights} />
+					</Card>
+				</div>
+
+				<aside className="xl:sticky xl:top-8 xl:self-start">
+					<Card className="grid gap-4 p-5">
+						<div>
+							<h2 className="m-0 text-[14px] font-semibold">Run summary</h2>
+							<p className="m-0 mt-0.5 text-[12.5px] text-muted-foreground">
+								{meta?.name ?? target} · {candidates.length} framework
+								{candidates.length === 1 ? "" : "s"} · {provider}
+							</p>
+						</div>
+						{vr?.budget && (
+							<div className="grid gap-1 rounded-md bg-muted p-3">
+								<span className="text-[12px] text-muted-foreground">
+									Spend cap
+								</span>
+								<span className="font-mono text-[26px] font-medium leading-none tracking-[-0.02em]">
+									${vr.budget.maxCostUsd.toFixed(0)}
+								</span>
+								<span className="text-[12.5px] text-muted-foreground">
+									{vr.budget.totalTrials} trial
+									{vr.budget.totalTrials === 1 ? "" : "s"} · at most{" "}
+									{vr.budget.wallClockHours.toFixed(1)}h
+								</span>
+								{vr.budget.note && (
+									<span className="text-[12px] text-muted-foreground">
+										{vr.budget.note}
+									</span>
+								)}
+							</div>
+						)}
+						{vr?.errors && vr.errors.length > 0 && (
+							<div className="rounded-md border border-danger/25 bg-danger-bg p-3 text-[13px]">
+								<p className="m-0 mb-1 font-medium text-danger">
+									Not runnable yet
+								</p>
+								<ul className="m-0 grid gap-1 pl-4 text-foreground">
+									{vr.errors.map((e) => (
+										<li key={e}>{e}</li>
+									))}
+								</ul>
+							</div>
+						)}
+						<div className="grid gap-2">
 							<button
 								type="button"
-								disabled={busy}
-								className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+								disabled={busy || !runnable}
+								className={`${btn.primary} h-9 justify-center`}
 								onClick={() => launch(false, false)}
 							>
+								<Play className="size-3.5" />
 								Launch real run
 							</button>
 							<button
 								type="button"
-								disabled={busy}
-								className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted disabled:opacity-50"
+								disabled={busy || !runnable}
+								className={`${btn.secondary} h-9 justify-center`}
 								onClick={() => launch(true, false)}
 							>
-								Dry run (no spend)
+								Dry run, no spend
 							</button>
-							<span className="text-[12px] text-muted-foreground">
-								Real runs bill your subscription and require confirmation. Dry
-								run uses a fake build on worktree.
-							</span>
+							<p className="m-0 text-[12px] text-muted-foreground">
+								Real runs bill your subscription and ask for confirmation first.
+								A dry run fakes the build on a worktree.
+							</p>
 						</div>
 						{launchErr && (
-							<p className="mt-2 text-[13px] text-danger">⚠ {launchErr}</p>
+							<Callout tone="danger" title="Launch failed.">
+								{launchErr}
+							</Callout>
 						)}
-					</CardContent>
-				</Card>
-			) : null}
+						{vr?.command && (
+							<div className="grid gap-1.5 border-t border-border pt-4">
+								<span className="flex items-center justify-between text-[12px] text-muted-foreground">
+									Equivalent CLI command
+									<button
+										type="button"
+										className={`${btn.ghost} h-6 px-1.5 text-[12px]`}
+										onClick={() => {
+											navigator.clipboard
+												?.writeText(vr.command ?? "")
+												.catch(() => {});
+											setCopied(true);
+											setTimeout(() => setCopied(false), 1500);
+										}}
+									>
+										{copied ? (
+											<Check className="size-3.5" />
+										) : (
+											<Copy className="size-3.5" />
+										)}
+										{copied ? "Copied" : "Copy"}
+									</button>
+								</span>
+								<pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-md bg-muted p-3 font-mono text-[11.5px] text-foreground">
+									{vr.command}
+								</pre>
+							</div>
+						)}
+					</Card>
+				</aside>
+			</div>
 
 			{confirm && (
 				<ConfirmDialog
@@ -469,49 +557,48 @@ function ConfirmDialog({
 	onConfirm: () => void;
 }) {
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-[15px]">Confirm real run</CardTitle>
-				</CardHeader>
-				<CardContent className="text-[13px]">
-					<p className="mb-3 text-muted-foreground">
-						This starts a real evaluation that bills your subscription.
-					</p>
-					<ul className="mb-4 space-y-1">
-						<li>
-							Provider: <span className="font-medium">{provider}</span>
-						</li>
-						<li>
-							Trials: <span className="font-medium">{budget.totalTrials}</span>
-						</li>
-						<li>
-							Max spend:{" "}
-							<span className="font-medium">
-								${budget.maxCostUsd.toFixed(0)}
-							</span>{" "}
-							· ≤ {budget.wallClockHours.toFixed(1)}h wall-clock
-						</li>
-						<li>Grading after build: {grade ? "yes" : "no"}</li>
-					</ul>
-					<div className="flex justify-end gap-2">
-						<button
-							type="button"
-							className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-							onClick={onCancel}
-						>
-							Cancel
-						</button>
-						<button
-							type="button"
-							disabled={busy}
-							className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-							onClick={onConfirm}
-						>
-							Confirm &amp; launch (${budget.maxCostUsd.toFixed(0)})
-						</button>
-					</div>
-				</CardContent>
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="confirm-title"
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+		>
+			<Card className="w-full max-w-md p-6 shadow-[0_16px_48px_rgba(0,0,0,0.25)]">
+				<h2 id="confirm-title" className="m-0 text-[17px] font-semibold">
+					Start a real run?
+				</h2>
+				<p className="m-0 mt-1.5 text-[13.5px] text-muted-foreground">
+					This bills your subscription. The run stops at its spend cap.
+				</p>
+				<dl className="m-0 mt-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[13.5px]">
+					<dt className="text-muted-foreground">Provider</dt>
+					<dd className="m-0 text-right font-medium">{provider}</dd>
+					<dt className="text-muted-foreground">Trials</dt>
+					<dd className="m-0 text-right font-mono">{budget.totalTrials}</dd>
+					<dt className="text-muted-foreground">Spend cap</dt>
+					<dd className="m-0 text-right font-mono">
+						${budget.maxCostUsd.toFixed(0)}
+					</dd>
+					<dt className="text-muted-foreground">Wall-clock cap</dt>
+					<dd className="m-0 text-right font-mono">
+						{budget.wallClockHours.toFixed(1)}h
+					</dd>
+					<dt className="text-muted-foreground">Grade after build</dt>
+					<dd className="m-0 text-right">{grade ? "Yes" : "No"}</dd>
+				</dl>
+				<div className="mt-6 flex justify-end gap-2">
+					<button type="button" className={btn.secondary} onClick={onCancel}>
+						Cancel
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						className={btn.primary}
+						onClick={onConfirm}
+					>
+						Launch, up to ${budget.maxCostUsd.toFixed(0)}
+					</button>
+				</div>
 			</Card>
 		</div>
 	);

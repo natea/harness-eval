@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
 	ALL_APPS,
@@ -8,7 +9,7 @@ import {
 	useAppParam,
 } from "../../app-filter";
 import { Badge } from "../components/ui/badge";
-import { Card, CardContent } from "../components/ui/card";
+import { Card } from "../components/ui/card";
 import {
 	Select,
 	SelectContent,
@@ -30,7 +31,7 @@ import {
 	TooltipTrigger,
 } from "../components/ui/tooltip";
 import type { RunSummary } from "../lib/api";
-import { fmtRunDate, runTs } from "./shared";
+import { btn, fmtRunDate, fmtUsd, PageHeader, runTs } from "./shared";
 
 interface QueueEntry {
 	runId: string;
@@ -88,6 +89,7 @@ function merge(disk: RunSummary[], queue: QueueEntry[]): Row[] {
 	const byId = new Map<string, Row>();
 	for (const r of disk) {
 		const scored = r.summary?.scores.map((s) => s.candidate) ?? [];
+		// Brownfield runs carry candidates and a trial count but no scores.
 		const cands = scored.length ? scored : (r.summary?.candidates ?? []);
 		const total = r.summary
 			? (r.summary.trialCount ??
@@ -237,232 +239,220 @@ export function Runs() {
 	const appFilter = effectiveApp(rawApp, apps);
 	const rows = allRows.filter((r) => matchesApp(r.target, appFilter));
 
+	const spin = (
+		<span
+			aria-hidden
+			className="inline-block size-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+		/>
+	);
+
 	return (
 		<>
-			<h1 className="text-xl font-bold tracking-tight">Runs</h1>
-			<p className="mt-1 text-[13px] text-muted-foreground">
-				All runs — historical from disk plus live status for studio-launched
-				jobs. Completed runs link to their scorecard.
-			</p>
-			{allRows.length === 0 ? (
-				<p className="mt-4 text-muted-foreground">
-					No runs yet — start one from{" "}
-					<a href="/configure" className="text-primary-hover hover:underline">
-						Configure
+			<PageHeader
+				title="Runs"
+				description="Every run on disk plus live status for runs launched here. Completed runs open as a trace of their trials."
+				actions={
+					<>
+						{apps.length > 0 && (
+							<Select value={appFilter} onValueChange={setApp}>
+								<SelectTrigger
+									aria-label="App"
+									className="h-8 w-auto min-w-[200px] gap-2"
+								>
+									<span className="text-muted-foreground">App</span>
+									<SelectValue placeholder="All" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value={ALL_APPS}>All</SelectItem>
+									{apps.map((o) => (
+										<SelectItem key={o.value} value={o.value}>
+											{o.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						)}
+						<a href="/configure" className={btn.primary}>
+							<Plus className="size-3.5" />
+							New run
+						</a>
+					</>
+				}
+			/>
+			{rows.length === 0 ? (
+				<Card className="grid place-items-center gap-2 px-6 py-16 text-center">
+					<h2 className="m-0 text-[15px] font-semibold">
+						{allRows.length === 0 ? "No runs yet" : "No runs for this app"}
+					</h2>
+					<p className="m-0 max-w-[48ch] text-[13.5px] text-muted-foreground">
+						{allRows.length === 0
+							? "Launch a dry run first to check the setup costs nothing, then a real run."
+							: "Pick another app, or start a run for this one."}
+					</p>
+					<a href="/configure" className={`${btn.primary} mt-2`}>
+						<Plus className="size-3.5" />
+						New run
 					</a>
-					.
-				</p>
+				</Card>
 			) : (
-				<>
-					<div className="mt-3 flex items-center gap-2 text-[13px]">
-						<span className="text-muted-foreground">App / PRD:</span>
-						<Select value={appFilter} onValueChange={setApp}>
-							<SelectTrigger className="w-[300px]">
-								<SelectValue placeholder="All" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value={ALL_APPS}>All</SelectItem>
-								{apps.map((o) => (
-									<SelectItem key={o.value} value={o.value}>
-										{o.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						<span className="text-muted-foreground">
-							{rows.length} run{rows.length === 1 ? "" : "s"}
-						</span>
-					</div>
-					{rows.length === 0 ? (
-						<p className="mt-4 text-muted-foreground">No runs for this app.</p>
-					) : (
-						<Card className="mt-3">
-							<CardContent className="px-2 pb-2 pt-2">
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Run</TableHead>
-											<TableHead>
-												<button
-													type="button"
-													onClick={() =>
-														setSortDir((d) => (d === "desc" ? "asc" : "desc"))
-													}
-													className="inline-flex items-center gap-1 uppercase hover:text-foreground"
-													title="Sort by date/time"
+				<Card className="overflow-hidden">
+					<Table>
+						<TableHeader>
+							<TableRow className="hover:bg-transparent">
+								<TableHead className="pl-5">Run</TableHead>
+								<TableHead>Status</TableHead>
+								<TableHead>Frameworks</TableHead>
+								<TableHead className="text-right">Trials</TableHead>
+								<TableHead className="text-right">Spend</TableHead>
+								<TableHead className="text-right">
+									<button
+										type="button"
+										onClick={() =>
+											setSortDir((d) => (d === "desc" ? "asc" : "desc"))
+										}
+										className="inline-flex items-center gap-1 hover:text-foreground"
+										aria-label={`Sort by date, ${sortDir === "desc" ? "newest" : "oldest"} first`}
+									>
+										Started
+										{sortDir === "desc" ? (
+											<ArrowDown className="size-3" />
+										) : (
+											<ArrowUp className="size-3" />
+										)}
+									</button>
+								</TableHead>
+								<TableHead className="pr-5" />
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{rows.map((e) => {
+								const href = e.link
+									? `/runs/${e.runId}`
+									: e.status === "running" &&
+											e.kind === "live" &&
+											e.candidates[0]
+										? // Watch the (first) building trial live (live-build-stream).
+											`/runs/${e.runId}/trials/${e.candidates[0]}-t1`
+										: null;
+								const title =
+									e.target?.title ?? (e.kind === "dry" ? "Dry run" : "Run");
+								return (
+									<TableRow key={e.runId}>
+										<TableCell className="max-w-[360px] py-3 pl-5">
+											{href ? (
+												<a
+													href={href}
+													className="block truncate font-medium text-foreground no-underline hover:underline"
 												>
-													Date / time
-													<span aria-hidden>
-														{sortDir === "desc" ? "▼" : "▲"}
+													{title}
+												</a>
+											) : (
+												<span className="block truncate font-medium">
+													{title}
+												</span>
+											)}
+											<span className="block truncate font-mono text-[11.5px] text-muted-foreground">
+												{e.runId}
+											</span>
+										</TableCell>
+										<TableCell>
+											<span className="inline-flex items-center gap-2">
+												{e.status === "running" && (
+													<span className="relative flex size-2">
+														<span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-50" />
+														<span className="relative inline-flex size-2 rounded-full bg-primary" />
 													</span>
-												</button>
-											</TableHead>
-											<TableHead>App / PRD</TableHead>
-											<TableHead>Status</TableHead>
-											<TableHead>Candidates</TableHead>
-											<TableHead>Trials</TableHead>
-											<TableHead>Cost</TableHead>
-											<TableHead>Mode</TableHead>
-											<TableHead />
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{rows.map((e) => (
-											<TableRow key={e.runId}>
-												<TableCell>
-													{e.link ? (
-														<a
-															href={`/runs/${e.runId}`}
-															className="font-mono text-[12px] text-primary-hover underline decoration-primary-hover/40 underline-offset-2 hover:decoration-primary-hover"
-														>
-															{e.runId}
-														</a>
-													) : e.status === "running" &&
-														e.kind === "live" &&
-														e.candidates[0] ? (
-														// Watch the (first) building trial live (live-build-stream).
-														<a
-															href={`/runs/${e.runId}/trials/${e.candidates[0]}-t1`}
-															title="watch the live build"
-															className="font-mono text-[12px] text-primary-hover underline decoration-primary-hover/40 underline-offset-2 hover:decoration-primary-hover"
-														>
-															{e.runId}
-														</a>
-													) : (
-														<span className="font-mono text-[12px]">
-															{e.runId}
-														</span>
-													)}
-												</TableCell>
-												<TableCell className="whitespace-nowrap font-mono text-[12px] text-muted-foreground">
-													{fmtRunDate(e.ts)}
-												</TableCell>
-												<TableCell className="text-[13px]">
-													{e.target ? (
-														<>
-															{e.target.title}{" "}
-															<span className="font-mono text-[11px] text-muted-foreground">
-																({e.target.name})
-															</span>
-														</>
-													) : (
-														<span className="text-muted-foreground">—</span>
-													)}
-												</TableCell>
-												<TableCell>
-													<span className="inline-flex items-center gap-2">
-														{e.status === "running" && (
-															<span
-																role="status"
-																aria-label="running"
-																className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
-															/>
-														)}
-														<Badge variant={STATUS_VARIANT[e.status]}>
-															{e.status === "running" && e.stage
-																? e.stage
-																: e.status}
-														</Badge>
-														{e.error && (
-															<Tooltip>
-																<TooltipTrigger asChild>
-																	<button
-																		type="button"
-																		className="cursor-help text-[11px] text-danger underline decoration-dotted underline-offset-2"
-																	>
-																		why?
-																	</button>
-																</TooltipTrigger>
-																<TooltipContent className="max-w-[420px] whitespace-pre-wrap break-words">
-																	{e.error}
-																</TooltipContent>
-															</Tooltip>
-														)}
-													</span>
-												</TableCell>
-												<TableCell className="text-[13px] text-muted-foreground">
-													{e.candidates.join(", ") || "—"}
-												</TableCell>
-												<TableCell className="font-mono text-[12px]">
-													{e.trialsDetail ? (
-														<Tooltip>
-															<TooltipTrigger asChild>
-																<span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
-																	{e.trialsLabel}
-																</span>
-															</TooltipTrigger>
-															<TooltipContent className="whitespace-pre-line">
-																{e.trialsDetail}
-															</TooltipContent>
-														</Tooltip>
-													) : (
-														e.trialsLabel
-													)}
-												</TableCell>
-												<TableCell className="font-mono text-[12px]">
-													{e.cost != null ? `$${e.cost.toFixed(2)}` : "—"}
-												</TableCell>
-												<TableCell>
-													{e.kind ? (
-														<Badge
-															variant={e.kind === "dry" ? "outline" : "default"}
-														>
-															{e.kind === "dry" ? "dry run" : "live"}
-														</Badge>
-													) : (
-														<span className="text-[12px] text-muted-foreground">
-															—
-														</span>
-													)}
-												</TableCell>
-												<TableCell>
-													{e.status === "running" ? (
-														cancelling.has(e.runId) ? (
-															<span className="inline-flex items-center gap-1.5 px-2 py-1 text-[12px] text-muted-foreground">
-																<span
-																	aria-hidden
-																	className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
-																/>
-																cancelling…
-															</span>
-														) : (
+												)}
+												<Badge variant={STATUS_VARIANT[e.status]}>
+													{e.status === "running" && e.stage
+														? e.stage
+														: e.status}
+												</Badge>
+												{e.kind === "dry" && (
+													<Badge variant="outline">dry</Badge>
+												)}
+												{e.error && (
+													<Tooltip>
+														<TooltipTrigger asChild>
 															<button
 																type="button"
-																className="rounded-md border border-border px-2 py-1 text-[12px] text-foreground hover:bg-muted"
-																onClick={() => cancel(e.runId)}
+																className="cursor-help text-[12px] text-danger underline decoration-dotted underline-offset-2"
 															>
-																Cancel
+																Why?
 															</button>
-														)
-													) : e.regradable ? (
-														regrading.has(e.runId) ? (
-															<span className="inline-flex items-center gap-1.5 px-2 py-1 text-[12px] text-muted-foreground">
-																<span
-																	aria-hidden
-																	className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
-																/>
-																resuming…
-															</span>
-														) : (
-															<button
-																type="button"
-																className="whitespace-nowrap rounded-md border border-primary/40 px-2 py-1 text-[12px] text-primary-hover hover:bg-muted"
-																title="Grade built-but-ungraded trials on your subscription (no rebuild)"
-																onClick={() => regrade(e.runId)}
-															>
-																Resume grading
-															</button>
-														)
-													) : null}
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</CardContent>
-						</Card>
-					)}
-				</>
+														</TooltipTrigger>
+														<TooltipContent className="max-w-[420px] whitespace-pre-wrap break-words">
+															{e.error}
+														</TooltipContent>
+													</Tooltip>
+												)}
+											</span>
+										</TableCell>
+										<TableCell className="max-w-[280px] truncate text-[13px] text-muted-foreground">
+											{e.candidates.join(", ") || "—"}
+										</TableCell>
+										<TableCell className="text-right font-mono text-[12.5px]">
+											{e.trialsDetail ? (
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+															{e.trialsLabel}
+														</span>
+													</TooltipTrigger>
+													<TooltipContent className="whitespace-pre-line">
+														{e.trialsDetail}
+													</TooltipContent>
+												</Tooltip>
+											) : (
+												e.trialsLabel
+											)}
+										</TableCell>
+										<TableCell className="text-right font-mono text-[12.5px]">
+											{fmtUsd(e.cost)}
+										</TableCell>
+										<TableCell className="whitespace-nowrap text-right text-[12.5px] text-muted-foreground">
+											{fmtRunDate(e.ts)}
+										</TableCell>
+										<TableCell className="pr-5 text-right">
+											{e.status === "running" ? (
+												cancelling.has(e.runId) ? (
+													<span className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+														{spin}
+														Cancelling…
+													</span>
+												) : (
+													<button
+														type="button"
+														className={btn.secondary}
+														onClick={() => cancel(e.runId)}
+													>
+														Cancel
+													</button>
+												)
+											) : e.regradable ? (
+												regrading.has(e.runId) ? (
+													<span className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+														{spin}
+														Resuming…
+													</span>
+												) : (
+													<button
+														type="button"
+														className={`${btn.secondary} whitespace-nowrap`}
+														title="Grade built-but-ungraded trials on your subscription (no rebuild)"
+														onClick={() => regrade(e.runId)}
+													>
+														Resume grading
+													</button>
+												)
+											) : null}
+										</TableCell>
+									</TableRow>
+								);
+							})}
+						</TableBody>
+					</Table>
+				</Card>
 			)}
 		</>
 	);

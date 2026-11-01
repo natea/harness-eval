@@ -11,8 +11,6 @@
  * - CMake 4 refuses old `cmake_minimum_required` → CMAKE_POLICY_VERSION_MINIMUM.
  */
 
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { $ } from "bun";
 import { sha256 } from "./bundle";
 
@@ -48,104 +46,97 @@ function serialized<T>(fn: () => Promise<T>): Promise<T> {
 	return run;
 }
 
-export function buildEnv(dir: string, opts: EnvOptions): Promise<EnvResult> {
-	return serialized(async () => {
-		const t0 = Date.now();
-		const py = opts.python ?? "3.12";
-		const hasLock = existsSync(join(dir, "uv.lock"));
-		const env = {
-			...process.env,
-			UV_PYTHON: py,
-			CMAKE_POLICY_VERSION_MINIMUM: "3.5",
-		};
-		const attempt = async () => {
-			if (hasLock) {
-				for (const extra of [
-					["--all-extras", "--all-groups"],
-					["--all-groups"],
-					[],
-				]) {
-					const r =
-						await $`uv sync --frozen ${extra} --reinstall-package ${opts.pkg}`
-							.cwd(dir)
-							.env(env)
-							.quiet()
-							.nothrow();
-					if (r.exitCode === 0)
-						return { ok: true, log: r.stdout.toString() + r.stderr.toString() };
-					if (extra.length === 0)
-						return {
-							ok: false,
-							log: r.stdout.toString() + r.stderr.toString(),
-						};
-				}
-			}
-			await $`rm -rf .venv && uv venv -q --python ${py}`
-				.cwd(dir)
-				.env(env)
-				.quiet()
-				.nothrow();
-			const spec = `.[${opts.extras ?? "dev"}]`;
-			const tries: string[][] = [
-				[
-					"-e",
-					spec,
-					"--group",
-					"dev",
-					"pytest",
-					"pytest-timeout",
-					"pytest-asyncio",
-				],
-				[
-					"-e",
-					spec,
-					"pytest",
-					"pytest-timeout",
-					"pytest-asyncio",
-					"hypothesis",
-				],
-				["-e", ".", "pytest", "pytest-timeout", "pytest-asyncio", "hypothesis"],
-			];
-			let log = "";
-			for (const t of tries) {
-				const r =
-					await $`uv pip install -q --exclude-newer ${opts.excludeNewer} ${t}`
-						.cwd(dir)
-						.env(env)
-						.quiet()
-						.nothrow();
-				log += r.stdout.toString() + r.stderr.toString();
-				if (r.exitCode === 0) return { ok: true, log };
-			}
-			return { ok: false, log };
-		};
+/** Runs one shell command in the environment directory; host or sandbox. */
+export type EnvRunner = (
+	command: string,
+	env: Record<string, string>,
+) => Promise<{ exitCode: number; out: string }>;
 
-		let res = await attempt();
-		for (
-			let i = 1;
-			!res.ok && i < (opts.retries ?? 3) && NETWORK_RE.test(res.log);
-			i++
-		) {
-			await Bun.sleep(10_000 * i);
-			res = await attempt();
-		}
-		let digest: string | null = null;
-		if (res.ok) {
-			// pytest-timeout keeps a hung test from hanging the whole validation.
-			await $`uv pip install -q pytest-timeout`
-				.cwd(dir)
-				.env(env)
-				.quiet()
-				.nothrow();
-			const freeze = await $`uv pip freeze`.cwd(dir).env(env).quiet().nothrow();
-			digest = sha256(freeze.stdout.toString());
-		}
+/** Shell-quote one argument. */
+export const shq = (a: string) => `'${a.replaceAll("'", `'\\''`)}'`;
+
+/** Run commands on the host, in `dir`. */
+export function hostRunner(dir: string): EnvRunner {
+	return async (command, env) => {
+		const r = await $`bash -c ${command}`
+			.cwd(dir)
+			.env({ ...process.env, ...env })
+			.quiet()
+			.nothrow();
 		return {
-			ok: res.ok,
-			method: hasLock ? "uv.lock" : "exclude-newer",
-			log: res.log,
-			digest,
-			seconds: Math.round((Date.now() - t0) / 1000),
+			exitCode: r.exitCode,
+			out: r.stdout.toString() + r.stderr.toString(),
 		};
-	});
+	};
+}
+
+export function buildEnv(dir: string, opts: EnvOptions): Promise<EnvResult> {
+	return serialized(() => buildEnvWith(hostRunner(dir), opts));
+}
+
+/**
+ * The environment build itself, over any runner. The trial-image builder runs it
+ * inside a container so trials get the same recipe validation used.
+ */
+export async function buildEnvWith(
+	run: EnvRunner,
+	opts: EnvOptions,
+): Promise<EnvResult> {
+	const t0 = Date.now();
+	const py = opts.python ?? "3.12";
+	const hasLock = (await run("test -f uv.lock", {})).exitCode === 0;
+	const env = { UV_PYTHON: py, CMAKE_POLICY_VERSION_MINIMUM: "3.5" };
+	const attempt = async (): Promise<{ ok: boolean; log: string }> => {
+		if (hasLock) {
+			for (const extra of ["--all-extras --all-groups", "--all-groups", ""]) {
+				const r = await run(
+					`uv sync --frozen ${extra} --reinstall-package ${shq(opts.pkg)}`,
+					env,
+				);
+				if (r.exitCode === 0) return { ok: true, log: r.out };
+				if (extra === "") return { ok: false, log: r.out };
+			}
+		}
+		await run(`rm -rf .venv && uv venv -q --python ${shq(py)}`, env);
+		const spec = shq(`.[${opts.extras ?? "dev"}]`);
+		const tries = [
+			`-e ${spec} --group dev pytest pytest-timeout pytest-asyncio`,
+			`-e ${spec} pytest pytest-timeout pytest-asyncio hypothesis`,
+			"-e . pytest pytest-timeout pytest-asyncio hypothesis",
+		];
+		let log = "";
+		for (const t of tries) {
+			const r = await run(
+				`uv pip install -q --exclude-newer ${shq(opts.excludeNewer)} ${t}`,
+				env,
+			);
+			log += r.out;
+			if (r.exitCode === 0) return { ok: true, log };
+		}
+		return { ok: false, log };
+	};
+
+	let res = await attempt();
+	for (
+		let i = 1;
+		!res.ok && i < (opts.retries ?? 3) && NETWORK_RE.test(res.log);
+		i++
+	) {
+		await Bun.sleep(10_000 * i);
+		res = await attempt();
+	}
+	let digest: string | null = null;
+	if (res.ok) {
+		// pytest-timeout keeps a hung test from hanging the whole validation.
+		await run("uv pip install -q pytest-timeout", env);
+		const freeze = await run("uv pip freeze 2>/dev/null", env);
+		digest = sha256(freeze.out);
+	}
+	return {
+		ok: res.ok,
+		method: hasLock ? "uv.lock" : "exclude-newer",
+		log: res.log,
+		digest,
+		seconds: Math.round((Date.now() - t0) / 1000),
+	};
 }

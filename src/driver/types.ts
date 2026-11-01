@@ -23,6 +23,11 @@ export interface DriverRunOptions {
 	 * provider-side web tools (task 4.6). Brownfield trials always set this.
 	 */
 	isolated?: boolean;
+	/**
+	 * Egress lockdown (task 4.4): run the command inside a network namespace with
+	 * only loopback plus a socat relay to the gateway's unix socket.
+	 */
+	netns?: { script: string };
 }
 
 export type RunDriverSession = (

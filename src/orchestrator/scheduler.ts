@@ -90,6 +90,11 @@ export interface SchedulerDeps {
 		plan: TrialPlan,
 		config: RunConfig,
 	) => Promise<void>;
+	/**
+	 * Egress lockdown (task 4.4): worker commands run in a loopback-only network
+	 * namespace wired to the gateway's unix socket. Brownfield trials only.
+	 */
+	sessionNetns?: { script: string };
 	/** Brownfield: capture the candidate's patch after the session (task 4.7). */
 	capturePatch?: (
 		sandbox: Sandbox,
@@ -363,6 +368,7 @@ export async function runTrial(
 				costBudgetUsd: config.budget.trialCostUsd,
 				env: workerAuth,
 				isolated: plan.task !== undefined,
+				netns: plan.task && deps.sessionNetns ? deps.sessionNetns : undefined,
 			});
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);

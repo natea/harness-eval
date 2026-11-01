@@ -29,6 +29,8 @@ export interface SessionScriptOptions {
 	runSession?: RunDriverSession;
 	/** Trial isolation: no operator MCP config, no provider-side web tools. */
 	isolated?: boolean;
+	/** Egress lockdown: run worker commands in a loopback-only namespace. */
+	netns?: { script: string };
 }
 
 /** Heuristic gate detection: the framework paused awaiting approval. */
@@ -84,6 +86,7 @@ export async function executeSessionScript(
 				timeoutMs: remainingMs(),
 				env: opts.env,
 				isolated: opts.isolated,
+				netns: opts.netns,
 			});
 		} catch (err) {
 			// Environmental failures (dead daemon, unreachable socket, ACP
@@ -124,6 +127,7 @@ export async function executeSessionScript(
 				timeoutMs: remainingMs(),
 				env: opts.env,
 				isolated: opts.isolated,
+				netns: opts.netns,
 			});
 			records.push(cont.record);
 			transcripts.push(cont.transcript);

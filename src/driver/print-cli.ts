@@ -38,8 +38,18 @@ export function createPrintCliSessionRunner(
 		const slot = `${sandbox.id.replace(/[^a-zA-Z0-9_.-]/g, "_")}-${run.stepIndex}`;
 		const promptFile = `/tmp/he-prompt-${slot}.txt`;
 		const outFile = `/tmp/he-out-${slot}.jsonl`;
+		// Shared /tmp on worktree-style providers: a stale file from an earlier
+		// run with the same trial id would otherwise be read back as this
+		// session's transcript if the CLI exits without writing.
+		await sandbox.exec(`rm -f ${promptFile} ${outFile}`, { timeoutMs: 30_000 });
 		await sandbox.writeFile(promptFile, run.prompt);
-		const command = opts.buildCommand({ ...run, promptFile, outFile });
+		let command = opts.buildCommand({ ...run, promptFile, outFile });
+		if (run.netns) {
+			// File-based to avoid nested quoting between zsh and the wrapper.
+			const cmdFile = `/tmp/he-cmd-${slot}.sh`;
+			await sandbox.writeFile(cmdFile, command);
+			command = `unshare -rn sh ${run.netns.script} zsh ${cmdFile}`;
+		}
 		// Best-effort live tap: drop a disk pointer to this session's output file so
 		// the studio's (separate) process can tail it while the build runs. Never
 		// affects the build; the post-exit read below is unchanged (byte-identical

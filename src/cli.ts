@@ -80,7 +80,12 @@ import {
 } from "./catalog";
 import { type LoadedDesign, loadDesign } from "./designs";
 import { assertWebToolKillSwitch } from "./driver/toolpolicy";
-import { type Gateway, startGateway } from "./gateway/server";
+import {
+	type Gateway,
+	startGateway,
+	type UnixRelay,
+	startUnixRelay,
+} from "./gateway/server";
 import { loadManifest } from "./grading/integration";
 import { loadHarnesses, resolveHarness } from "./harnesses";
 import {
@@ -541,6 +546,10 @@ async function cmdRunBrownfield(): Promise<void> {
 	// Model gateway (4.4): the sandbox holds a placeholder key; only this run's
 	// model and non-provider-tool requests are forwarded.
 	let gateway: Gateway | null = null;
+	const relays: UnixRelay[] = [];
+	let sessionNetns: { script: string } | undefined;
+	let sandboxBaseUrl: string | undefined;
+	const workerEnvExtra: Record<string, string> = {};
 	let workerEnv = rw.env;
 	if (flag("gateway")) {
 		if (config.harness !== "claude-code")
@@ -562,8 +571,43 @@ async function cmdRunBrownfield(): Promise<void> {
 			model: workerProfile.modelId,
 			logPath: join(runDir, "gateway.jsonl"),
 		});
+		// Egress lockdown (4.4): a second gateway on a unix socket, reachable from
+		// a loopback-only namespace through a socat relay on 127.0.0.1:8787. The
+		// worker then has no route to anything but this proxy.
+		if (config.provider === "worktree" && !flag("no-egress-lockdown")) {
+			const sock = join(runDir, "gateway.sock");
+			relays.push(startUnixRelay(sock, gateway.port));
+			const script = join(runDir, "netns.sh");
+			writeFileSync(
+				script,
+				[
+					"#!/bin/sh",
+					"# Loopback-only namespace: the gateway relay is the only endpoint.",
+					"ip link set lo up",
+					'[ -n "$HE_GATEWAY_SOCK" ] || exit 97',
+					// Detached with closed stdio: a background child holding the exec's
+					// stdout pipe would keep the caller waiting until timeout.
+					'socat TCP-LISTEN:8787,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:"$HE_GATEWAY_SOCK" </dev/null >/dev/null 2>&1 &',
+					"sleep 0.4",
+					'exec "$@"',
+					"",
+				].join("\n"),
+			);
+			sessionNetns = { script };
+			// Sessions point at the in-namespace relay; the preflight (below) runs
+			// outside the namespace, so it keeps using the TCP gateway URL.
+			sandboxBaseUrl = "http://127.0.0.1:8787";
+			workerEnvExtra.HE_GATEWAY_SOCK = sock;
+			// Inside the namespace we are root (needed to raise lo); Claude Code
+			// refuses bypass-permissions as root unless it is told it's sandboxed.
+			workerEnvExtra.IS_SANDBOX = "1";
+			console.log(
+				`egress lockdown: worker sees loopback only (${sandboxBaseUrl} → ${sock})`,
+			);
+		}
 		workerEnv = {
 			...rw.env,
+			...workerEnvExtra,
 			ANTHROPIC_BASE_URL: gateway.url,
 			ANTHROPIC_API_KEY: "gateway-placeholder",
 			// Every Claude Code slot resolves to the one model the gateway allows.
@@ -588,6 +632,8 @@ async function cmdRunBrownfield(): Promise<void> {
 			console.log(`gateway preflight: ${candidate.name} ok`);
 		}
 	}
+	if (sandboxBaseUrl && workerEnv)
+		workerEnv = { ...workerEnv, ANTHROPIC_BASE_URL: sandboxBaseUrl };
 	// Egress reduction (4.4): worker shells see a dead proxy, with loopback
 	// exempt so the gateway (and nothing else) stays reachable. Best-effort:
 	// raw sockets bypass it; the audit is the backstop.
@@ -667,6 +713,7 @@ async function cmdRunBrownfield(): Promise<void> {
 						`task environment build failed in ${sandbox.workspacePath}: ${env.log.slice(-600)}`,
 					);
 			},
+			sessionNetns,
 			capturePatch: async (sandbox, trialDir, plan) => {
 				const task = plan.task as NonNullable<typeof plan.task>;
 				writePatchCapture(trialDir, await captureCandidatePatch(sandbox, task));
@@ -675,6 +722,7 @@ async function cmdRunBrownfield(): Promise<void> {
 	);
 
 	gateway?.stop();
+	for (const r of relays) r.stop();
 	// Solution-reach audit (5.3): did the trial reach the upstream fix?
 	for (const trial of trials) {
 		const ref = trial.provenance.brownfield;
@@ -880,7 +928,7 @@ async function probeGatewaySession(
 		.reverse()
 		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
 	if (code === 0 && line) return { ok: true, reason: "" };
-	const reason = err.trim().split("\n").slice(-2).join(" ") || `exit ${code}`;
+	const reason = `exit ${code}: ${err.trim().split("\n").slice(-2).join(" ") || "(no stderr)"}`;
 	return { ok: false, reason: reason.slice(0, 300) };
 }
 

@@ -4,7 +4,7 @@
  * operator's key, forwards only the run's model, and rejects provider-side tool
  * requests (web search/fetch) that would reach the upstream fix.
  */
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { dirname } from "node:path";
 
 /** Provider-side tools a worker must not use (server executes them upstream). */
@@ -59,13 +59,11 @@ export function startGateway(opts: GatewayOptions): Gateway {
 		appendFileSync(opts.logPath, `${JSON.stringify(e)}\n`);
 	};
 
-	const server = Bun.serve({
-		hostname: "127.0.0.1",
-		port: opts.port ?? 0,
+	const handler = {
 		// Model responses can sit idle >10s (Bun's default) before the first
 		// token; a cut here looks like a provider error to the worker.
 		idleTimeout: 255,
-		async fetch(req) {
+		async fetch(req: Request) {
 			const url = new URL(req.url);
 			const entry: GatewayLogEntry = {
 				at: new Date().toISOString(),
@@ -157,7 +155,12 @@ export function startGateway(opts: GatewayOptions): Gateway {
 				headers: outHeaders,
 			});
 		},
-	});
+	};
+	const server = Bun.serve({
+		hostname: "127.0.0.1",
+		port: opts.port ?? 0,
+		...handler,
+	} as Parameters<typeof Bun.serve>[0]);
 
 	// Never keep the run process alive on the gateway's account.
 	server.unref();
@@ -168,4 +171,27 @@ export function startGateway(opts: GatewayOptions): Gateway {
 		requests,
 		stop: () => server.stop(true),
 	};
+}
+
+export interface UnixRelay {
+	socketPath: string;
+	stop(): void;
+}
+
+/**
+ * Bridges the gateway's TCP port onto a unix socket so a loopback-only network
+ * namespace (task 4.4 egress lockdown) can reach it without any route out.
+ * `socat` is used because Bun 1.4's unix listener accepts connections but never
+ * answers.
+ */
+export function startUnixRelay(socketPath: string, tcpPort: number): UnixRelay {
+	try {
+		unlinkSync(socketPath);
+	} catch {}
+	const proc = Bun.spawn(
+		["socat", `UNIX-LISTEN:${socketPath},fork,reuseaddr`, `TCP:127.0.0.1:${tcpPort}`],
+		{ stdin: "ignore", stdout: "ignore", stderr: "ignore" },
+	);
+	proc.unref();
+	return { socketPath, stop: () => proc.kill() };
 }

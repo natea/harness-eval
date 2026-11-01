@@ -1,0 +1,53 @@
+{
+  "arm": "single",
+  "task": "pr293-issue292",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "If the model response looks like: ... we do not parse it correctly. We should be able to handle that.",
+      "rationale": "The issue shows an example input with literal newlines inside a JSON string and says parsing fails. It does not name the function or the cause, and it does not propose a change. The title mentions newlines, which hints at the cause, but a developer still has to find llm_read_json and design the escaping.",
+      "author": "whitead",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "The test feeds JSON with literal newlines inside string values and expects them to be parsed and preserved as \"\\n\". The issue describes exactly this input and says it should parse. The expected values (newline preserved) follow naturally from the issue."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.0157653,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.0157653,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

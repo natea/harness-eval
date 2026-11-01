@@ -1,0 +1,34 @@
+{
+  "frozenAt": "2026-11-01T16:38:56.526Z",
+  "note": "Frozen before any arm output was compared with human labels (task 4.1). Cap = 4x single-arm median spend (D8).",
+  "model": "claude-sonnet-5-5",
+  "singleMedianUsd": 0.0585,
+  "capUsd": 0.234,
+  "quorumRuleHash": "8a4f912be12874c2119577601c0a887448d6c7131ad8144ed954efe23fc8dd52",
+  "d9PromptHash": "0b74132edbf3523b626339d2177f5c481c0ff523cf38f7e74f5d9d039f9214ae",
+  "promptHashes": {
+    "issue-reader": "45a6e7ecd26db9ca0b00ba5291cfabacff756204522b3e5ed945827c6aeba143",
+    "gold-comparer": "f913a45996713daed820f6e6faf91e44623fb617395c22c22f20d8e156febdc0",
+    "test-auditor": "3ea9f73ecb8ca35bda08ccf143268f47e9f8ca8493c1b180c849a2a359c91a60",
+    "history-agent": "9d149f09a4dc9cba798c4320c3d9a6403f5af8858e695f83eedb57a50242e727",
+    "round2": "fb47ab7e719421d34270bea50fae1aecc54434329ac91513986ff7ec1e1c1871",
+    "single": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0",
+    "controller": "d4d73a850ba0d487b9f78d88222cf80d07ded3b170f977bb1b3b1fe4ad277069"
+  },
+  "tasks": [
+    "pr1029-issue1005",
+    "pr1186-issue1165",
+    "pr1255-issue1254",
+    "pr1260-issue1258",
+    "pr1262-issue1257",
+    "pr1296-issue1274",
+    "pr1298-issue1273",
+    "pr1311-issue1310",
+    "pr293-issue292",
+    "pr708-issue693",
+    "pr724-issue709",
+    "pr768-issue761",
+    "pr894-issue889",
+    "pr961-issue959"
+  ]
+}

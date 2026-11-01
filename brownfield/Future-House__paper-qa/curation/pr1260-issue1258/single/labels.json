@@ -1,0 +1,74 @@
+{
+  "arm": "single",
+  "task": "pr1260-issue1258",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py",
+        "src/paperqa/utils.py"
+      ],
+      "evidence": "The extracted text contains orphaned UTF-16 surrogate characters (e.g., `\\udc63`, `\\udc65`, `\\udc66`) which are invalid in UTF-8.",
+      "rationale": "Identifies root cause: pypdf-extracted text has orphaned surrogates. Reference cleans at extraction by replacing with the replacement char. The issue's suggested fix (patching hexdigest) points elsewhere, but the cause and the replacement-char idea match.",
+      "author": "hummat",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [
+        "src/paperqa/utils.py"
+      ],
+      "evidence": "Your suggested fix—encoding with errors=\"replace\" in hexdigest—is safe and effective.",
+      "rationale": "Endorses patching hexdigest, which the reference did not change. It would not make the hidden tests pass, so it is not a leak.",
+      "author": "dosubot",
+      "role": "bot"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The tests import REPLACEMENT_CHAR from paperqa.utils, a name the issue never mentions, so a valid fix fails on ImportError. The pymupdf tests also require table markdown to be cleaned and kept (not dropped as None), which the issue, about pypdf and hexdigest, does not describe. The pypdf test patches pypdf.PageObject.extract_text and expects cleaning inside parse_pdf_to_pages, which the issue's hexdigest suggestion would not satisfy."
+  },
+  "eligibility": {
+    "excludeTests": [
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_equation_parsing",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing",
+      "packages.paper-qa-pymupdf.tests.test_paperqa_pymupdf::test_table_parsing_orphaned_surrogate",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_media_deduplication",
+      "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_table_parsing"
+    ],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "medium",
+  "overBudget": false,
+  "spendUsd": 0.059968,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.059968,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

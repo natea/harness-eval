@@ -1,0 +1,60 @@
+{
+  "arm": "single",
+  "task": "pr708-issue693",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The LM ignores `14` (the supplied answer) and tries to answer directly. The response then breaks our single-letter-extraction regex, which returns `T`.",
+      "rationale": "Describes observed behavior and examples, plus a partial cause (LM ignores answer, regex returns T). It does not say where to change or what to do. The reference fix changes the eval prompt template (adds 'Question:'/'Answer:' labels) and adds total_options checking, plus unrelated refactors (reward mapping). The issue doesn't point to these.",
+      "author": "sidnarayanan",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "unfair",
+    "reason": "The tests use VCR cassettes recorded with the exact new prompt text (\"Question: Q: ...\", \"Answer: ...\"). Reproducing them needs the exact prompt template wording, which the issue never specifies. test_consistent_mc_options also needs make_mc_options to return a 4-tuple with distractor letters, which is an API change the issue doesn't mention. The tests probably also exercise the string-valued LitQAEvaluation and the reward mapping refactor."
+  },
+  "eligibility": {
+    "excludeTests": [
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors0-the answer is 94107-correct-expected_dreturns0]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors1-the answer is 14004-incorrect-expected_dreturns1]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors2-the answer is 94106-incorrect-expected_dreturns2]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors3-Insufficient information-unsure-expected_dreturns3]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is my office's zip code?-94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4]",
+      "tests.test_litqa.TestLitQAEvaluation::test_from_question[What is the meaning of life?-42-distractors5-14-incorrect-expected_dreturns5]"
+    ],
+    "appEgressNeeded": true,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "hard",
+  "overBudget": false,
+  "spendUsd": 0.08223130000000001,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.08223130000000001,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

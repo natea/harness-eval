@@ -1,0 +1,67 @@
+{
+  "arm": "single",
+  "task": "pr1311-issue1310",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "evidence": "if pil_image.mode == \"CMYK\":\n    pil_image = pil_image.convert(\"RGB\")\npil_image.save(buf, format=\"PNG\")",
+      "rationale": "Names the exact file and line, the root cause (Pillow cannot save CMYK as PNG), and gives code converting to RGB before saving, which is substantially the reference fix and would pass the CMYK test.",
+      "author": "menyoung",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "evidence": "if pil_image.mode not in (\"RGB\", \"RGBA\", \"L\", \"LA\"):\n    pil_image = pil_image.convert(\"RGB\")",
+      "rationale": "Endorses the CMYK to RGB conversion and offers a general variant that would also solve it. It repeats the issue's fix and adds nothing new about the mechanism. The suggestion to catch OSError in search.py is a different direction from the reference.",
+      "author": "dosubot",
+      "role": "bot"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "The F2P test saves a CMYK image and expects the output PNG to be RGB. The issue describes exactly this, converting CMYK to RGB before saving as PNG. The mode assertion matches the issue's suggestion."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.0313453,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.0313453,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "arm": "single",
+  "task": "pr894-issue889",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/settings.py"
+      ],
+      "evidence": "index_directory: str | os.PathLike | None = Field(\n        default=pqa_directory(\"indexes\"), ... However, when a module is imported, the code within it is executed, and `index_directory` is set at that time.",
+      "rationale": "Identifies the root cause: the default is evaluated at import time in Settings.index_directory, which is exactly what the fix changes to default_factory. No fix is proposed, though.",
+      "author": "lingyaochu",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "you can use `unittest.mock.patch.dict` to temporarily set the environment variable, as shown below",
+      "rationale": "It restates the import-time cause and suggests a workaround that sets the env var before import. That avoids the bug without fixing it and doesn't point to default_factory.",
+      "author": "dosubot",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I recommend adding some instructions to the documentation to improve clarity and usability for users.",
+      "rationale": "It only asks for documentation and has no technical content about the fix.",
+      "author": "lingyaochu",
+      "role": "issue author"
+    }
+  ],
+  "fairness": {
+    "verdict": "fair",
+    "reason": "The test checks that PQA_HOME set after import changes the default index_directory, which is the behavior the issue describes. It reads agent.index.index_directory, which is also fixed in the same way, and the issue's index_directory complaint implies this. A small risk is that the test uses the agent.index path rather than Settings.index_directory."
+  },
+  "eligibility": {
+    "excludeTests": [],
+    "appEgressNeeded": false,
+    "note": "",
+    "advisory": true
+  },
+  "difficulty": "easy",
+  "overBudget": false,
+  "spendUsd": 0.0290593,
+  "capUsd": 5,
+  "provenance": {
+    "promptHashes": {
+      "leak-system": "0fb27975ec497fbfb6edf4a5d8dd4074b74fe9b4efb0d08506ac43c742399ec0"
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "calls": [
+      {
+        "agent": "single",
+        "model": "claude-sonnet-5-5",
+        "promptHash": "eba1e0b0e1bb017f1f519fbd5cd2aff4e9a92a90f56ac7d774cd56bef5f1c230",
+        "costUsd": 0.0290593,
+        "inputManifest": [
+          "issue@T*",
+          "reference.patch",
+          "tests.patch",
+          "validation",
+          "git-log@base(touched files)"
+        ]
+      }
+    ]
+  }
+}

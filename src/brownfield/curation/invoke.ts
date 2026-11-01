@@ -14,6 +14,35 @@ export const PROMPT_DIR = join(import.meta.dir, "../../../config/curation");
 
 export class OverBudgetError extends Error {}
 
+/**
+ * The D9 runner when CLAUDE_CODE_OAUTH_TOKEN is set; otherwise the same headless
+ * flags on the local `claude` login. ANTHROPIC_API_KEY is blanked either way so
+ * calls never bill the API account.
+ */
+export const curationRunner: ClaudeRunner = async (args) => {
+	if (process.env.CLAUDE_CODE_OAUTH_TOKEN) return claudeCliRunner(args);
+	const p = Bun.spawn(
+		[
+			"claude", "-p", "--model", args.model, "--tools", "", "--strict-mcp-config",
+			"--setting-sources", "", "--system-prompt", args.system,
+			"--output-format", "json", "--json-schema", JSON.stringify(args.schema),
+		],
+		{
+			cwd: "/tmp",
+			stdin: new TextEncoder().encode(args.prompt),
+			stdout: "pipe",
+			stderr: "pipe",
+			env: { ...process.env, ANTHROPIC_API_KEY: "" },
+		},
+	);
+	const out = await new Response(p.stdout).text();
+	const code = await p.exited;
+	const res = JSON.parse(out || "{}");
+	if (code !== 0 || res.is_error || !res.structured_output)
+		throw new Error(`claude -p failed (${code}): ${out.slice(0, 300)}`);
+	return { structured: res.structured_output, costUsd: res.total_cost_usd ?? 0 };
+};
+
 /** Spend meter for one arm on one bundle. A call that crosses the cap marks it over. */
 export class Budget {
 	spent = 0;
@@ -47,7 +76,7 @@ export interface AgentCall {
 export async function callAgent<T>(
 	call: AgentCall,
 	budget: Budget,
-	runner: ClaudeRunner = claudeCliRunner,
+	runner: ClaudeRunner = curationRunner,
 ): Promise<T> {
 	if (budget.over) throw new OverBudgetError(`over budget before ${call.agent}`);
 	const model = call.model ?? CURATION_MODEL;

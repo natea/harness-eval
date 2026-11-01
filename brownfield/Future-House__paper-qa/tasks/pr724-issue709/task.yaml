@@ -1,0 +1,41 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 724
+issues:
+  - 709
+baseSha: e62255d215d687b8dc6833a79dd7683314ffe284
+mergeSha: 31f9825a30640eb31eb8554389b443336308fbd4
+tStar: 2024-11-26T18:37:37Z
+issueCreatedAt: 2024-11-19T23:16:00Z
+prMergedAt: 2024-11-27T02:12:18Z
+verdict: VALID
+failToPass:
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-several-options]
+passToPass: []
+envBroken:
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-correct-option]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[didnt-match-and-no-llm-innate-knowledge]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-incorrect-option]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-unsure-option]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer1]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[didnt-match-and-llm-has-innate-knowledge]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer2]
+  - tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer3]
+flaky: []
+testPaths:
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 370a4dd80d4e782d2b9f1d571db828e8d0faf43620e42ad1ef44367d9f76171d
+  issue/body+human.md: 370a4dd80d4e782d2b9f1d571db828e8d0faf43620e42ad1ef44367d9f76171d
+  issue/body.md: 370a4dd80d4e782d2b9f1d571db828e8d0faf43620e42ad1ef44367d9f76171d
+  leaks.json: 2a91e976e781d4b65e92677979b0e9d626b1cdc82262fde4b20c90d13eea19d8
+  reference.patch: 3b5ff0fb2367c0dd5251e4c81935ddefa0c847e1ffff42622cf30c7528bee597
+  snapshot.json: a6153b79f4c27f86a67c97763eeecee8f1963ffe8851c38431c5c26a180c3c5a
+  tests.patch: 7573c91521c9379483ddc8bc568a5c35a12bca9bd43e30fb8c6c4a94c9237700
+  validation.json: dea618f0de9a80ab25a16f51d0fd2aa411a1266c6772da58e44b33b26aff7583

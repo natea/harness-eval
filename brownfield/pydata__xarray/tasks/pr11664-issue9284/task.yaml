@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11664
+issues:
+  - 9284
+baseSha: be662823d9e4323330197a5262b8cc3350e9a8a5
+mergeSha: cb434090f7d1ffeb7e4169f11e90d13f0c7e5470
+tStar: 2026-10-03T12:01:01Z
+issueCreatedAt: 2024-07-26T20:58:00Z
+prMergedAt: 2026-10-08T21:49:05Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestDataArray::test_assign_coords_from_named_pandas_series
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 3e76a26fe55cd68bcd7b22f11d1a09f6452623a59991491ae58110330b7c1c7c
+  issue/body+human.md: 3e76a26fe55cd68bcd7b22f11d1a09f6452623a59991491ae58110330b7c1c7c
+  issue/body.md: 3e76a26fe55cd68bcd7b22f11d1a09f6452623a59991491ae58110330b7c1c7c
+  leaks.json: 2b490ec85c88028349e3c99977dfe7ba85005d3da66e144cbf63f48806382dfd
+  reference.patch: 97602eb31fff11f061d52266ccb3ee3c22a1f5133a8caefb1de20b2386a2b2cc
+  snapshot.json: 1aa2765bce667ee49ca0fcdbdaa86ee498de74db4fe733571dbdbbc2c8638872
+  tests.patch: 9977564603b9a54459197d64d69d14d66821e2745210f6a541c4a9331be54a08
+  validation.json: 568b461bbd410edfe19ac67b902ed9f8585dc681c4b2628cd4278721b1d4c321

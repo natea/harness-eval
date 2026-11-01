@@ -1,0 +1,9 @@
+{
+  "pr": 512,
+  "issue": 488,
+  "tStar": "2024-10-01T19:10:23Z",
+  "title": "Refactor to split up `get_directory_index` so every `paper_search` doesn't have to re-index",
+  "issueAuthor": "jamesbraza",
+  "body": "Our current workflow as of `paper-qa==5.0.8` is to re-index every `paper_search`\r\n\r\nA more performant and perhaps modular workflow is:\r\n1. Index at the start of the agent\r\n2. Not re-index during each `paper_search`",
+  "comments": []
+}

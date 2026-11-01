@@ -1,0 +1,178 @@
+diff --git a/src/paperqa/configs/clinical_trials.json b/src/paperqa/configs/clinical_trials.json
+index f7235b4..bbfa56b 100644
+--- a/src/paperqa/configs/clinical_trials.json
++++ b/src/paperqa/configs/clinical_trials.json
+@@ -15,7 +15,9 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 9000,
+-    "overlap": 750
++    "reader_config": {
++      "chunk_chars": 9000,
++      "overlap": 750
++    }
+   }
+ }
+diff --git a/src/paperqa/configs/contracrow.json b/src/paperqa/configs/contracrow.json
+index 3985ec5..47d5893 100644
+--- a/src/paperqa/configs/contracrow.json
++++ b/src/paperqa/configs/contracrow.json
+@@ -20,13 +20,14 @@
+     "answer_filter_extra_background": false
+   },
+   "parsing": {
+-    "chunk_size": 7000,
+     "use_doc_details": true,
+-    "overlap": 250,
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 250
++    },
+     "citation_prompt": "Provide the citation for the following text in MLA Format. Do not write an introductory sentence. If reporting date accessed, the current year is 2024\n\n{text}\n\nCitation:",
+     "structured_citation_prompt": "Extract the title, authors, and doi as a JSON from this MLA citation. If any field can not be found, return it as null. Use title, authors, and doi as keys, author's value should be a list of authors. {citation}\n\nCitation JSON:",
+-    "disable_doc_valid_check": false,
+-    "chunking_algorithm": "simple_overlap"
++    "disable_doc_valid_check": false
+   },
+   "prompts": {
+     "summary": "Summarize the excerpt below to help answer a question.\n\nExcerpt from {citation}\n\n----\n\n{text}\n\n----\n\nQuestion: {question}\n\nDo not directly answer the question, instead summarize to give evidence to help answer the question. Stay detailed; report specific numbers, equations, or direct quotes (marked with quotation marks). Reply \"Not applicable\" if the excerpt is irrelevant. At the end of your response, provide an integer score from 1-10 on a newline indicating relevance to question. Do not explain your score.\n\nRelevant Information Summary ({summary_length}):",
+diff --git a/src/paperqa/configs/high_quality.json b/src/paperqa/configs/high_quality.json
+index 1fac778..16cc0ff 100644
+--- a/src/paperqa/configs/high_quality.json
++++ b/src/paperqa/configs/high_quality.json
+@@ -6,7 +6,9 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 7000,
+-    "overlap": 250
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 250
++    }
+   }
+ }
+diff --git a/src/paperqa/configs/openreview.json b/src/paperqa/configs/openreview.json
+index 0bf1bc4..562e7d4 100644
+--- a/src/paperqa/configs/openreview.json
++++ b/src/paperqa/configs/openreview.json
+@@ -30,7 +30,9 @@
+     "return_paper_metadata": false
+   },
+   "parsing": {
+-    "chunk_size": 3000000,
+-    "use_doc_details": false
++    "use_doc_details": false,
++    "reader_config": {
++      "chunk_chars": 3000000
++    }
+   }
+ }
+diff --git a/src/paperqa/configs/search_only_clinical_trials.json b/src/paperqa/configs/search_only_clinical_trials.json
+index d6c105b..1b04d47 100644
+--- a/src/paperqa/configs/search_only_clinical_trials.json
++++ b/src/paperqa/configs/search_only_clinical_trials.json
+@@ -14,7 +14,9 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 9000,
+-    "overlap": 750
++    "reader_config": {
++      "chunk_chars": 9000,
++      "overlap": 750
++    }
+   }
+ }
+diff --git a/src/paperqa/configs/tier2_limits.json b/src/paperqa/configs/tier2_limits.json
+index 238974c..7ac9dfb 100644
+--- a/src/paperqa/configs/tier2_limits.json
++++ b/src/paperqa/configs/tier2_limits.json
+@@ -6,8 +6,10 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 7000,
+-    "overlap": 250
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 250
++    }
+   },
+   "prompts": {
+     "use_json": true
+diff --git a/src/paperqa/configs/tier3_limits.json b/src/paperqa/configs/tier3_limits.json
+index 4c21bda..eaed70c 100644
+--- a/src/paperqa/configs/tier3_limits.json
++++ b/src/paperqa/configs/tier3_limits.json
+@@ -6,8 +6,10 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 7000,
+-    "overlap": 250
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 250
++    }
+   },
+   "prompts": {
+     "use_json": true
+diff --git a/src/paperqa/configs/tier4_limits.json b/src/paperqa/configs/tier4_limits.json
+index ddc6879..c4b199a 100644
+--- a/src/paperqa/configs/tier4_limits.json
++++ b/src/paperqa/configs/tier4_limits.json
+@@ -6,8 +6,10 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 7000,
+-    "overlap": 250
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 250
++    }
+   },
+   "prompts": {
+     "use_json": true
+diff --git a/src/paperqa/configs/tier5_limits.json b/src/paperqa/configs/tier5_limits.json
+index 2b15880..a7ea556 100644
+--- a/src/paperqa/configs/tier5_limits.json
++++ b/src/paperqa/configs/tier5_limits.json
+@@ -6,8 +6,10 @@
+   },
+   "parsing": {
+     "use_doc_details": true,
+-    "chunk_size": 7000,
+-    "overlap": 250
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 250
++    }
+   },
+   "prompts": {
+     "use_json": true
+diff --git a/src/paperqa/configs/wikicrow.json b/src/paperqa/configs/wikicrow.json
+index d1ba4f7..38b4de4 100644
+--- a/src/paperqa/configs/wikicrow.json
++++ b/src/paperqa/configs/wikicrow.json
+@@ -20,13 +20,14 @@
+     "answer_filter_extra_background": false
+   },
+   "parsing": {
+-    "chunk_size": 7000,
+     "use_doc_details": true,
+-    "overlap": 1750,
++    "reader_config": {
++      "chunk_chars": 7000,
++      "overlap": 1750
++    },
+     "citation_prompt": "Provide the citation for the following text in MLA Format. Do not write an introductory sentence. If reporting date accessed, the current year is 2024\n\n{text}\n\nCitation:",
+     "structured_citation_prompt": "Extract the title, authors, and doi as a JSON from this MLA citation. If any field can not be found, return it as null. Use title, authors, and doi as keys, author's value should be a list of authors. {citation}\n\nCitation JSON:",
+-    "disable_doc_valid_check": false,
+-    "chunking_algorithm": "simple_overlap"
++    "disable_doc_valid_check": false
+   },
+   "prompts": {
+     "summary": "Summarize the excerpt below to help answer a question.\n\nExcerpt from {citation}\n\n----\n\n{text}\n\n----\n\nQuestion: {question}\n\nDo not directly answer the question, instead summarize to give evidence to help answer the question. Stay detailed; report specific numbers, equations, or direct quotes (marked with quotation marks). Reply \"Not applicable\" if the excerpt is irrelevant. At the end of your response, provide an integer score from 1-10 on a newline indicating relevance to question. Do not explain your score.\n\nRelevant Information Summary ({summary_length}):",

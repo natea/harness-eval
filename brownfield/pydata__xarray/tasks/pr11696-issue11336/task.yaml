@@ -1,0 +1,118 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11696
+issues:
+  - 11336
+baseSha: 78c171760cfdc10bdbcb640bcff8d4eca16c03e1
+mergeSha: 25ef02edfeb5a8e0480c4485e536646b62b60c97
+tStar: 2026-10-09T07:01:42Z
+issueCreatedAt: 2026-05-13T09:53:00Z
+prMergedAt: 2026-10-11T18:31:40Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-2-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-3-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-4-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[numpy-10-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-2-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-3-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-4-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[bottleneck-10-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-2-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-3-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-4-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_argminmax_vs_iter[dask-10-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-None-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-numbagg-1-None-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-None-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-bottleneck-1-None-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-None-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-numpy-None-1-None-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-None-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-numbagg-1-None-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-None-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-bottleneck-1-None-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-True-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-True-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-False-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-False-argmax]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-None-argmin]
+  - xarray.tests.test_rolling.TestDataArrayRolling::test_rolling_wrapped_bottleneck[1-dask-None-1-None-argmax]
+  - xarray.tests.test_rolling::test_cumulative_argminmax[argmin]
+  - xarray.tests.test_rolling::test_cumulative_argminmax[argmax]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: diagnosis
+provisional: true
+files:
+  issue/body+all.md: 8e513ca71c2563e152c39b15369f326b1fe33ca339f08276c071d815f51a1fd7
+  issue/body+human.md: 8e513ca71c2563e152c39b15369f326b1fe33ca339f08276c071d815f51a1fd7
+  issue/body.md: 23f72f0dd9f86bbf72769b03c8fb40bca4c1aa20f92075f05c40258657e9bb8a
+  leaks.json: 5e51694db50e456d7958f0dad0db9d245c764f07eb82b2121150a70cf168e54c
+  reference.patch: 96c310eeef6c25b0f57caba8dd34bf68674b9d0c19b6362a4f2e4a789f5b6d2a
+  snapshot.json: 31a12c39d1c1483cc3f4b8a8f3d064a078cbb3e32baeeafa2cdf25f65f663ff3
+  tests.patch: 7ab1045d07a377732dda1137c6909efbb35307e42c19c8db0cce504bc5f0776e
+  validation.json: 8ea9b46f9c457f9d52a4cc415383537e703d175b7049e85a5954c4eb33c4c632

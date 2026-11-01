@@ -1,0 +1,79 @@
+diff --git a/xarray/tests/test_coordinates.py b/xarray/tests/test_coordinates.py
+index ba3f366b..478ef0a3 100644
+--- a/xarray/tests/test_coordinates.py
++++ b/xarray/tests/test_coordinates.py
+@@ -289,6 +289,26 @@ class TestCoordinates:
+         assert set(actual.dims) == {"x", "y"}
+         assert set(actual.variables) == {"a", "u", "v"}
+ 
++    def test_coordinates_as_coord_value(self) -> None:
++        # a Coordinates object must be passed directly, not as a value of a
++        # mapping of coordinate names (GH10194)
++        ds = Dataset({"foo": ("x", [1, 2, 3])})
++        coords = Coordinates({"x": [4, 5, 6]})
++
++        with pytest.raises(TypeError, match=r"Using a Coordinates object"):
++            ds.assign_coords({"x": coords})
++        with pytest.raises(TypeError, match=r"Using a Coordinates object"):
++            ds.foo.assign_coords({"x": coords})
++        with pytest.raises(TypeError, match=r"Using a Coordinates object"):
++            Dataset({"foo": ("x", [1, 2, 3])}, coords={"x": coords})
++        with pytest.raises(TypeError, match=r"Using a Coordinates object"):
++            DataArray([1, 2, 3], dims="x", coords={"x": coords})
++
++        # passing it directly still works and keeps the index
++        actual = ds.assign_coords(coords)
++        assert_identical(actual, Dataset({"foo": ("x", [1, 2, 3])}, coords=coords))
++        assert "x" in actual.xindexes
++
+     def test_operator_merge(self) -> None:
+         coords1 = Coordinates({"x": ("x", [0, 1, 2])})
+         coords2 = Coordinates({"y": ("y", [3, 4, 5])})
+diff --git a/xarray/tests/test_dataset.py b/xarray/tests/test_dataset.py
+index a7178bba..08ebfef5 100644
+--- a/xarray/tests/test_dataset.py
++++ b/xarray/tests/test_dataset.py
+@@ -5021,7 +5021,11 @@ class TestDataset:
+         mx = xr.Coordinates.from_pandas_multiindex(
+             pd.MultiIndex.from_tuples([(1, 2), (3, 4)], names=["d", "e"]), "z"
+         )
+-        ds = Dataset(dict(var1=var), coords=dict(y=idx, z=mx)).assign_attrs(a=1, b=2)
++        ds = (
++            Dataset(dict(var1=var), coords=dict(y=idx))
++            .assign_coords(mx)
++            .assign_attrs(a=1, b=2)
++        )
+         assert ds.attrs != {}
+         assert ds["var1"].attrs != {}
+         assert ds["y"].attrs != {}
+diff --git a/xarray/tests/test_variable.py b/xarray/tests/test_variable.py
+index c2bc73f7..1190d356 100644
+--- a/xarray/tests/test_variable.py
++++ b/xarray/tests/test_variable.py
+@@ -12,7 +12,14 @@ import pandas as pd
+ import pytest
+ import pytz
+ 
+-from xarray import DataArray, Dataset, IndexVariable, Variable, set_options
++from xarray import (
++    Coordinates,
++    DataArray,
++    Dataset,
++    IndexVariable,
++    Variable,
++    set_options,
++)
+ from xarray.core import dtypes, duck_array_ops, indexing
+ from xarray.core.common import full_like, ones_like, zeros_like
+ from xarray.core.extension_array import PandasExtensionArray
+@@ -1273,6 +1280,10 @@ class TestVariable(VariableSubclassobjects):
+         with pytest.raises(TypeError):
+             as_variable(("x", DataArray([])))
+ 
++        # GH10194
++        with pytest.raises(TypeError, match=r"Using a Coordinates object"):
++            as_variable(Coordinates({"x": [1, 2, 3]}), name="x")
++
+     def test_repr(self):
+         v = Variable(["time", "x"], [[1, 2, 3], [4, 5, 6]], {"foo": "bar"})
+         v = v.astype(np.uint64)

@@ -1,0 +1,64 @@
+{
+  "pr": 11700,
+  "merged": "2026-10-22",
+  "issues": [
+    {
+      "n": 6577,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 10,
+  "srcFiles": [
+    ".github/ISSUE_TEMPLATE/bugreport.yml",
+    "doc/api/top-level.rst",
+    "doc/whats-new.rst",
+    "pyproject.toml",
+    "xarray/__init__.py",
+    "xarray/backends/plugins.py",
+    "xarray/util/_report.py",
+    "xarray/util/print_versions.py"
+  ],
+  "testFiles": [
+    "xarray/tests/backends/test_plugins.py",
+    "xarray/tests/test_print_versions.py"
+  ],
+  "env": "exclude-newer 2026-10-22T13:41:15+02:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/backends/test_plugins.py::test_refresh_engines",
+    "xarray/tests/backends/test_plugins.py::test_remote_url_backend_auto_detection",
+    "xarray/tests/backends/test_plugins.py::test_show_backends",
+    "xarray/tests/test_print_versions.py::test_html_table",
+    "xarray/tests/test_print_versions.py::test_in_rich_frontend_without_ipython",
+    "xarray/tests/test_print_versions.py::test_markdown_table",
+    "xarray/tests/test_print_versions.py::test_package_version",
+    "xarray/tests/test_print_versions.py::test_package_version_dist_name_differs",
+    "xarray/tests/test_print_versions.py::test_show_report",
+    "xarray/tests/test_print_versions.py::test_show_versions",
+    "xarray/tests/test_print_versions.py::test_show_versions_markdown"
+  ],
+  "counts": {
+    "f2p": 11,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.backends.test_plugins::test_refresh_engines",
+    "xarray.tests.backends.test_plugins::test_remote_url_backend_auto_detection",
+    "xarray.tests.backends.test_plugins::test_show_backends",
+    "xarray.tests.test_print_versions::test_html_table",
+    "xarray.tests.test_print_versions::test_in_rich_frontend_without_ipython",
+    "xarray.tests.test_print_versions::test_markdown_table",
+    "xarray.tests.test_print_versions::test_package_version",
+    "xarray.tests.test_print_versions::test_package_version_dist_name_differs",
+    "xarray.tests.test_print_versions::test_show_report",
+    "xarray.tests.test_print_versions::test_show_versions",
+    "xarray.tests.test_print_versions::test_show_versions_markdown"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

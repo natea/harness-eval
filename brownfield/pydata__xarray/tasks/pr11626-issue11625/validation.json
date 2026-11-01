@@ -1,0 +1,61 @@
+{
+  "pr": 11626,
+  "merged": "2026-09-28",
+  "issues": [
+    {
+      "n": 9075,
+      "repo": "pydata/xarray"
+    },
+    {
+      "n": 11625,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/indexing.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_backends.py",
+    "xarray/tests/test_indexing.py"
+  ],
+  "env": "exclude-newer 2026-09-28T09:00:46-06:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_backends.py",
+    "xarray/tests/test_indexing.py::test_decompose_indexer_empty_ndarray",
+    "xarray/tests/test_indexing.py::test_decompose_indexers",
+    "xarray/tests/test_indexing.py::test_implicit_indexing_adapter"
+  ],
+  "counts": {
+    "f2p": 17,
+    "p2p": 3015,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_backends.TestNetCDF4Data::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestScipyInMemoryData::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestScipyFileObject::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestScipyFilePath::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestNetCDF3ViaNetCDF4Data::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestNetCDF4ClassicViaNetCDF4Data::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestNetCDF4ClassicViaH5NetCDFData::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestGenericNetCDFData::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestH5NetCDFData::test_empty_isel_multidim",
+    "xarray.tests.test_backends.TestH5NetCDFFileObject::test_empty_isel_multidim",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-first-shape0]",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-first-shape1]",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-last-shape0]",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-last-shape1]",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.OUTER_1VECTOR-first-shape0]",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.OUTER_1VECTOR-first-shape1]",
+    "xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.OUTER_1VECTOR-last-shape1]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

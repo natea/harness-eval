@@ -1,0 +1,94 @@
+diff --git a/tests/test_codecs/test_numcodecs.py b/tests/test_codecs/test_numcodecs.py
+index 7d5a0c29..99cd8949 100644
+--- a/tests/test_codecs/test_numcodecs.py
++++ b/tests/test_codecs/test_numcodecs.py
+@@ -163,6 +163,40 @@ def test_generic_filter(
+     np.testing.assert_array_equal(data, b[:, :])
+ 
+ 
++@pytest.mark.parametrize(
++    ("codec_class", "codec_config", "dtype"),
++    [
++        (_numcodecs.Delta, {"dtype": "int64"}, "int64"),
++        (_numcodecs.FixedScaleOffset, {"offset": 0, "scale": 1}, "int64"),
++        (_numcodecs.PackBits, {}, "bool"),
++    ],
++    ids=["delta", "fixedscaleoffset", "packbits"],
++)
++def test_generic_filter_f_contiguous(
++    codec_class: type[_numcodecs._NumcodecsArrayArrayCodec],
++    codec_config: dict[str, JSON],
++    dtype: str,
++) -> None:
++    # gh-3558: F-contiguous chunks were handed to numcodecs filters as is, and
++    # numcodecs flattens in memory order, so the elements came back transposed
++    if dtype == "bool":
++        data = np.asfortranarray(np.tril(np.ones((16, 16), dtype=bool)))
++    else:
++        data = np.asfortranarray(np.arange(256, dtype=dtype).reshape(16, 16))
++
++    a = create_array(
++        {},
++        shape=data.shape,
++        chunks=(16, 16),
++        dtype=data.dtype,
++        fill_value=0,
++        filters=[codec_class(**codec_config)],
++    )
++
++    a[:, :] = data
++    np.testing.assert_array_equal(data, a[:, :])
++
++
+ def test_generic_filter_bitround() -> None:
+     data = np.linspace(0, 1, 256, dtype="float32").reshape((16, 16))
+ 
+diff --git a/tests/test_codecs/test_vlen.py b/tests/test_codecs/test_vlen.py
+index 3422090a..6729a68a 100644
+--- a/tests/test_codecs/test_vlen.py
++++ b/tests/test_codecs/test_vlen.py
+@@ -9,7 +9,7 @@ from zarr.abc.codec import Codec, SupportsSyncCodec
+ from zarr.abc.store import Store
+ from zarr.codecs import ZstdCodec
+ from zarr.codecs.vlen_utf8 import VLenBytesCodec, VLenUTF8Codec
+-from zarr.core.dtype import get_data_type_from_native_dtype
++from zarr.core.dtype import VariableLengthBytes, get_data_type_from_native_dtype
+ from zarr.core.metadata.v3 import ArrayV3Metadata
+ from zarr.storage import StorePath
+ 
+@@ -67,6 +67,35 @@ def test_vlen_string(
+     assert a.dtype == data.dtype
+ 
+ 
++@pytest.mark.parametrize("store", ["memory"], indirect=["store"])
++@pytest.mark.parametrize("chunks", [(3, 3), (2, 2)])
++def test_vlen_string_f_contiguous(store: Store, chunks: tuple[int, int]) -> None:
++    # gh-3558: F-contiguous chunks were encoded in transposed element order
++    data = np.asarray(
++        np.array([f"S{i:05}" for i in range(9)], dtype=object).reshape(3, 3), order="F"
++    )
++    sp = StorePath(store, path="string-f-contiguous")
++    a = zarr.create_array(sp, shape=data.shape, chunks=chunks, dtype=str, fill_value="")
++    a[:, :] = data
++    assert np.array_equal(data, np.asarray(a[:, :], dtype=object))
++
++
++@pytest.mark.filterwarnings("ignore::zarr.core.dtype.common.UnstableSpecificationWarning")
++@pytest.mark.parametrize("store", ["memory"], indirect=["store"])
++@pytest.mark.parametrize("chunks", [(3, 3), (2, 2)])
++def test_vlen_bytes_f_contiguous(store: Store, chunks: tuple[int, int]) -> None:
++    # gh-3558: F-contiguous chunks were encoded in transposed element order
++    data = np.asarray(
++        np.array([b"%05d" % i for i in range(9)], dtype=object).reshape(3, 3), order="F"
++    )
++    sp = StorePath(store, path="bytes-f-contiguous")
++    a = zarr.create_array(
++        sp, shape=data.shape, chunks=chunks, dtype=VariableLengthBytes(), fill_value=b""
++    )
++    a[:, :] = data
++    assert np.array_equal(data, np.asarray(a[:, :], dtype=object))
++
++
+ def test_vlen_utf8_codec_supports_sync() -> None:
+     assert isinstance(VLenUTF8Codec(), SupportsSyncCodec)
+ 

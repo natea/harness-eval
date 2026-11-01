@@ -1,0 +1,9 @@
+{
+  "pr": 515,
+  "issue": 478,
+  "tStar": "2024-10-02T01:21:48Z",
+  "title": "Moving timeout and max steps into `PaperQAEnvironment` itself",
+  "issueAuthor": "jamesbraza",
+  "body": "Currently as of https://github.com/Future-House/paper-qa/tree/v5.0.7:\r\n- Timeouts are managed by rollouts in `agents.main`\r\n- There is not a max steps, unless using `ldp`\r\n\r\nIt would be nice if the `PaperQAEnvironment` itself directly supported timeouts and max steps. That way we can have:\r\n\r\n- A simpler `agents.main`\r\n- More information (e.g. step count, current runtime) directly in `env.state`\r\n",
+  "comments": []
+}

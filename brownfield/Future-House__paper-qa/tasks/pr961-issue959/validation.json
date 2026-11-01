@@ -1,0 +1,45 @@
+{
+  "pr": 961,
+  "merged": "2025-06-11",
+  "issues": [
+    {
+      "n": 959,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 6,
+  "srcFiles": [
+    ".gitignore",
+    "paperqa/readers.py",
+    "paperqa/settings.py"
+  ],
+  "testFiles": [
+    "tests/stub_data/.DS_Store",
+    "tests/test_agents.py",
+    "tests/test_paperqa.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 8,
+  "selected": [
+    "tests/test_agents.py::test_resuming_crashed_index_build",
+    "tests/test_paperqa.py::test_chunk_metadata_reader",
+    "tests/test_paperqa.py::test_code"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 2,
+    "liveApi": 2,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_paperqa::test_chunk_metadata_reader"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_agents::test_resuming_crashed_index_build",
+    "tests.test_paperqa::test_code"
+  ],
+  "verdict": "VALID"
+}

@@ -1,0 +1,79 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/utils.py"
+      ],
+      "evidence": "I traced the bottleneck down to https://github.com/pydata/xarray/blob/96030d4825159c6259736155084f38ee8db5c9bb/xarray/core/utils.py#L662",
+      "rationale": "Pinpoints the magic-number read in utils.py as the cause (buffered read pulling the whole file) and notes read1 helps, i.e. avoiding the buffer fill. Matches the reference's change to read_magic_number_from_file/try_read_magic_number_from_path.",
+      "author": "groutr",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Just asks the author to open a PR.",
+      "author": "Illviljan",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Did you try specifying the correct engine directly?",
+      "rationale": "Suggests a workaround (specify engine) without fixing; doesn't reveal the mechanism.",
+      "author": "headtr1ck",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I tried setting the engine to 'netcdf4' and while it did help a little bit, it still seems slow on my system.",
+      "rationale": "Reports profile results of a workaround; no fix info.",
+      "author": "groutr",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Fundamentally, xarray has to touch every file because there is no guarantee they are consistent with each other.",
+      "rationale": "General explanation and kerchunk workaround; not the reference mechanism.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "the underlying filesystem is actually a networked filesystem",
+      "rationale": "Environment info and a question about compat; no fix content.",
+      "author": "groutr",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "we still construct a  dataset representation for each file which involves reading all coordinates etc.",
+      "rationale": "Explains other overhead and suggests dask parallel; not related to the reference fix.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "symptom"
+}

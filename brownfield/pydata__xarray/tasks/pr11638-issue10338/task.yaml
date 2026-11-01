@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11638
+issues:
+  - 10338
+baseSha: ede38e513f648eaf38fc5acf5ad03fba05c35d8d
+mergeSha: 5bf7aa271cc4660aa5768af9d2178042cfc03cd4
+tStar: 2026-09-29T15:46:03Z
+issueCreatedAt: 2025-05-20T13:55:00Z
+prMergedAt: 2026-09-29T16:36:41Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_backends.TestScipyFileObject::test_indexing_multiple_non_adjacent_indexers
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: bb90fdfdf23fdc642402a98d19400491961a447995a0b61ec89d1137212ad6bf
+  issue/body+human.md: bb90fdfdf23fdc642402a98d19400491961a447995a0b61ec89d1137212ad6bf
+  issue/body.md: 8342ee87a3860c837d3dafe94ee32ee5eb9ca255604998916b24c6c4ae8b964a
+  leaks.json: 8d7baa1d5cff1fcd2fdef58d2fa934a892c4d717cb4ee95f9f4507e1ce489dd2
+  reference.patch: ab8a4113c5b5da9857a3d2f6fe699ef2f5f3cf035a3d06091e83e985d44db234
+  snapshot.json: 0fd10c9001454e8b216e776993855795aeeddb0b88db511a77312e088ae1d201
+  tests.patch: c765a4c350e56ec6d46a7c97ca87a0643482b2adaa5bc26265dac16ef98d73e5
+  validation.json: 3c81441859b034a00f2900695d6a45fbf212f72f415cc03324f6a9d1452ac6aa

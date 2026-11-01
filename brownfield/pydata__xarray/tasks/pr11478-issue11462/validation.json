@@ -1,0 +1,39 @@
+{
+  "pr": 11478,
+  "merged": "2026-07-29",
+  "issues": [
+    {
+      "n": 11462,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/computation/computation.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_computation.py"
+  ],
+  "env": "exclude-newer 2026-07-29T12:49:03+02:00",
+  "envSecs": 8,
+  "selected": [
+    "xarray/tests/test_computation.py::test_polyfit_polyval_integration",
+    "xarray/tests/test_computation.py::test_polyval_degree_dim_checks",
+    "xarray/tests/test_computation.py::test_polyval_timedelta_nat"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 17,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_computation::test_polyval_timedelta_nat"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

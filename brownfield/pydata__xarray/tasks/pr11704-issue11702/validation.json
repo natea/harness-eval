@@ -1,0 +1,45 @@
+{
+  "pr": 11704,
+  "merged": "2026-10-11",
+  "issues": [
+    {
+      "n": 11702,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/dataset.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataset.py"
+  ],
+  "env": "exclude-newer 2026-10-11T19:10:59Z",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_exception_n_neg",
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_large_n",
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n2",
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n2_label",
+    "xarray/tests/test_dataset.py::TestDataset::test_dataset_diff_n_larger_than_size"
+  ],
+  "counts": {
+    "f2p": 5,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataset.TestDataset::test_dataset_diff_large_n",
+    "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n2",
+    "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n2_label[upper-coords0]",
+    "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n2_label[lower-coords1]",
+    "xarray.tests.test_dataset.TestDataset::test_dataset_diff_n_larger_than_size"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

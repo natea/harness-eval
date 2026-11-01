@@ -1,0 +1,133 @@
+diff --git a/changes/4404.feature.md b/changes/4404.feature.md
+new file mode 100644
+index 00000000..cfa685ed
+--- /dev/null
++++ b/changes/4404.feature.md
+@@ -0,0 +1 @@
++Reading data encoded with the `pickle` codec now requires an explicit opt-in, because unpickling data from an untrusted store can execute arbitrary code ([GHSA-jqc8-qjfv-5m6r](https://github.com/zarr-developers/numcodecs/security/advisories/GHSA-jqc8-qjfv-5m6r)). Enable it with `zarr.config.set({"array.allow_unsafe_pickle_decode": True})` or the environment variable `ZARR_ARRAY__ALLOW_UNSAFE_PICKLE_DECODE=True`. Without the opt-in, reading such data raises `zarr.errors.PickleCodecDisabledError`. numcodecs has its own opt-in (`numcodecs.pickles.ALLOW_UNSAFE_PICKLE_DECODE`), which must also be enabled. Writing with the `pickle` codec is unchanged.
+diff --git a/changes/4539.bugfix.md b/changes/4539.bugfix.md
+new file mode 100644
+index 00000000..62f2472e
+--- /dev/null
++++ b/changes/4539.bugfix.md
+@@ -0,0 +1 @@
++The minimum supported numcodecs version is now 0.16.6, and 0.17.0 is excluded. Those versions leave `Pickle.decode` enabled by default, which allows arbitrary code execution when reading an untrusted Zarr v2 array ([GHSA-jqc8-qjfv-5m6r](https://github.com/zarr-developers/numcodecs/security/advisories/GHSA-jqc8-qjfv-5m6r)).
+diff --git a/docs/user-guide/config.md b/docs/user-guide/config.md
+index d1a70a14..a97feb85 100644
+--- a/docs/user-guide/config.md
++++ b/docs/user-guide/config.md
+@@ -40,6 +40,7 @@ Configuration options include the following:
+ - Whether empty chunks are written to storage `array.write_empty_chunks`
+ - Enable experimental rectilinear chunks `array.rectilinear_chunks`
+ - Whether missing chunks are filled with the array's fill value on read `array.read_missing_chunks` (default `True`). Set to `False` to raise a [`ChunkNotFoundError`][zarr.errors.ChunkNotFoundError] instead.
++- Whether data encoded with the `pickle` codec can be read `array.allow_unsafe_pickle_decode` (default `False`). Unpickling can execute arbitrary code, so only enable this for data from a source you trust, e.g. with `zarr.config.set({'array.allow_unsafe_pickle_decode': True})` or the environment variable `ZARR_ARRAY__ALLOW_UNSAFE_PICKLE_DECODE=True`. While it is disabled, reading such data raises a [`PickleCodecDisabledError`][zarr.errors.PickleCodecDisabledError]. Writing with the `pickle` codec is not affected. numcodecs has a separate opt-in for the same reason (`numcodecs.pickles.ALLOW_UNSAFE_PICKLE_DECODE = True`, or `NUMCODECS_ALLOW_UNSAFE_PICKLE_DECODE=1` before importing numcodecs); both must be enabled to read pickled data.
+ - Async and threading options, e.g. `async.concurrency` and `threading.max_workers`
+ - Selections of implementations of codecs, codec pipelines and buffers
+ - Enabling GPU support with `zarr.config.enable_gpu()`. See [GPU support](gpu.md) for more.
+diff --git a/pyproject.toml b/pyproject.toml
+index e6323ce2..0df173f8 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -47,7 +47,8 @@ requires-python = ">=3.12"
+ dependencies = [
+     'packaging>=22.0',
+     'numpy>=2',
+-    'numcodecs>=0.16',
++    # 0.16.6 and 0.17.1 refuse to unpickle untrusted data (GHSA-jqc8-qjfv-5m6r); 0.17.0 does not.
++    'numcodecs>=0.16.6,!=0.17.0',
+     'google-crc32c>=1.5',
+     'typing_extensions>=4.14',
+     'donfig>=0.8',
+diff --git a/src/zarr/codecs/_v2.py b/src/zarr/codecs/_v2.py
+index 7fdf408d..7c33caaa 100644
+--- a/src/zarr/codecs/_v2.py
++++ b/src/zarr/codecs/_v2.py
+@@ -8,6 +8,8 @@ import numpy as np
+ from numcodecs.compat import ensure_bytes, ensure_ndarray_like
+ 
+ from zarr.abc.codec import ArrayBytesCodec
++from zarr.core.config import config
++from zarr.errors import PickleCodecDisabledError
+ from zarr.registry import get_ndbuffer_class
+ 
+ if TYPE_CHECKING:
+@@ -16,6 +18,29 @@ if TYPE_CHECKING:
+     from zarr.core.buffer import Buffer, NDBuffer
+ 
+ 
++def _check_pickle_allowed(codecs: tuple[Numcodec | None, ...]) -> None:
++    """
++    Raise if any of ``codecs`` is the pickle codec and reading pickled data has not been enabled.
++
++    Unpickling can run arbitrary code, so data from an untrusted store must not be decoded
++    with the pickle codec unless the user has explicitly opted in.
++    """
++    if not any(getattr(codec, "codec_id", None) == "pickle" for codec in codecs):
++        return
++    # Compare with ``True`` rather than testing truthiness: donfig keeps an environment
++    # variable it cannot parse as a Python literal (e.g. ``false``) as a non-empty string.
++    if config.get("array.allow_unsafe_pickle_decode") is not True:
++        raise PickleCodecDisabledError(
++            "Refusing to decode data with the 'pickle' codec, because unpickling data "
++            "from an untrusted source can execute arbitrary code. If you trust this data, "
++            "enable the pickle codec with zarr.config.set({'array.allow_unsafe_pickle_decode': True}) "
++            "or set the environment variable ZARR_ARRAY__ALLOW_UNSAFE_PICKLE_DECODE=True. numcodecs has "
++            "its own opt-in, which must be enabled as well: set "
++            "numcodecs.pickles.ALLOW_UNSAFE_PICKLE_DECODE = True, or set the environment "
++            "variable NUMCODECS_ALLOW_UNSAFE_PICKLE_DECODE=1 before importing numcodecs."
++        )
++
++
+ @dataclass(frozen=True)
+ class V2Codec(ArrayBytesCodec):
+     filters: tuple[Numcodec, ...] | None
+@@ -28,6 +53,7 @@ class V2Codec(ArrayBytesCodec):
+         chunk_bytes: Buffer,
+         chunk_spec: ArraySpec,
+     ) -> NDBuffer:
++        _check_pickle_allowed((self.compressor, *(self.filters or ())))
+         cdata = chunk_bytes.as_array_like()
+         # decompress
+         if self.compressor:
+diff --git a/src/zarr/core/config.py b/src/zarr/core/config.py
+index c0ebb313..4a7cb041 100644
+--- a/src/zarr/core/config.py
++++ b/src/zarr/core/config.py
+@@ -103,6 +103,9 @@ config = Config(
+                 "rectilinear_chunks": False,
+                 "sharding_coalesce_max_gap_bytes": 1 << 20,  # 1 MiB
+                 "sharding_coalesce_max_bytes": 16 << 20,  # 16 MiB
++                # Decoding data with the pickle codec can execute arbitrary code,
++                # so it must be explicitly enabled.
++                "allow_unsafe_pickle_decode": False,
+             },
+             "async": {"concurrency": 10, "timeout": None},
+             "threading": {"max_workers": None},
+diff --git a/src/zarr/errors.py b/src/zarr/errors.py
+index 3e445de2..bceb683e 100644
+--- a/src/zarr/errors.py
++++ b/src/zarr/errors.py
+@@ -12,6 +12,7 @@ __all__ = [
+     "MetadataValidationError",
+     "NegativeStepError",
+     "NodeTypeValidationError",
++    "PickleCodecDisabledError",
+     "UnknownCodecError",
+     "UnstableSpecificationWarning",
+     "VindexInvalidSelectionError",
+@@ -101,6 +102,15 @@ class UnknownCodecError(BaseZarrError):
+     """
+ 
+ 
++class PickleCodecDisabledError(BaseZarrError):
++    """
++    Raised when reading data encoded with the pickle codec without opting in.
++
++    Unpickling can execute arbitrary code, so decoding with the pickle codec is
++    disabled unless the ``array.allow_unsafe_pickle_decode`` configuration option is set to ``True``.
++    """
++
++
+ class NodeTypeValidationError(MetadataValidationError):
+     """
+     Specialized exception when the node_type of the metadata document is incorrect.

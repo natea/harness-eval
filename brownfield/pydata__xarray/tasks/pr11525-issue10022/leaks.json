@@ -1,0 +1,119 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "print(\"xarray\", xr_arr.isin(s))",
+      "rationale": "Reports that isin with a set returns all False; no cause or fix given.",
+      "author": "mark-boer",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/common.py"
+      ],
+      "evidence": "np.array({1, 2, 3})\narray({1, 2, 3}, dtype=object)\n\nIMO special-casing a set makes sense to me.",
+      "rationale": "Identifies root cause (numpy makes 0-d object array from set) and proposes special-casing sets, which matches the fix.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Agree! We would take a PR...",
+      "rationale": "No technical content.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c3",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Sure thing, I can make a PR!",
+      "rationale": "Scheduling only.",
+      "author": "mark-boer",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Pandas performs an `is_list_like` check, raising an error when that fails",
+      "rationale": "Proposes a stricter pandas-style validation that the reference did not do.",
+      "author": "mark-boer",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "what's the difference between \"special-case a set\" and that?",
+      "rationale": "Discussion question, no concrete content.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "So the main difference between special casing a set and following the pandas approach is a much stricter validation",
+      "rationale": "Mostly behavior listing and a stricter-validation proposal that the reference did not adopt. Shows the set behavior as a symptom.",
+      "author": "mark-boer",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "only the sets case seems to pass that test...",
+      "rationale": "Scope discussion; says only the set case warrants a change, without implementation detail.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c8",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it should just be a small change then",
+      "rationale": "Discusses string and scalar strictness, which the reference did not implement. No fix detail.",
+      "author": "mark-boer",
+      "role": "issue author"
+    },
+    {
+      "id": "c9",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "That weighs me a bit towards disallowing it.",
+      "rationale": "Opinion on scalar strictness, not part of the reference.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    },
+    {
+      "id": "c10",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I like the idea of raising for a string, just like the other scalars.",
+      "rationale": "Proposes deprecating strings, which the reference does not do.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

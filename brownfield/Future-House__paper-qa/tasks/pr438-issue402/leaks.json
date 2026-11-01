@@ -1,0 +1,79 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "But is not clear to me how to execute the same functionality with the Python module.",
+      "rationale": "A documentation question; it doesn't identify a code location or propose a change.",
+      "author": "ivanhigueram",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "search_index = SearchIndex(index_name=index_name, settings=settings)",
+      "rationale": "This is a bot answer using SearchIndex. The reference fix only changes the README, so it points the wrong way.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "how can I use a previous `ask` object index to execute a search? that is the part that is not clear in the documentation.",
+      "rationale": "Restates the user's need and notes the docs are unclear. It gives no fix.",
+      "author": "ivanhigueram",
+      "role": "issue author"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "paperqa search --index answers \"your search query\"",
+      "rationale": "A CLI-only answer that doesn't match the fix.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "this is using the CLI, I want to execute this search in Python.",
+      "rationale": "Clarifies the request and gives no fix.",
+      "author": "ivanhigueram",
+      "role": "issue author"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "settings = Settings(paper_directory=\"path/to/your/index_directory\")",
+      "rationale": "A wrong guess that uses ask, so it doesn't match the fix.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c6",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "just make a new `Settings` object with the paper directory and settings that you previously used and then do: `settings.get_index_name()` -- it'll tell you the name of the index.",
+      "rationale": "It explains how to find and reuse an index from Python, which is what the new README 'Reusing Index' section documents. That section uses get_index_name and the paper_directory setting. It is a prose pointer to the documentation content, not code.",
+      "author": "mskarlin",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

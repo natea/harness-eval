@@ -1,0 +1,43 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11700
+issues:
+  - 6577
+baseSha: c52a59f94ae45dd4f8f4d84b6e8906fd4a67a449
+mergeSha: 030b27658ea222c5afbc38a511030e6e9b24698b
+tStar: 2026-10-09T12:37:30Z
+issueCreatedAt: 2022-05-05T20:27:00Z
+prMergedAt: 2026-10-22T12:05:55Z
+verdict: VALID
+failToPass:
+  - xarray.tests.backends.test_plugins::test_refresh_engines
+  - xarray.tests.backends.test_plugins::test_remote_url_backend_auto_detection
+  - xarray.tests.backends.test_plugins::test_show_backends
+  - xarray.tests.test_print_versions::test_html_table
+  - xarray.tests.test_print_versions::test_in_rich_frontend_without_ipython
+  - xarray.tests.test_print_versions::test_markdown_table
+  - xarray.tests.test_print_versions::test_package_version
+  - xarray.tests.test_print_versions::test_package_version_dist_name_differs
+  - xarray.tests.test_print_versions::test_show_report
+  - xarray.tests.test_print_versions::test_show_versions
+  - xarray.tests.test_print_versions::test_show_versions_markdown
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: true
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: a54ebd531bc708a54cad5cd515098865a1cc1d405ca4e89f5b0748377ec53279
+  issue/body+human.md: a54ebd531bc708a54cad5cd515098865a1cc1d405ca4e89f5b0748377ec53279
+  issue/body.md: 12854db3b4c4a77c89b9dbbe13266061cb00fc2226475a24823ac3056abc93b0
+  leaks.json: a37a957a2f2e8355daff604434ed99f743cca12740dd60c54e739fed2947e176
+  reference.patch: fa02d562fad2c603109b51a1b39c0736e5952525946ddb222f9af81642c1746b
+  snapshot.json: d38eeabaa6781c3ea9d7544228d809cd6a22e19eb66b7f590fd9cadedbab5189
+  tests.patch: e13f141b056248a3d96fa29f3e1a56c12b80704e4ce4c137714be4793c7e9f42
+  validation.json: e97c654770072ee1d58e9e0f4ddc33e1f69fec60f384347ced783fd275aa131d

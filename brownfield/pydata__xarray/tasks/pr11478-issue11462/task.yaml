@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11478
+issues:
+  - 11462
+baseSha: 5c1ff1cb2e3ce98906877c56fd267e6f9f886337
+mergeSha: 0c2d2b40c4f1738d417835c35201ea235f8d1f4c
+tStar: 2026-07-27T05:33:05Z
+issueCreatedAt: 2026-07-20T10:39:00Z
+prMergedAt: 2026-07-29T15:50:40Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_computation::test_polyval_timedelta_nat
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 7654c0770fd347301a2272cad1d7b45261bb795f02acf3a6d6043d17f8c08926
+  issue/body+human.md: 7654c0770fd347301a2272cad1d7b45261bb795f02acf3a6d6043d17f8c08926
+  issue/body.md: 7654c0770fd347301a2272cad1d7b45261bb795f02acf3a6d6043d17f8c08926
+  leaks.json: 6b3bddc7be7a635e6149c8079a96f0ef1de9973ddb7d2c1e1074e9e1be19cd48
+  reference.patch: 57a020ad2fec129e59940d342cc201d6912acbcb6a76d21fc4f3f8ff8a6115b2
+  snapshot.json: 856547885452370a576ec035b648b906b73b00c3f23f741c1aa1feeff57fa741
+  tests.patch: 1d815e6c12a1e16e9dc2db76130b6d20355ccd817c9fbf12a3e2ecbf468483ac
+  validation.json: 58c9b9f00c9980316745d9cf5909fb5efd49bce238422344975a99c88885ab6a

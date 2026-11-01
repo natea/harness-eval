@@ -1,0 +1,42 @@
+{
+  "pr": 11322,
+  "merged": "2026-10-22",
+  "issues": [
+    {
+      "n": 11317,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/structure/concat.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_concat.py"
+  ],
+  "env": "exclude-newer 2026-10-22T13:40:12+02:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_concat.py::TestNewDefaults::test_concat_second_empty_with_scalar_data_var_only_on_first",
+    "xarray/tests/test_concat.py::test_concat_index_not_same_dim",
+    "xarray/tests/test_concat.py::test_concat_pandas_index_string_dtype"
+  ],
+  "counts": {
+    "f2p": 4,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_concat::test_concat_pandas_index_string_dtype[False-None]",
+    "xarray.tests.test_concat::test_concat_pandas_index_string_dtype[False-dtype1]",
+    "xarray.tests.test_concat::test_concat_pandas_index_string_dtype[True-None]",
+    "xarray.tests.test_concat::test_concat_pandas_index_string_dtype[True-dtype1]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

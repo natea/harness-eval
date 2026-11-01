@@ -1,0 +1,43 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4257
+issues:
+  - 4255
+baseSha: 6ba6e891d103b42d40849de229183fea26745231
+mergeSha: d3dc9f527e5b4b75ca492948c820a57be50aa199
+tStar: 2026-08-12T19:34:51Z
+issueCreatedAt: 2026-08-12T19:21:00Z
+prMergedAt: 2026-08-12T19:56:30Z
+verdict: VALID
+failToPass:
+  - tests.test_api::test_create
+  - tests.test_chunk_grids::test_normalize_chunks[chunks20-shape20-expected20]
+  - tests.test_chunk_grids::test_normalize_chunks[chunks21-shape21-expected21]
+  - tests.test_chunk_grids::test_normalize_chunks[chunks22-shape22-expected22]
+  - tests.test_chunk_grids::test_normalize_chunks[chunks23-shape23-expected23]
+  - tests.test_chunk_grids::test_normalize_chunks[chunks24-shape24-expected24]
+  - tests.test_chunk_grids::test_normalize_chunks_1d_errors[zero-uniform-numpy]
+  - tests.test_chunk_grids::test_normalize_chunks_1d_errors[non-iterable-scalar]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_code
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 223f35c04f5319775ae1eb88d338b2f7117b90ffa0627307a9c7c4c8bc08d07b
+  issue/body+human.md: 223f35c04f5319775ae1eb88d338b2f7117b90ffa0627307a9c7c4c8bc08d07b
+  issue/body.md: ac17f4539336330506ea6c04ac0e031e90f843490da1a6f92b0bad613018b6ef
+  leaks.json: 18c2b865fb2aa8dce636bac278b15a3559354b5d1e24dae529cbfffe4e73fc27
+  reference.patch: 15e56b0839051c71dcd7f67deb8981ee5e3fe374990a63a4e564ca75fae48600
+  snapshot.json: f5ee18d9b4a3c7165c446bffa2bfe77d10c9d01c22670ae20102b6d677e89307
+  tests.patch: 737bc580c96d2208aade184f0aa7c19051d7f78eeebc60de4c0f42fc54738c73
+  validation.json: cf8086e5f4c4f65c7066601b29787eb02002cde52ace3237ca128ac6e52fbf9f

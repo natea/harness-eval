@@ -1,0 +1,29 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index a387ee1f..63177c82 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -46,6 +46,9 @@ Bug Fixes
+   differ from the dtype returned by the matching numpy-backed bottleneck path,
+   notably ``object`` instead of ``float64`` for boolean inputs.
+   By `Matthew Rocklin <https://github.com/mrocklin>`_.
++- Fixed :py:meth:`Dataset.stack` raising ``KeyError`` when a stacked dimension
++  has a falsy but valid name such as ``""``, ``False`` or ``0`` (:issue:`9969`).
++  By `JOhnsonKC201 <https://github.com/JOhnsonKC201>`_.
+ - :py:func:`polyval` now propagates ``NaN`` for ``NaT`` entries in ``timedelta64``
+   coordinates instead of returning a large sentinel value (:issue:`11462`).
+   By `Dipak Chaudhari <https://github.com/dchaudhari7177>`_.
+diff --git a/xarray/core/indexes.py b/xarray/core/indexes.py
+index 2242e57e..136160bd 100644
+--- a/xarray/core/indexes.py
++++ b/xarray/core/indexes.py
+@@ -1038,7 +1038,9 @@ class PandasMultiIndex(PandasIndex):
+         # default index level names
+         names = []
+         for i, idx in enumerate(self.index.levels):
+-            name = idx.name or f"{dim}_level_{i}"
++            # only unnamed levels get a synthetic name: ``""``, ``False`` and
++            # ``0`` are all valid (if unusual) level names
++            name = idx.name if idx.name is not None else f"{dim}_level_{i}"
+             if name == dim:
+                 raise ValueError(
+                     f"conflicting multi-index level name {name!r} with dimension {dim!r}"

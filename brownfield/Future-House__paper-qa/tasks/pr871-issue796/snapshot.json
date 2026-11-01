@@ -1,0 +1,42 @@
+{
+  "pr": 871,
+  "issue": 796,
+  "tStar": "2025-02-17T17:45:23Z",
+  "title": "`gemini-1.5-flash` can't call tools without empty arguments",
+  "issueAuthor": "jamesbraza",
+  "body": "Running the below code on Jan 8th 2025 with Python 3.12 and `litellm==1.53.3`:\r\n\r\n```python\r\nimport litellm\r\n\r\nOPENAI_MODEL = \"gpt-4o-2024-11-20\"\r\nGEMINI_MODEL = \"gemini/gemini-1.5-flash\"\r\n\r\n\r\nresponse = litellm.completion(\r\n    model=GEMINI_MODEL,\r\n    messages=[\r\n        {\"role\": \"user\", \"content\": \"Select a tool to print 'hi'.\"},\r\n    ],\r\n    tool_choice=\"required\",\r\n    tools=[\r\n        {\r\n            \"type\": \"function\",\r\n            \"function\": {\r\n                \"name\": \"print_hi\",\r\n                \"description\": \"Print 'hi'.\",\r\n                \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []},\r\n            },\r\n        }\r\n    ],\r\n)\r\nassert len(response.choices) == 1, \"Expected one response choice.\"\r\nprint(response.choices[0].message.tool_calls)\r\n```\r\n\r\nIt works fine with OpenAI `gpt-4o-2024-11-20`, but does not work with Google `gemini/gemini-1.5-flash`:\r\n\r\n```none\r\nlitellm.exceptions.BadRequestError: litellm.BadRequestError: VertexAIException BadRequestError - {\r\n  \"error\": {\r\n    \"code\": 400,\r\n    \"message\": \"* GenerateContentRequest.tools[0].function_declarations[0].parameters.properties: should be non-empty for OBJECT type\\n\",\r\n    \"status\": \"INVALID_ARGUMENT\"\r\n  }\r\n}\r\n```\r\n\r\nSo Gemini does not yet support empty tool `parameters`.\r\n\r\nUnfortunately, PaperQA's `gen_answer` and `reset` tools have empty parameters. Thus, `gemini/gemini-1.5-flash` can't be used for tool selections (our agent LLM).",
+  "comments": [
+    {
+      "at": "2025-02-13T02:59:22Z",
+      "author": "vietvudanh",
+      "isBot": false,
+      "role": "other user",
+      "text": "Can we just drop the key `properties` when it's an empty object?",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-13T06:07:12Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "role": "issue author",
+      "text": "@vietvudanh if you can get some variant of the above snippet to run, perhaps we can implement it.\n\nI just tried removing `properties` like you suggest, so `\"parameters\": {\"type\": \"object\", \"required\": []},`, and still got the same `INVALID_ARGUMENT` error.",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-02-13T10:03:50Z",
+      "author": "vietvudanh",
+      "isBot": false,
+      "role": "other user",
+      "text": "> [@vietvudanh](https://github.com/vietvudanh) if you can get some variant of the above snippet to run, perhaps we can implement it.\n> \n> I just tried removing `properties` like you suggest, so `\"parameters\": {\"type\": \"object\", \"required\": []},`, and still got the same `INVALID_ARGUMENT` error.\n\nI mean to remove `\"parameters\"`. As in when call `litellm.completion`, this works:\n```python\n\n# this works\nlitellm.completion(\n  ...\n  tools=[\n          {\n              \"type\": \"function\",\n              \"function\": {\n                  \"name\": \"print_hi\",\n                  \"description\": \"Print 'hi'.\",\n              },\n          }\n      ],\n  ...\n)\n```\nOr call Google API, this works:\n```shell\ncurl -X POST \\\n\"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${GEMINI_API_KEY}\" \\\n-H 'Content-Type: application/json' \\\n-d '{\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Select a tool to print hi\"\n        }\n      ]\n    }\n  ],\n  \"tools\": [\n    {\n      \"function_declarations\": [\n        {\n          \"name\": \"print_hi\",\n          \"description\": \"Print hi.\"\n        }\n      ]\n    }\n  ],\n  \"toolConfig\": {\n    \"functionCallingConfig\": {\n      \"mode\": \"ANY\"\n    }\n  },\n  \"generationConfig\": {}\n}'\n```\nI know this problems is at server side of Google API, it's just not OpenAI compatible, but still, trying to make it works first.",
+      "source": "edit@2025-02-13T10:04:12Z"
+    },
+    {
+      "at": "2025-02-13T20:34:32Z",
+      "author": "jamesbraza",
+      "isBot": false,
+      "role": "issue author",
+      "text": "@vietvudanh ah I follow, nice find. This opens the door for a few possible workarounds.\n\nPaperQA has almost no LLM-provider specifics, we outsource all of it to LiteLLM. Can you post your conclusion in the issue https://github.com/BerriAI/litellm/issues/7634? Maybe LiteLLM can implement this, that's one possible solution.\n\nWe form the `parameters` schema from https://github.com/Future-House/aviary/blob/v0.18.1/src/aviary/tools/base.py#L220. I made https://github.com/Future-House/aviary/pull/188 so we can create a workaround to clobber `parameters` manually in something like a callback. I will circle back, I think this workaround can work.",
+      "source": "no-edits"
+    }
+  ]
+}

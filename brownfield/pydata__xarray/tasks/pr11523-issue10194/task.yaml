@@ -1,0 +1,34 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11523
+issues:
+  - 10194
+baseSha: abdc46498ddaf623e057c18ce35799be865bed54
+mergeSha: c2998a75ef32f6cf4d62cd946f2200ca953550d9
+tStar: 2026-08-14T23:13:54Z
+issueCreatedAt: 2025-03-31T14:32:00Z
+prMergedAt: 2026-08-18T03:31:36Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_coordinates.TestCoordinates::test_coordinates_as_coord_value
+  - xarray.tests.test_variable.TestVariable::test_as_variable
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: true
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: f571eda4d24539e1c616d26e0e3da7dc527b3a8bea13ca4220f7c9ab96db7c7f
+  issue/body+human.md: f571eda4d24539e1c616d26e0e3da7dc527b3a8bea13ca4220f7c9ab96db7c7f
+  issue/body.md: 41f93273b59a049351f9aa8ac6ad1fdc78e81dd224da2b61c20b91469628c964
+  leaks.json: caf06e3ab9be4da866efcfe9a83d266cb0f6e5efe0e05de2ed589469589270e7
+  reference.patch: 0339e3486e2756a44e9e9cbd55ecefd535115b497b97aac3eeb618da70a2514e
+  snapshot.json: 0cc3112e1d5c2cdd42770bf931f0f3f8a522ee007e7bb834e5fe8e25ff353ec3
+  tests.patch: c59bc7861565c482b2cf01f3e9818db2d5b1a536e9a604500d05f924cde47792
+  validation.json: 776a5e07790fd91a14c7624c244cc219d2e5e520a924ff2e1b5db3c1fc2bf62a

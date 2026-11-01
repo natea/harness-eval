@@ -1,0 +1,59 @@
+{
+  "pr": 724,
+  "merged": "2024-11-27",
+  "issues": [
+    {
+      "n": 709,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 16,
+  "srcFiles": [
+    "paperqa/prompts.py"
+  ],
+  "testFiles": [
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors1-the answer is 14004-incorrect-expected_dreturns1].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors2-the answer is 94106-incorrect-expected_dreturns2].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors3-Insufficient information-unsure-expected_dreturns3].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is my office-s zip code--94107-distractors4-the answer is 94106 or 94107-incorrect-expected_dreturns4].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[What is the meaning of life--42-distractors5-14-incorrect-expected_dreturns5].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[didnt-match-and-llm-has-innate-knowledge].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[didnt-match-and-no-llm-innate-knowledge].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[empty-answer1].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[empty-answer2].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[empty-answer3].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[matched-correct-option].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[matched-incorrect-option].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[matched-several-options].yaml",
+    "tests/cassettes/TestLitQAEvaluation.test_from_question[matched-unsure-option].yaml",
+    "tests/test_litqa.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 8,
+  "selected": [
+    "tests/test_litqa.py::TestLitQAEvaluation::test_from_question"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 8,
+    "liveApi": 8,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-several-options]"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-correct-option]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[didnt-match-and-no-llm-innate-knowledge]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-incorrect-option]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[matched-unsure-option]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer1]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[didnt-match-and-llm-has-innate-knowledge]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer2]",
+    "tests.test_litqa.TestLitQAEvaluation::test_from_question[empty-answer3]"
+  ],
+  "verdict": "VALID"
+}

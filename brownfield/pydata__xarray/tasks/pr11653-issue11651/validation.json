@@ -1,0 +1,41 @@
+{
+  "pr": 11653,
+  "merged": "2026-10-02",
+  "issues": [
+    {
+      "n": 11651,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/groupby.py",
+    "xarray/core/resample.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_groupby.py"
+  ],
+  "env": "exclude-newer 2026-10-01T20:56:34Z",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_groupby.py::test_da_groupby_quantile",
+    "xarray/tests/test_groupby.py::test_dask_da_resample_median",
+    "xarray/tests/test_groupby.py::test_dask_groupby_blockwise_interleaved_groups"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_groupby::test_dask_groupby_blockwise_interleaved_groups[median]",
+    "xarray.tests.test_groupby::test_dask_groupby_blockwise_interleaved_groups[mean]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -1,0 +1,45 @@
+{
+  "pr": 11525,
+  "merged": "2026-10-12",
+  "issues": [
+    {
+      "n": 10022,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/core/common.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py",
+    "xarray/tests/test_dataset.py"
+  ],
+  "env": "exclude-newer 2026-10-12T22:37:06+02:00",
+  "envSecs": 4,
+  "selected": [
+    "xarray/tests/test_dataarray.py::test_isin",
+    "xarray/tests/test_dataarray.py::test_raise_no_warning_for_nan_in_binary_ops",
+    "xarray/tests/test_dataset.py::test_isin"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 7,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray::test_isin[numpy-repeating_ints]",
+    "xarray.tests.test_dataarray::test_isin[dask-repeating_ints]",
+    "xarray.tests.test_dataset::test_isin[numpy-set]",
+    "xarray.tests.test_dataset::test_isin[numpy-frozenset]",
+    "xarray.tests.test_dataset::test_isin[dask-set]",
+    "xarray.tests.test_dataset::test_isin[dask-frozenset]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

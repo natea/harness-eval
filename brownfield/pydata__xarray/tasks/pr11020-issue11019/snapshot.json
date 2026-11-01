@@ -1,0 +1,9 @@
+{
+  "pr": 11020,
+  "issue": 11019,
+  "tStar": "2025-12-16T05:39:26Z",
+  "title": "Problem using assign_attrs() in map()",
+  "issueAuthor": "dopplershift",
+  "body": "### What is your issue?\n\nIn MetPy we have an attribute managing helper that calls `DataArray.assign_attrs()` within a callable passed to `Dataset.map()`. With recent versions of xarray, it is impossible to have the attributes assigned using `assign_attrs()` to be present in the result. See the following example:\n\n```python\nimport numpy as np\nimport xarray as xr\n\nds = xr.DataArray(np.zeros((3)),\n    coords={'b': xr.DataArray(np.arange(3), dims='b')},\n    dims=['b'], attrs={'units': 'kelvin'}, name='test').to_dataset()\n\ndef add_attr(da):\n    d = da.assign_attrs(my_attr='foobar')\n    return d\n\nds2 = ds.map(add_attr, keep_attrs=True)\n\nprint(ds2['test'].attrs)\n```\n\nThis gives `{'units': 'kelvin'}`. If instead, `keep_attrs=False` is used, then we get `{}`.\n\nThis boils down to the fact that there are only two options for a `DataArray` processed within `map()`:\n1. Get a direct copy (really, reference) to the original `DataArray`'s `.attrs`\n2. Have `.attrs` set to `{}`\n\nThere's no option to tell `map()` to just leave the created `DataArray` alone. The only work-around I've found is to modify the original `DataArray` directly instead of using `assign_attrs()`, which is suboptimal. Things worked fine as recently as xarray 2025.6.1. I know the `keep_attrs` default changed to `True` this fall, but I'm surprised setting to `False` doesn't restore the previous behavior.",
+  "comments": []
+}

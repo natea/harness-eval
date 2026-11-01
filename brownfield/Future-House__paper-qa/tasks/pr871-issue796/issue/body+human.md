@@ -1,0 +1,131 @@
+# `gemini-1.5-flash` can't call tools without empty arguments
+
+_Opened by @jamesbraza_
+
+Running the below code on Jan 8th 2025 with Python 3.12 and `litellm==1.53.3`:
+
+```python
+import litellm
+
+OPENAI_MODEL = "gpt-4o-2024-11-20"
+GEMINI_MODEL = "gemini/gemini-1.5-flash"
+
+
+response = litellm.completion(
+    model=GEMINI_MODEL,
+    messages=[
+        {"role": "user", "content": "Select a tool to print 'hi'."},
+    ],
+    tool_choice="required",
+    tools=[
+        {
+            "type": "function",
+            "function": {
+                "name": "print_hi",
+                "description": "Print 'hi'.",
+                "parameters": {"type": "object", "properties": {}, "required": []},
+            },
+        }
+    ],
+)
+assert len(response.choices) == 1, "Expected one response choice."
+print(response.choices[0].message.tool_calls)
+```
+
+It works fine with OpenAI `gpt-4o-2024-11-20`, but does not work with Google `gemini/gemini-1.5-flash`:
+
+```none
+litellm.exceptions.BadRequestError: litellm.BadRequestError: VertexAIException BadRequestError - {
+  "error": {
+    "code": 400,
+    "message": "* GenerateContentRequest.tools[0].function_declarations[0].parameters.properties: should be non-empty for OBJECT type\n",
+    "status": "INVALID_ARGUMENT"
+  }
+}
+```
+
+So Gemini does not yet support empty tool `parameters`.
+
+Unfortunately, PaperQA's `gen_answer` and `reset` tools have empty parameters. Thus, `gemini/gemini-1.5-flash` can't be used for tool selections (our agent LLM).
+
+---
+
+## Discussion
+
+**@vietvudanh** (2025-02-13):
+
+Can we just drop the key `properties` when it's an empty object?
+
+**@jamesbraza** (2025-02-13):
+
+@vietvudanh if you can get some variant of the above snippet to run, perhaps we can implement it.
+
+I just tried removing `properties` like you suggest, so `"parameters": {"type": "object", "required": []},`, and still got the same `INVALID_ARGUMENT` error.
+
+**@vietvudanh** (2025-02-13):
+
+> [@vietvudanh](https://github.com/vietvudanh) if you can get some variant of the above snippet to run, perhaps we can implement it.
+> 
+> I just tried removing `properties` like you suggest, so `"parameters": {"type": "object", "required": []},`, and still got the same `INVALID_ARGUMENT` error.
+
+I mean to remove `"parameters"`. As in when call `litellm.completion`, this works:
+```python
+
+# this works
+litellm.completion(
+  ...
+  tools=[
+          {
+              "type": "function",
+              "function": {
+                  "name": "print_hi",
+                  "description": "Print 'hi'.",
+              },
+          }
+      ],
+  ...
+)
+```
+Or call Google API, this works:
+```shell
+curl -X POST \
+"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${GEMINI_API_KEY}" \
+-H 'Content-Type: application/json' \
+-d '{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Select a tool to print hi"
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "function_declarations": [
+        {
+          "name": "print_hi",
+          "description": "Print hi."
+        }
+      ]
+    }
+  ],
+  "toolConfig": {
+    "functionCallingConfig": {
+      "mode": "ANY"
+    }
+  },
+  "generationConfig": {}
+}'
+```
+I know this problems is at server side of Google API, it's just not OpenAI compatible, but still, trying to make it works first.
+
+**@jamesbraza** (2025-02-13):
+
+@vietvudanh ah I follow, nice find. This opens the door for a few possible workarounds.
+
+PaperQA has almost no LLM-provider specifics, we outsource all of it to LiteLLM. Can you post your conclusion in the issue https://github.com/BerriAI/litellm/issues/7634? Maybe LiteLLM can implement this, that's one possible solution.
+
+We form the `parameters` schema from https://github.com/Future-House/aviary/blob/v0.18.1/src/aviary/tools/base.py#L220. I made https://github.com/Future-House/aviary/pull/188 so we can create a workaround to clobber `parameters` manually in something like a callback. I will circle back, I think this workaround can work.

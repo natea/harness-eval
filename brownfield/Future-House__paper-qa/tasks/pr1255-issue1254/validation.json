@@ -1,0 +1,41 @@
+{
+  "pr": 1255,
+  "merged": "2025-12-23",
+  "issues": [
+    {
+      "n": 1254,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "README.md",
+    "docs/tutorials/settings_tutorial.ipynb",
+    "docs/tutorials/settings_tutorial.md",
+    "src/paperqa/settings.py"
+  ],
+  "testFiles": [
+    "tests/test_configs.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_configs.py::test_prompt_settings_validation",
+    "tests/test_configs.py::test_readme_settings_cheatsheet_accuracy",
+    "tests/test_configs.py::test_validity_of_bundled_configs"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_configs::test_readme_settings_cheatsheet_accuracy"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

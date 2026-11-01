@@ -1,0 +1,36 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11748
+issues:
+  - 10269
+baseSha: c13613adbb408e52f698ada89ee7c13fde14c31b
+mergeSha: a432f788bee51e1c8861fa41e9b5da9e1cee8943
+tStar: 2026-10-16T06:05:34Z
+issueCreatedAt: 2025-04-29T02:09:00Z
+prMergedAt: 2026-10-17T06:11:11Z
+verdict: VALID
+failToPass:
+  - xarray.tests.backends.test_zarr.TestZarrDictStore::test_use_zarr_fill_value_as_mask[3-True-expected0]
+  - xarray.tests.backends.test_zarr.TestZarrNoConsolidatedMetadataSupport::test_use_zarr_fill_value_as_mask[3-True-expected0]
+  - xarray.tests.backends.test_zarr.TestZarrDirectoryStore::test_use_zarr_fill_value_as_mask[3-True-expected0]
+  - xarray.tests.backends.test_zarr.TestZarrWriteEmpty::test_use_zarr_fill_value_as_mask[3-True-expected0]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: a3b3d9699a777b23b5d6c042b0c4836d272d0a1a20cf53ae42732956ec228e7d
+  issue/body+human.md: a3b3d9699a777b23b5d6c042b0c4836d272d0a1a20cf53ae42732956ec228e7d
+  issue/body.md: 774df94a19662b44e5b225c516015e6da12a5b76e90cbaee9fef620be567038d
+  leaks.json: 82b7fb262170647ca16e25befb4376d6fa9fd0a80cb98196e567c721a66db59a
+  reference.patch: 0905c79421d006aadc25b90c8ac6865e7bf9ad85abe9b9367403dcc1f2f07bf5
+  snapshot.json: 575729fef46b4f0e1b5ecc8ce920586e0704a416b9253da4a6226bbf894ab5dd
+  tests.patch: 80b70d85dd25fd2c552d616431995b0af59aa07d7afab534a3495d733cc05299
+  validation.json: 1bd812ef5c79741658dfc08ee3ef4502013366198d77c4bb8194eb7521aa636f

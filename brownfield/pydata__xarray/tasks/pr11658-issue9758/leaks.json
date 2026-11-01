@@ -1,0 +1,20 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataset.py",
+        "Dataset.interp"
+      ],
+      "evidence": "if self.indexes[coord].is_monotonic_decreasing:\n        obj = obj.isel(coord: slice(None, None, -1))",
+      "rationale": "Points to the sortby line in Dataset.interp and proposes skipping sort for increasing coords, reversing decreasing ones via isel slice, and treating dims without coords as fine. This is essentially what the reference does.",
+      "author": "dcherian",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "fix_code",
+  "commentsLevel": "noise"
+}

@@ -1,0 +1,55 @@
+{
+  "pr": 768,
+  "merged": "2025-01-05",
+  "issues": [
+    {
+      "n": 761,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 11,
+  "srcFiles": [
+    ".pre-commit-config.yaml",
+    "paperqa/_ldp_shims.py",
+    "paperqa/agents/env.py",
+    "paperqa/agents/models.py",
+    "paperqa/agents/task.py",
+    "paperqa/litqa.py",
+    "paperqa/types.py",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "testFiles": [
+    "tests/test_litqa.py",
+    "tests/test_task.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 42,
+  "selected": [
+    "tests/test_litqa.py::test_creating_litqa_questions",
+    "tests/test_litqa.py::test_make_discounted_returns",
+    "tests/test_task.py::TestTaskDataset::test___len__",
+    "tests/test_task.py::TestTaskDataset::test_evaluation"
+  ],
+  "counts": {
+    "f2p": 3,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 4,
+    "liveApi": 4,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_litqa::test_make_discounted_returns[correct-expected_dreturns0]",
+    "tests.test_litqa::test_make_discounted_returns[incorrect-expected_dreturns1]",
+    "tests.test_litqa::test_make_discounted_returns[unsure-expected_dreturns2]"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_litqa::test_creating_litqa_questions",
+    "tests.test_task.TestTaskDataset::test___len__[train-159]",
+    "tests.test_task.TestTaskDataset::test___len__[eval-40]",
+    "tests.test_task.TestTaskDataset::test_evaluation"
+  ],
+  "verdict": "VALID"
+}

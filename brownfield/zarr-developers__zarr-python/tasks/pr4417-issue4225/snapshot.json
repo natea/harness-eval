@@ -1,0 +1,19 @@
+{
+  "pr": 4417,
+  "issue": 4225,
+  "tStar": "2026-09-26T07:22:18Z",
+  "title": "Fix broken docstring-consistency test - it reveals mismatches in parameter docs",
+  "issueAuthor": "Aniketsy",
+  "body": "There's a test  `test_docstring_consistent_parameters` that's supposed to check that shared parameters (like store, filters, chunks, etc.) are documented the same way across different functions (create, create_array, create_group, Group.create_array).\n\n> Turns out the test had a bug and was never actually running its check, it always passed no matter what, even if the docs didn't match. after fixing this\n\nNow that it actually runs, it fails, because the docs really are inconsistent in places:\n\n- Real problem: Parameters like `filters`, `codecs`, `compressors`, `chunks`, `shape`, `dtype`, `shards`, fill_value are worded differently depending on which function you look at (`create/create_array` vs `Group.create_array`).\n- Smaller issue: store and path are checked together, but not every function has both, this may just need the test itself to check them separately instead of as a pair.   ( suggested by ai)\n\nI've  marked the test `xfail` in #4224 for now so it doesn't block CI, but opening this issue to track fixing the actual docs (and possibly refining the test) so it can be un-marked later.",
+  "comments": [
+    {
+      "at": "2026-08-01T10:44:57Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "thanks for spotting this! getting that test running and fixing the discrepancies would be great",
+      "source": "no-edits"
+    }
+  ]
+}

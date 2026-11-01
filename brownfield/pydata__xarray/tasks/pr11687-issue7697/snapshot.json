@@ -1,0 +1,64 @@
+{
+  "pr": 11687,
+  "issue": 7697,
+  "tStar": "2026-10-07T07:02:11Z",
+  "title": "open_mfdataset very slow",
+  "issueAuthor": "groutr",
+  "body": "### What happened?\r\n\r\nI am trying to open an mfdataset consisting of over 4400 files. The call completes in 342.735s on my machine. After running a profiler, I discovered that most of that time is spent reading the first 8 bytes of the file. However, on my filesystem, looking at my system resource monitor, it looks like the entire file is being read (with a sustained 40-50MB of read IO most of that time).\r\n\r\nI traced the bottleneck down to https://github.com/pydata/xarray/blob/96030d4825159c6259736155084f38ee8db5c9bb/xarray/core/utils.py#L662 According to my profile, 264.381s (77%) of the execution time is spent on this line.\r\n\r\nI isolated the essence of this code, by reading the first 8 bytes of each file.\r\n```python\r\nfor f in files:\r\n    with open(f, 'rb') as fh:\r\n        if fh.tell() != 0:\r\n            fh.seek(0)\r\n        magic = fh.read(8)\r\n        fh.seek(0)\r\n```\r\nProfiling this on my directory of netcdf files took 137.587s (not sure why this was faster than 264s, caching maybe?). Changing the `fh.read(8)` to `fh.read1(8)`, the execution time dropped to 1.52s.\r\n\r\n### What did you expect to happen?\r\n\r\nI expected open_mfdataset to be quicker.\r\n\r\n### Minimal Complete Verifiable Example\r\n\r\n```Python\r\nimport xarray as xr\r\nimport pathlib\r\n\r\nfiles = [... <list of 4400 filenames> ...]\r\n# This takes almost 6 minutes to finish.\r\nD = xr.open_mfdataset(files, compat='override', coords='minimal', data_vars='minimal')\r\n```\r\n\r\n\r\n### MVCE confirmation\r\n\r\n- [X] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.\r\n- [ ] Complete example — the example is self-contained, including all data and the text of any traceback.\r\n- [ ] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.\r\n- [X] New issue — a search of GitHub Issues suggests this is not a duplicate.\r\n\r\n### Relevant log output\r\n\r\n_No response_\r\n\r\n### Anything else we need to know?\r\n\r\nI cannot share the netcdf files. I believe this issue to isolated, and possibly triggered by the shared filesystems found on supercomputers.\r\n\r\n### Environment\r\n\r\n<details>\r\nINSTALLED VERSIONS\r\n------------------\r\ncommit: None\r\npython: 3.11.0 | packaged by conda-forge | (main, Jan 14 2023, 12:27:40) [GCC 11.3.0]\r\npython-bits: 64\r\nOS: Linux\r\nOS-release: 3.10.0-1160.80.1.el7.x86_64\r\nmachine: x86_64\r\nprocessor: x86_64\r\nbyteorder: little\r\nLC_ALL: None\r\nLANG: None\r\nLOCALE: (None, None)\r\nlibhdf5: 1.12.2\r\nlibnetcdf: 4.9.1\r\n\r\nxarray: 2023.2.0\r\npandas: 1.5.3\r\nnumpy: 1.24.2\r\nscipy: 1.10.1\r\nnetCDF4: 1.6.2\r\npydap: None\r\nh5netcdf: None\r\nh5py: None\r\nNio: None\r\nzarr: None\r\ncftime: 1.6.2\r\nnc_time_axis: None\r\nPseudoNetCDF: None\r\nrasterio: 1.3.6\r\ncfgrib: None\r\niris: None\r\nbottleneck: None\r\ndask: 2023.3.1\r\ndistributed: None\r\nmatplotlib: 3.7.1\r\ncartopy: None\r\nseaborn: None\r\nnumbagg: None\r\nfsspec: 2023.3.0\r\ncupy: None\r\npint: None\r\nsparse: None\r\nflox: None\r\nnumpy_groupies: None\r\nsetuptools: 67.5.1\r\npip: 23.0.1\r\nconda: None\r\npytest: None\r\nmypy: None\r\nIPython: 8.11.0\r\nsphinx: None\r\n\r\n\r\n\r\n</details>\r\n",
+  "comments": [
+    {
+      "at": "2023-03-29T18:17:35Z",
+      "author": "Illviljan",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "Looks like you almost got this figured out! You want to create a PR for this?",
+      "source": "no-edits"
+    },
+    {
+      "at": "2023-03-29T19:02:39Z",
+      "author": "headtr1ck",
+      "isBot": false,
+      "assoc": "COLLABORATOR",
+      "role": "future fixer (author of the reference PR)",
+      "text": "It seems that this problematic code is mostly used to determine the engine that is used to finally open it. Did you try specifying the correct engine directly?",
+      "source": "no-edits"
+    },
+    {
+      "at": "2023-03-29T20:30:49Z",
+      "author": "groutr",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "issue author",
+      "text": "> It seems that this problematic code is mostly used to determine the engine that is used to finally open it. Did you try specifying the correct engine directly?\r\n\r\nI tried setting the engine to 'netcdf4' and while it did help a little bit, it still seems slow on my system.\r\n\r\nHere is my profile with `engine='netcdf4'`\r\n![slowmfdataset](https://user-images.githubusercontent.com/10678620/228648325-24128f1a-fb53-486a-8739-38f06a7d3375.png)\r\n\r\nI'm not sure what to make of this profile. I don't see anything in the file_manager that would be especially slow. Perhaps it is a filesystem bottleneck at this point (given that the cpu time is 132s of the total 288s duration).",
+      "source": "edit@2023-03-29T20:33:27Z"
+    },
+    {
+      "at": "2023-03-29T20:53:37Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "Fundamentally, xarray has to touch every file because there is no guarantee they are consistent with each other.\r\n\r\nA number of us now use [kerchunk](https://fsspec.github.io/kerchunk/) to create virtual aggregate datasets that can be read a lot faster.",
+      "source": "no-edits"
+    },
+    {
+      "at": "2023-03-29T20:59:24Z",
+      "author": "groutr",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "issue author",
+      "text": "@dcherian I'll look at that. I thought the `compat='override'` option bypassed most of the consistency checking. In my case, it is typically safe to assume the set of files are consistent (each file represents one timestep, the structure of each file is otherwise identical).\r\n\r\n@headtr1ck I was just informed that the underlying filesystem is actually a networked filesystem. The PR might still be useful, but the latest profile seems more reasonable in light of my new info.",
+      "source": "no-edits"
+    },
+    {
+      "at": "2023-03-29T21:20:59Z",
+      "author": "dcherian",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": ">  I thought the compat='override' option bypassed most of the consistency checking. \r\n\r\nwe still construct a  dataset representation for each file which involves reading all coordinates etc. The consistency checking is bypassed at the \"concatenation\" stage.\r\n\r\nYou could also speed using dask by setting up a cluster and using `parallel=True`",
+      "source": "no-edits"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# idxmax with multiple dimensions
+
+_Opened by @max-sixty_
+
+### Is your feature request related to a problem?
+
+(I thought we had an issue for this, but can't find it after five minutes of looking, so either we don't or I've done a very bad job searching...)
+
+`idxmax` (+ `idxmin`) doesn't accept multiple dimensions, but `argmax` does.
+
+### Describe the solution you'd like
+
+Could we implement `idxmax` as a wrapper of `argmax`?
+
+### Describe alternatives you've considered
+
+_No response_
+
+### Additional context
+
+Possibly it's just me, but fwiw I find the `idxmax` & `argmax` terms very confusing, constantly have to look up which is which... I guess it doesn't help that the description of `argmax` is "Index or indices of the maximum"...! But I'm not sure there's a good way of making these much better — maybe in a vacuum we could have started with names like `label_max` & `index_max`, or `argmax` & `iargmax`, but tough to change now.

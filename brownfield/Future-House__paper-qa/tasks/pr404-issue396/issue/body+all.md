@@ -1,0 +1,45 @@
+# Install it for development
+
+_Opened by @griff4692_
+
+Hi,
+
+Are there setup instructions for developing the package, e.g., `pip install -e .`?
+
+---
+
+## Discussion
+
+**@dosubot** (bot) (2024-09-13):
+
+<!-- Greeting -->
+Hey @griff4692! I'm here to help you with any questions or issues you have. Let's tackle this together!
+
+<!-- Answer -->
+Yes, there are setup instructions for developing the package. You can use the following command to install the package in editable mode:
+
+```bash
+pip install -e .
+```
+
+Additionally, to install the package along with the provided environments, you can use:
+
+```bash
+pip install -e . -e packages/gsm8k -e packages/hotpotqa
+```
+
+For PaperQA2, you can install it via pip:
+
+```bash
+pip install paper-qa
+```
+
+If you need to index a large set of papers, you may also want to set up API keys for Crossref and Semantic Scholar to avoid hitting public rate limits. These can be exported as `CROSSREF_API_KEY` and `SEMANTIC_SCHOLAR_API_KEY` variables <sup>[[1]](https://github.com/Future-House/paper-qa/blob/main/README.md)</sup>.
+
+
+<!-- Dosu Comment Footer -->
+*To continue talking to [Dosu](https://dosu.dev), mention @dosu.*
+
+**@jamesbraza** (2024-09-13):
+
+@griff4692 we should make a `CONTRIBUTING.md`, I can set one up. We use `uv` for dev, so you will just run `uv sync` to install everything

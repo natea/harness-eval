@@ -4,7 +4,7 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 ## 1. Task bundle format + miner
 
-- [ ] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, `testPaths`, `appEgress` allowlist, dates, leak strata; hash verification
+- [x] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, `testPaths`, `appEgress` allowlist, dates, leak strata; hash verification
 - [ ] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test / dependency-change with reasons (from `validate.ts` screens)
 - [ ] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
 - [ ] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
@@ -13,11 +13,11 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 ## 2. Studio task review (early — unblocks human labeling)
 
-- [ ] 2.1 Read-only routes listing bundles and serving one bundle (issue variants, snapshot, patches, validation, leak strata)
-- [ ] 2.2 Review view: side-by-side issue / reference patch / tests patch; keyboard leak labels per item; test-fairness verdict; bot tags visible
-- [ ] 2.3 Blind mode: LLM labels withheld until submit; append-only `review/labels.jsonl` endpoint (the only new write)
-- [ ] 2.4 Agreement summary: per-item diff, per-level agreement, Cohen's κ
-- [ ] 2.5 Import the spike snapshots + LLM labels as provisional bundles (paper-qa 37, xarray 53 valid, zarr 19 valid; `brownfield/<repo>/{snapshots,leaks}`) so labeling can start before 3–4 land
+- [x] 2.1 Read-only routes listing bundles and serving one bundle (issue variants, snapshot, patches, validation, leak strata)
+- [x] 2.2 Review view: side-by-side issue / reference patch / tests patch; keyboard leak labels per item; test-fairness verdict; bot tags visible
+- [x] 2.3 Blind mode: LLM labels withheld until submit; append-only `review/labels.jsonl` endpoint (the only new write)
+- [x] 2.4 Agreement summary: per-item diff, per-level agreement, Cohen's κ
+- [x] 2.5 Import the spike snapshots + LLM labels as provisional bundles (paper-qa 37, xarray 53 valid, zarr 19 valid; `brownfield/<repo>/{snapshots,leaks}`) so labeling can start before 3–4 land
 - [ ] 2.6 Human-label all paper-qa bodies and comments; record κ
 
 ## 3. Sealed repo + environment + validation

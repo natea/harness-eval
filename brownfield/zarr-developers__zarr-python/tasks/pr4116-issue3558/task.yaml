@@ -1,0 +1,38 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4116
+issues:
+  - 3558
+baseSha: 179f2ff32bf51067d89dcd41a724451fe0329bb8
+mergeSha: 1d06a821d18e3f21146d0a4274d8f3dba3847db0
+tStar: 2026-07-02T19:41:51Z
+issueCreatedAt: 2025-10-28T14:56:00Z
+prMergedAt: 2026-07-06T09:36:12Z
+verdict: VALID
+failToPass:
+  - tests.test_codecs.test_numcodecs::test_generic_filter_f_contiguous[delta]
+  - tests.test_codecs.test_numcodecs::test_generic_filter_f_contiguous[fixedscaleoffset]
+  - tests.test_codecs.test_numcodecs::test_generic_filter_f_contiguous[packbits]
+  - tests.test_codecs.test_vlen::test_vlen_bytes_f_contiguous[chunks0-memory]
+  - tests.test_codecs.test_vlen::test_vlen_string_f_contiguous[chunks0-memory]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: diagnosis
+provisional: true
+files:
+  issue/body+all.md: 85263f54e460a245ab936f58ff30a7efbec60f50308ec904067733acc507327d
+  issue/body+human.md: 85263f54e460a245ab936f58ff30a7efbec60f50308ec904067733acc507327d
+  issue/body.md: ccfd6a28d6236ae904e80155a778dce87c44d5ee9af4031ef9c37338f2fcc018
+  leaks.json: 20b36ed58f49664c18d0b827bdb66b081cf603d50a89ca5df6e1aebe1f61cb2d
+  reference.patch: 5341bf8d66cd8a983a1f362ce6267d346282547bae5f3506da0a1d7ae4434039
+  snapshot.json: 59e91c0b8636c3dea3d84ab5f98bfc4ca64981c8e74662419b7ded3984b4c372
+  tests.patch: 0c540cd2438b4ef8d8e0543f2c62a49acd8090dbd2b2df52cdf3c35ba64efc6e
+  validation.json: e49f4a073f8eb8e36a1c208da8698b56cc4e6fba2db7f64914b0a99e4d8559a6

@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "ImportError: cannot import name 'Settings' from 'paperqa'",
+      "rationale": "Error report and repro only.",
+      "author": "bsvisser",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "could be caused by a circular import issue or a missing import statement",
+      "rationale": "Wrong guess about circular imports; reference fix only changes README install instructions.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "I am thinking you don't have `paper-qa` version 5, likely you have v4. The `Settings` object is new in that version. So you'll want to do something like `pip install paper-qa>=5`.",
+      "rationale": "Identifies the version mismatch and proposes pip install paper-qa>=5, which is what the README change states.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

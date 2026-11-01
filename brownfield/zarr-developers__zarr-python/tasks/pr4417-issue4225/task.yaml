@@ -1,0 +1,48 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4417
+issues:
+  - 4225
+baseSha: 5e3d8a42c7c7681d05e2fa79f357ee96287ff520
+mergeSha: 9e631c66f0d88f944fe1c80af8dd9e6573207f15
+tStar: 2026-09-26T07:22:18Z
+issueCreatedAt: 2026-08-01T09:44:00Z
+prMergedAt: 2026-09-30T08:00:32Z
+verdict: VALID
+failToPass:
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-chunk_key_encoding]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-chunks]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-compressors]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-config]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-data]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-dtype]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-filters]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-order]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-overwrite]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-serializer]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-shape]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-shards]
+  - tests.test_api.test_synchronous::test_docstring_consistent_parameters[create_array_variants-write_data]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 2ef384cfc0f8072e8677197dd3fbf58d0ddba28285518127b72d0c5e8cd4d7fa
+  issue/body+human.md: 2ef384cfc0f8072e8677197dd3fbf58d0ddba28285518127b72d0c5e8cd4d7fa
+  issue/body.md: 1a56230e858d5856893046d97c19c9b6fc7bbaaed03496f43d908baee683f8a8
+  leaks.json: 62eaced3552e084c990631b77d10ce18c2dba35c509e7d3727c6d0b941d75f90
+  reference.patch: 278d4c1dce8e6cf17c0a107b989f6cc13e66916982ccfa80f0d18996d1fea899
+  snapshot.json: 4e07efca539db5552b18e7a5cd029e9ddc3e44bf4eff47bd06b3188cd2892e92
+  tests.patch: e182030b8ddefbcacd5811a71296bde3f6a7e4efa0c29fe223d9bd8a7861316b
+  validation.json: 31658c2f99e4b5a7b3fb873a80d7d6819881b87b12156803d0d7622927c7b526

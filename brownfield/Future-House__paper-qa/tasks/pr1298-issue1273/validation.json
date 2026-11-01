@@ -1,0 +1,38 @@
+{
+  "pr": 1298,
+  "merged": "2026-02-21",
+  "issues": [
+    {
+      "n": 1273,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 2,
+  "srcFiles": [
+    "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+  ],
+  "testFiles": [
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::TestMediaMode::test_same_member_is_equal",
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_clustering",
+    "packages/paper-qa-pypdf/tests/test_paperqa_pypdf.py::test_individual_mode_outputs_png"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[non_png_re_encodes]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

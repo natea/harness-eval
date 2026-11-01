@@ -1,0 +1,19 @@
+{
+  "pr": 4363,
+  "issue": 4362,
+  "tStar": "2026-09-16T10:27:48Z",
+  "title": "Bad assert usage",
+  "issueAuthor": "mezdej",
+  "body": "In core/group.py\n\nLine 414:\n``    def from_dict(cls, data: dict[str, Any]) -> GroupMetadata:\n        data = dict(data)\n\n        assert data.pop(\"node_type\", None) in (\"group\", None)``\n\nIf code is run with -O it does not work correctly",
+  "comments": [
+    {
+      "at": "2026-09-16T09:55:35Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "future fixer (author of the reference PR)",
+      "text": "I agree, it is bad. happy to review a PR that fixes it",
+      "source": "no-edits"
+    }
+  ]
+}

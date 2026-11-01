@@ -1,0 +1,37 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4117
+issues:
+  - 4032
+baseSha: a75add93e2114c9e4fdc732702178ee33537ed8a
+mergeSha: de2cce1adc41a4d38721bf62b25eb312a52066dd
+tStar: 2026-07-02T20:35:07Z
+issueCreatedAt: 2026-06-04T03:36:00Z
+prMergedAt: 2026-07-14T09:48:16Z
+verdict: VALID
+failToPass:
+  - tests.test_array::test_chunks_initialized[shape0-None-chunk_shape0-foo]
+  - tests.test_array::test_chunks_initialized[shape1-shard_shape1-chunk_shape1-foo]
+  - tests.test_array::test_chunks_initialized[shape2-shard_shape2-chunk_shape2-foo]
+passToPass: []
+envBroken:
+  - tests.test_store.test_object::test_list_dir_ignores_s3_prefix_marker
+flaky: []
+testPaths:
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: 68b213f40aaef34065d0729e823af1452a84cd2cb720063600dbd6dd98663841
+  issue/body+human.md: 68b213f40aaef34065d0729e823af1452a84cd2cb720063600dbd6dd98663841
+  issue/body.md: 72f125ca5b1638b8789a124db53803576215f4e1a1b1400c1f9111d08b0b4ca6
+  leaks.json: a5bed794fd743b06601013e1a416d27c39c4b420bca8fef8fef8a52d8c803c0f
+  reference.patch: 51055ccba9944ce596840054c4e99a80695c594ce8a89aa5d5619de9eaf013f2
+  snapshot.json: 8875ed58eceaf1699dc1f4c68173f865c73857d9b43cf62b897c4f3953658ad0
+  tests.patch: e909885aa783e79283e7aa5397f7f7107e9706b57f6b1ac666e9f84cd75b81f8
+  validation.json: aa3da3fc39afc5109bf80df63074b6d773bc5c22586c089b8b4b094dcdedb9e0

@@ -1,0 +1,19 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/variable.py"
+      ],
+      "evidence": "This is because we discard the `lon` index name when converting the Series, and so we think we're trying to add a dim named `lat_at_0`.",
+      "rationale": "Identifies the root cause: the Series' index name is dropped during conversion to a variable, which is what the fix addresses in as_variable. It doesn't name the function or give the exact change, and the suggestion to use xr.DataArray(series) differs from the fix, so it's not a fix sketch.",
+      "author": "max-sixty",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "noise"
+}

@@ -1,0 +1,39 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 1186
+issues:
+  - 1165
+baseSha: f7adf0c87f341d53405eca1c9a37440e4daaf3eb
+mergeSha: 449c3dbab5bf3aed69d6d1916dcca60671eeade1
+tStar: 2025-11-08T01:56:13Z
+issueCreatedAt: 2025-11-01T14:45:00Z
+prMergedAt: 2025-11-11T19:05:10Z
+verdict: VALID
+failToPass:
+  - tests.test_paperqa::test_context_comparison
+  - tests.test_paperqa::test_nonduplicate_contexts
+passToPass: []
+envBroken:
+  - tests.test_paperqa::test_evidence
+  - tests.test_paperqa::test_json_evidence
+flaky: []
+testPaths:
+  - packages/paper-qa-docling/tests
+  - packages/paper-qa-pymupdf/tests
+  - packages/paper-qa-pypdf/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: b4645e502643b5fadf6cdfe7dfb2d94026c9539ac68c2684b54f853187b36300
+  issue/body+human.md: b80602c616b02a37fd53fa4687ce39ad584e23ae6d41cb69e6cc2e9d0b570d1f
+  issue/body.md: 9d76a5a334e10ebf9cf236d33a5c6ae962bdf0f5b5247a7ae02dbee9358cb294
+  leaks.json: db98587c198eb90f5a473aa260a3e3a2f3ad8eb72c375acf17dc4f24abb7b57b
+  reference.patch: 706a50ac09ae167810ad551a035a758f54efc6b498cda3f7392667a98986c7c5
+  snapshot.json: 3a1a9359baa354b8db58d0a54a37e21d1c193fe4cad1e59d213aac2a57d7ec7c
+  tests.patch: bfcafbd2880044cda5199c52ea7b04148fc82e4412049163de8a69a751463d42
+  validation.json: b454e26259231ccc8b1eec1dd667d4bc8abedd7f6e11b90c6f8369753e7c6066

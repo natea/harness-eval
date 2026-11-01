@@ -1,0 +1,55 @@
+{
+  "pr": 4116,
+  "issue": 3558,
+  "tStar": "2026-07-02T19:41:51Z",
+  "title": "Wrong array write when writing chunked array from numpy string data with \"F\" order",
+  "issueAuthor": "dtonagel",
+  "body": "### Zarr version\n\nv3.1.3\n\n### Numcodecs version\n\nv0.16.3\n\n### Python Version\n\n3.12.7, 3.13.9\n\n### Operating System\n\nWindows\n\n### Installation\n\npip into virtual environment\n\n### Description\n\nI have a pandas DataFrame storing string data with string[pyarrow] datatype.\n\nWhen converting this data to numpy array with either \"df.values\" or \"df.to_numpy()\" it produces a numpy \"object\" array (dtype==\"O\").\n\nWhen storing this array in a chunked zarr-array there seems to be a strange \"off-by-one\" error either when writing or when reading. The result of the array read back from zarr differs from the original array.\n\nWhen the DataFrame was stored as normal (python) string, this does not happen even though the numpy array looks exactly the same.\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n#   \"pandas\",\n#   \"pyarrow\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\n# your reproducer code\nimport numpy as np\nimport pandas as pd\n\n# Number of rows and columns\nnum_rows = 11\nnum_cols = 11\n\n# Generate incrementing strings\nincrementing_strings = [f\"S{i:05}\" for i in range(1, num_rows * num_cols + 1)]\n\nnpdata = np.array(incrementing_strings, dtype=\"str\").reshape(num_rows, num_cols)\n\ndf = pd.DataFrame(npdata)\ndfpa = df.astype(\"string[pyarrow]\")\n\ndata = df.values\ndatapa = dfpa.values\n\n# According to numpy, the converted data is identical:\nassert data.dtype == datapa.dtype  # dtype == 'O'\nassert data.shape == datapa.shape\nassert data.size == datapa.size\nassert np.all(data == datapa)\n\n# Now store both in a zarray (using the same array here but doesn't matter if I use a fresh one)\nstore = zarr.storage.MemoryStore()  # Or LocalStore, doesn't matter\n\narray = zarr.create_array(\n                store,\n                name=\"s\",\n                shape=data.shape,\n                chunks=(10,10),\n                fill_value=\"<NA>\",\n                dtype=str,\n            )\n\n# This works as expected\narray[:,:] = data\nzdata = array[:,:]\nassert np.all(zdata == data)\n\n# This doesn't\narray[:,:] = datapa\nzdata = array[:,:]\nprint(f\"written={datapa[0,:4]}\")  # ['S00001' 'S00002' 'S00003' 'S00004']\nprint(f\"read={zdata[0,:4]}\")        # ['S00001' 'S00012' 'S00023' 'S00034']\nassert np.all(zdata == datapa)  # Fails\n```\n\n\n### Additional output\n\n_No response_",
+  "comments": [
+    {
+      "at": "2025-10-28T15:08:32Z",
+      "author": "dtonagel",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "issue author",
+      "text": "The problem seems to be on the write side because the generated chunk files are different when using LocalStore (\"0\" chunk has 256 bytes in the pa version versus 200 with the non-pa-strings)",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-10-28T15:15:01Z",
+      "author": "dtonagel",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "issue author",
+      "text": "For what its worth: The memory layout of the two numpy arrays is different:\n\n*** data strides and flags:\n(88, 8)\n  C_CONTIGUOUS : True\n  F_CONTIGUOUS : False\n  OWNDATA : False\n  WRITEABLE : True\n  ALIGNED : True\n  WRITEBACKIFCOPY : False\n\n*** datapa strides and flags\n(8, 88)\n  C_CONTIGUOUS : False\n  F_CONTIGUOUS : True\n  OWNDATA : False\n  WRITEABLE : True\n  ALIGNED : True\n  WRITEBACKIFCOPY : False\n",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-10-28T16:03:12Z",
+      "author": "dtonagel",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "issue author",
+      "text": "If I use `datapa = np.asarray(dfpa.values, order=\"C\")` the problem disappears, so looks definitely like a handling problem with the \"F\" memory layout",
+      "source": "no-edits"
+    },
+    {
+      "at": "2025-10-28T16:16:48Z",
+      "author": "dtonagel",
+      "isBot": false,
+      "assoc": "NONE",
+      "role": "issue author",
+      "text": "I modified the example to remove pandas and pyarrow since they are not relevant any more:\n\n```\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\nimport zarr\nimport numpy as np\n\nndata = np.arange(9).reshape(3,3)\ndata = np.asarray(ndata, order=\"F\")  # does work with \"C\"\n\nstore = zarr.storage.MemoryStore()  # Or LocalStore, doesn't matter\n\nchunk_size = 2 # Doesn't work with 2 or 3 but works for 1 or 4 and greater\narray = zarr.create_array(\n                store,\n                name=\"s\",\n                shape=data.shape,\n                chunks=(chunk_size,chunk_size),\n                dtype=\"str\",  # Does work with \"int\" or \"float\", does not work with \"str\"\n            )\n\narray[:,:] = data\nprint(f\"written={data}\")\nprint(f\"read={array[:,:]}\")\n\nassert np.all(array[:,:].astype(int) == data.astype(int))  # Fails\n```",
+      "source": "edit@2025-10-28T16:42:02Z"
+    },
+    {
+      "at": "2025-10-28T16:48:02Z",
+      "author": "d-v-b",
+      "isBot": false,
+      "assoc": "CONTRIBUTOR",
+      "role": "other user",
+      "text": "thanks for this example @dtonagel! I'm guessing the culprit is some assumption in the [`vlen-utf8` codec](https://github.com/zarr-developers/numcodecs/blob/b543298ebaa47608065c57893c1709d6523f6b6b/numcodecs/vlen.pyx#L48) we are using here",
+      "source": "no-edits"
+    }
+  ]
+}

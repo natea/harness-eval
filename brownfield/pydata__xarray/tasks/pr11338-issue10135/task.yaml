@@ -1,0 +1,40 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11338
+issues:
+  - 10135
+baseSha: 1fa3b831cd95989886c4cd8ecd02903f5938ff72
+mergeSha: 219181945320940c9d8a6140b616165df67bee3b
+tStar: 2026-05-13T18:07:16Z
+issueCreatedAt: 2025-03-16T21:50:00Z
+prMergedAt: 2026-08-19T20:46:34Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_arrow_schema_fields
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_arrow_schema_metadata
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_dask_dataarray
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_data_array_unnamed_variable
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_1d
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_2d
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_curvilinear_coords
+  - xarray.tests.test_dataarray.TestArrowPyCapsule::test_pyarrow_table_transposed_coords
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: true
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: 3332022c7f9d8478497e2c07d24ce28ea2522a9a5da2088f3a9ab211359b9d5a
+  issue/body+human.md: 181c6027495f6a53d78ebd3deb2361574c6e225d97410186a6d93ba0079f1566
+  issue/body.md: e23641d2004561e1e224a9c7c57e00592a8d36969be9c9f5b2a30735daed89a7
+  leaks.json: 45e88d5dab12b54679fa153a20fae1908a0d3e592279dc6e57f3d9bf1a5b3f6d
+  reference.patch: 6ae59046506fc5e3a75c775f0436295c9c64b1cdd91bd230561747c73f074db7
+  snapshot.json: 110c706f5ebb4358de3101dfdb0a0969f7394aa5226407e31d1cde36e0479266
+  tests.patch: 155829638d6ff4aa3588303f16b81a28d126ace81b1bb23d4b0a702a8e55e2be
+  validation.json: 76175f9f8266e57becde38aefd82d8e36ce9ace90367922c48a9dbaa4aaa9f02

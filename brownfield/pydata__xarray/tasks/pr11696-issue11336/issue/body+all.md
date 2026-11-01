@@ -1,0 +1,100 @@
+# cumulate+argmax uses padded index instead of absolute index
+
+_Opened by @saschahofmann_
+
+### What happened?
+
+The combination of cumulative + argmax does not lead to the (at least from me) expected result.
+Example: 
+```python
+import numpy as np
+import xarray as xr
+da = xr.DataArray([1,2,1.5,3.5,4], coords={'time': ('time', np.arange(5))})
+da.cumulative('time').argmax()
+# [4., 4., 3., 4., 4.]
+# expected [0, 1, 1,3,4]
+```
+
+If I want to fetch the time for the largest value until that value I would use something like above `cumulative('time').argmax()`. However it doesnt not return the index but seems to use some kind of padded rolling array and fetches the argmax from this. Maybe this is the expected behaviour but I was definitely suprised.
+
+
+### MVCE confirmation
+
+- [x] Minimal example — the example is as focused as reasonably possible to demonstrate the underlying issue in xarray.
+- [x] Complete example — the example is self-contained, including all data and the text of any traceback.
+- [x] Verifiable example — the example copy & pastes into an IPython prompt or [Binder notebook](https://mybinder.org/v2/gh/pydata/xarray/main?urlpath=lab/tree/doc/examples/blank_template.ipynb), returning the result.
+- [x] New issue — a search of GitHub Issues suggests this is not a duplicate.
+- [x] Recent environment — the issue occurs with the latest version of xarray and its dependencies.
+
+### Environment
+
+<details>
+
+
+INSTALLED VERSIONS
+------------------
+commit: None
+python: 3.13.8 | packaged by conda-forge | (main, Oct 13 2025, 14:15:33) [GCC 14.3.0]
+python-bits: 64
+OS: Linux
+OS-release: 5.14.0-427.22.1.el9_4.x86_64
+machine: x86_64
+processor: x86_64
+byteorder: little
+LC_ALL: None
+LANG: C.UTF-8
+LOCALE: ('C', 'UTF-8')
+libhdf5: 1.14.6
+libnetcdf: 4.9.3
+
+xarray: 2025.10.1
+pandas: 2.3.3
+numpy: 2.3.3
+scipy: 1.16.2
+netCDF4: 1.7.3
+pydap: None
+h5netcdf: None
+h5py: None
+zarr: 2.18.7
+cftime: 1.6.4
+nc_time_axis: None
+iris: None
+bottleneck: 1.6.0
+dask: 2025.10.0
+distributed: 2025.10.0
+matplotlib: 3.10.6
+cartopy: 0.24.0
+seaborn: 0.13.2
+numbagg: None
+fsspec: 2025.9.0
+cupy: None
+pint: 0.25
+sparse: 0.17.0
+flox: 0.10.7
+numpy_groupies: 0.11.3
+setuptools: 80.9.0
+pip: 25.3
+conda: None
+pytest: 8.4.2
+mypy: None
+IPython: 9.6.0
+sphinx: 7.4.7
+
+</details>
+
+---
+
+## Discussion
+
+**@beanscg** (2026-06-09):
+
+I think this is specifically a window-local index leaking through a cumulative rolling reduction.
+
+The code path I checked on current `main`:
+- `DataArray.cumulative("time")` returns a `DataArrayRolling` with a cumulative window.
+- `Rolling.reduce(...)` constructs a temporary rolling dimension, then calls `windows.reduce(func, dim=<temporary rolling dim>, ...)`.
+- Applying `argmax` there naturally returns the position inside each padded/cumulative window, not the original absolute position along `time`.
+
+That matches the reported `[4, 4, 3, 4, 4]` style output: it is answering "where is the max within the constructed window?" rather than "which original `time` index currently owns the cumulative max?"
+
+The regression test I would add is the exact example here, with the expected result pinned to `[0, 1, 1, 3, 4]` if the intended semantics are absolute positions. If cumulative-window `argmax` is supposed to stay window-local, then this probably needs docs/API clarification because `cumulative(...).sum()` reads like an aligned cumulative operation while `argmax()` currently exposes the intermediate padded window indexing.

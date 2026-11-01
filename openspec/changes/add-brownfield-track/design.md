@@ -271,6 +271,12 @@ only to the bundle's `review/labels.jsonl`, append-only. An agreement view shows
 per-item disagreements and Cohen's κ. This needs a narrow exception to "Scoped
 writes only" (spec delta).
 
+Blindness is enforced server-side (`src/brownfield/review.ts`): no classifier
+output leaves the server for a task until it has a human review. That includes
+the manifest's leak strata in the task list, since they are derived from the
+classifier. Agreement also reports quadratic-weighted κ, because the leak scale
+is ordinal.
+
 ### D16. Human baseline
 Computed at mining time from data the miner already fetches (PR commits,
 reviews, timeline) and stored in `task.yaml`:

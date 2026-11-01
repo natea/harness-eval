@@ -1,0 +1,9 @@
+# Refactor to split up `get_directory_index` so every `paper_search` doesn't have to re-index
+
+_Opened by @jamesbraza_
+
+Our current workflow as of `paper-qa==5.0.8` is to re-index every `paper_search`
+
+A more performant and perhaps modular workflow is:
+1. Index at the start of the agent
+2. Not re-index during each `paper_search`

@@ -1,0 +1,13 @@
+diff --git a/README.md b/README.md
+index 1f4a728..c2011d1 100644
+--- a/README.md
++++ b/README.md
+@@ -861,7 +861,7 @@ which relies on [pyzotero](https://github.com/urschrei/pyzotero).
+ Install `pyzotero` via the `zotero` extra for this feature:
+ 
+ ```bash
+-pip install paperqa[zotero]
++pip install paper-qa[zotero]
+ ```
+ 
+ First, note that PaperQA2 parses the PDFs of papers to store in the database,

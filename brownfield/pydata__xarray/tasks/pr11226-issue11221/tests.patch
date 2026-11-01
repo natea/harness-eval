@@ -1,0 +1,108 @@
+diff --git a/xarray/tests/backends/test_common.py b/xarray/tests/backends/test_common.py
+index 67cac99f..e3b3e8fd 100644
+--- a/xarray/tests/backends/test_common.py
++++ b/xarray/tests/backends/test_common.py
+@@ -2,13 +2,21 @@ from __future__ import annotations
+ 
+ import io
+ import re
++from collections.abc import Callable
++from typing import Any
+ 
+ import numpy as np
+ import pytest
+ 
+ import xarray as xr
+ from xarray.backends.common import _infer_dtype, robust_getitem
+-from xarray.tests import requires_scipy
++from xarray.tests import (
++    requires_h5netcdf,
++    requires_netCDF4,
++    requires_pydap,
++    requires_scipy,
++    requires_zarr,
++)
+ 
+ 
+ class DummyFailure(Exception):
+@@ -87,3 +95,42 @@ class TestCommon:
+ 
+         actual = robust_getitem(array, 0, catch=UnreliableArrayFailure, initial_delay=0)
+         assert actual == 0
++
++
++def _memory_store() -> Any:
++    from zarr.storage import MemoryStore
++
++    return MemoryStore()
++
++
++def _store_path() -> Any:
++    from zarr.storage import MemoryStore, StorePath
++
++    return StorePath(MemoryStore())
++
++
++@pytest.mark.parametrize(
++    "engine",
++    [
++        pytest.param("netcdf4", marks=requires_netCDF4),
++        pytest.param("h5netcdf", marks=requires_h5netcdf),
++        pytest.param("scipy", marks=requires_scipy),
++        pytest.param("pydap", marks=requires_pydap),
++    ],
++)
++@pytest.mark.parametrize(
++    "make_store",
++    [
++        pytest.param(dict, id="dict"),
++        pytest.param(_memory_store, id="MemoryStore", marks=requires_zarr),
++        pytest.param(_store_path, id="StorePath", marks=requires_zarr),
++    ],
++)
++def test_open_zarr_store_with_other_engine(
++    engine: str, make_store: Callable[[], Any]
++) -> None:
++    with pytest.raises(TypeError, match=r"cannot open zarr stores.*engine='zarr'"):
++        xr.open_dataset(make_store(), engine=engine)
++    if engine != "scipy":
++        with pytest.raises(TypeError, match=r"cannot open zarr stores.*engine='zarr'"):
++            xr.open_datatree(make_store(), engine=engine)
+diff --git a/xarray/tests/test_backends_typing.yml b/xarray/tests/test_backends_typing.yml
+new file mode 100644
+index 00000000..b444d020
+--- /dev/null
++++ b/xarray/tests/test_backends_typing.yml
+@@ -0,0 +1,32 @@
++- case: test_mypy_open_zarr_arguments
++  main: |
++    from pathlib import Path
++
++    from zarr.storage import MemoryStore
++
++    import xarray as xr
++
++    ds = xr.open_zarr("store.zarr", chunks="auto")
++    reveal_type(ds)  # N: Revealed type is "xarray.core.dataset.Dataset"
++
++    xr.open_zarr(Path("store.zarr"), group="a/b", chunks=None, zarr_format=3)
++    xr.open_zarr(MemoryStore(), chunks={"x": 10}, consolidated=False)
++    xr.open_zarr(
++        "store.zarr",
++        mask_and_scale={"a": False},
++        decode_times=xr.coders.CFDatetimeCoder(use_cftime=True),
++        decode_timedelta={"b": xr.coders.CFTimedeltaCoder()},
++        drop_variables=["c"],
++        storage_options={"anon": True},
++    )
++
++- case: test_mypy_open_zarr_invalid_arguments
++  main: |
++    import xarray as xr
++
++    xr.open_zarr("store.zarr", zarr_format=4)
++    xr.open_zarr("store.zarr", chunk={"x": 10})
++  out: |
++    main:3: error: Argument "zarr_format" to "open_zarr" has incompatible type "Literal[4]"; expected "Literal[2, 3] | None"  [arg-type]
++    main:4: error: Unexpected keyword argument "chunk" for "open_zarr"; did you mean "chunks"?  [call-arg]
++    main:4: note: "open_zarr" defined in "xarray.backends.zarr"

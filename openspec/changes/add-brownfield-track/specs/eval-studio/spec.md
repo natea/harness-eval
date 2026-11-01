@@ -20,7 +20,7 @@ The studio server SHALL write nothing except run operations through the orchestr
 ## ADDED Requirements
 
 ### Requirement: Brownfield task review view
-The studio SHALL provide a task review view listing brownfield task bundles with validation verdict and leak strata, showing a selected task's issue variants, reference patch, and hidden test patch side by side. The reviewer SHALL assign a leak level to the body and each retained comment, and a test-fairness verdict (yes / no / unsure, with a note). Bot authorship SHALL be visible.
+The studio SHALL provide a task review view listing brownfield task bundles with validation verdict and, once a task is reviewed, its LLM leak strata, showing a selected task's issue variants, reference patch, and hidden test patch side by side. The reviewer SHALL assign a leak level to the body and each retained comment, and a test-fairness verdict (yes / no / unsure, with a note). Bot authorship SHALL be visible.
 
 #### Scenario: Review a task
 - **WHEN** a reviewer opens a task bundle in the review view

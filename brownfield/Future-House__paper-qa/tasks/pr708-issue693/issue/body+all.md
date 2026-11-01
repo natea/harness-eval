@@ -1,0 +1,62 @@
+# Evaluation bug when answer is not in option list
+
+_Opened by @sidnarayanan_
+
+We have observed two incorrect edge cases when the evaluation language model is provided an answer not in the options list
+
+Here is one example:
+```
+INPUT:
+ Extract the single letter answer from the following question and answer
+
+Q: What is the meaning of life?
+
+Options:
+A) 11
+B) cheesecake
+C) -84
+D) Insufficient information to answer this question
+E) 42
+
+14
+
+Single Letter Answer:
+OUTPUT:
+ The single letter answer, based on the popular cultural reference from "The Hitchhiker's Guide to the Galaxy" where the answer to the ultimate question of life, the universe, and everything is humorously given as 42, is:
+
+E
+```
+The LM ignores `14` (the supplied answer) and tries to answer directly. The response then breaks our single-letter-extraction regex, which returns `T`. This ultimately leads to us marking the answer as `INCORRECT` (as expected), but for the wrong reason.
+
+Here is another example:
+```
+Q: What is my office's zip code?
+
+Options:
+A) 94107
+B) -8
+C) 94106
+D) cheesecake
+E) Insufficient information to answer this question
+
+the answer is 14004
+
+Single Letter Answer:
+OUTPUT:
+ To find the single letter answer, we need to determine which option corresponds to the answer "14004." Since none of the options directly match "14004," we need to consider if there's another way to interpret the answer.
+
+Looking at the options:
+A) 94107
+B) -8
+C) 94106
+D) cheesecake
+E) Insufficient information to answer this question
+
+Since "14004" is a zip code and none of the provided zip codes match it, and since the question is about a zip code but the answer provided ("14004") isn't listed among the options, the most logical choice is:
+E) Insufficient information to answer this question
+
+Therefore, the single letter answer is:
+E
+```
+
+Again, the supplied answer is ignored and another one is chosen (E). The longform response is parsed as `T`, and so we mark this as `INCORRECT`, not `UNSURE`.

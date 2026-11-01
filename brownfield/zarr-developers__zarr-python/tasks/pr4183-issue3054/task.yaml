@@ -1,0 +1,45 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4183
+issues:
+  - 3054
+baseSha: bd24f4f4a28212bcceb52edf07fb4b10a738651d
+mergeSha: aa2b8e298e0b8c245737b1240a5c56c8957998b9
+tStar: 2026-07-23T11:45:00Z
+issueCreatedAt: 2025-05-13T11:55:00Z
+prMergedAt: 2026-07-29T11:43:07Z
+verdict: VALID
+failToPass:
+  - tests.test_array_spec::test_equal_specs_hash_equal[float64-nan]
+  - tests.test_array_spec::test_equal_specs_hash_equal[datetime64-NaT]
+  - tests.test_array_spec::test_equal_specs_hash_equal[structured-void]
+  - tests.test_array_spec::test_hashable[structured-void]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[float16]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[float32]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[float64]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[complex128-both]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[complex128-imag]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[complex128-real]
+  - tests.test_array_spec::test_signed_zero_fills_are_distinct[structured]
+  - tests.test_codecs.test_sharding::test_structured_dtype_fill_value
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: 123d6aaf50e9d19afbb7b3fff9fdce220888967d818566e8ec0a3c5627101879
+  issue/body+human.md: 123d6aaf50e9d19afbb7b3fff9fdce220888967d818566e8ec0a3c5627101879
+  issue/body.md: ba68439bb9c84b260904f49f8e9e128ad99f79f3ebc9ef0d4b34451b17041ef1
+  leaks.json: 71d87510f8bbb1fb337b8d45cf811574b5d6a8577e8d8f1655f4490111b945bc
+  reference.patch: daa6984e2effed3ada2c2c31897536906c54253f197dd4e17da84ec3a18b5257
+  snapshot.json: 626b39f3cf4acf1d55620b6bc847defd7623378c1de2afb03d1f24332b18fafc
+  tests.patch: 74196168e46619105ea2951ccd53907c6fb51eb7e2d57d7881f6cb419ba492ba
+  validation.json: a39a5114161468fe2142dde7e14427adffa34963b0687a1cb3d1023484b701fa

@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11348
+issues:
+  - 11341
+baseSha: 219181945320940c9d8a6140b616165df67bee3b
+mergeSha: 0e627d9d140b45dda311b89c8b557d8922270d04
+tStar: 2026-05-21T10:09:28Z
+issueCreatedAt: 2026-05-15T19:43:00Z
+prMergedAt: 2026-08-19T20:46:44Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray.TestDataArray::test_selection_multiindex_nested_tuple_level_value
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 2d1ddaa5bcbc0dc63d0d7425b34abe91d2e6c2e45cbee3ece5058924768a1151
+  issue/body+human.md: 2d1ddaa5bcbc0dc63d0d7425b34abe91d2e6c2e45cbee3ece5058924768a1151
+  issue/body.md: 2d1ddaa5bcbc0dc63d0d7425b34abe91d2e6c2e45cbee3ece5058924768a1151
+  leaks.json: d393efc673576c2e75ddc7c2f34f9806c952b881a8474aa2bb1ea38ad408baee
+  reference.patch: a2bf3958f85691c060e3cfd22807c6495b7c5ad6e597690ac6f1134a386aa77e
+  snapshot.json: 8d676266cfd0924e826209126f5e043b5dec7abc6890911c9281b4234a23edda
+  tests.patch: 27721b1498ee80b92bd081d5c5a64c4bc5e5f4ce43bf8799641c08a10dae0d3b
+  validation.json: 3f9ddc53de36ea5b15c8ab77be3b61876fb32fb8aeb81218e9a3b028ca80c24e

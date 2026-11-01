@@ -1,0 +1,38 @@
+# v3 structured dtype serialization drops per-field endianness (silent byte-order loss on metadata roundtrip)
+
+_Opened by @emfdavid_
+
+The v3 metadata encoding for a **structured dtype** records each field as a bare `data_type` (e.g. `'float32'`) with no byte order, so `ArrayV3Metadata` does not round-trip endianness for structured dtypes — a big-endian field silently comes back native little-endian.
+
+### Reproducer (pure zarr-python, no other deps)
+
+```python
+import numpy as np, zarr, tempfile
+
+dt = np.dtype([("flux", ">f4"), ("mask", ">i4")])          # big-endian structured
+store = tempfile.mkdtemp()
+z = zarr.create_array(store=store, shape=(3,), chunks=(3,), dtype=dt)
+
+print(z.dtype)                                # [('flux', '>f4'), ('mask', '>i4')]  -- correct at create
+print(z.metadata.to_dict()["data_type"])      # {'name': 'struct', 'configuration':
+                                              #   {'fields': [{'name': 'flux', 'data_type': 'float32'}, ...]}}
+                                              #   ^ no endianness recorded
+
+print(zarr.open_array(store=store).dtype)     # [('flux', '<f4'), ('mask', '<i4')]  -- silently little-endian!
+```
+
+The serialized `data_type` for each field is `'float32'` / `'int32'` with no byte-order, so on reopen the deserializer has nothing to restore and defaults to native (little-endian on x86).
+
+### Why it matters
+
+For a self-contained zarr store this is an internal inconsistency (zarr wrote native bytes, so it reads its own data back consistently). But for **virtual references to external big-endian on-disk data it is silent data corruption** — the referenced bytes are big-endian, the metadata claims little-endian, values are read byte-swapped, and no error is raised.
+
+This surfaced while adding FITS binary-table support to VirtualiZarr (zarr-developers/VirtualiZarr#1037). A FITS `BinTableHDU` (e.g. an SDSS spectrum) is a structured dtype with big-endian (`>f4`) columns; virtual references point at the original big-endian bytes, but after the metadata round-trips through v3 the array reads back as garbage/NaN.
+
+### Notes
+
+- Scalar dtypes preserve endianness via the `bytes` codec's `endian` configuration; only the **structured** path drops it.
+- Understood that v3 structured dtypes are the "unstable" extension (they emit `UnstableSpecificationWarning`) — filing so the endianness gap is tracked explicitly rather than lost.
+- Related: #2134 (umbrella "[v3] Structured dtype support"), #3582 (subarray dtypes lost on serialization — a sibling serialization gap, but distinct from byte order).
+
+Environment: `zarr` 3.2.1, numpy, CPython 3.12 (little-endian x86-64).

@@ -1,0 +1,37 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 1298
+issues:
+  - 1273
+baseSha: 10f036a9dc0e655efa2bb34739b7e74bab23c82e
+mergeSha: e1d9339f46305f2f2315eca05d64ed7331275cc0
+tStar: 2026-02-20T22:30:50Z
+issueCreatedAt: 2026-01-22T22:14:00Z
+prMergedAt: 2026-02-21T01:48:40Z
+verdict: VALID
+failToPass:
+  - packages.paper-qa-pypdf.tests.test_paperqa_pypdf::test_individual_mode_outputs_png[non_png_re_encodes]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/paper-qa-docling/tests
+  - packages/paper-qa-nemotron/tests
+  - packages/paper-qa-pymupdf/tests
+  - packages/paper-qa-pypdf/tests
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: diagnosis
+provisional: true
+files:
+  issue/body+all.md: 57572243c15b4abae90822f8b595c5f9f25fab376bdbbf1db6cb390046e0cdad
+  issue/body+human.md: 3675c5d41e14392ff4231b9322b21ee1433aaf869b56c806290ab1298239ca82
+  issue/body.md: 1dbaf04eaa9ea4fd401c7b12963092c0725cc7f04ec9440a91884af3aff72b12
+  leaks.json: 89b959193d18204c90a5a49e990448adc8627d12bf57b67ae3d6e7292325e5b6
+  reference.patch: 9a6cd94ed8e498391e6275ec64a5613bbc5fbf4a2f0e05b5339db05f921f47ac
+  snapshot.json: ab1bca4ecb43191fdf8e24598fadb62376af76d694ae011756befc62692e7c42
+  tests.patch: 0ecf17b91c3feb14f4722e7015fb02a5ed6a470dfe0f7ad5d32be848fe843475
+  validation.json: c6c674c739faa64d7f4690e366016c9ab115d453724edf51c34b1d7998226443

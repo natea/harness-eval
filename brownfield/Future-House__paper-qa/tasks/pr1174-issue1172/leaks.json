@@ -1,0 +1,39 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "The `file_location` attribute is None when executing `paper_search` if manifest is not explicitly set.",
+      "rationale": "Describes observed behavior and a debug snippet; no cause or location of the fix.",
+      "author": "lucky0218",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "Yes, this is expected behavior.",
+      "rationale": "Wrongly claims it is by design; the reference treats it as a bug, so this points nowhere useful.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "src/paperqa/agents/search.py"
+      ],
+      "evidence": "file_location=kwargs.pop(\"file_location\", file_location),",
+      "rationale": "Names the cause (file_location discarded without a manifest) and gives the exact code change in process_file that matches the reference diff in search.py.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_code"
+}

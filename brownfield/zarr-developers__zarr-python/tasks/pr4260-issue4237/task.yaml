@@ -1,0 +1,48 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4260
+issues:
+  - 4237
+baseSha: e62e45bfac1f9b6e0892ce4df45d75315a302be3
+mergeSha: 12aa83b69b1513b6958d49fc0e3c6768c0b2e1f8
+tStar: 2026-08-13T09:18:22Z
+issueCreatedAt: 2026-08-05T08:53:00Z
+prMergedAt: 2026-08-13T19:50:07Z
+verdict: VALID
+failToPass:
+  - tests.test_codecs.test_cast_value::test_check_backend_version[exactly-minimum]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[newer-patch]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[newer-minor]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[newer-major]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[post-release]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[known-corrupting]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[one-patch-below]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[older-minor]
+  - tests.test_codecs.test_cast_value::test_check_backend_version[pre-release-of-minimum]
+  - tests.test_codecs.test_cast_value::test_check_backend_version_allows_missing_metadata
+  - tests.test_codecs.test_cast_value::test_encode_rejects_outdated_backend
+  - tests.test_codecs.test_cast_value::test_min_version_matches_pyproject
+passToPass: []
+envBroken:
+  - tests.test_codecs.test_cast_value::test_enforce_contiguous_arrays
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: true
+appEgress: []
+leak:
+  body: symptom
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: b2b87dc1981fa830a8b2ac46df87afe7043134a14e45ed2becd460591d508f13
+  issue/body+human.md: b2b87dc1981fa830a8b2ac46df87afe7043134a14e45ed2becd460591d508f13
+  issue/body.md: bb4e371e3f67a053a667530851bcc6dfe01569e98e9389cb8a26c1ae1a33cad4
+  leaks.json: c1c5a1bff9040f3a44d5b1854285e9fa3e0262fc7c692358e765dfde7120e466
+  reference.patch: b50ba30394b0fd00af90068b5a8c89e00b2bd2ab1efc0ed190640a01d5602925
+  snapshot.json: b89c10d4abad1b41d4a0e79ca24829831758decbafd311bf0cece2fb5c0bf558
+  tests.patch: fe45fa34773fc5eadeb3677ec10223cef6fd9911e280a80fc7b3322e4a5e0eb9
+  validation.json: 7b9114c95656f88fd05fc6f013c856ea7efae23ac4ab77d7608b6cf3299b2bf4

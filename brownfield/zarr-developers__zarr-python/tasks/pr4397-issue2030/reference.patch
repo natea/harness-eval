@@ -1,0 +1,84 @@
+diff --git a/changes/4397.bugfix.md b/changes/4397.bugfix.md
+new file mode 100644
+index 00000000..bc0005a8
+--- /dev/null
++++ b/changes/4397.bugfix.md
+@@ -0,0 +1 @@
++Sharding `index_codecs` containing a variable-size codec, such as a compressor, are now rejected when the `ShardingCodec` is built, with a clear error. Before, writing failed later with an unexplained `NotImplementedError`.
+diff --git a/src/zarr/abc/codec.py b/src/zarr/abc/codec.py
+index 34d349e6..c5e753d1 100644
+--- a/src/zarr/abc/codec.py
++++ b/src/zarr/abc/codec.py
+@@ -109,9 +109,9 @@ class BaseCodec[CI: CodecInput, CO: CodecOutput](Metadata):
+ 
+     # Whether this codec's encoded output is a fixed size given a fixed input
+     # size. Defaults to False (the conservative answer): a codec that does not
+-    # explicitly opt in is treated as variable-size, which only disables
+-    # size-dependent fast paths (e.g. the sharding bulk-decode), never
+-    # correctness. Codecs with genuinely fixed-size output (BytesCodec,
++    # explicitly opt in is treated as variable-size, which disables
++    # size-dependent fast paths (e.g. the sharding bulk-decode) and makes it
++    # ineligible as a sharding index codec. Codecs with genuinely fixed-size output (BytesCodec,
+     # TransposeCodec, ...) override this with True. The default also keeps
+     # third-party / variable-length codecs (VLenUTF8, numcodecs wrappers) that
+     # never set the attribute from raising AttributeError where it is read.
+diff --git a/src/zarr/codecs/numcodecs/_codecs.py b/src/zarr/codecs/numcodecs/_codecs.py
+index f44c3596..c9807431 100644
+--- a/src/zarr/codecs/numcodecs/_codecs.py
++++ b/src/zarr/codecs/numcodecs/_codecs.py
+@@ -303,6 +303,8 @@ class AsType(_NumcodecsArrayArrayCodec, codec_name="astype"):
+ 
+ # bytes-to-bytes checksum codecs
+ class _NumcodecsChecksumCodec(_NumcodecsBytesBytesCodec):
++    is_fixed_size = True
++
+     def compute_encoded_size(self, input_byte_length: int, chunk_spec: ArraySpec) -> int:
+         return input_byte_length + 4  # pragma: no cover
+ 
+diff --git a/src/zarr/codecs/sharding.py b/src/zarr/codecs/sharding.py
+index 3d5057ce..7a053867 100644
+--- a/src/zarr/codecs/sharding.py
++++ b/src/zarr/codecs/sharding.py
+@@ -422,6 +422,21 @@ def _drops_only_unit_axes(shape: tuple[int, ...], full: tuple[int, ...]) -> bool
+     return all(full_size == 1 for full_size in remaining)
+ 
+ 
++def _check_index_codecs_fixed_size(index_codecs: tuple[Codec, ...]) -> None:
++    """Reject index codecs whose encoded size is not fixed.
++
++    The spec forbids variable-size codecs (such as compressors) in `index_codecs`:
++    the shard index is located by its byte size, which must be known before the
++    index is read.
++    """
++    variable_size = [codec for codec in index_codecs if not codec.is_fixed_size]
++    if variable_size:
++        raise ValueError(
++            "Sharding `index_codecs` must produce a fixed-size encoding, but these codecs "
++            f"do not: {variable_size}. Compression codecs cannot be used for the shard index."
++        )
++
++
+ @dataclass(frozen=True)
+ class ShardingCodec(
+     ArrayBytesCodec, ArrayBytesCodecPartialDecodeMixin, ArrayBytesCodecPartialEncodeMixin
+@@ -453,6 +468,7 @@ class ShardingCodec(
+         chunk_shape_parsed = parse_shapelike(chunk_shape)
+         codecs_parsed = parse_codecs(codecs)
+         index_codecs_parsed = parse_codecs(index_codecs)
++        _check_index_codecs_fixed_size(index_codecs_parsed)
+         index_location_coerced = _coerce_enum_input(
+             index_location, "index_location", "ShardingCodec"
+         )
+diff --git a/uv.lock b/uv.lock
+index f0810033..dd2af12d 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -3684,7 +3684,7 @@ requires-dist = [
+     { name = "fsspec", marker = "extra == 'remote'", specifier = ">=2023.10.0" },
+     { name = "google-crc32c", specifier = ">=1.5" },
+     { name = "msgspec", specifier = ">=0.19" },
+-    { name = "numcodecs", specifier = ">=0.14" },
++    { name = "numcodecs", specifier = ">=0.16" },
+     { name = "numpy", specifier = ">=2" },
+     { name = "obstore", marker = "extra == 'remote'", specifier = ">=0.5.1" },
+     { name = "packaging", specifier = ">=22.0" },

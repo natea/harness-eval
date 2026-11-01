@@ -1,0 +1,29 @@
+# Duplicate contexts in final session
+
+_Opened by @lucky0218_
+
+Hi!
+I want to report a potential enhancement for the `aquery` function. 
+When facing complex or multiple questions, there maybe duplicate contexts:
+```
+        contexts = session.contexts
+        if answer_config.get_evidence_if_no_contexts and not contexts:
+            session = await self.aget_evidence(
+                session,
+                callbacks=callbacks,
+                settings=settings,
+                embedding_model=embedding_model,
+                summary_llm_model=summary_llm_model,
+                partitioning_fn=partitioning_fn,
+            )
+            contexts = session.contexts
+```
+When applying filtering:        
+```
+filtered_contexts = sorted(
+            contexts,
+            key=lambda x: (-x.score, x.text.name),
+        )[: answer_config.answer_max_sources]
+```
+One piece of context maybe counted 2 or even more times. 
+Not sure this is a feature or a bug.

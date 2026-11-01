@@ -1,0 +1,117 @@
+# CMYK images in PDFs crash indexing with OSError
+
+_Opened by @menyoung_
+
+## Bug
+
+When indexing a directory containing PDFs that have CMYK images, `pqa index` crashes instead of skipping the problematic files.
+
+## Error
+
+```
+OSError: cannot write mode CMYK as PNG
+```
+
+The crash originates in `paperqa_pypdf/reader.py:323`:
+
+```python
+pil_image.save(buf, format="PNG")
+```
+
+Pillow cannot save CMYK-mode images as PNG. The error propagates out of the `anyio.TaskGroup` in `get_directory_index` and kills the entire indexing process.
+
+## Steps to reproduce
+
+1. Have a directory of PDFs where at least one contains a CMYK image (common in academic papers from print journals)
+2. Run `pqa index /path/to/pdfs`
+3. Indexing crashes with an `ExceptionGroup` containing the `OSError`
+
+## Expected behavior
+
+The file-level error handler in `process_file` (search.py:521) should catch this and skip the file, logging a warning. Currently it does log "Error parsing ... skipping index for this file" but the exception still propagates and crashes the TaskGroup.
+
+## Workaround
+
+Set `parsing.multimodal` to `"OFF"` in Settings to disable image extraction entirely.
+
+## Full traceback
+
+```
+ExceptionGroup: unhandled errors in a TaskGroup (2 sub-exceptions)
++-+---------------- 1 ----------------
+  | Traceback (most recent call last):
+  |   File ".../PIL/PngImagePlugin.py", line 1380, in _save
+  |     rawmode, bit_depth, color_type = _OUTMODES[outmode]
+  | KeyError: 'CMYK'
+  |
+  | The above exception was the direct cause of the following exception:
+  |
+  | Traceback (most recent call last):
+  |   File ".../paperqa/agents/search.py", line 522, in process_file
+  |     await tmp_docs.aadd(
+  |   File ".../paperqa/docs.py", line 303, in aadd
+  |     texts, metadata = await read_doc(
+  |   File ".../paperqa/readers.py", line 464, in read_doc
+  |     parsed_text = cast(SyncPDFParserFn, parse_pdf)(path, **parser_kwargs)
+  |   File ".../paperqa_pypdf/reader.py", line 323, in parse_pdf_to_pages
+  |     pil_image.save(buf, format="PNG")
+  |   File ".../PIL/Image.py", line 2590, in save
+  |     save_handler(self, fp, filename)
+  |   File ".../PIL/PngImagePlugin.py", line 1383, in _save
+  |     raise OSError(msg) from e
+  | OSError: cannot write mode CMYK as PNG
+```
+
+## Suggested fix
+
+In `paperqa_pypdf/reader.py`, convert CMYK images to RGB before saving as PNG:
+
+```python
+if pil_image.mode == "CMYK":
+    pil_image = pil_image.convert("RGB")
+pil_image.save(buf, format="PNG")
+```
+
+## Environment
+
+- paper-qa 1.26.0
+- pillow (latest)
+- macOS
+
+---
+
+## Discussion
+
+**@dosubot** (bot) (2026-03-03):
+
+<!-- Greeting -->
+Hi @menyoung! I'm [Dosu](https://go.dosu.dev/dosubot) and I’m helping the paper-qa team.
+
+<!-- Answer -->
+Thanks for the detailed bug report! Your analysis is correct — the issue stems from [PR #1298](https://github.com/Future-House/paper-qa/pull/1298) which added image format conversion to PNG but only checks the image format, not the color mode.
+
+The suggested fix looks right:
+
+```python
+if pil_image.mode == "CMYK":
+    pil_image = pil_image.convert("RGB")
+pil_image.save(buf, format="PNG")
+```
+
+You might also consider handling other non-RGB modes that could fail (like `LAB` or `P` with transparency) by using a more general approach:
+
+```python
+if pil_image.mode not in ("RGB", "RGBA", "L", "LA"):
+    pil_image = pil_image.convert("RGB")
+```
+
+Regarding exception propagation: looking at [`process_file` in search.py](https://github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/agents/search.py#L529-L553), only `ValueError` and `ImpossibleParsingError` are treated as recoverable — `OSError` is re-raised, which crashes the TaskGroup. There may also be value in adding `OSError` to the recoverable exceptions for image-related failures, but fixing the root cause in the reader is the better approach.
+
+
+<!-- Dosu Comment Footer -->
+*To reply, just mention [@dosu](https://go.dosu.dev/dosubot).*
+
+---
+<sup>How did I do? [Good](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=great_response) | [Irrelevant](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=irrelevant_answer) | [Incorrect](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=incorrect_sources) | [Verbose](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=too_verbose) | [Hallucination](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=hallucination) | [Report 🐛](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=bug_report) | [Other](https://app.dosu.dev/response-feedback/2fd833f2-0db9-4469-8a88-4b219b6ea3fe?feedback_type=other)</sup>
+
+[![Chat with Dosu](https://dosu.dev/dosu-chat-badge.svg)](https://app.dosu.dev/0e493df4-ff8c-42a6-a866-71a34b293513/ask?utm_source=github)&nbsp;[![Open in Cursor](https://dosu.dev/dosu-in-cursor.svg)](https://cursor.com/link/prompt?text=Thanks%20for%20the%20detailed%20bug%20report%21%20Your%20analysis%20is%20correct%20%E2%80%94%20the%20issue%20stems%20from%20%5BPR%20%231298%5D%28https%3A//github.com/Future-House/paper-qa/pull/1298%29%20which%20added%20image%20format%20conversion%20to%20PNG%20but%20only%20checks%20the%20image%20format%2C%20not%20the%20color%20mode.%0A%0AThe%20suggested%20fix%20looks%20right%3A%0A%0A%60%60%60python%0Aif%20pil_image.mode%20%3D%3D%20%22CMYK%22%3A%0A%20%20%20%20pil_image%20%3D%20pil_image.convert%28%22RGB%22%29%0Apil_image.save%28buf%2C%20format%3D%22PNG%22%29%0A%60%60%60%0A%0AYou%20might%20also%20consider%20handling%20other%20non-RGB%20modes%20that%20could%20fail%20%28like%20%60LAB%60%20or%20%60P%60%20with%20transparency%29%20by%20using%20a%20more%20general%20approach%3A%0A%0A%60%60%60python%0Aif%20pil_image.mode%20not%20in%20%28%22RGB%22%2C%20%22RGBA%22%2C%20%22L%22%2C%20%22LA%22%29%3A%0A%20%20%20%20pil_image%20%3D%20pil_image.convert%28%22RGB%22%29%0A%60%60%60%0A%0ARegarding%20exception%20propagation%3A%20looking%20at%20%5B%60process_file%60%20in%20search.py%5D%28https%3A//github.com/Future-House/paper-qa/blob/8221e3cf8b7ff7b2485cd9e05e44387dab183a0a/paperqa/agents/search.py%23L529-L553%29%2C%20only%20%60ValueError%60%20and%20%60ImpossibleParsingError%60%20are%20treated%20as%20recoverable%20%E2%80%94%20%60OSError%60%20is%20re-raised%2C%20which%20crashes%20the%20TaskGroup.%20There%20may%20also%20be%20value%20in%20adding%20%60OSError%60%20to%20the%20recoverable%20exceptions%20for%20image-related%20failures%2C%20but%20fixing%20the%20root%20cause%20in%20the%20reader%20is%20the%20better%20approach.)&nbsp;[![Join Discord](https://img.shields.io/badge/join-5865F2?logo=discord&logoColor=white&label=)](https://go.dosu.dev/discord-bot)&nbsp;[![Share on X](https://img.shields.io/badge/X-share-black)](https://twitter.com/intent/tweet?text=%40dosu_ai%20helped%20me%20solve%20this%20issue!&url=https%3A//github.com/Future-House/paper-qa/issues/1310)

@@ -1,0 +1,52 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11701
+issues:
+  - 9354
+baseSha: caba01cc1baa00e10b6a47bdb34acd3d88a260b1
+mergeSha: b17afe2109a7e78740ac49370d65dfc27d650072
+tStar: 2026-10-09T15:40:19Z
+issueCreatedAt: 2024-08-13T19:27:00Z
+prMergedAt: 2026-10-14T19:53:26Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_datatree.TestContains::test_contains_path[a/b]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[/a/b]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[./a]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[a/]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[a//b]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[c/../a]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[a/b/v]
+  - xarray.tests.test_datatree.TestContains::test_contains_path[a/x]
+  - xarray.tests.test_datatree.TestContains::test_contains_self[.]
+  - xarray.tests.test_datatree.TestContains::test_contains_self[/]
+  - xarray.tests.test_datatree.TestContains::test_contains_self[]
+  - xarray.tests.test_datatree.TestContains::test_not_contains_path[a/b/v/x]
+  - xarray.tests.test_datatree.TestContains::test_not_contains_path[a/b/v/..]
+  - xarray.tests.test_datatree.TestContains::test_contains_double_leading_slash
+  - xarray.tests.test_datatree.TestContains::test_contains_relative_to_child
+  - xarray.tests.test_datatree.TestGetItem::test_getitem_path_past_variable
+  - xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments0]
+  - xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments1]
+  - xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments2]
+  - xarray.tests.test_treenode::test_nodepath_double_leading_slash[segments3]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_sketch
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: bfebaeb051c84ea96ceecf8bb1906438a8577eeaa71fe3f20c4f7283c0afde59
+  issue/body+human.md: bfebaeb051c84ea96ceecf8bb1906438a8577eeaa71fe3f20c4f7283c0afde59
+  issue/body.md: bfebaeb051c84ea96ceecf8bb1906438a8577eeaa71fe3f20c4f7283c0afde59
+  leaks.json: 0c6d9dfad2449ec91cdfaf8e436c8dde12bb629a23faacc6cbf5e51a9c31d3a3
+  reference.patch: 3eec328bf2fa523e9546a88064fd7cc61debaffc45ae558dd24e851fd02cea94
+  snapshot.json: a1c2652ae45a2336f9bd08a91b12a35e1467ca6cfc4eadaa0be398b68e5548a9
+  tests.patch: 1482595ec1c83213ea87c6029d294cdb551c7896533463fdd1be1ee7a207e0a5
+  validation.json: e3d58f8abf1ce9ead1eec73f94f2ccd3d14471d1dc26c1a40a60be11770413c4

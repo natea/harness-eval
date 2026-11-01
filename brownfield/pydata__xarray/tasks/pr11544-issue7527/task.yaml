@@ -1,0 +1,34 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11544
+issues:
+  - 7527
+baseSha: 45629ccc7b796fb62e6f50de63832d0d2e33254c
+mergeSha: dafd310b36aca13f28eb85adc263249a92addb35
+tStar: 2026-08-26T08:02:07Z
+issueCreatedAt: 2023-02-14T17:45:00Z
+prMergedAt: 2026-10-05T13:15:26Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_dataarray::test_idxminmax_preserves_coord_dtype[idxmin]
+  - xarray.tests.test_dataarray::test_idxminmax_preserves_coord_dtype[idxmax]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_code
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: c8c2a68d7a39acc518dc091000844e9c474f02eb3996bce20337f9ab47ad5267
+  issue/body+human.md: c8c2a68d7a39acc518dc091000844e9c474f02eb3996bce20337f9ab47ad5267
+  issue/body.md: c8c2a68d7a39acc518dc091000844e9c474f02eb3996bce20337f9ab47ad5267
+  leaks.json: 6713504a82becc06c8dd9999ba5c54e35ab502bcb8b2631f5c7992a993d384aa
+  reference.patch: 369fc456fbe7587f1cdfd1f4124a663c91838cf875da5ea64ca749d4397b49df
+  snapshot.json: 639cdf226a78a36fe370d30ef1e79913f21a95e969fb5ac6b1eb11d5477bafbe
+  tests.patch: 93a68a10d5ff16701ce298114fd2f3c766faf94ed29d7773c98bf1cce7ead2f8
+  validation.json: 49c05d2d3f48fe91069baf179f6d4c3d96b302a15787e07a40e83393e05c9be6

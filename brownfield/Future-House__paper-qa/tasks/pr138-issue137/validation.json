@@ -1,0 +1,39 @@
+{
+  "pr": 138,
+  "merged": "2023-06-10",
+  "issues": [
+    {
+      "n": 137,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "README.md",
+    "paperqa/docs.py",
+    "paperqa/version.py"
+  ],
+  "testFiles": [
+    "tests/test_paperqa.py"
+  ],
+  "env": "exclude-newer 2023-06-09T20:34:15-04:00",
+  "envSecs": 6,
+  "selected": [
+    "tests/test_paperqa.py::test_docs_pickle",
+    "tests/test_paperqa.py::test_docs_pickle_no_faiss"
+  ],
+  "counts": {
+    "f2p": 0,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 1,
+    "liveApi": 1,
+    "goldRegress": 0
+  },
+  "f2p": [],
+  "flaky": [],
+  "broken": [
+    "::tests.test_paperqa"
+  ],
+  "verdict": "fail:needs-live-api"
+}

@@ -1,0 +1,18 @@
+diff --git a/src/zarr/codecs/gzip.py b/src/zarr/codecs/gzip.py
+index 7d86a03b..7f218720 100644
+--- a/src/zarr/codecs/gzip.py
++++ b/src/zarr/codecs/gzip.py
+@@ -28,6 +28,13 @@ def parse_gzip_level(data: JSON) -> int:
+     return parsed
+ 
+ 
++def _gzip_streams_equal_except_mtime(a: bytes, b: bytes) -> bool:
++    if len(a) != len(b):
++        return False
++
++    return a[:4] == b[:4] and a[8:] == b[8:]
++
++
+ @dataclass(frozen=True)
+ class GzipCodec(BytesBytesCodec):
+     """gzip codec"""

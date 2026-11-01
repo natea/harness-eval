@@ -1,0 +1,49 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11626
+issues:
+  - 11625
+baseSha: 56a5d37067f03acb439a20438768739bf4331366
+mergeSha: 78d2b3ed7eaa0e06e033f89764ba293c1bc840d7
+tStar: 2026-09-28T10:15:32Z
+issueCreatedAt: 2026-09-28T10:09:00Z
+prMergedAt: 2026-09-28T18:09:30Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_backends.TestNetCDF4Data::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestScipyInMemoryData::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestScipyFileObject::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestScipyFilePath::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestNetCDF3ViaNetCDF4Data::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestNetCDF4ClassicViaNetCDF4Data::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestNetCDF4ClassicViaH5NetCDFData::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestGenericNetCDFData::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestH5NetCDFData::test_empty_isel_multidim
+  - xarray.tests.test_backends.TestH5NetCDFFileObject::test_empty_isel_multidim
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-first-shape0]
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-first-shape1]
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-last-shape0]
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.BASIC-last-shape1]
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.OUTER_1VECTOR-first-shape0]
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.OUTER_1VECTOR-first-shape1]
+  - xarray.tests.test_indexing::test_decompose_indexer_empty_ndarray[IndexingSupport.OUTER_1VECTOR-last-shape1]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: 231c31427d8ae19dc7e3da223445b14c407df8bbd7d553540a9ab89e39229c31
+  issue/body+human.md: 231c31427d8ae19dc7e3da223445b14c407df8bbd7d553540a9ab89e39229c31
+  issue/body.md: 231c31427d8ae19dc7e3da223445b14c407df8bbd7d553540a9ab89e39229c31
+  leaks.json: f9159b9079becb32fdcc7e6502d8cde425d1acb4b1897e86d7cb113d7592e723
+  reference.patch: 0d5ad72824b3850beadac0bc796476517d5a83fbac702fe225021755c5113c88
+  snapshot.json: 9dec4419ead5fddc00427cb6fb787bdb2ea15dbe7e7e59e53aae589d3cd2772e
+  tests.patch: 215c99cdb7e9adb6799e003a2655c823d34346cc081fb834a610f7c6bac68e56
+  validation.json: 47010797e465f1d2db2ee6753e35f0f0d4bcd1fdab6bfcb6c6f34a4966983826

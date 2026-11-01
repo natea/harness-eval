@@ -1,0 +1,33 @@
+schemaVersion: 1
+repo: Future-House/paper-qa
+pr: 717
+issues:
+  - 710
+baseSha: 22127576733c3266ee317e85f27eba28d9d033b2
+mergeSha: 013023307423f9ed8da40025d6949f3a603eed47
+tStar: 2024-11-21T08:33:11Z
+issueCreatedAt: 2024-11-19T23:42:00Z
+prMergedAt: 2024-12-02T21:29:10Z
+verdict: fail:needs-live-api
+failToPass: []
+passToPass: []
+envBroken:
+  - tests.test_paperqa::test_maybe_is_text
+flaky: []
+testPaths:
+  - tests
+depsTouched: false
+appEgress: []
+leak:
+  body: fix_code
+  comments: noise
+provisional: true
+files:
+  issue/body+all.md: ce2b9fa086c85a53a9b49bedcb288c95d7d6916e4d1c8a28ada1743f8c4d35df
+  issue/body+human.md: ce2b9fa086c85a53a9b49bedcb288c95d7d6916e4d1c8a28ada1743f8c4d35df
+  issue/body.md: f1369fd7c545d1f61e001445240968027b8f3a146688a3a832cd0fffad5b7a45
+  leaks.json: 9ed8a991b4d324bda001ea32c9449caf12ad7400eadff6a87d493fc85e1e11c2
+  reference.patch: f3a9dbbcf7081dd80e47892b1b99d96f031c27e116bbe1150a024f470c07ddaf
+  snapshot.json: 06180495956a11c68157e0f8c8f053c8c095aaeb9cdc0c3aa188d0bb9b1c4a56
+  tests.patch: 17c13f00f8e32ff5bd61c88c227e4bfffaf302e1b6613ec41eefd7bad62f68b1
+  validation.json: e04f35c1db8f0cc94ed365238483f051821cea44654f01c3ac866337683fc321

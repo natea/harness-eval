@@ -1,0 +1,38 @@
+{
+  "pr": 894,
+  "merged": "2025-03-01",
+  "issues": [
+    {
+      "n": 889,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 2,
+  "srcFiles": [
+    "paperqa/settings.py"
+  ],
+  "testFiles": [
+    "tests/test_configs.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 8,
+  "selected": [
+    "tests/test_configs.py::test_get_settings_missing_file",
+    "tests/test_configs.py::test_index_naming",
+    "tests/test_configs.py::test_settings_default_instantiation"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_configs::test_settings_default_instantiation"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

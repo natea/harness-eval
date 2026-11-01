@@ -1,0 +1,49 @@
+{
+  "pr": 314,
+  "merged": "2024-09-11",
+  "issues": [
+    {
+      "n": 313,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "paperqa/clients/__init__.py",
+    "paperqa/clients/retractions.py",
+    "paperqa/types.py"
+  ],
+  "testFiles": [
+    "tests/test_clients.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 6,
+  "selected": [
+    "tests/test_clients.py::test_crossref_retraction_status",
+    "tests/test_clients.py::test_doi_search",
+    "tests/test_clients.py::test_ensure_sequential_run_early_stop",
+    "tests/test_clients.py::test_title_search"
+  ],
+  "counts": {
+    "f2p": 7,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 1,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_clients::test_doi_search[paper_attributes0]",
+    "tests.test_clients::test_doi_search[paper_attributes1]",
+    "tests.test_clients::test_doi_search[paper_attributes2]",
+    "tests.test_clients::test_ensure_sequential_run_early_stop",
+    "tests.test_clients::test_title_search[paper_attributes0]",
+    "tests.test_clients::test_title_search[paper_attributes1]",
+    "tests.test_clients::test_title_search[paper_attributes2]"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_clients::test_crossref_retraction_status"
+  ],
+  "verdict": "VALID"
+}

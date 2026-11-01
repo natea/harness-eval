@@ -1,0 +1,74 @@
+{
+  "pr": 11629,
+  "merged": "2026-09-30",
+  "issues": [
+    {
+      "n": 7079,
+      "repo": "pydata/xarray"
+    },
+    {
+      "n": 9125,
+      "repo": "pydata/xarray"
+    },
+    {
+      "n": 9779,
+      "repo": "pydata/xarray"
+    },
+    {
+      "n": 11088,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 9,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/backends/api.py",
+    "xarray/backends/locks.py",
+    "xarray/backends/netCDF4_.py"
+  ],
+  "testFiles": [
+    "xarray/tests/backends/base.py",
+    "xarray/tests/backends/test_api.py",
+    "xarray/tests/backends/test_locks.py",
+    "xarray/tests/backends/test_netCDF4.py",
+    "xarray/tests/test_distributed.py"
+  ],
+  "env": "exclude-newer 2026-09-30T11:53:56-04:00",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/backends/test_api.py::test_open_mfdataset_manyfiles",
+    "xarray/tests/backends/test_locks.py::test_combined_lock_is_sorted_again_when_unpickled",
+    "xarray/tests/backends/test_locks.py::test_global_locks_unpickle_to_global_locks_of_other_process",
+    "xarray/tests/backends/test_locks.py::test_is_reentrant_lock",
+    "xarray/tests/backends/test_locks.py::test_reentrant_serializable_lock",
+    "xarray/tests/backends/test_locks.py::test_reentrant_serializable_lock_pickle",
+    "xarray/tests/backends/test_locks.py::test_reentrant_serializable_lock_release_from_other_thread",
+    "xarray/tests/backends/test_locks.py::test_threaded_lock",
+    "xarray/tests/backends/test_netCDF4.py::test_netcdf4_concurrent_opens",
+    "xarray/tests/backends/test_netCDF4.py::test_netcdf4_concurrent_writes",
+    "xarray/tests/backends/test_netCDF4.py::test_netcdf4_entrypoint",
+    "xarray/tests/backends/test_netCDF4.py::test_open_mfdataset_netcdf4_parallel",
+    "xarray/tests/test_distributed.py::test_dask_distributed_read_netcdf_integration_test",
+    "xarray/tests/test_distributed.py::test_open_mfdataset_multiple_files_parallel_distributed",
+    "xarray/tests/test_distributed.py::test_open_mfdataset_netcdf4_parallel_distributed"
+  ],
+  "counts": {
+    "f2p": 6,
+    "p2p": 77,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.backends.test_locks::test_global_locks_unpickle_to_global_locks_of_other_process",
+    "xarray.tests.backends.test_locks::test_is_reentrant_lock",
+    "xarray.tests.backends.test_locks::test_reentrant_serializable_lock",
+    "xarray.tests.backends.test_locks::test_reentrant_serializable_lock_pickle",
+    "xarray.tests.backends.test_locks::test_reentrant_serializable_lock_release_from_other_thread",
+    "xarray.tests.backends.test_locks::test_threaded_lock"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

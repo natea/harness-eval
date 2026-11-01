@@ -1,0 +1,27 @@
+# Add a `.to_polars_df()` method (very similar to `.to_dataframe()`, which implicitly uses pandas)
+
+_Opened by @DeflateAwning_
+
+### Is your feature request related to a problem?
+
+Pandas is much less performant, and is decreasingly used in new projects. It would be awesome to be able to move data out of xarray and into Polars directly, without jumping through Pandas. 
+
+### Describe the solution you'd like
+
+Add a `.to_polars_df()` method (very similar to `.to_dataframe()`, which implicitly uses pandas)
+
+### Describe alternatives you've considered
+
+You currently have to do:
+
+```python
+import polars as pl
+
+pl.from_pandas(da.to_dataframe())`
+```
+
+This is slower than it could be if there was a directly-to-polars method.
+
+### Additional context
+
+I'd even consider renaming the `.to_dataframe()` method to `.to_pandas_df()`. Suggesting that the main/default dataframe is Pandas seems a little strange in the 2025 data analysis ecosystem.

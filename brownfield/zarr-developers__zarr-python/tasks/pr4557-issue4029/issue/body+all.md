@@ -1,0 +1,198 @@
+# VerboseModule cannot be pickled
+
+_Opened by @vladidobro_
+
+### Zarr version
+
+3.2.1
+
+### Numcodecs version
+
+0.16.5
+
+### Python Version
+
+3.12.12
+
+### Operating System
+
+Mac
+
+### Installation
+
+using uv run
+
+### Description
+
+Hi,
+
+I was trying to send zarr.storage.ObjectStore-backed Dask arrays to Dask, and I hit this error.
+Apparently `zarr.storage`, the module, cannot be pickled, which in my opinion should be considered a bug, because modules are in general always picklable.
+The problem goes away when I change `import zarr.storage; zarr.storage.ObjectStore` to `from zarr.storage import ObjectStore; ObjectStore`, because then there is no attempt to serialize `zarr.storage`.
+
+It is also very confusing that "zarr" does not come up anywhere in the traceback, which makes it hard to find the culprit.
+
+The problem is that `zarr.storage` is doing some import magic in https://github.com/zarr-developers/zarr-python/blob/fe229107f9915f05817f7a664d3550695ff9ca44/src/zarr/storage/__init__.py#L31
+
+### Steps to reproduce
+
+```python
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "zarr@git+https://github.com/zarr-developers/zarr-python.git@main",
+#   "dask",
+#   "distributed",
+# ]
+# ///
+#
+# This script automatically imports the development branch of zarr to check for issues
+
+import zarr
+zarr.print_debug_info()
+
+import zarr.storage
+import dask.distributed
+
+def do():
+    print(zarr.storage.ObjectStore)
+
+if __name__ == '__main__':
+    with dask.distributed.LocalCluster(n_workers=1, processes=True) as cluster:
+        client = cluster.get_client()
+        client.submit(do).result()
+
+```
+
+
+### Additional output
+
+Installed 25 packages in 62ms
+platform: macOS-26.4.1-arm64-arm-64bit
+python: 3.12.12
+zarr: 3.2.2.dev40+gfe229107
+
+**Required dependencies:**
+packaging: 26.2
+numpy: 2.4.6
+numcodecs: 0.16.5
+typing_extensions: 4.15.0
+donfig: 0.8.1.post1
+
+**Optional dependencies:**
+fsspec: 2026.4.0
+numcodecs: 0.16.5
+
+**Not Installed:**
+botocore
+cupy-cuda12x
+s3fs
+gcsfs
+universal-pathlib
+obstore
+platform: macOS-26.4.1-arm64-arm-64bit
+python: 3.12.12
+zarr: 3.2.2.dev40+gfe229107
+
+**Required dependencies:**
+packaging: 26.2
+numpy: 2.4.6
+numcodecs: 0.16.5
+typing_extensions: 4.15.0
+donfig: 0.8.1.post1
+
+**Optional dependencies:**
+fsspec: 2026.4.0
+numcodecs: 0.16.5
+
+**Not Installed:**
+botocore
+cupy-cuda12x
+s3fs
+gcsfs
+universal-pathlib
+obstore
+2026-06-03 22:35:23,265 - distributed.protocol.pickle - ERROR - Failed to serialize LLGExpr(dsk={'do-8b75dbdc4db9fb9776a06e901a3f5600': <Task 'do-8b75dbdc4db9fb9776a06e901a3f5600' do()>}).
+Traceback (most recent call last):
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/pickle.py", line 76, in dumps
+    result = cloudpickle.dumps(x, **dump_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1544, in dumps
+    cp.dump(obj)
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1313, in dump
+    return super().dump(obj)
+           ^^^^^^^^^^^^^^^^^
+TypeError: cannot pickle 'VerboseModule' object
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/pickle.py", line 80, in dumps
+    result = cloudpickle.dumps(x, **dump_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1544, in dumps
+    cp.dump(obj)
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1313, in dump
+    return super().dump(obj)
+           ^^^^^^^^^^^^^^^^^
+TypeError: cannot pickle 'VerboseModule' object
+Traceback (most recent call last):
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/pickle.py", line 76, in dumps
+    result = cloudpickle.dumps(x, **dump_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1544, in dumps
+    cp.dump(obj)
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1313, in dump
+    return super().dump(obj)
+           ^^^^^^^^^^^^^^^^^
+TypeError: cannot pickle 'VerboseModule' object
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/serialize.py", line 366, in serialize
+    header, frames = dumps(x, context=context) if wants_context else dumps(x)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/serialize.py", line 78, in pickle_dumps
+    frames[0] = pickle.dumps(
+                ^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/pickle.py", line 80, in dumps
+    result = cloudpickle.dumps(x, **dump_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1544, in dumps
+    cp.dump(obj)
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/cloudpickle/cloudpickle.py", line 1313, in dump
+    return super().dump(obj)
+           ^^^^^^^^^^^^^^^^^
+TypeError: cannot pickle 'VerboseModule' object
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/vladislavwohlrath/dskzr.py", line 24, in <module>
+    client.submit(do).result()
+    ^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/client.py", line 2180, in submit
+    futures = self._graph_to_futures(
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/client.py", line 3392, in _graph_to_futures
+    expr_ser = Serialized(*serialize(to_serialize(expr), on_error="raise"))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/serialize.py", line 284, in serialize
+    return serialize(
+           ^^^^^^^^^^
+  File "/Users/vladislavwohlrath/.cache/uv/environments-v2/dskzr-2f5da7d8eb1debb7/lib/python3.12/site-packages/distributed/protocol/serialize.py", line 392, in serialize
+    raise TypeError(msg, str_x) from exc
+TypeError: ('Could not serialize object of type LLGExpr', "LLGExpr(dsk={'do-8b75dbdc4db9fb9776a06e901a3f5600': <Task 'do-8b75dbdc4db9fb9776a06e901a3f5600' do()>})")
+
+---
+
+## Discussion
+
+**@d-v-b** (2026-06-03):
+
+sorry about this! I feel like we can remove that verbosemodule thing -- it only existed to emit a warning for long-deprecated behavior
+
+**@vladidobro** (2026-06-04):
+
+Thank you very much!

@@ -1,0 +1,62 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "xarray.list_engines()",
+      "rationale": "Feature request proposing a top-level list_engines with a table output; the reference added show_backends instead, so no leak.",
+      "author": "snowman2",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "It would be nice to add the `description` & `documentation` properties to `xarray.backends.common.BackendEntrypoint`",
+      "rationale": "Points at existing list_engines in plugins, but proposes adding properties and a list_engines function; reference added show_backends in plugins.py. Not matching.",
+      "author": "snowman2",
+      "role": "issue author"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I'm happy to work on this!",
+      "rationale": "No technical content.",
+      "author": "JessicaS11",
+      "role": "other user"
+    },
+    {
+      "id": "c3",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/__init__.py",
+        "xarray/backends/plugins.py"
+      ],
+      "evidence": "Shall we also add a top-level import: `xr.show_backends` like `xr.show_versions`.",
+      "rationale": "Proposes adding top-level xr.show_backends analogous to show_versions, which is what the reference does.",
+      "author": "dcherian",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/__init__.py"
+      ],
+      "evidence": "You could just add an `xr.show_backends` that points to the same function as `xr.backends.list_engines`?",
+      "rationale": "Suggests adding xr.show_backends top-level; the reference adds it but as a new printing function rather than alias, so partially consistent.",
+      "author": "TomNicholas",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "fix_sketch"
+}

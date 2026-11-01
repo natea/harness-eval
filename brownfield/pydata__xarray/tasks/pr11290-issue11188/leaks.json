@@ -1,0 +1,51 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataarray.py"
+      ],
+      "evidence": "the next line `new_sizes = dict(zip(self.dims, variable.shape, strict=True))` assumes that the dims order is the same, otherwise it does not have any sense.",
+      "rationale": "Identifies _replace_maybe_drop_dims and the zip of self.dims with variable.shape as the root cause, exactly the line changed.",
+      "author": "eugene57",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "",
+      "rationale": "Bot welcome message.",
+      "author": "welcome",
+      "role": "bot"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I think its any time you group by a non-leading dim (i.e. reordering hapapens) and the dims don't have the same lengths",
+      "rationale": "Workaround and generalization of the symptom; no code location given.",
+      "author": "ianhi",
+      "role": "maintainer"
+    },
+    {
+      "id": "c3",
+      "label": "fix_code",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/core/dataarray.py"
+      ],
+      "evidence": "Fix: replace with `dict(variable.sizes)`.",
+      "rationale": "Gives the exact one-line replacement used in the reference fix, in the right function.",
+      "author": "kkollsga",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "diagnosis",
+  "commentsLevel": "fix_code"
+}

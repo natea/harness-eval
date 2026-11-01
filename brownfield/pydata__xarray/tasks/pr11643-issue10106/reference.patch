@@ -1,0 +1,32 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 0bcda67e..6973109c 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -160,6 +160,10 @@ Bug Fixes
+ - Preserve NumPy ``StringDType`` variables and coordinates in Zarr format 3
+   round trips (:issue:`11466`, :pull:`11474`).
+   By `stanbot8 <https://github.com/stanbot8>`_.
++- :py:meth:`Dataset.copy` now preserves its resource-closing callback, so a
++  copied file-backed dataset can release a file reopened after the original
++  dataset is closed (:issue:`10106`). By `nightcityblade
++  <https://github.com/nightcityblade>`_.
+ - Fixed dask-backed bottleneck rolling reductions declaring a dtype that could
+   differ from the dtype returned by the matching numpy-backed bottleneck path,
+   notably ``object`` instead of ``float64`` for boolean inputs (:pull:`11449`).
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index 0a46ff6d..0f486cfc 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -1251,7 +1251,11 @@ class Dataset(
+             copy.deepcopy(self._encoding, memo) if deep else copy.copy(self._encoding)
+         )
+ 
+-        return self._replace(variables, indexes=indexes, attrs=attrs, encoding=encoding)
++        copied = self._replace(
++            variables, indexes=indexes, attrs=attrs, encoding=encoding
++        )
++        copied.set_close(self._close)
++        return copied
+ 
+     def __copy__(self) -> Self:
+         return self._copy(deep=False)

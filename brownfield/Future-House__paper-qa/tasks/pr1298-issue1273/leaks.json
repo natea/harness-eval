@@ -1,0 +1,129 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You uploaded an unsupported image. Please make sure your image has of one the following formats",
+      "rationale": "Error report only.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Are you able to share a PDF DOI or title",
+      "rationale": "Request for repro.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c2",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "it's specific to the PyMuPDF path",
+      "rationale": "Blames PyMuPDF path; reference fix is in the PyPDF reader. Wrong location, though the idea of converting to PNG is similar.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c3",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "this is an example pdf with that warning",
+      "rationale": "Repro PDF.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c4",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "the below code works for me, including enrichment",
+      "rationale": "Non-repro script.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c5",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Skipping enrichment for media index 0 on page 1",
+      "rationale": "Logs and script.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "--parsing.parse_pdf \"paperqa_pypdf.parse_pdf_to_pages\"",
+      "rationale": "Repro with PyPDF parser and logs; names the parser module but is only a symptom.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c7",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "packages/paper-qa-pypdf/src/paperqa_pypdf/reader.py"
+      ],
+      "evidence": "Apparently in this individual media mode, the image read is not PNG it's something else (possibly JPEG 2000)",
+      "rationale": "Identifies the root cause in the PyPDF reader: images are not PNG but are labeled as PNG, which matches the reference's re-encoding to PNG.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c8",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "indeed no pdfplumber.",
+      "rationale": "Confirms environment; the workaround worked.",
+      "author": "satra",
+      "role": "issue author"
+    },
+    {
+      "id": "c9",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "Let's keep this open until I fix this bug with `pdfplumber`",
+      "rationale": "Scheduling comment.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c10",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "You may want to try deleting the index",
+      "rationale": "Unrelated advice.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c11",
+      "label": "noise",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "followed up in #1274",
+      "rationale": "Pointer to another issue.",
+      "author": "satra",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis"
+}

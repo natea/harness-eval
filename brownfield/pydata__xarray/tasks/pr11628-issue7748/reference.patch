@@ -1,0 +1,31 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 1cf9f1a3..4cf481f6 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -142,6 +142,11 @@ Bug Fixes
+ - Fixed a bug that caused rechunking a multi-dimensional cftime array along a
+   subset of its dimensions to raise an error (:issue:`11567`, :pull:`11576`).
+   By `Spencer Clark <https://github.com/spencerkclark>`_.
++- :py:meth:`Dataset.diff` and :py:meth:`DataArray.diff` now raise a ``ValueError``
++  when ``dim`` is not an existing dimension, instead of silently returning the
++  object unchanged. This matches the behavior of other methods such as
++  :py:meth:`Dataset.differentiate` and reductions like ``mean`` (:issue:`7748`).
++  By `imam2004i <https://github.com/imam2004i>`_.
+ - Fixed indexing with an empty indexer array. An empty indexer array is now always
+   turned into an empty slice for the backend, so that the in-memory part of the
+   decomposed indexer stays aligned with the axes of the loaded array. Previously the
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index 2706e5ee..0a46ff6d 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -8016,6 +8016,10 @@ class Dataset(
+         --------
+         Dataset.differentiate
+         """
++        if dim not in self.dims:
++            raise ValueError(
++                f"Dimension {dim!r} not found in data dimensions {tuple(self.dims)}"
++            )
+         if n == 0:
+             return self
+         if n < 0:

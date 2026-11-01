@@ -1,0 +1,45 @@
+{
+  "pr": 512,
+  "merged": "2024-10-01",
+  "issues": [
+    {
+      "n": 488,
+      "repo": "Future-House/paper-qa"
+    },
+    {
+      "n": 499,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "paperqa/agents/env.py",
+    "paperqa/agents/main.py",
+    "paperqa/agents/search.py",
+    "paperqa/agents/tools.py"
+  ],
+  "testFiles": [
+    "tests/test_agents.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 5,
+  "selected": [
+    "tests/test_agents.py::test_agent_sharing_state",
+    "tests/test_agents.py::test_get_directory_index"
+  ],
+  "counts": {
+    "f2p": 0,
+    "p2p": 0,
+    "flaky": 0,
+    "envBroken": 2,
+    "liveApi": 2,
+    "goldRegress": 0
+  },
+  "f2p": [],
+  "flaky": [],
+  "broken": [
+    "tests.test_agents::test_agent_sharing_state",
+    "tests.test_agents::test_get_directory_index"
+  ],
+  "verdict": "fail:needs-live-api"
+}

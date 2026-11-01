@@ -1,0 +1,22 @@
+# raise an error for `assign_coords({Hashable: xr.Coordinates})`
+
+_Opened by @dcherian_
+
+### What happened?
+
+This works but is wrong.
+
+```
+import xarray as xr
+from xarray.indexes import RangeIndex
+
+ds = xr.Dataset({"foo": ("x", [1, 2, 3])})
+coords = xr.Coordinates.from_xindex(RangeIndex.arange("x", "x", 1.5, 4.5, 1.0))
+ds.assign_coords({"x": coords})
+```
+
+### What did you expect to happen?
+
+We should error and tell the user to use `ds.assign_coords(coords)` instead
+
+xref https://github.com/pydata/xarray/pull/10076/commits/efe3e81be686881ca63a561095e95f50856a8d19#r2019841034

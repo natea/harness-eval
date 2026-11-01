@@ -1,0 +1,70 @@
+diff --git a/doc/whats-new.rst b/doc/whats-new.rst
+index 85b01ff5..93100702 100644
+--- a/doc/whats-new.rst
++++ b/doc/whats-new.rst
+@@ -60,6 +60,12 @@ Bug Fixes
+   copied file-backed dataset can release a file reopened after the original
+   dataset is closed (:issue:`10106`, :pull:`11643`).
+   By `nightcityblade <https://github.com/nightcityblade>`_.
++- :py:meth:`DataArray.idxmin`, :py:meth:`DataArray.idxmax` and the
++  :py:class:`Dataset` equivalents no longer cast integer labels to ``float64``
++  for floating-point data without any all-``NaN`` slices. The label dtype only
++  changes if a slice is all-``NaN`` and has to be filled with ``fill_value``
++  (:issue:`7527`, :pull:`11544`).
++  By `Shurong Cao <https://github.com/CAOShurong>`_.
+ 
+ 
+ Documentation
+diff --git a/xarray/computation/computation.py b/xarray/computation/computation.py
+index 6317a036..6df8aa53 100644
+--- a/xarray/computation/computation.py
++++ b/xarray/computation/computation.py
+@@ -1012,8 +1012,10 @@ def _calc_idxminmax(
+     res = index._replace(coord[(index.variable,)]).rename(dim)
+ 
+     if skipna or (skipna is None and array.dtype.kind in na_dtypes):
+-        # Put the NaN values back in after removing them
+-        res = res.where(~allna, fill_value)
++        # Put the NaN values back in after removing them.
++        # We attempt to preserve dtype where we can.
++        if is_chunked_array(allna.data) or allna.any():
++            res = res.where(~allna, fill_value)
+ 
+     # Copy attributes from argmin/argmax, if any
+     res.attrs = index.attrs
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index 3a79e90f..0f3d29f7 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -9465,13 +9465,13 @@ class Dataset(
+             int      int64 8B 4
+             float    (y) int64 24B 4 0 2
+         >>> ds.idxmin(dim="x")
+-        <xarray.Dataset> Size: 52B
++        <xarray.Dataset> Size: 40B
+         Dimensions:  (y: 3)
+         Coordinates:
+           * y        (y) int64 24B -1 0 1
+         Data variables:
+             int      <U1 4B 'e'
+-            float    (y) object 24B 'e' 'a' 'c'
++            float    (y) <U1 12B 'e' 'a' 'c'
+         """
+         return self.map(
+             methodcaller(
+@@ -9563,13 +9563,13 @@ class Dataset(
+             int      int64 8B 1
+             float    (y) int64 24B 0 2 2
+         >>> ds.idxmax(dim="x")
+-        <xarray.Dataset> Size: 52B
++        <xarray.Dataset> Size: 40B
+         Dimensions:  (y: 3)
+         Coordinates:
+           * y        (y) int64 24B -1 0 1
+         Data variables:
+             int      <U1 4B 'b'
+-            float    (y) object 24B 'a' 'c' 'c'
++            float    (y) <U1 12B 'a' 'c' 'c'
+         """
+         return self.map(
+             methodcaller(

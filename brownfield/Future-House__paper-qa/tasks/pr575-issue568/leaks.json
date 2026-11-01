@@ -1,0 +1,44 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/agents/main.py",
+        "paperqa/agents/helpers.py"
+      ],
+      "evidence": "I managed to solve this by patching `litellm_get_search_query` to accept a config dict and using it in the `LiteLLMModel` initialization",
+      "rationale": "Identifies the call site in run_fake_agent and the helper creating a default LiteLLMModel, and proposes passing the local config through. The reference passes the configured LLM model instead, which is close in spirit.",
+      "author": "migalkin",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/agents/helpers.py"
+      ],
+      "evidence": "Your proposed patch to allow the function to accept a configuration dictionary and initialize `LiteLLMModel` with it is a valid solution.",
+      "rationale": "Endorses the issue's proposal without adding anything new.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "paperqa/agents/models.py"
+      ],
+      "evidence": "Looks like the same thing happens in `AnswerResponse.get_summary`.",
+      "rationale": "Points to another location the reference fix changes (get_summary), but does not describe the change itself.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "fix_sketch"
+}

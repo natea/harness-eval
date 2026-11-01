@@ -1,0 +1,30 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "fix_sketch",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "xarray/computation/computation.py",
+        "xarray/core/dataarray.py"
+      ],
+      "evidence": "`idxmax` (+ `idxmin`) doesn't accept multiple dimensions, but `argmax` does.",
+      "rationale": "Requests idxmax/idxmin accept multiple dims like argmax and suggests wrapping argmax. The reference does this, returning a dict like argmin/argmax, but the issue gives no details of the implementation.",
+      "author": "max-sixty",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "At present, it seems like it calls the `arg*` duck array op.",
+      "rationale": "Agrees with the proposal and notes the current behavior, but gives no concrete change beyond the issue body.",
+      "author": "dcherian",
+      "role": "other user"
+    }
+  ],
+  "bodyLevel": "fix_sketch",
+  "commentsLevel": "symptom"
+}

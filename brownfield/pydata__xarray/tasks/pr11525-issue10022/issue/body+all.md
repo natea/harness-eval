@@ -1,0 +1,175 @@
+# DataArray.isin does not accept sets intuitively
+
+_Opened by @mark-boer_
+
+### What is your issue?
+
+This is halfway between an feature request and a bug report. I do not find the way that DataArray.isin handles sets is very intuitive:
+
+Example:
+```python
+np_arr = np.arange(5)
+dask_arr = da.arange(5)
+xr_arr = xr.DataArray(np_arr)
+pd_series = pd.Series(np_arr)
+
+s = {1, 2}
+print("numpy", np.isin(np_arr, s))
+print("dask", da.isin(dask_arr, s).compute())
+print("xarray", xr_arr.isin(s))
+print("pandas", pd_series.isin(s))
+```
+
+Which results in:
+```txt
+numpy [False False False False False]
+dask [False False False False False]
+xarray <xarray.DataArray (dim_0: 5)> Size: 5B
+array([False, False, False, False, False])
+Dimensions without coordinates: dim_0
+pandas 0    False
+1     True
+2     True
+3    False
+4    False
+dtype: bool
+```
+
+Personally, I find only pandas handles this in an intuitive way. But I also understand, that you might want to stay consistent with numpy and dask.
+
+I'd be interested to see what you think!
+
+---
+
+## Discussion
+
+**@dcherian** (2025-02-04):
+
+I agree with you. 
+
+This is the issue really:
+```python
+>>> import numpy as np
+>>> np.array({1, 2, 3})
+array({1, 2, 3}, dtype=object)
+```
+
+IMO special-casing a set makes sense to me.
+
+**@max-sixty** (2025-02-04):
+
+Agree! We would take a PR...
+
+**@mark-boer** (2025-02-05):
+
+Sure thing, I can make a PR!
+
+**@mark-boer** (2025-02-08):
+
+Can we make breaking changes? Pandas performs an `is_list_like` check, raising an error when that fails:
+
+https://github.com/pandas-dev/pandas/blob/3da2c1c14e8ad55d8cd22efee75e8477e4403997/pandas/_libs/lib.pyx#L1238
+
+Personally, I really like this.
+
+**@max-sixty** (2025-02-08):
+
+> Can we make breaking changes?
+
+If worthwhile! But with a fairly high bar.
+
+To the extent you're proposing the pandas approach: what's the difference between "special-case a set" and that?
+
+**@mark-boer** (2025-02-09):
+
+Maybe breaking change is not the correct term, but currently the xarray isin works as follows:
+
+```python
+ints = xr.DataArray([1,2,3,4])
+strs = xr.DataArray(["a", "ab", "abc"])
+
+ints.isin(1)
+# array([ True, False, False, False])
+ints.isin(np.array(1))
+# array([ True, False, False, False])
+ints.isin({1,2})
+# array([ False, False, False, False])
+ints.isin(xr.DataArray([1, 2]))
+# array([ True, True, False, False])
+ints.isin(xr.DataArray([1, 2]).to_dataset(name="hello"))
+# TypeError
+ints.isin(xr.DataArray(1))
+# array([ True, False, False, False])
+
+strs.isin("abc")
+# array([ False, False, True])
+strs.isin(["abc"])
+# array([ False, False, True])
+strs.isin({"a", "b"})
+# array([ False, False, False])
+```
+
+and we could consider following the pandas implementation:
+
+```python
+ints = xr.DataArray([1,2,3,4])
+strs = xr.DataArray(["a", "ab", "abc"])
+
+ints.isin(1)
+# TypeError / ValueError
+ints.isin(np.array(1))
+# ValueError, it is a scalar
+ints.isin({1,2})
+# array([ True, True, False, False])
+ints.isin(xr.DataArray([1, 2]))
+# array([ True, True, False, False])
+ints.isin(xr.DataArray([1, 2]).to_dataset(name="hello"))
+# TypeError
+ints.isin(xr.DataArray(1))
+# ValueError (also a scalar)
+
+strs.isin("abc")
+# ValueError / TypeError
+strs.isin(["abc"])
+# array([ False, False, True])
+strs.isin({"a", "b"})
+# array([ True, True, False])
+```
+
+So the main difference between special casing a set and following the pandas approach is a much stricter validation is the value passed is list-like. Anything that is not list-like (or set-like) will result in a ValueError.
+
+**@max-sixty** (2025-02-09):
+
+OK, so aside from sets, the difference is in the first few IIUC — if pandas is passed something like a scalar or array, it'll raise an error.
+
+I somewhat understand scalars. I don't immediately see why refusing arrays is better. 
+
+So in answer to your question above, I don't see adding strictness for an abstract reason is sufficient for a breaking change; we'd need to show if it was actively confusing or causing pain in some way — and only the sets case seems to pass that test...
+
+**@mark-boer** (2025-02-09):
+
+> I somewhat understand scalars. I don't immediately see why refusing arrays is better.
+
+It will accept regular arrays. It will just not accept numpy scalars. I believe it checks that `ndim > 0`. 
+
+> So in answer to your question above, I don't see adding strictness for an abstract reason is sufficient for a breaking change; we'd need to show if it was actively confusing or causing pain in some way — and only the sets case seems to pass that test...
+
+The only other one that I find actively confusing is the string one
+
+```python
+strs.isin("abc")
+# is not the same as
+strs.isin(list("abc"))
+```
+
+Anyhow, thanks for the input, it should just be a small change then :-)
+
+**@max-sixty** (2025-02-10):
+
+> It will accept regular arrays. It will just not accept numpy scalars. I believe it checks that `ndim > 0`.
+
+Ah great, thanks, I missed that. That weighs me a bit towards disallowing it. But probably not enough, unless others have views...
+
+**@dcherian** (2025-02-10):
+
+I like the idea of raising for a string, just like the other scalars. We can do a short deprecation cycle for that one specifically.

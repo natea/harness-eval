@@ -1,0 +1,282 @@
+# [v3] `ShardingCodec` allows user to violate the `index_codecs` invariant.
+
+_Opened by @zoj613_
+
+### Zarr version
+
+3.0.0a0
+
+### Numcodecs version
+
+v0.12.1
+
+### Python Version
+
+3.12.3
+
+### Operating System
+
+Linux
+
+### Installation
+
+pip install zarr==3.0.0a0
+
+### Description
+
+Regarding the `index_codecs` field of the Sharding codec, the v3 spec states: **Codecs that produce variable-sized encoded representation, such as compression codecs, MUST NOT be used for index codecs. It is RECOMMENDED to use a little-endian codec followed by a crc32c checksum as index codecs.**
+
+That is, compression codecs must not be specified for decoding/encoding the index array. However, the `ShardingCodec` class allows the user to violate this invariant. 
+
+### Steps to reproduce
+
+Here is an example to reproduce this:
+
+```python
+import numpy as np
+import zarr
+from zarr.codecs import *
+
+store = zarr.store.LocalStore("./testdata.zarr", mode="w")
+data = np.ones(shape=(128,) * 3, dtype="uint16")
+codecs = [TransposeCodec(order=[0, 1, 2]), BytesCodec(), BloscCodec(cname="lz4")]
+# adding Gzip here violates the invariant
+index_codecs = [BytesCodec(), GzipCodec(level=1)]
+sharding = ShardingCodec(
+  chunk_shape=(32,) * data.ndim,
+  codecs=codecs,
+  index_codecs=index_codecs,
+  index_location="end"
+)
+offset = 10
+
+arr = zarr.Array.create(
+  store,
+  shape=tuple(s + offset for s in data.shape),
+  chunk_shape=(64,) * data.ndim,
+  dtype=data.dtype,
+  fill_value=6,
+  codecs=[sharding]
+)
+write_region = tuple(slice(offset, None) for dim in range(data.ndim))
+arr[write_region] = data
+```
+The above snippet works even though it shouldn't.
+
+### Additional output
+
+ The programming error becomes apparent when trying to read back the data into memory:
+
+
+```python
+if offset > 0:
+    empty_region = tuple(slice(0, offset) for dim in range(data.ndim))
+    assert np.all(arr[empty_region] == arr.metadata.fill_value)
+
+read_data = arr[write_region]
+assert data.shape == read_data.shape
+assert np.array_equal(data, read_data)
+```
+
+This will throw a `NotImplementedError` exception:
+
+<details>
+<summary>stacktrace</summary>
+
+
+```python
+
+NotImplementedError                       Traceback (most recent call last)
+Cell In[7], line 3
+      1 if offset > 0:
+      2     empty_region = tuple(slice(0, offset) for dim in range(data.ndim))
+----> 3     assert np.all(arr[empty_region] == arr.metadata.fill_value)
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/array.py:709, in Array.__getitem__(self, selection)
+    707     return self.vindex[cast(CoordinateSelection | MaskSelection, selection)]
+    708 elif is_pure_orthogonal_indexing(pure_selection, self.ndim):
+--> 709     return self.get_orthogonal_selection(pure_selection, fields=fields)
+    710 else:
+    711     return self.get_basic_selection(cast(BasicSelection, pure_selection), fields=fields)
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/array.py:762, in Array.get_orthogonal_selection(self, selection, out, fields, prototype)
+    753 def get_orthogonal_selection(
+    754     self,
+    755     selection: OrthogonalSelection,
+   (...)
+    759     prototype: BufferPrototype = default_buffer_prototype,
+    760 ) -> NDArrayLike:
+    761     indexer = OrthogonalIndexer(selection, self.shape, self.metadata.chunk_grid)
+--> 762     return sync(
+    763         self._async_array._get_selection(
+    764             indexer=indexer, out=out, fields=fields, prototype=prototype
+    765         )
+    766     )
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/sync.py:92, in sync(coro, loop, timeout)
+     89 return_result = next(iter(finished)).result()
+     91 if isinstance(return_result, BaseException):
+---> 92     raise return_result
+     93 else:
+     94     return return_result
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/sync.py:51, in _runner(coro)
+     46 """
+     47 Await a coroutine and return the result of running it. If awaiting the coroutine raises an
+     48 exception, the exception will be returned.
+     49 """
+     50 try:
+---> 51     return await coro
+     52 except Exception as ex:
+     53     return ex
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/array.py:447, in AsyncArray._get_selection(self, indexer, prototype, out, fields)
+    439     out_buffer = prototype.nd_buffer.create(
+    440         shape=indexer.shape,
+    441         dtype=out_dtype,
+    442         order=self.order,
+    443         fill_value=self.metadata.fill_value,
+    444     )
+    445 if product(indexer.shape) > 0:
+    446     # reading chunks and decoding them
+--> 447     await self.metadata.codec_pipeline.read(
+    448         [
+    449             (
+    450                 self.store_path / self.metadata.encode_chunk_key(chunk_coords),
+    451                 self.metadata.get_chunk_spec(chunk_coords, self.order, prototype=prototype),
+    452                 chunk_selection,
+    453                 out_selection,
+    454             )
+    455             for chunk_coords, chunk_selection, out_selection in indexer
+    456         ],
+    457         out_buffer,
+    458         drop_axes=indexer.drop_axes,
+    459     )
+    460 return out_buffer.as_ndarray_like()
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/pipeline.py:489, in BatchedCodecPipeline.read(self, batch_info, out, drop_axes)
+    483 async def read(
+    484     self,
+    485     batch_info: Iterable[tuple[ByteGetter, ArraySpec, SelectorTuple, SelectorTuple]],
+    486     out: NDBuffer,
+    487     drop_axes: tuple[int, ...] = (),
+    488 ) -> None:
+--> 489     await concurrent_map(
+    490         [
+    491             (single_batch_info, out, drop_axes)
+    492             for single_batch_info in batched(batch_info, self.batch_size)
+    493         ],
+    494         self.read_batch,
+    495         config.get("async.concurrency"),
+    496     )
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/common.py:53, in concurrent_map(items, func, limit)
+     49 async def concurrent_map(
+     50     items: list[T], func: Callable[..., Awaitable[V]], limit: int | None = None
+     51 ) -> list[V]:
+     52     if limit is None:
+---> 53         return await asyncio.gather(*[func(*item) for item in items])
+     55     else:
+     56         sem = asyncio.Semaphore(limit)
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/pipeline.py:298, in BatchedCodecPipeline.read_batch(self, batch_info, out, drop_axes)
+    291 async def read_batch(
+    292     self,
+    293     batch_info: Iterable[tuple[ByteGetter, ArraySpec, SelectorTuple, SelectorTuple]],
+    294     out: NDBuffer,
+    295     drop_axes: tuple[int, ...] = (),
+    296 ) -> None:
+    297     if self.supports_partial_decode:
+--> 298         chunk_array_batch = await self.decode_partial_batch(
+    299             [
+    300                 (byte_getter, chunk_selection, chunk_spec)
+    301                 for byte_getter, chunk_spec, chunk_selection, _ in batch_info
+    302             ]
+    303         )
+    304         for chunk_array, (_, chunk_spec, _, out_selection) in zip(
+    305             chunk_array_batch, batch_info, strict=False
+    306         ):
+    307             if chunk_array is not None:
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/pipeline.py:254, in BatchedCodecPipeline.decode_partial_batch(self, batch_info)
+    252 assert self.supports_partial_decode
+    253 assert isinstance(self.array_bytes_codec, ArrayBytesCodecPartialDecodeMixin)
+--> 254 return await self.array_bytes_codec.decode_partial(batch_info)
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/abc/codec.py:182, in ArrayBytesCodecPartialDecodeMixin.decode_partial(self, batch_info)
+    162 async def decode_partial(
+    163     self,
+    164     batch_info: Iterable[tuple[ByteGetter, SelectorTuple, ArraySpec]],
+    165 ) -> Iterable[NDBuffer | None]:
+    166     """Partially decodes a batch of chunks.
+    167     This method determines parts of a chunk from the slice selection,
+    168     fetches these parts from the store (via ByteGetter) and decodes them.
+   (...)
+    180     Iterable[NDBuffer | None]
+    181     """
+--> 182     return await concurrent_map(
+    183         [
+    184             (byte_getter, selection, chunk_spec)
+    185             for byte_getter, selection, chunk_spec in batch_info
+    186         ],
+    187         self._decode_partial_single,
+    188         config.get("async.concurrency"),
+    189     )
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/common.py:53, in concurrent_map(items, func, limit)
+     49 async def concurrent_map(
+     50     items: list[T], func: Callable[..., Awaitable[V]], limit: int | None = None
+     51 ) -> list[V]:
+     52     if limit is None:
+---> 53         return await asyncio.gather(*[func(*item) for item in items])
+     55     else:
+     56         sem = asyncio.Semaphore(limit)
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/sharding.py:463, in ShardingCodec._decode_partial_single(self, byte_getter, selection, shard_spec)
+    460     shard_dict = shard_dict_maybe
+    461 else:
+    462     # read some chunks within the shard
+--> 463     shard_index = await self._load_shard_index_maybe(byte_getter, chunks_per_shard)
+    464     if shard_index is None:
+    465         return None
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/sharding.py:650, in ShardingCodec._load_shard_index_maybe(self, byte_getter, chunks_per_shard)
+    647 async def _load_shard_index_maybe(
+    648     self, byte_getter: ByteGetter, chunks_per_shard: ChunkCoords
+    649 ) -> _ShardIndex | None:
+--> 650     shard_index_size = self._shard_index_size(chunks_per_shard)
+    651     if self.index_location == ShardingCodecIndexLocation.start:
+    652         index_bytes = await byte_getter.get(
+    653             prototype=default_buffer_prototype, byte_range=(0, shard_index_size)
+    654         )
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/sharding.py:615, in ShardingCodec._shard_index_size(self, chunks_per_shard)
+    614 def _shard_index_size(self, chunks_per_shard: ChunkCoords) -> int:
+--> 615     return self.index_codecs.compute_encoded_size(
+    616         16 * product(chunks_per_shard), self._get_index_chunk_spec(chunks_per_shard)
+    617     )
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/pipeline.py:189, in BatchedCodecPipeline.compute_encoded_size(self, byte_length, array_spec)
+    187 def compute_encoded_size(self, byte_length: int, array_spec: ArraySpec) -> int:
+    188     for codec in self:
+--> 189         byte_length = codec.compute_encoded_size(byte_length, array_spec)
+    190         array_spec = codec.resolve_metadata(array_spec)
+    191     return byte_length
+
+File ~/micromamba/envs/general/lib/python3.12/site-packages/zarr/codecs/gzip.py:70, in GzipCodec.compute_encoded_size(self, _input_byte_length, _chunk_spec)
+     65 def compute_encoded_size(
+     66     self,
+     67     _input_byte_length: int,
+     68     _chunk_spec: ArraySpec,
+     69 ) -> int:
+---> 70     raise NotImplementedError
+
+NotImplementedError:
+```
+
+</details>
+and it appears this exception is throw when trying to compute the encoded size. I believe this is not implemented for Gzip (and rightfully so).
+
+Note that removing `GzipCodec` from the index chain gets rid of this error.
+
+I would expect this kind of thing to be caught at construction time with a clear message to the user that using variable sized bytes to bytes codecs is not allowed.

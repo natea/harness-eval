@@ -1,0 +1,58 @@
+{
+  "pr": 4183,
+  "merged": "2026-07-29",
+  "issues": [
+    {
+      "n": 3054,
+      "repo": "zarr-developers/zarr-python"
+    }
+  ],
+  "files": 5,
+  "srcFiles": [
+    "changes/4183.bugfix.md",
+    "src/zarr/codecs/sharding.py",
+    "src/zarr/core/array_spec.py"
+  ],
+  "testFiles": [
+    "tests/test_array_spec.py",
+    "tests/test_codecs/test_sharding.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_array_spec.py::test_distinct_specs_unequal",
+    "tests/test_array_spec.py::test_dtype_and_fill_value_matter",
+    "tests/test_array_spec.py::test_equal_specs_hash_equal",
+    "tests/test_array_spec.py::test_hashable",
+    "tests/test_array_spec.py::test_signed_zero_fills_are_distinct",
+    "tests/test_array_spec.py::test_unequal_with_invalid_type",
+    "tests/test_codecs/test_sharding.py::test_delete_empty_shards",
+    "tests/test_codecs/test_sharding.py::test_pickle",
+    "tests/test_codecs/test_sharding.py::test_structured_dtype_fill_value"
+  ],
+  "counts": {
+    "f2p": 12,
+    "p2p": 77,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_array_spec::test_equal_specs_hash_equal[float64-nan]",
+    "tests.test_array_spec::test_equal_specs_hash_equal[datetime64-NaT]",
+    "tests.test_array_spec::test_equal_specs_hash_equal[structured-void]",
+    "tests.test_array_spec::test_hashable[structured-void]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[float16]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[float32]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[float64]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[complex128-both]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[complex128-imag]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[complex128-real]",
+    "tests.test_array_spec::test_signed_zero_fills_are_distinct[structured]",
+    "tests.test_codecs.test_sharding::test_structured_dtype_fill_value"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

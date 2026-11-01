@@ -1,0 +1,41 @@
+{
+  "pr": 11544,
+  "merged": "2026-10-05",
+  "issues": [
+    {
+      "n": 7527,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/computation/computation.py",
+    "xarray/core/dataset.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_dataarray.py"
+  ],
+  "env": "exclude-newer 2026-10-04T13:08:33+02:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_dataarray.py::TestArrowPyCapsule::test_pyarrow_table_transposed_coords",
+    "xarray/tests/test_dataarray.py::test_idxminmax_all_nan_slice_fills_labels",
+    "xarray/tests/test_dataarray.py::test_idxminmax_preserves_coord_dtype"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 3,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_dataarray::test_idxminmax_preserves_coord_dtype[idxmin]",
+    "xarray.tests.test_dataarray::test_idxminmax_preserves_coord_dtype[idxmax]"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

@@ -1,0 +1,39 @@
+{
+  "pr": 11379,
+  "merged": "2026-10-09",
+  "issues": [
+    {
+      "n": 11344,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 3,
+  "srcFiles": [
+    "doc/whats-new.rst",
+    "xarray/namedarray/utils.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_namedarray.py"
+  ],
+  "env": "exclude-newer 2026-10-09T16:51:00+02:00",
+  "envSecs": 2,
+  "selected": [
+    "xarray/tests/test_namedarray.py::test_fake_target_chunksize_cftime",
+    "xarray/tests/test_namedarray.py::test_module_available_valid",
+    "xarray/tests/test_namedarray.py::test_module_available_version_none"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_namedarray::test_module_available_version_none"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

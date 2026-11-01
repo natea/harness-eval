@@ -1,0 +1,45 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11681
+issues:
+  - 10683
+baseSha: 3d0fea056a19390439cefc43d864d4aa324a3c73
+mergeSha: aee3dc55672d02a13e8e39df38f0b14aceb4d33e
+tStar: 2026-10-06T19:57:29Z
+issueCreatedAt: 2025-09-02T14:57:00Z
+prMergedAt: 2026-10-27T14:27:24Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_computation::test_vectorize_dims[numpy-vectorize0-expected_shapes0]
+  - xarray.tests.test_computation::test_vectorize_dims[numpy-t-expected_shapes1]
+  - xarray.tests.test_computation::test_vectorize_dims[numpy-vectorize2-expected_shapes2]
+  - xarray.tests.test_computation::test_vectorize_dims[dask-vectorize0-expected_shapes0]
+  - xarray.tests.test_computation::test_vectorize_dims[dask-t-expected_shapes1]
+  - xarray.tests.test_computation::test_vectorize_dims[dask-vectorize2-expected_shapes2]
+  - xarray.tests.test_computation::test_vectorize_dims_empty_loop
+  - xarray.tests.test_computation::test_vectorize_dims_invalid
+  - xarray.tests.test_computation::test_vectorize_dims_loop_order
+  - xarray.tests.test_interp::test_interp_empty_new_coords[linear]
+  - xarray.tests.test_interp::test_interp_empty_new_coords[nearest]
+  - xarray.tests.test_interp::test_interp_vectorized_empty_dim[numpy]
+  - xarray.tests.test_interp::test_interp_vectorized_empty_dim[dask]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: fix_sketch
+provisional: true
+files:
+  issue/body+all.md: 571ef587b15fa369b47079f6e8191f54145dcfa4c7a2fa895c625efe9fea16fb
+  issue/body+human.md: 571ef587b15fa369b47079f6e8191f54145dcfa4c7a2fa895c625efe9fea16fb
+  issue/body.md: 2fdaa1ff8b710bd937e68c655986e4fcb9479452a28f721d6ac4ab44e25493bf
+  leaks.json: af513acb64ba9f861bb7bbf9d88a3700bd147dc0cdacda22e66bcab8417171f0
+  reference.patch: 03ab953df7f3985a8f051aab77e9c468d7c82cd3d2ca4fb03753328808d7a235
+  snapshot.json: 86dc0e79565d68ef3de6521dc6f13c13cd0c73a2fe050cf654a01b7916b8b4aa
+  tests.patch: 58df0dfc5839e4f729c1c090e3918c091c53bee798277ff016624b61b0a5efc1
+  validation.json: 0f1998ff19fe83521827e53875455a9f13503c3016a411550884b5811eecea91

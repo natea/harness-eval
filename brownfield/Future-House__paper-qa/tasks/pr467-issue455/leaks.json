@@ -1,0 +1,81 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "I encountered an ImportError while trying to import the Settings class from the paperqa package.",
+      "rationale": "Only reports the error and environment.",
+      "author": "zhiyiZeng",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "from paperqa.settings import Settings",
+      "rationale": "Suggests a different import path, which is not what the fix did. It also mentions upgrading, but the fix is only a README change, so this is not a leak.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c2",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "pip install -e .",
+      "rationale": "Generic source install instructions that don't address the cause.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c3",
+      "label": "noise",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "pip install -e .",
+      "rationale": "Generic install instructions that don't address the cause.",
+      "author": "dosubot",
+      "role": "other user"
+    },
+    {
+      "id": "c4",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "you need paper-qa version 5. The `settings` module didn't exist before then in versions such as version 4.",
+      "rationale": "Gives the root cause (the user has an old version) and the suggested `pip install paper-qa>=5` matches the README change. It doesn't name the file to edit.",
+      "author": "jamesbraza",
+      "role": "future fixer (author of the reference PR)"
+    },
+    {
+      "id": "c5",
+      "label": "diagnosis",
+      "consistent_with_reference": true,
+      "reveals_files": [
+        "README.md"
+      ],
+      "evidence": "There are no installation candidates for `pip install paper-qa>=5` on python3.10.",
+      "rationale": "Identifies that version 5 requires Python 3.11+, which is the note the README fix adds.",
+      "author": "habema",
+      "role": "other user"
+    },
+    {
+      "id": "c6",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "the error message suggests that I need to use Python 3.11",
+      "rationale": "Confirms that the reporter's problem is solved.",
+      "author": "zhiyiZeng",
+      "role": "issue author"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "diagnosis"
+}

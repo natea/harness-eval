@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "It says location has 12 values, but it should have 3.",
+      "rationale": "Describes the observed wrong behavior and a repro, with no cause or location identified.",
+      "author": "Pietervanhalem",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": false,
+      "reveals_files": [],
+      "evidence": "I think this has to do with the fact that you're closing the file before `xarray` has a chance to read the data",
+      "rationale": "The guess is that the closed file causes the bug, but the real cause is indexing in the scipy backend. It says the bug may be in the scipy interaction, which is vague and gives no mechanism.",
+      "author": "keewis",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

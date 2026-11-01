@@ -1,0 +1,77 @@
+# ⚠️ Nightly upstream-dev CI failed ⚠️
+
+_Opened by @github-actions_
+
+[Workflow Run URL](https://github.com/pydata/xarray/actions/runs/36362316560)
+
+<details><summary>Python 3.13 Test Summary</summary>
+
+```
+xarray/tests/test_backends.py::TestDask::test_roundtrip_stringdtype_nulls: AssertionError: Left and right Dataset objects are not identical
+Differing data variables:
+L   x        (t) <U2 16B 'ab' ''
+R   x        (t) StringDType(na_object=None) 32B dask.array<chunksize=(2,), meta=np.ndarray>
+xarray/tests/test_duck_array_ops.py::test_reduce[None-False-min-False-bool-1]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array(True)
+R
+    array(nan)
+xarray/tests/test_duck_array_ops.py::test_reduce[None-False-min-False-bool-2]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array(False)
+R
+    array(nan)
+xarray/tests/test_duck_array_ops.py::test_reduce[None-False-max-False-bool-1]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array(True)
+R
+    array(nan)
+xarray/tests/test_duck_array_ops.py::test_reduce[None-False-max-False-bool-2]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array(True)
+R
+    array(nan)
+xarray/tests/test_duck_array_ops.py::test_reduce[x-False-min-False-bool-1]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array(True)
+R
+    array(nan)
+xarray/tests/test_duck_array_ops.py::test_reduce[x-False-min-False-bool-2]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array([nan, nan, nan, False, False, False, True, False], dtype=object)
+R
+    array([nan, nan, nan, nan, nan, nan, nan, nan])
+xarray/tests/test_duck_array_ops.py::test_reduce[x-False-max-False-bool-1]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array(True)
+R
+    array(nan)
+xarray/tests/test_duck_array_ops.py::test_reduce[x-False-max-False-bool-2]: AssertionError: Left and right DataArray objects are not close
+Differing values:
+L
+    array([nan, nan, nan, False, True, True, True, True], dtype=object)
+R
+    array([nan, nan, nan, nan, nan, nan, nan, nan])
+xarray/tests/test_variable.py::TestAsCompatibleData::test_tz_datetime: pandas.errors.Pandas4Warning: Series.values returning an ndarray that drops timezone information for DatetimeTZDtype is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'Series.to_numpy()' to get a NumPy array, or 'Series.array' to get the ExtensionArray.
+xarray/tests/test_variable.py::test_datetime_conversion[0   2000-01-01 00:00:00-05:00\ndtype: datetime64[ns, America/New_York]-ns]: pandas.errors.Pandas4Warning: Series.values returning an ndarray that drops timezone information for DatetimeTZDtype is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'Series.to_numpy()' to get a NumPy array, or 'Series.array' to get the ExtensionArray.
+xarray/tests/test_variable.py::test_pandas_two_only_datetime_conversion_warnings[series-timezone]: pandas.errors.Pandas4Warning: Series.values returning an ndarray that drops timezone information for DatetimeTZDtype is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'Series.to_numpy()' to get a NumPy array, or 'Series.array' to get the ExtensionArray.
+```
+
+</details>
+
+---
+
+## Discussion
+
+**@dncnmcdougall** (2026-08-24):
+
+In addition there seems to be a failure in the documentation building.
+See:
+#11540 , #11537

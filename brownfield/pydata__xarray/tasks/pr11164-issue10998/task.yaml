@@ -1,0 +1,37 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11164
+issues:
+  - 10998
+baseSha: 29be48c2bd2be1701c4baa48caebd45f19cf6219
+mergeSha: 4b5cb3063f6f4e9c56a9fe7da9a135946387b2bc
+tStar: 2026-02-13T14:27:51Z
+issueCreatedAt: 2025-12-08T21:49:00Z
+prMergedAt: 2026-10-17T08:59:09Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_plot.TestFacetGrid::test_legend_deduplicates_line_hue
+  - xarray.tests.test_plot.TestPlot::test_2d_line_duplicate_hue_shares_color
+  - xarray.tests.test_plot.TestPlot::test_2d_line_duplicate_hue_shares_cycled_style
+  - xarray.tests.test_plot.TestPlot::test_2d_line_missing_hue_values[category0]
+  - xarray.tests.test_plot.TestPlot::test_2d_line_missing_hue_values[category2]
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: symptom
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: 7a723635386953991c1d5359aed3f1cf9b043f8e9b78a4259e1c1422d5b221fc
+  issue/body+human.md: 7a723635386953991c1d5359aed3f1cf9b043f8e9b78a4259e1c1422d5b221fc
+  issue/body.md: 3ab7eabe432ae2c05b4b037bea85185263e774160ed8cbff866aabe6f07aabfd
+  leaks.json: 519f1a21c69f4059d9a011fae5c79d400ed478d6027d38dd280b507312c98e3d
+  reference.patch: e023ee3f1eb083e5136067e1fd0856459337d4db0f8efa4a76b5d24d8530b49a
+  snapshot.json: 787376b9a726c93030f3a2b48076eaf4a61444181a956bd62b3fda2e0ccf3b25
+  tests.patch: 5963dc4ed27288687b3836f8c6066e1fb745668309d449886b7d7cb997ac3d70
+  validation.json: 98fcdf995530a4ecbc1c9a5918a3052f5ac274e2dfd10b4da9dd69424b25d0af

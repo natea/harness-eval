@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5-5",
+  "items": [
+    {
+      "id": "body",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "y.query(index='a==0') #error",
+      "rationale": "Reproduction and traceback only; names Dataset.query's pd.eval call as traceback frame but gives no cause.",
+      "author": "LunarLanding",
+      "role": "issue author"
+    },
+    {
+      "id": "c1",
+      "label": "symptom",
+      "consistent_with_reference": true,
+      "reveals_files": [],
+      "evidence": "ds.set_coords(['a','b']).query(x=\"a > 2\")\n\n# fails",
+      "rationale": "Another reproduction showing failure when all variables are coords; no cause or fix.",
+      "author": "max-sixty",
+      "role": "maintainer"
+    }
+  ],
+  "bodyLevel": "symptom",
+  "commentsLevel": "symptom"
+}

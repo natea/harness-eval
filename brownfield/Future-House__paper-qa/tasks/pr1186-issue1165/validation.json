@@ -1,0 +1,46 @@
+{
+  "pr": 1186,
+  "merged": "2025-11-11",
+  "issues": [
+    {
+      "n": 1165,
+      "repo": "Future-House/paper-qa"
+    }
+  ],
+  "files": 4,
+  "srcFiles": [
+    "src/paperqa/docs.py",
+    "src/paperqa/types.py"
+  ],
+  "testFiles": [
+    "tests/cassettes/test_nonduplicate_contexts.yaml",
+    "tests/test_paperqa.py"
+  ],
+  "env": "uv.lock",
+  "envSecs": 2,
+  "selected": [
+    "tests/test_paperqa.py::test_context_comparison",
+    "tests/test_paperqa.py::test_evidence",
+    "tests/test_paperqa.py::test_json_evidence",
+    "tests/test_paperqa.py::test_nonduplicate_contexts",
+    "tests/test_paperqa.py::test_text_comparison"
+  ],
+  "counts": {
+    "f2p": 2,
+    "p2p": 1,
+    "flaky": 0,
+    "envBroken": 2,
+    "liveApi": 2,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "tests.test_paperqa::test_context_comparison",
+    "tests.test_paperqa::test_nonduplicate_contexts"
+  ],
+  "flaky": [],
+  "broken": [
+    "tests.test_paperqa::test_evidence",
+    "tests.test_paperqa::test_json_evidence"
+  ],
+  "verdict": "VALID"
+}

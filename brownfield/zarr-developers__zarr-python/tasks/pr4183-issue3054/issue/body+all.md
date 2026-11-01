@@ -1,0 +1,25 @@
+# sharding codec use of lru caching fails with numpy void scalars
+
+_Opened by @d-v-b_
+
+numpy void scalars are not hashable, which means that a class with a np.void attribute cannot be hashed by `lru_cache`, which is used by the sharding codec class [here](https://github.com/zarr-developers/zarr-python/blob/7584b96f22b5d517cf61f13b415961d7be99b428/src/zarr/codecs/sharding.py#L358).
+
+I ran into this In #2874. Any ideas for fixing this would be appreciated! IMO the ideal fix would be to resolve the basic performance problems we are solving with this caching layer.
+
+---
+
+## Discussion
+
+**@nenb** (2025-05-19):
+
+It seems like `_get_chunk_spec` (the problem function) is internal to the module in question, and is only called a handful of times. Might a practical solution (short-term) be to add another function that parses the inputs to `_get_chunk_spec` prior to calling it? This parser could then check for a void scalar, convert it to something hashable (e.g. `(dtype signature, raw bytes)`, and then recover the original value from the hashable object prior to returning from `_get_chunk_spec`.
+
+I agree that the ideal fix (likely requires larger refactor, longer-term) would to resolve the basic performance problems that are being solved with this caching layer.
+
+**@sehoffmann** (2026-07-20):
+
++1 Also ran across this when trying to do sharding on arrays with structured dtypes (as they have np.void type fill values)
+
+**@sehoffmann** (2026-07-20):
+
+In my case, the issue is the default `ArraySpec.__hash__` implementation which hashes each field, including `np.void` fill values. I think this can be fixed locally in `ArraySpec` by manually hashing `np.void` fill values based on their byte content (`.tobytes()`). If such `np.void` values need to be hashed in different places as well, it might make sense to introduce a dedicated utility function for this.

@@ -1,0 +1,37 @@
+{
+  "pr": 11638,
+  "merged": "2026-09-29",
+  "issues": [
+    {
+      "n": 10338,
+      "repo": "pydata/xarray"
+    }
+  ],
+  "files": 2,
+  "srcFiles": [
+    "xarray/backends/scipy_.py"
+  ],
+  "testFiles": [
+    "xarray/tests/test_backends.py"
+  ],
+  "env": "exclude-newer 2026-09-29T07:47:13Z",
+  "envSecs": 3,
+  "selected": [
+    "xarray/tests/test_backends.py::TestScipyFileObject::test_create_default_indexes",
+    "xarray/tests/test_backends.py::TestScipyFileObject::test_indexing_multiple_non_adjacent_indexers"
+  ],
+  "counts": {
+    "f2p": 1,
+    "p2p": 2,
+    "flaky": 0,
+    "envBroken": 0,
+    "liveApi": 0,
+    "goldRegress": 0
+  },
+  "f2p": [
+    "xarray.tests.test_backends.TestScipyFileObject::test_indexing_multiple_non_adjacent_indexers"
+  ],
+  "flaky": [],
+  "broken": [],
+  "verdict": "VALID"
+}

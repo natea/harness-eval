@@ -1,0 +1,34 @@
+schemaVersion: 1
+repo: pydata/xarray
+pr: 11687
+issues:
+  - 7697
+baseSha: 8bc8e8aa05cc24a9ec5105c6854d9591c5aac7ca
+mergeSha: a1c8083816a78618d83aa6df4bc519c2d60bf6cc
+tStar: 2026-10-07T07:02:11Z
+issueCreatedAt: 2023-03-29T17:55:00Z
+prMergedAt: 2026-10-08T18:17:02Z
+verdict: VALID
+failToPass:
+  - xarray.tests.test_utils::test_read_magic_number_from_file_short_reads
+  - xarray.tests.test_utils::test_try_read_magic_number_from_path_unbuffered
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - xarray/tests
+depsTouched: false
+appEgress: []
+leak:
+  body: diagnosis
+  comments: symptom
+provisional: true
+files:
+  issue/body+all.md: db24208689efc817e2234bc957cc1774d37325f97fda95a4b11c8bb583a5235b
+  issue/body+human.md: db24208689efc817e2234bc957cc1774d37325f97fda95a4b11c8bb583a5235b
+  issue/body.md: 9f1e3586e7ec711d09b97824414f9d023991b95059db004620b4cfa00b5bd0d1
+  leaks.json: 887b95db289b00f9596dd8f81fe83fed0c1255cbcd6776650dc527abc12ed9aa
+  reference.patch: 7129e07f1ca507041630cfff2342b6371007ba4791831fe5121bdae3564dcb9b
+  snapshot.json: 54cf71dacfe31d1c7b98037fa55a6ce65f08b350c8ebabf827ae13f73c49b104
+  tests.patch: 83df8567eb531d8b67dad049843ec1b90ff67287fe784d56cd5852096510d471
+  validation.json: 14e44fe3b87436f867b7616fc22f8a60db7f2e726828dc8e020b4d5a7a3c2808

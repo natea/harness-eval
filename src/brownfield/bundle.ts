@@ -71,6 +71,33 @@ export const TaskManifest = z.object({
 		body: LeakLevel.nullable(),
 		comments: LeakLevel.nullable(),
 	}),
+	/** T* signal (prCreated / firstPrCommit / firstXref). */
+	cutBy: z.string().optional(),
+	/** Environment the validation ran in (D7): build method and `uv pip freeze` digest. */
+	env: z
+		.object({
+			method: z.string(),
+			digest: z.string().nullable(),
+			python: z.string(),
+		})
+		.optional(),
+	/** Which tests validation ran: PR-touched only, or the full suite under testPaths. */
+	validationSelection: z.enum(["touched", "full"]).optional(),
+	/** Human baseline timings (D16). */
+	humanBaseline: z
+		.object({
+			codingWindowMinutes: z.number(),
+			reviewMinutes: z.number(),
+			reviewRounds: z.number(),
+			commitsAfterFirstReview: z.number(),
+			issueLifetimeMinutes: z.number(),
+			humanDiff: z.object({
+				linesAdded: z.number(),
+				linesRemoved: z.number(),
+				filesTouched: z.number(),
+			}),
+		})
+		.optional(),
 	/** Imported from spike data, not yet produced by the full miner. */
 	provisional: z.boolean().default(false),
 	/** sha256 of every bundle file except task.yaml and review/ (relative path → hex). */
@@ -96,6 +123,10 @@ export const Snapshot = z.object({
 	issueAuthor: z.string(),
 	body: z.string(),
 	comments: z.array(SnapshotComment),
+	/** Items whose edit history failed the self-check (D4); recorded, never trusted silently. */
+	selfCheckFailures: z.array(z.string()).optional(),
+	/** Image URLs that could not be bundled (left as links). */
+	imagesFailed: z.array(z.string()).optional(),
 });
 export type Snapshot = z.infer<typeof Snapshot>;
 
@@ -114,6 +145,9 @@ export const LeakLabels = z.object({
 	items: z.array(LeakItem),
 	bodyLevel: LeakLevel.optional(),
 	commentsLevel: LeakLevel.optional(),
+	/** sha256 of the classifier's system prompt + schema (stale-prompt detection). */
+	promptHash: z.string().optional(),
+	costUsd: z.number().optional(),
 });
 export type LeakLabels = z.infer<typeof LeakLabels>;
 

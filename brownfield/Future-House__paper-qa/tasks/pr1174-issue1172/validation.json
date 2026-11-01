@@ -1,37 +1,25 @@
 {
-  "pr": 1174,
-  "merged": "2025-11-04",
-  "issues": [
-    {
-      "n": 1172,
-      "repo": "Future-House/paper-qa"
-    }
-  ],
-  "files": 3,
-  "srcFiles": [
-    "src/paperqa/agents/search.py",
-    "src/paperqa/types.py"
-  ],
-  "testFiles": [
-    "tests/test_agents.py"
-  ],
-  "env": "uv.lock",
-  "envSecs": 2,
-  "selected": [
-    "tests/test_agents.py::test_propagate_options"
-  ],
-  "counts": {
-    "f2p": 0,
-    "p2p": 0,
-    "flaky": 0,
-    "envBroken": 1,
-    "liveApi": 1,
-    "goldRegress": 0
-  },
-  "f2p": [],
+  "verdict": "fail:needs-live-api",
+  "failToPass": [],
+  "passToPass": [],
   "flaky": [],
-  "broken": [
+  "envBroken": [
     "tests.test_agents::test_propagate_options"
   ],
-  "verdict": "fail:needs-live-api"
+  "liveApi": [
+    "tests.test_agents::test_propagate_options"
+  ],
+  "goldRegress": [],
+  "gpuSkipped": [],
+  "selection": "touched",
+  "targets": [
+    "tests/test_agents.py::test_propagate_options"
+  ],
+  "env": {
+    "ok": true,
+    "method": "uv.lock",
+    "digest": "5916dfce48ea81b156a14a64ae6ef7f09596a17d65fa33758caf86fb4c745149",
+    "seconds": 6
+  },
+  "sealProblems": []
 }

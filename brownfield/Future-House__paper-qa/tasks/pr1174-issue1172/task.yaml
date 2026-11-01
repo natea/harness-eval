@@ -22,15 +22,33 @@ testPaths:
 depsTouched: false
 appEgress: []
 leak:
-  body: symptom
-  comments: fix_code
-provisional: true
+  body: null
+  comments: null
+cutBy: firstPrCommit
+env:
+  method: uv.lock
+  digest: 5916dfce48ea81b156a14a64ae6ef7f09596a17d65fa33758caf86fb4c745149
+  python: "3.12"
+validationSelection: touched
+humanBaseline:
+  codingWindowMinutes: 0
+  reviewMinutes: 120
+  reviewRounds: 3
+  commitsAfterFirstReview: 2
+  issueLifetimeMinutes: 2130
+  humanDiff:
+    linesAdded: 6
+    linesRemoved: 1
+    filesTouched: 2
+provisional: false
 files:
-  issue/body+all.md: e37ff4918d7ea2cd59d30885f6f12794299ac3305483ae7e8ab0bd58ae5af40a
+  issue/assets/07c40f3784fa.svg: 07c40f3784fa749eed82bc2ee44fa1810fb00d3ccb7dbf0c3141bc4fa2a23bdc
+  issue/assets/40b384e75d82.svg: 40b384e75d821266cf135e95507704f42c8ed9329e75bdd6dfe1acc516c1d86a
+  issue/assets/58edc5b4256c.svg: 58edc5b4256c23a8e45f07f9395b24291b6b756416b3af6f7abc5bc33bb5012e
+  issue/body+all.md: 8063d3d0856b9cc20be5e3c835aba731519918a6ce6c10a7240040eb327f2d9b
   issue/body+human.md: fc8c0e7c4341dc6c0104ceec46ab55aa9f76bc8cfedae1d88cae2ed3baef54f8
   issue/body.md: 6c2bf5843259e9d825886db97384841c1acf11106c801a6dcd57c58aca94671a
-  leaks.json: a0b6366de9a71a76eb99d39a222116594cede380b09d12e6871f42acefe6783c
   reference.patch: 77249175f49e6265139f55d755bb357647fd073a7fec3ead9baaecb186fe0333
-  snapshot.json: 27c3eceb0d4864d32745c8db7252ac9be0b11006d0de4fb04acc11d2cfc9cba1
+  snapshot.json: 634c5d86e0173201b92f4a9dd9df4dd290300bda33e8234816c36474d7d8cb9f
   tests.patch: 1ab220493af96821609dffc76daecff4d9bb49ba0c4d1db007166de6a0eaeb04
-  validation.json: a4211be89f32819bf7444c858f70ec40c568f7ad41d749c6cef68b94c036493e
+  validation.json: f0cf377d584ab10ead19a52df6549df60e5722efdfbf5401a43e9d8aeaa87fc1

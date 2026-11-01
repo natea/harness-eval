@@ -281,9 +281,16 @@ is ordinal.
 Computed at mining time from data the miner already fetches (PR commits,
 reviews, timeline) and stored in `task.yaml`:
 - `codingWindow`: T* → last PR commit before the first submitted review (→ last
-  commit before merge if never reviewed). An upper bound on human work time;
-  people multitask. Commit dates are set by the committer's machine (the same
-  caveat as D3), so reports label the coding window as approximate.
+  commit before merge if never reviewed). It is **not** a bound on human work time
+  in either direction:
+  - People multitask, which can inflate it.
+  - When T* is the first PR commit (37/37 paper-qa issues), work done before that
+    commit is invisible. A fixer who pushes one commit before review gets a
+    window of 0 (xarray #11798).
+
+  Commit dates are set by the committer's machine (the same caveat as D3), so
+  reports label the coding window as approximate and show it alongside review
+  time, never alone.
 - `reviewTime`: PR createdAt → mergedAt; `reviewRounds` (submitted reviews) and
   `commitsAfterFirstReview`.
 - `issueLifetime`: issue createdAt → mergedAt (context only).

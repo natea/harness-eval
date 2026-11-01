@@ -5,11 +5,11 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 ## 1. Task bundle format + miner
 
 - [x] 1.1 Define the bundle schema (zod) and loader in `src/brownfield/bundle.ts`: manifest, file hashes, test lists, `testPaths`, `appEgress` allowlist, dates, leak strata; hash verification
-- [ ] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test / dependency-change with reasons (from `validate.ts` screens)
-- [ ] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
-- [ ] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
-- [ ] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
-- [ ] 1.6 Human baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, human diff size; unit tests for reviewed and unreviewed PRs
+- [x] 1.2 Miner: enumerate merged PRs with closing issues; reject cross-repo / no-src / no-test / dependency-change with reasons (from `validate.ts` screens)
+- [x] 1.3 T* computation and `issue-after-fix-start` rejection (from `snapshot.ts`)
+- [x] 1.4 Issue reconstruction: timeline replay, `userContentEdits` rewind with self-check, bot tagging, image download, future-link stripping; render `body` / `body+human` / `body+all`
+- [x] 1.5 Unit tests on recorded GraphQL fixtures (body edited after T*, comment after T*, rename, bot comment, issue-after-fix)
+- [x] 1.6 Human baseline fields (D16): coding window, review time, review rounds, commits after first review, issue lifetime, human diff size; unit tests for reviewed and unreviewed PRs
 
 ## 2. Studio task review (early — unblocks human labeling)
 
@@ -22,14 +22,14 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 ## 3. Sealed repo + environment + validation
 
-- [ ] 3.1 Sealed repo builder at merge^1 (single branch, no tags/remotes/reflog) with absence checks (`cat-file`, `log --all`, `fsck --lost-found`)
-- [ ] 3.2 Env builder: `uv sync --frozen` + package reinstall; `--exclude-newer` fallback; record env digest
-- [ ] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
+- [x] 3.1 Sealed repo builder at merge^1 (single branch, no tags/remotes/reflog) with absence checks (`cat-file`, `log --all`, `fsck --lost-found`)
+- [x] 3.2 Env builder: `uv sync --frozen` + package reinstall; `--exclude-newer` fallback; record env digest
+- [x] 3.3 Offline test runner: forced cassette playback, blank credentials, dead proxy, per-test timeout; junit parsing
 - [ ] 3.4 Validator: before / gold×2 over the full offline suite; F2P / P2P / flaky / env-broken; rejection reasons
-- [ ] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
-- [ ] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
+- [x] 3.5 Leak classifier: gold-aware, structured output, model + prompt hash recorded; refuse when classifier model equals a run's worker model
+- [x] 3.6 Freeze: write bundle + manifest hashes (byte-exact; `.gitattributes` marks `brownfield/**` `-text` so CRLF issue text survives checkout); `validate --brownfield` checks hashes
 - [ ] 3.7 Classify `needs-live-api` (blocked/unauthenticated provider calls in gold, no other FAIL_TO_PASS); recovery per D17 — record affected tests at mining time with a budget-capped key, seal recordings in tests.patch, re-validate offline, reject cassette-miss-only before-failures. Depends on 4.3/4.7 recording + 5.1 cassette-miss detection; paper-qa targets: #138, #512, #515, #717, #871, #1174
-- [ ] 3.8 Validator verdicts from the spike: `deps-touched` flag with `dependency-change` decided by gold-in-base-env (D5); `needs-gpu` for module-level hardware skips; capture pytest stderr so crashes are never silent
+- [x] 3.8 Validator verdicts from the spike: `deps-touched` flag with `dependency-change` decided by gold-in-base-env (D5); `needs-gpu` for module-level hardware skips; capture pytest stderr so crashes are never silent
 
 ## 4. Brownfield trials
 

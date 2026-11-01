@@ -19,10 +19,22 @@
  *
  *   bun run src/cli.ts report <run-dir> [--weights a,q,s,t]
  *       (Re)generate results.json + scorecard.md from stored trials.
+ *
+ *   bun run src/cli.ts validate --brownfield
+ *       Also hash-verify every brownfield task bundle (fails on any mismatch).
+ *
+ *   bun run src/cli.ts brownfield mine --repo owner/name --clone <dir> --pkg <dist> \
+ *       [--prs 1,2 | --since YYYY-MM-DD] [--limit N] [--selection touched|full] \
+ *       [--python 3.12] [--extras io,etc] [--classify] [--model m] [--force] [--work <dir>]
+ *       Mine merged PR ↔ issue pairs into frozen bundles under brownfield/.
+ *       Validation runs tests locally (no spend); --classify spends ≈$0.02/issue.
+ *   bun run src/cli.ts brownfield verify
+ *       Hash-verify every bundle.
  */
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
+import { listBundleDirs, loadBundle } from "./brownfield/bundle";
 import {
 	CATALOG_PATH,
 	checkCatalog,
@@ -94,6 +106,85 @@ async function cmdValidate(): Promise<void> {
 		);
 	}
 	console.log(`catalog OK: ${CATALOG_PATH} up to date`);
+	if (flag("brownfield")) verifyBrownfieldBundles();
+}
+
+function verifyBrownfieldBundles(): void {
+	const dirs = listBundleDirs();
+	const bad: string[] = [];
+	for (const d of dirs) {
+		try {
+			loadBundle(d);
+		} catch (e) {
+			bad.push((e as Error).message);
+		}
+	}
+	if (bad.length)
+		throw new Error(
+			`brownfield: ${bad.length}/${dirs.length} bundles failed:\n  ${bad.join("\n  ")}`,
+		);
+	console.log(`brownfield OK: ${dirs.length} bundles hash-verified`);
+}
+
+async function cmdBrownfield(): Promise<void> {
+	const sub = process.argv[3];
+	if (sub === "verify") return verifyBrownfieldBundles();
+	if (sub !== "mine") {
+		console.error(
+			"usage: brownfield <mine|verify> [options]   (see file header)",
+		);
+		process.exit(2);
+	}
+	const repo = arg("repo");
+	const clone = arg("clone");
+	const pkg = arg("pkg");
+	if (!repo || !clone || !pkg)
+		throw new Error("brownfield mine needs --repo, --clone and --pkg");
+	const selection = (arg("selection") ?? "full") as "touched" | "full";
+	if (selection !== "touched" && selection !== "full")
+		throw new Error("--selection must be touched|full");
+	const { listMergedIssuePrs } = await import("./brownfield/github");
+	const { minePr } = await import("./brownfield/mine");
+	const prFilter = arg("prs")?.split(",").map(Number);
+	const all = await listMergedIssuePrs(repo, {
+		since: arg("since"),
+		limit: Number(arg("limit") ?? 1000),
+	});
+	const prs = prFilter ? all.filter((p) => prFilter.includes(p.number)) : all;
+	if (prFilter && prs.length !== prFilter.length)
+		console.warn(
+			`warning: ${prFilter.length - prs.length} requested PR(s) not found among merged issue-closing PRs`,
+		);
+	const workRoot = arg("work") ?? join("runs", "brownfield-work");
+	console.log(
+		`mining ${prs.length} PR(s) from ${repo} (selection: ${selection}, classify: ${flag("classify")})`,
+	);
+	const tally: Record<string, number> = {};
+	for (const pr of prs) {
+		try {
+			const reports = await minePr(pr, {
+				repo,
+				clone,
+				workRoot,
+				env: { pkg, python: arg("python"), extras: arg("extras") },
+				selection,
+				classify: flag("classify"),
+				model: arg("model"),
+				force: flag("force"),
+				log: (m) => console.log(m),
+			});
+			for (const r of reports) {
+				tally[r.verdict] = (tally[r.verdict] ?? 0) + 1;
+				console.log(
+					`#${r.pr}${r.issue ? ` → #${r.issue}` : ""}: ${r.verdict}${r.bundle ? `  ${r.bundle}` : ""}`,
+				);
+			}
+		} catch (e) {
+			tally.error = (tally.error ?? 0) + 1;
+			console.error(`#${pr.number}: error: ${(e as Error).message}`);
+		}
+	}
+	console.log("summary:", JSON.stringify(tally));
 }
 
 async function cmdCatalog(): Promise<void> {
@@ -446,7 +537,11 @@ async function cmdCleanup(): Promise<void> {
 		{
 			binary: "docker",
 			listArgs: ["ps", "-a", "--format", "{{.Names}}"],
-			parse: (o: string) => o.split("\n").map((s) => s.trim()).filter(Boolean),
+			parse: (o: string) =>
+				o
+					.split("\n")
+					.map((s) => s.trim())
+					.filter(Boolean),
 			reapProcesses: undefined as undefined | ((n: string) => Promise<number>),
 		},
 		{
@@ -491,11 +586,12 @@ const commands: Record<string, () => Promise<void>> = {
 	run: cmdRun,
 	report: cmdReport,
 	cleanup: cmdCleanup,
+	brownfield: cmdBrownfield,
 };
 const handler = commands[cmd ?? ""];
 if (!handler) {
 	console.error(
-		"usage: cli.ts <validate|init|catalog|model|run|report> [options]   (see file header)",
+		"usage: cli.ts <validate|init|catalog|model|run|report|brownfield> [options]   (see file header)",
 	);
 	process.exit(2);
 }

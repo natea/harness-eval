@@ -1,35 +1,6 @@
 {
-  "pr": 11798,
-  "merged": "2026-10-24",
-  "issues": [
-    {
-      "n": 6449,
-      "repo": "pydata/xarray"
-    }
-  ],
-  "files": 3,
-  "srcFiles": [
-    "doc/whats-new.rst",
-    "xarray/core/dataset.py"
-  ],
-  "testFiles": [
-    "xarray/tests/test_dataset.py"
-  ],
-  "env": "exclude-newer 2026-10-24T01:47:22+02:00",
-  "envSecs": 4,
-  "selected": [
-    "xarray/tests/test_dataset.py::TestDataset::test_astype_attrs",
-    "xarray/tests/test_dataset.py::TestDataset::test_query"
-  ],
-  "counts": {
-    "f2p": 8,
-    "p2p": 9,
-    "flaky": 0,
-    "envBroken": 0,
-    "liveApi": 0,
-    "goldRegress": 0
-  },
-  "f2p": [
+  "verdict": "VALID",
+  "failToPass": [
     "xarray.tests.test_dataset.TestDataset::test_query[numpy-python-pandas-True]",
     "xarray.tests.test_dataset.TestDataset::test_query[numpy-python-python-True]",
     "xarray.tests.test_dataset.TestDataset::test_query[numpy-None-pandas-True]",
@@ -39,7 +10,32 @@
     "xarray.tests.test_dataset.TestDataset::test_query[dask-None-pandas-True]",
     "xarray.tests.test_dataset.TestDataset::test_query[dask-None-python-True]"
   ],
+  "passToPass": [
+    "xarray.tests.test_dataset.TestDataset::test_astype_attrs",
+    "xarray.tests.test_dataset.TestDataset::test_query[numpy-python-pandas-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[numpy-python-python-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[numpy-None-pandas-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[numpy-None-python-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[dask-python-pandas-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[dask-python-python-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[dask-None-pandas-False]",
+    "xarray.tests.test_dataset.TestDataset::test_query[dask-None-python-False]"
+  ],
   "flaky": [],
-  "broken": [],
-  "verdict": "VALID"
+  "envBroken": [],
+  "liveApi": [],
+  "goldRegress": [],
+  "gpuSkipped": [],
+  "selection": "touched",
+  "targets": [
+    "xarray/tests/test_dataset.py::TestDataset::test_astype_attrs",
+    "xarray/tests/test_dataset.py::TestDataset::test_query"
+  ],
+  "env": {
+    "ok": true,
+    "method": "exclude-newer",
+    "digest": "a41cba24c2d4ff0be2a43cbcddbea6c88db8076ce20431c98332f134811ff13f",
+    "seconds": 3
+  },
+  "sealProblems": []
 }

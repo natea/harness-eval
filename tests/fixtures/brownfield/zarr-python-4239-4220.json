@@ -1,0 +1,160 @@
+{
+  "pullRequest": {
+    "number": 4239,
+    "title": "fix: preserve non-JSON-serializable storage options in _make_async",
+    "createdAt": "2026-08-05T13:47:56Z",
+    "mergedAt": "2026-08-05T14:34:26Z",
+    "url": "https://github.com/zarr-developers/zarr-python/pull/4239",
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "0f90e378e0ee5db53add9d97b6e183cf5aa039a1",
+            "authoredDate": "2026-07-30T19:43:32Z",
+            "committedDate": "2026-08-05T13:40:40Z"
+          }
+        },
+        {
+          "commit": {
+            "oid": "d844269837b1753ea0681279d120b8f6a026eec6",
+            "authoredDate": "2026-08-05T13:48:14Z",
+            "committedDate": "2026-08-05T13:48:14Z"
+          }
+        }
+      ]
+    }
+  },
+  "issue": {
+    "number": 4220,
+    "title": "FsspecStore.from_mapper() fails with DefaultAzureCredential because AzureBlobFileSystem is not JSON serializable",
+    "body": "### Zarr version\n\nv3.3.0\n\n### Numcodecs version\n\nv0.6.15\n\n### Python Version\n\n3.12.11\n\n### Operating System\n\nUbuntu 26.04\n\n### Installation\n\nuv add zarr\n\n### Environment\n\n- Python 3.12.11\n- zarr 3.3.0\n- xarray 2026.7.0\n- fsspec 2026.7.0\n- adlfs 2026.5.0\n- azure-identity 1.25.3\n\n### Description\n\nOpening an xarray dataset backed by an Azure Blob Storage FSMap created with\nDefaultAzureCredential fails because `FsspecStore.from_mapper()` attempts to\nserialize the filesystem using `fs.to_json()`.\n\nThe embedded `DefaultAzureCredential` is not JSON serializable.\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\nfrom fsspec import filesystem\nfrom azure.identity import DefaultAzureCredential\nimport xarray as xr\n\nfs = filesystem(\n    \"az\",\n    account_name=\"<account>\",\n    credential=DefaultAzureCredential(),\n)\nmapper = fs.get_mapper(\"container/example.zarr\")\nxr.open_zarr(mapper)\n\n# zarr.print_debug_info()\n```\n\n### Additional output\n\n#### Traceback\n\n`TypeError: Object of type DefaultAzureCredential is not JSON serializable`\n\n##### The traceback ends in\n\n```\nFsspecStore.from_mapper(...)\n_make_async(...)\nfs.to_json()\njson.dumps(...)\n```",
+    "createdAt": "2026-07-30T19:36:59Z",
+    "url": "https://github.com/zarr-developers/zarr-python/issues/4220",
+    "state": "CLOSED",
+    "author": {
+      "login": "hginzel"
+    },
+    "userContentEdits": {
+      "nodes": [
+        {
+          "editedAt": "2026-07-30T20:42:16Z",
+          "createdAt": "2026-07-30T20:42:16Z",
+          "deletedAt": null,
+          "diff": "### Zarr version\n\nv3.3.0\n\n### Numcodecs version\n\nv0.6.15\n\n### Python Version\n\n3.12.11\n\n### Operating System\n\nUbuntu 26.04\n\n### Installation\n\nuv add zarr\n\n### Environment\n\n- Python 3.12.11\n- zarr 3.3.0\n- xarray 2026.7.0\n- fsspec 2026.7.0\n- adlfs 2026.5.0\n- azure-identity 1.25.3\n\n### Description\n\nOpening an xarray dataset backed by an Azure Blob Storage FSMap created with\nDefaultAzureCredential fails because `FsspecStore.from_mapper()` attempts to\nserialize the filesystem using `fs.to_json()`.\n\nThe embedded `DefaultAzureCredential` is not JSON serializable.\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\nfrom fsspec import filesystem\nfrom azure.identity import DefaultAzureCredential\nimport xarray as xr\n\nfs = filesystem(\n    \"az\",\n    account_name=\"<account>\",\n    credential=DefaultAzureCredential(),\n)\nmapper = fs.get_mapper(\"container/example.zarr\")\nxr.open_zarr(mapper)\n\n# zarr.print_debug_info()\n```\n\n### Additional output\n\n#### Traceback\n\n`TypeError: Object of type DefaultAzureCredential is not JSON serializable`\n\n##### The traceback ends in\n\n```\nFsspecStore.from_mapper(...)\n_make_async(...)\nfs.to_json()\njson.dumps(...)\n```",
+          "editor": {
+            "login": "hginzel"
+          }
+        },
+        {
+          "editedAt": "2026-07-30T19:36:59Z",
+          "createdAt": "2026-07-30T20:42:16Z",
+          "deletedAt": null,
+          "diff": "### Zarr version\n\nv3.3.0\n\n### Numcodecs version\n\nv0.6.15\n\n### Python Version\n\n3.12.11\n\n### Operating System\n\nUbuntu 26.04\n\n### Installation\n\nuv add zarr\n\n### Description\n\n### Environment\n\n- Python 3.12.11\n- zarr 3.3.0\n- xarray 2026.7.0\n- fsspec 2026.7.0\n- adlfs 2026.5.0\n- azure-identity 1.25.3\n\n### Description\n\nOpening an xarray dataset backed by an Azure Blob Storage FSMap created with\nDefaultAzureCredential fails because `FsspecStore.from_mapper()` attempts to\nserialize the filesystem using `fs.to_json()`.\n\nThe embedded `DefaultAzureCredential` is not JSON serializable.\n\n### Steps to reproduce\n\n```python\n# /// script\n# requires-python = \">=3.12\"\n# dependencies = [\n#   \"zarr@git+https://github.com/zarr-developers/zarr-python.git@main\",\n# ]\n# ///\n#\n# This script automatically imports the development branch of zarr to check for issues\n\nimport zarr\nfrom fsspec import filesystem\nfrom azure.identity import DefaultAzureCredential\nimport xarray as xr\n\nfs = filesystem(\n    \"az\",\n    account_name=\"<account>\",\n    credential=DefaultAzureCredential(),\n)\nmapper = fs.get_mapper(\"container/example.zarr\")\nxr.open_zarr(mapper)\n\n# zarr.print_debug_info()\n```\n\n### Additional output\n\n#### Traceback\n\n`TypeError: Object of type DefaultAzureCredential is not JSON serializable`\n\n##### The traceback ends in\n\n```\nFsspecStore.from_mapper(...)\n_make_async(...)\nfs.to_json()\njson.dumps(...)\n```",
+          "editor": {
+            "login": "hginzel"
+          }
+        }
+      ]
+    },
+    "comments": {
+      "nodes": [
+        {
+          "id": "IC_kwDOAt0r8c8AAAABMhjCQw",
+          "createdAt": "2026-07-30T19:38:50Z",
+          "authorAssociation": "CONTRIBUTOR",
+          "author": {
+            "login": "d-v-b",
+            "__typename": "User"
+          },
+          "body": "thanks for the report, did this start breaking in the recent 3.3.0 release?",
+          "url": "https://github.com/zarr-developers/zarr-python/issues/4220#issuecomment-5135450691",
+          "userContentEdits": {
+            "nodes": []
+          }
+        },
+        {
+          "id": "IC_kwDOAt0r8c8AAAABMiI5ZA",
+          "createdAt": "2026-07-30T20:43:36Z",
+          "authorAssociation": "NONE",
+          "author": {
+            "login": "hginzel",
+            "__typename": "User"
+          },
+          "body": "Sorry, don't know, no tested before.",
+          "url": "https://github.com/zarr-developers/zarr-python/issues/4220#issuecomment-5136071012",
+          "userContentEdits": {
+            "nodes": []
+          }
+        }
+      ]
+    },
+    "timelineItems": {
+      "nodes": [
+        {
+          "__typename": "LabeledEvent",
+          "createdAt": "2026-07-30T19:37:01Z",
+          "label": {
+            "name": "bug"
+          }
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "IssueComment"
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-08-01T03:11:12Z",
+          "source": {
+            "__typename": "Issue",
+            "number": 4223
+          }
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-08-01T03:11:20Z",
+          "source": {
+            "__typename": "Issue",
+            "number": 272
+          }
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-08-01T05:30:18Z",
+          "source": {
+            "__typename": "Issue",
+            "number": 12
+          }
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-08-05T13:41:52Z",
+          "source": {
+            "__typename": "PullRequest",
+            "number": 276
+          }
+        },
+        {
+          "__typename": "CrossReferencedEvent",
+          "createdAt": "2026-08-05T13:47:57Z",
+          "source": {
+            "__typename": "PullRequest",
+            "number": 4239
+          }
+        },
+        {
+          "__typename": "ClosedEvent",
+          "createdAt": "2026-08-05T14:34:28Z"
+        },
+        {
+          "__typename": "ReferencedEvent",
+          "createdAt": "2026-08-05T17:20:46Z",
+          "commit": {
+            "oid": "4e13cf577d5be18b8e5312fa254d1a3034a3d321"
+          }
+        }
+      ]
+    }
+  }
+}

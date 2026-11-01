@@ -1,0 +1,50 @@
+schemaVersion: 1
+repo: zarr-developers/zarr-python
+pr: 4063
+issues:
+  - 3285
+baseSha: 9fd669fd22a414ed19e79bc6a17a42b6b44ea8b8
+mergeSha: e62e45bfac1f9b6e0892ce4df45d75315a302be3
+tStar: 2026-06-15T05:51:21Z
+issueCreatedAt: 2025-07-23T08:58:19Z
+prMergedAt: 2026-08-13T15:06:52Z
+verdict: fail:dependency-change
+failToPass: []
+passToPass: []
+envBroken: []
+flaky: []
+testPaths:
+  - packages/zarr-http-server/tests
+  - packages/zarr-indexing/tests
+  - packages/zarr-metadata/tests
+  - tests
+depsTouched: true
+appEgress: []
+leak:
+  body: null
+  comments: null
+cutBy: firstPrCommit
+env:
+  method: uv.lock
+  digest: a130ef0d8e9b644861b73ffc125e92693f22ec1165a509fca8971f694843a498
+  python: "3.12"
+validationSelection: touched
+humanBaseline:
+  codingWindowMinutes: 20244
+  reviewMinutes: 85498
+  reviewRounds: 4
+  commitsAfterFirstReview: 10
+  issueLifetimeMinutes: 556209
+  humanDiff:
+    linesAdded: 225
+    linesRemoved: 71
+    filesTouched: 14
+provisional: false
+files:
+  issue/body+all.md: 92b55cd4831bfcfa490e608836d2646e444a4ac19818e2b9bca78ee0e6df4b09
+  issue/body+human.md: 92b55cd4831bfcfa490e608836d2646e444a4ac19818e2b9bca78ee0e6df4b09
+  issue/body.md: 844bed19afc92a1197c1405e65650b29f452953e7983a0218b9e3f82cc68881e
+  reference.patch: e208572b46d135c3ce377413a2e605bd5750b3ef8d91dce74735ffd913e15870
+  snapshot.json: 7b3feb1eb527016e9c8f86b83ce5aac33be88a68c0277151b0e0dbb21646f523
+  tests.patch: 79667704c9735b9182875131d7024b5de0089512d06aad38aff6d077ed7ab64e
+  validation.json: d9cda5aef1cb4d0bf3a3d44247d629342b309cc71aa4cbef933446386d9c18d1

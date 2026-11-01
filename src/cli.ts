@@ -36,6 +36,26 @@ import { join } from "node:path";
 import { parse } from "yaml";
 import { listBundleDirs, loadBundle } from "./brownfield/bundle";
 import {
+	loadPromptTemplate,
+	PROMPT_TEMPLATE_PATH,
+	planTasks,
+} from "./brownfield/prompt";
+import {
+	assertTasksClassifierIndependent,
+	buildBrownfieldMatrix,
+	parseBrownfieldSpec,
+	selectBrownfieldTasks,
+	taskSetHash,
+} from "./brownfield/run";
+import {
+	buildWorkspaceEnv,
+	captureCandidatePatch,
+	commitDate,
+	ensureSealedRepo,
+	seedWorkspace as seedTrialWorkspace,
+	writePatchCapture,
+} from "./brownfield/seed";
+import {
 	CATALOG_PATH,
 	checkCatalog,
 	generateCatalog,
@@ -206,6 +226,7 @@ async function cmdCatalog(): Promise<void> {
 }
 
 async function cmdRun(): Promise<void> {
+	if (arg("brownfield")) return cmdRunBrownfield();
 	const harnesses = loadHarnesses();
 	const registry = loadRegistry(REGISTRY_PATH, harnesses);
 	const defaults = existsSync(DEFAULTS_PATH)
@@ -393,6 +414,172 @@ async function cmdRun(): Promise<void> {
 		judgeModel: judgeModelRef,
 		crossVendorJudge: crossVendor,
 		costSource,
+	});
+	console.log(`results: ${writeResults(runDir, results)}`);
+	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+}
+
+async function cmdRunBrownfield(): Promise<void> {
+	if (flag("grade"))
+		throw new Error(
+			"brownfield grading lands in task 5.1; run without --grade and grade the run afterwards",
+		);
+	const spec = parseBrownfieldSpec({
+		repo: arg("brownfield"),
+		tasks: arg("tasks"),
+		variant: arg("variant"),
+	});
+	const clone = arg("clone");
+	if (!clone)
+		throw new Error(
+			"--clone <path> is required: the task's sealed base repository is built from a local clone (never re-fetched)",
+		);
+
+	const harnesses = loadHarnesses();
+	const registry = loadRegistry(REGISTRY_PATH, harnesses);
+	const defaults = existsSync(DEFAULTS_PATH)
+		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
+		: {};
+	const baseBudget =
+		(defaults.budget as Record<string, unknown> | undefined) ?? {};
+	const trialMinutes = arg("trial-minutes");
+	if (trialMinutes !== undefined && !(Number(trialMinutes) > 0))
+		throw new Error(
+			`--trial-minutes must be a positive number, got ${trialMinutes}`,
+		);
+	const budget =
+		trialMinutes !== undefined
+			? { ...baseBudget, trialWallClockMs: Number(trialMinutes) * 60000 }
+			: baseBudget;
+
+	const config = RunConfig.parse({
+		...defaults,
+		candidates: (
+			arg("candidates") ?? registry.candidates.map((c) => c.id).join(",")
+		).split(","),
+		harness: arg("harness") ?? (defaults.harness as string | undefined),
+		// One trial per (task, candidate): --trials would replicate a task instead
+		// of adding coverage, so it is fixed at 1 for brownfield runs.
+		trialsPerCandidate: 1,
+		// Brownfield needs a provider with a working host toolchain; the run
+		// defaults target cloud PRD trials, so the brownfield default is worktree.
+		provider: arg("provider") ?? "worktree",
+		concurrency: Number(
+			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
+		),
+		budget,
+	});
+	const candidates = resolveCandidates(
+		registry,
+		config.candidates,
+		config.harness,
+		harnesses,
+	);
+	const harness = resolveHarness(config.harness, harnesses);
+	const models = loadModels();
+	const workerProfile = resolveProfile(
+		arg("worker-model") ?? config.model,
+		models,
+	);
+	const rw = resolveWorkerEnv(workerProfile);
+	const workerModelRef = toModelRef(workerProfile);
+
+	const bundles = selectBrownfieldTasks(spec);
+	assertTasksClassifierIndependent(bundles, workerProfile.modelId);
+	const template = loadPromptTemplate(arg("prompt") ?? PROMPT_TEMPLATE_PATH);
+	const tasks = planTasks(bundles, spec.variant, template);
+	const byId = new Map(bundles.map((b) => [b.id, b]));
+	const bundleSetHash = taskSetHash(bundles);
+
+	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+	const runDir = join("runs", runId);
+	mkdirSync(join(runDir, "trials"), { recursive: true });
+	const provider = createProvider(config.provider, {
+		snapshot: resolveProviderSnapshot(
+			config.provider,
+			config.harness,
+			arg("snapshot") ?? (defaults.snapshot as string | undefined),
+		),
+		worktreeBaseDir: join(runDir, "sandboxes"),
+	});
+	if (provider.preflight) {
+		await provider.preflight({
+			trialWallClockMs: config.budget.trialWallClockMs,
+			concurrency: config.concurrency,
+			requiredProbe: preflightProbeForHarness(config.harness),
+		});
+	}
+
+	console.log(
+		`brownfield run ${runId}: ${candidates.length} candidate(s) × ${tasks.length} task(s) [${spec.variant}] on ${provider.id}`,
+	);
+	console.log(`tasks: ${tasks.map((t) => t.taskId).join(", ")}`);
+	console.log(
+		`budget: $${config.budget.trialCostUsd}/trial, $${config.budget.runCostUsd}/run, ${config.budget.trialWallClockMs / 60000}m wall-clock/trial`,
+	);
+
+	const startedAt = new Date().toISOString();
+	const trials = await runMatrix(
+		config,
+		buildBrownfieldMatrix(candidates, tasks),
+		{
+			provider,
+			registry,
+			runDir,
+			// Brownfield task content ships inside each task, not as one PRD.
+			prdContent: "",
+			prdSha256: bundleSetHash,
+			testPlanSha256: null,
+			harnessVersion: arg("harness-version") ?? harness.defaultVersion,
+			workerEnv: rw.env,
+			workerModelFlag: rw.modelFlag,
+			workerModelRef,
+			seedWorkspace: async (sandbox, plan) => {
+				const task = plan.task as NonNullable<typeof plan.task>;
+				const bundle = byId.get(task.taskId) as (typeof bundles)[number];
+				const sealed = await ensureSealedRepo({
+					clone,
+					baseSha: task.baseSha,
+					futureShas: [task.mergeSha],
+					repoDir: task.repoDir,
+				});
+				await seedTrialWorkspace(sandbox, task, sealed);
+				if (provider.id !== "worktree") {
+					console.warn(
+						`[brownfield] ${provider.id}: environment is not prebuilt inside the sandbox; the worker must build it`,
+					);
+					return;
+				}
+				// Prebuild the task environment inside the trial workspace so the worker
+				// starts offline-testable (design D7), exactly as validation did.
+				const env = await buildWorkspaceEnv(sandbox.workspacePath, {
+					python: bundle.manifest.env?.python,
+					excludeNewer: await commitDate(sandbox.workspacePath),
+				});
+				if (!env.ok)
+					throw new Error(
+						`task environment build failed in ${sandbox.workspacePath}: ${env.log.slice(-600)}`,
+					);
+			},
+			capturePatch: async (sandbox, trialDir, plan) => {
+				const task = plan.task as NonNullable<typeof plan.task>;
+				writePatchCapture(trialDir, await captureCandidatePatch(sandbox, task));
+			},
+		},
+	);
+
+	const results = buildResults({
+		runId,
+		config,
+		prdSha256: bundleSetHash,
+		testPlanSha256: null,
+		startedAt,
+		endedAt: new Date().toISOString(),
+		trials,
+		workerModel: workerModelRef,
+		judgeModel: toModelRef(resolveProfile(config.judgeModel, models)),
+		crossVendorJudge: false,
+		costSource: costSourceForHarness(workerProfile, harness.reportsCost),
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);

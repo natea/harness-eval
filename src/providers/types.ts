@@ -25,6 +25,12 @@ export interface Sandbox {
 	exec(command: string, opts?: ExecOptions): Promise<ExecResult>;
 	/** Copy a file or directory from the sandbox to a host destination. */
 	copyOut(sandboxPath: string, hostDest: string): Promise<void>;
+	/**
+	 * Copy a host file or directory INTO the sandbox (brownfield seeding). Optional:
+	 * providers without an upload path must refuse brownfield runs rather than
+	 * silently starting from an empty workspace.
+	 */
+	copyIn?(hostSrc: string, sandboxPath: string): Promise<void>;
 	/** Write a file into the sandbox. */
 	writeFile(sandboxPath: string, content: string): Promise<void>;
 	destroy(): Promise<void>;

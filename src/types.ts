@@ -197,6 +197,21 @@ export const CostSource = z.enum([
 ]);
 export type CostSource = z.infer<typeof CostSource>;
 
+/**
+ * Brownfield trial identity (add-brownfield-track, D2): the exact frozen bundle a
+ * trial ran, so a result is attributable to bytes that can never drift. Absent on
+ * PRD-target trials.
+ */
+export const BrownfieldProvenance = z.object({
+	repoDir: z.string(),
+	taskId: z.string(),
+	variant: z.string(),
+	/** sha256 of the bundle manifest (which hashes every bundle file). */
+	bundleSha256: z.string().length(64),
+	baseSha: z.string().min(7),
+});
+export type BrownfieldProvenance = z.infer<typeof BrownfieldProvenance>;
+
 export const TrialProvenance = z.object({
 	runId: z.string(),
 	trialId: z.string(),
@@ -217,6 +232,8 @@ export const TrialProvenance = z.object({
 	status: TrialStatus,
 	cappedBy: z.enum(["wall-clock", "cost"]).nullable().default(null),
 	notes: z.array(z.string()).default([]),
+	/** Present only for brownfield trials (add-brownfield-track). */
+	brownfield: BrownfieldProvenance.optional(),
 });
 export type TrialProvenance = z.infer<typeof TrialProvenance>;
 

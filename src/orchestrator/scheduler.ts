@@ -20,6 +20,30 @@ export interface TrialPlan {
 	trialId: string;
 	candidate: CandidateEntry;
 	trialIndex: number;
+	/** Brownfield only: the frozen task bundle this trial runs (design D1). */
+	task?: BrownfieldTrialTask;
+}
+
+/**
+ * The brownfield task a trial runs. Identity fields are recorded in provenance;
+ * `prompt` is the rendered base prompt (identical for every candidate of the
+ * task) and `issueContent` the variant text written into the workspace.
+ */
+export interface BrownfieldTrialTask {
+	repoDir: string;
+	taskId: string;
+	variant: string;
+	/** sha256 of the bundle manifest (which hashes every bundle file). */
+	bundleSha256: string;
+	baseSha: string;
+	/** Merge commit of the reference fix — must be absent from the sealed repo. */
+	mergeSha: string;
+	bundleDir: string;
+	/** Rendered base prompt; rendered once per task, never per candidate. */
+	prompt: string;
+	/** Issue file name in the workspace root (e.g. `ISSUE.md`). */
+	issueFile: string;
+	issueContent: string;
 }
 
 /** Hard cap on per-trial teardown. Larger than the provider's internal ladder
@@ -55,6 +79,22 @@ export interface SchedulerDeps {
 		sandbox: Sandbox,
 		trialDir: string,
 		transcripts: string[],
+	) => Promise<unknown>;
+	/**
+	 * Brownfield: seed the workspace with the task's sealed repo + issue file
+	 * instead of writing `SPEC.md` (design D6/D11). Required when a plan carries a
+	 * task; a missing hook fails the trial rather than running an empty workspace.
+	 */
+	seedWorkspace?: (
+		sandbox: Sandbox,
+		plan: TrialPlan,
+		config: RunConfig,
+	) => Promise<void>;
+	/** Brownfield: capture the candidate's patch after the session (task 4.7). */
+	capturePatch?: (
+		sandbox: Sandbox,
+		trialDir: string,
+		plan: TrialPlan,
 	) => Promise<unknown>;
 	now?: () => Date;
 	/**
@@ -171,6 +211,12 @@ function baseProvenance(
 	status: TrialStatus,
 ): TrialProvenance {
 	const now = (deps.now ?? (() => new Date()))();
+	// A brownfield trial's task content is its bundle, so the bundle hash takes the
+	// PRD-content slot (per-trial identity), with the full bundle identity recorded
+	// separately in `brownfield`.
+	const registry = plan.task
+		? { ...deps.registry, basePrompt: plan.task.prompt }
+		: deps.registry;
 	return {
 		runId: deps.runDir.split("/").at(-1) ?? deps.runDir,
 		trialId: plan.trialId,
@@ -182,10 +228,10 @@ function baseProvenance(
 		workerModel: deps.workerModelRef,
 		provider: deps.provider.id,
 		snapshotId: deps.provider.snapshotId,
-		prdSha256: deps.prdSha256,
+		prdSha256: plan.task?.bundleSha256 ?? deps.prdSha256,
 		testPlanSha256: deps.testPlanSha256,
 		sessionScript: renderSessionScript(
-			deps.registry,
+			registry,
 			plan.candidate,
 			config.harness,
 		),
@@ -194,6 +240,17 @@ function baseProvenance(
 		status,
 		cappedBy: null,
 		notes: [],
+		...(plan.task
+			? {
+					brownfield: {
+						repoDir: plan.task.repoDir,
+						taskId: plan.task.taskId,
+						variant: plan.task.variant,
+						bundleSha256: plan.task.bundleSha256,
+						baseSha: plan.task.baseSha,
+					},
+				}
+			: {}),
 	};
 }
 
@@ -238,10 +295,18 @@ export async function runTrial(
 				void s.destroy().catch(() => {});
 			};
 			deps.abortSignal?.addEventListener("abort", onAbort, { once: true });
-			await sandbox.writeFile(
-				join(sandbox.workspacePath, "SPEC.md"),
-				deps.prdContent,
-			);
+			if (plan.task) {
+				if (!deps.seedWorkspace)
+					throw new Error(
+						`trial ${plan.trialId} is a brownfield task but no seedWorkspace hook was provided`,
+					);
+				await deps.seedWorkspace(sandbox, plan, config);
+			} else {
+				await sandbox.writeFile(
+					join(sandbox.workspacePath, "SPEC.md"),
+					deps.prdContent,
+				);
+			}
 			if (deps.designContent)
 				await sandbox.writeFile(
 					join(sandbox.workspacePath, "DESIGN.md"),
@@ -262,7 +327,9 @@ export async function runTrial(
 			const setupDurationMs = Date.now() - setupStart;
 
 			const script = renderSessionScript(
-				deps.registry,
+				plan.task
+					? { ...deps.registry, basePrompt: plan.task.prompt }
+					: deps.registry,
 				plan.candidate,
 				config.harness,
 			);
@@ -298,6 +365,10 @@ export async function runTrial(
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);
 			ledger.add(telemetry.totalCostUsd);
+			// Capture the candidate's patch BEFORE archiving/teardown: grading and
+			// review read this, not the (possibly env-polluted) archived workspace.
+			if (plan.task && deps.capturePatch)
+				await deps.capturePatch(sandbox, trialDir, plan);
 			deps.onStage?.(plan.trialId, "archiving");
 			await archive(sandbox, trialDir, result.transcripts);
 

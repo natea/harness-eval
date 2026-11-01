@@ -33,13 +33,13 @@ Spike scripts to productionize: `brownfield/paper-qa/spike/{snapshot,validate,cl
 
 ## 4. Brownfield trials
 
-- [ ] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
-- [ ] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
+- [x] 4.1 Run config: `--brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
+- [x] 4.2 Workspace seeding from the sealed repo + issue file; brownfield base-prompt template with generic anti-cheat clause (no PR refs); fairness test that prompts are byte-identical across candidates
 - [ ] 4.3 Spike: Claude Code against an `ANTHROPIC_BASE_URL` proxy that injects (a) an API key and (b) a subscription OAuth token; record the required headers and whether (b) works and is permitted; outcome decides the gateway's default credential (API key until (b) is verified)
 - [ ] 4.4 Model gateway outside the sandbox: credential injection (placeholder in sandbox), forward only to the run's model, reject provider-side tool requests, request log; same-protocol endpoint override per harness (`ANTHROPIC_BASE_URL`, Codex `model_providers`), refuse protocol mismatches; pin all Claude Code model slots via `resolveClaudeCodeEnv`; network lockdown (egress only to the gateway) per provider, starting with docker/worktree
 - [ ] 4.5 Gateway preflight: extend `model probe` beyond the claude-code transport; one probe request per candidate through the gateway before dispatch; fail the run before spend on rejection, naming candidate and reason
 - [ ] 4.6 Per-harness server-side web tool kill-switch; refuse candidates that can't comply
-- [ ] 4.7 Capture candidate patch at trial end
+- [x] 4.7 Capture candidate patch at trial end
 - [ ] 4.8 Trial isolation (all trials, MODIFIED requirement): fresh home/config per trial with no operator MCP servers, plugins/skills, memory, or global instructions; test on the worktree provider
 - [ ] 4.9 Application egress: empty `appEgress` default (recorded fixtures only); per-task allowlist of provider endpoints and models (paper-qa: `gpt-4o`, `text-embedding-3-*`) forwarded through the gateway with a separate budget-capped credential and logging
 

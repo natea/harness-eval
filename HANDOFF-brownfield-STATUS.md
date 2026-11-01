@@ -8,9 +8,9 @@ Base: `0d41d12` (`add-brownfield-track` + `brownfield-paperqa-labels`).
 Critical path is a wet end-to-end trial: everything below is ordered so a real
 paper-qa trial can run as early as possible.
 
-- [ ] **Run config + issue variants** — `run --brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
-- [ ] **Workspace seeding + brownfield prompt** — sealed repo + `ISSUE.md` + anti-cheat template; byte-identical prompts across candidates
-- [ ] **Patch capture** — candidate diff saved at trial end
+- [x] **Run config + issue variants** — `run --brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
+- [x] **Workspace seeding + brownfield prompt** — sealed repo + `ISSUE.md` + anti-cheat template; byte-identical prompts across candidates
+- [x] **Patch capture** — candidate diff saved at trial end
 - [ ] **Trial isolation** — fresh HOME/config, no operator MCP/plugins/skills/memory/instructions
 - [ ] **Hidden-test grading** — restore test infra, apply `tests.patch`, offline suite, resolution verdict, `cassette-miss`
 - [ ] **Web-tool kill-switch** — per harness; refuse candidates that can't comply
@@ -29,11 +29,27 @@ paper-qa trial can run as early as possible.
 
 ## Decisions without asking
 
-(none yet)
+1. Brownfield runs default to the `worktree` provider (docker image has no
+   uv/pytest); `--provider` still overrides.
+2. Matrix for a brownfield run is candidates × tasks, one trial each
+   (`trialsPerCandidate` is fixed at 1; `--tasks` carries the repetition).
+3. Sealed repos are cached under `runs/.cache/sealed/<owner>__<repo>/<base12>`
+   and re-verified before reuse (`.gitignore`d, never committed).
+4. The trial environment is prebuilt only for the worktree provider (it shares
+   the host filesystem); other providers get a warning and rely on the agent.
+5. `--grade` is rejected for brownfield runs until hidden-test grading (5.1)
+   exists, rather than silently skipping grading.
+6. Trial env artifacts are kept out of the diff via `.git/info/exclude` (local
+   only, untracked) because `git add` rejects pathspecs naming ignored paths.
 
 ## Real-spend runs
 
 (none yet)
+
+## Commits
+
+- `543742f` kickoff status file and plan
+- (next) run config, seeding, prompt + patch capture (4.1/4.2/4.7)
 
 ## Blockers
 

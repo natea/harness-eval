@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import type {
@@ -89,6 +89,17 @@ class WorktreeSandbox implements Sandbox {
 			: join(this.workspacePath, sandboxPath);
 		mkdirSync(hostDest, { recursive: true });
 		cpSync(src, hostDest, { recursive: true });
+	}
+
+	async copyIn(hostSrc: string, sandboxPath: string): Promise<void> {
+		const dest = isAbsolute(sandboxPath)
+			? sandboxPath
+			: join(this.workspacePath, sandboxPath);
+		mkdirSync(dest, { recursive: true });
+		// Merge the source's *contents* into dest (mirrors copyOut), so a sealed
+		// repo's `.git` lands directly in the workspace, not a nested directory.
+		for (const entry of readdirSync(hostSrc))
+			cpSync(join(hostSrc, entry), join(dest, entry), { recursive: true });
 	}
 
 	async writeFile(sandboxPath: string, content: string): Promise<void> {

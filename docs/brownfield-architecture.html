@@ -215,7 +215,7 @@
         <text x="32" y="58" fill="#fbbf24" font-size="10" text-anchor="start" font-weight="600">① TASK MINING — once per merged PR ↔ issue pair (src/brownfield/, CLI: brownfield mine | verify)</text>
         <rect x="20" y="310" width="1160" height="390" rx="12" fill="rgba(251, 191, 36, 0.04)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
         <text x="32" y="328" fill="#fbbf24" font-size="10" text-anchor="start" font-weight="600">② TRIAL + GRADING — per candidate × task × issue variant (identical prompt for every candidate)</text>
-        <rect x="900" y="318" width="147" height="13" rx="3" fill="rgba(120, 53, 15, 0.35)" stroke="#fbbf24" stroke-width="0.8"/><text x="973.5" y="327" fill="#fbbf24" font-size="7" font-weight="600" text-anchor="middle">RUNNER WIRING · IN PROGRESS</text>
+        <rect x="900" y="318" width="157" height="13" rx="3" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="0.8"/><text x="978.5" y="327" fill="#34d399" font-size="7" font-weight="600" text-anchor="middle">RUNNER WIRING · DONE (DOCKER)</text>
         <line x1="165" y1="147" x2="183" y2="147" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <line x1="310" y1="147" x2="328" y2="147" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <line x1="455" y1="147" x2="473" y2="147" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
@@ -266,7 +266,7 @@
         <text x="405" y="624" fill="#fb7185" font-size="8" text-anchor="middle" font-weight="600">✕ no route out · no external DNS · no host access</text>
         <rect x="600" y="390" width="110" height="58" rx="6" fill="#0f172a"/><rect x="600" y="390" width="110" height="58" rx="6" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1.5"/><text x="655" y="409" fill="white" font-size="10" font-weight="600" text-anchor="middle">Relay</text><text x="655" y="426" fill="#94a3b8" font-size="8" text-anchor="middle">alias gateway:8080</text><text x="655" y="439" fill="#94a3b8" font-size="8" text-anchor="middle">HTTP → host gateway</text>
         <circle cx="700" cy="390" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="700" y="393" fill="white" font-size="8" font-weight="700" text-anchor="middle">8</text>
-        <rect x="735" y="355" width="200" height="130" rx="6" fill="#0f172a"/><rect x="735" y="355" width="200" height="130" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/><text x="835" y="374" fill="white" font-size="11" font-weight="600" text-anchor="middle">Model gateway (host)</text><text x="835" y="391" fill="#94a3b8" font-size="8" text-anchor="middle">per-run placeholder key only</text><text x="835" y="404" fill="#94a3b8" font-size="8" text-anchor="middle">→ real API key injected</text><text x="835" y="417" fill="#94a3b8" font-size="8" text-anchor="middle">run's model only</text><text x="835" y="430" fill="#94a3b8" font-size="8" text-anchor="middle">POST /v1/messages (+count_tokens)</text><text x="835" y="443" fill="#94a3b8" font-size="8" text-anchor="middle">rejects provider-side tools</text><text x="835" y="456" fill="#94a3b8" font-size="8" text-anchor="middle">checked on every request</text><text x="835" y="469" fill="#94a3b8" font-size="8" text-anchor="middle">JSONL log of every request</text>
+        <rect x="735" y="355" width="200" height="130" rx="6" fill="#0f172a"/><rect x="735" y="355" width="200" height="130" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/><text x="835" y="374" fill="white" font-size="11" font-weight="600" text-anchor="middle">Model gateway (host)</text><text x="835" y="391" fill="#94a3b8" font-size="8" text-anchor="middle">per-trial key, revoked at end</text><text x="835" y="404" fill="#94a3b8" font-size="8" text-anchor="middle">→ real API key injected</text><text x="835" y="417" fill="#94a3b8" font-size="8" text-anchor="middle">run's model only</text><text x="835" y="430" fill="#94a3b8" font-size="8" text-anchor="middle">POST /v1/messages (+count_tokens)</text><text x="835" y="443" fill="#94a3b8" font-size="8" text-anchor="middle">rejects provider-side tools</text><text x="835" y="456" fill="#94a3b8" font-size="8" text-anchor="middle">checked on every request</text><text x="835" y="469" fill="#94a3b8" font-size="8" text-anchor="middle">JSONL log of every request</text>
         <circle cx="925" cy="355" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="925" y="358" fill="white" font-size="8" font-weight="700" text-anchor="middle">7</text>
         <rect x="990" y="390" width="170" height="58" rx="6" fill="#0f172a"/><rect x="990" y="390" width="170" height="58" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/><text x="1075" y="409" fill="white" font-size="11" font-weight="600" text-anchor="middle">Anthropic API</text><text x="1075" y="426" fill="#94a3b8" font-size="8" text-anchor="middle">Messages API</text><text x="1075" y="439" fill="#94a3b8" font-size="8" text-anchor="middle">billed to API key</text>
         <rect x="600" y="520" width="160" height="80" rx="6" fill="#0f172a"/><rect x="600" y="520" width="160" height="80" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/><text x="680" y="539" fill="white" font-size="11" font-weight="600" text-anchor="middle">Capture patch</text><text x="680" y="556" fill="#94a3b8" font-size="8" text-anchor="middle">git diff vs base</text><text x="680" y="569" fill="#94a3b8" font-size="8" text-anchor="middle">committed + uncommitted</text><text x="680" y="582" fill="#94a3b8" font-size="8" text-anchor="middle">binary-safe</text><text x="680" y="595" fill="#94a3b8" font-size="8" text-anchor="middle">excludes ISSUE.md</text>
@@ -291,7 +291,7 @@
         <text x="36" y="860" fill="#cbd5e1" font-size="8" text-anchor="start">and the mcp_servers / container request fields.</text>
         <text x="36" y="875" fill="#cbd5e1" font-size="8" text-anchor="start">• Only client-executed tools pass: custom · bash_* · text_editor_* · computer_* · memory_*</text>
         <text x="36" y="890" fill="#cbd5e1" font-size="8" text-anchor="start">• Checked on every request: tools can be added mid-session.</text>
-        <text x="36" y="905" fill="#cbd5e1" font-size="8" text-anchor="start">• Also: per-run placeholder key only · run's model only · POST /v1/messages + count_tokens only.</text>
+        <text x="36" y="905" fill="#cbd5e1" font-size="8" text-anchor="start">• Also: per-trial placeholder key (revoked at trial end) · run's model only · Messages API only.</text>
         <text x="36" y="920" fill="#cbd5e1" font-size="8" text-anchor="start">• Verified with real Claude Code: WebSearch arrived as web_search_20250305 → rejected.</text>
         <text x="36" y="935" fill="#cbd5e1" font-size="8" text-anchor="start">• Harness configs also turn server web tools off; the gateway is the backstop.</text>
         <rect x="610" y="730" width="570" height="230" rx="8" fill="rgba(136, 19, 55, 0.12)" stroke="#fb7185" stroke-width="1.2" stroke-dasharray="4,4"/>
@@ -310,8 +310,8 @@
         <text x="626" y="875" fill="#cbd5e1" font-size="8" text-anchor="start">• That network has no route out, no external DNS and no host access.</text>
         <text x="626" y="890" fill="#cbd5e1" font-size="8" text-anchor="start">• Relay (alias gateway, port 8080) sits on internal + bridge; forwards HTTP only to the</text>
         <text x="626" y="905" fill="#cbd5e1" font-size="8" text-anchor="start">   host gateway, target fixed when the run starts.</text>
-        <text x="626" y="920" fill="#cbd5e1" font-size="8" text-anchor="start">• Verified: curl api.anthropic.com / pypi.org / 1.1.1.1 and DNS github.com all fail;</text>
-        <text x="626" y="935" fill="#cbd5e1" font-size="8" text-anchor="start">   relay → gateway works; a request for another model is rejected.</text>
+        <text x="626" y="920" fill="#cbd5e1" font-size="8" text-anchor="start">• Leak probes run after the lock, before the agent; any success fails the trial (no retry).</text>
+        <text x="626" y="935" fill="#cbd5e1" font-size="8" text-anchor="start">• Verified in a real trial: curl to pypi.org blocked, WebSearch 403 + flagged on the trial.</text>
         <text x="600" y="978" fill="#fbbf24" font-size="8" text-anchor="middle" font-weight="600">Why both: in the smoke test, after the gateway rejected WebSearch, the agent still got its answer another way on a host with open egress.</text>
         <text x="32" y="1012" fill="#fb7185" font-size="10" text-anchor="start" font-weight="600">④ ANTI-CHEAT CONTROLS — numbers match the badges above</text>
         <circle cx="38" cy="1031" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="38" y="1034" fill="white" font-size="8" font-weight="700" text-anchor="middle">1</text>
@@ -336,15 +336,15 @@
         <rect x="485" y="1152" width="32" height="13" rx="3" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="0.8"/><text x="501" y="1161" fill="#34d399" font-size="7" font-weight="600" text-anchor="middle">DONE</text>
         <circle cx="38" cy="1191" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="38" y="1194" fill="white" font-size="8" font-weight="700" text-anchor="middle">6</text>
         <text x="54" y="1194" fill="white" font-size="9" text-anchor="start" font-weight="600">Server-side web tools off in harness config</text>
-        <text x="54" y="1206" fill="#94a3b8" font-size="8" text-anchor="start">applied per harness when trials are wired to the gateway</text>
+        <text x="54" y="1206" fill="#94a3b8" font-size="8" text-anchor="start">per-harness kill-switch (task 4.6); the gateway already blocks them</text>
         <rect x="485" y="1184" width="67" height="13" rx="3" fill="rgba(120, 53, 15, 0.35)" stroke="#fbbf24" stroke-width="0.8"/><text x="518.5" y="1193" fill="#fbbf24" font-size="7" font-weight="600" text-anchor="middle">IN PROGRESS</text>
         <circle cx="628" cy="1031" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="628" y="1034" fill="white" font-size="8" font-weight="700" text-anchor="middle">7</text>
         <text x="644" y="1034" fill="white" font-size="9" text-anchor="start" font-weight="600">Model gateway outside the sandbox</text>
-        <text x="644" y="1046" fill="#94a3b8" font-size="8" text-anchor="start">fake key in, real key out; run's model only; provider tools → 403; full log</text>
+        <text x="644" y="1046" fill="#94a3b8" font-size="8" text-anchor="start">per-trial fake key in, real key out; run's model only; provider tools → 403 + trial flag</text>
         <rect x="1075" y="1024" width="32" height="13" rx="3" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="0.8"/><text x="1091" y="1033" fill="#34d399" font-size="7" font-weight="600" text-anchor="middle">DONE</text>
         <circle cx="628" cy="1063" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="628" y="1066" fill="white" font-size="8" font-weight="700" text-anchor="middle">8</text>
         <text x="644" y="1066" fill="white" font-size="9" text-anchor="start" font-weight="600">Egress locked to the gateway</text>
-        <text x="644" y="1078" fill="#94a3b8" font-size="8" text-anchor="start">docker --internal network + relay done; worktree + cloud providers next</text>
+        <text x="644" y="1078" fill="#94a3b8" font-size="8" text-anchor="start">docker lock + leak probes before the agent, fails closed; worktree + cloud next</text>
         <rect x="1075" y="1056" width="67" height="13" rx="3" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="0.8"/><text x="1108.5" y="1065" fill="#34d399" font-size="7" font-weight="600" text-anchor="middle">DOCKER DONE</text>
         <circle cx="628" cy="1095" r="8" fill="#881337" stroke="#fb7185" stroke-width="1"/><text x="628" y="1098" fill="white" font-size="8" font-weight="700" text-anchor="middle">9</text>
         <text x="644" y="1098" fill="white" font-size="9" text-anchor="start" font-weight="600">Offline tests</text>
@@ -413,8 +413,8 @@
         <ul>
           <li>• Mining, validation (touched tests), bundles, Studio review: done</li>
           <li>• Grading, workspace seeding, patch capture: done</li>
-          <li>• Gateway core + Docker egress lock: done and verified</li>
-          <li>• In progress: wiring into the trial runner, worktree/cloud egress, transcript audit</li>
+          <li>• Gateway, Docker egress lock and trial-runner wiring: done; verified in a real trial</li>
+          <li>• In progress: --brownfield run command, worktree/cloud egress, Codex, harness web-tool kill-switch, transcript audit</li>
           <li>• Full-suite validation deferred to the cloud orchestrator</li>
         </ul>
       </div>

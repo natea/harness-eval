@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Coding Harness Evaluations — which coding framework actually performs best?</title>
-<meta name="description" content="An eval framework that ranks agentic coding frameworks by having each build the same spec, same harness, same model, in isolated sandboxes — graded on an evidence-based rubric." />
+<meta name="description" content="An eval framework that ranks agentic coding frameworks by having each build the same spec, same harness, same model, in isolated sandboxes — graded on an evidence-based rubric. A brownfield track replays real merged PRs against their hidden tests." />
 <link rel="canonical" href="https://codingharness.xyz/" />
 <meta name="theme-color" content="#0d1117" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -56,6 +56,9 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 .shot p { margin: 0; color: #8b949e; font-size: 14px; }
 .flow { color: #8b949e; font-size: 13px; margin-top: 6px; }
 .flow b { color: #e6edf3; font-weight: 600; }
+.badge.pilot { background: #4a3a10; color: #ffdf9b; }
+.note { background: #161b22; border: 1px solid #21262d; border-left: 3px solid #d29922; border-radius: 6px; padding: 12px 14px; margin-top: 18px; color: #8b949e; font-size: 14px; }
+.note strong { color: #e6edf3; }
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="02050033-3400-4ace-9669-2c2bf81b6017"></script>
 </head>
@@ -79,6 +82,13 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		variable. Every artifact is then graded by two independent instruments
 		and ranked on a weighted composite.
 	</p>
+	<p>
+		Building from an empty folder is only half the job. Most real agent work is
+		fixing an issue in a codebase the agent didn't write, so the
+		<a href="#brownfield"><strong>brownfield track</strong></a> replays real merged
+		pull requests: the framework gets the issue as it read before the fix, and the
+		PR's own tests, hidden until grading, decide whether it worked.
+	</p>
 
 	<h2>The contenders</h2>
 	<div class="grid">
@@ -97,7 +107,7 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 	<div class="shots">
 
 		<figure class="shot">
-			<a class="frame" href="./assets/gallery-1-leaderboard.png" target="_blank" rel="noopener"><img src="./assets/gallery-1-leaderboard.png" alt="Eval Studio cross-harness leaderboard: candidates ranked by weighted composite with a harness/model column, re-weight sliders, and a runs table tagged by app/PRD" loading="lazy" /></a>
+			<a class="frame" href="./assets/gallery-1-leaderboard.png" target="_blank" rel="noopener"><img src="./assets/gallery-1-leaderboard.png" alt="Cross-harness leaderboard: candidates ranked by weighted composite with a harness/model column, re-weight sliders, and a runs table tagged by app/PRD" loading="lazy" /></a>
 			<figcaption class="cap">
 				<span class="step">The payoff · Leaderboard</span>
 				<h3>The ranked leaderboard</h3>
@@ -179,6 +189,72 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 
 	</div>
 
+	<h2 id="brownfield">The brownfield track <span class="badge pilot">pilot</span></h2>
+	<p>
+		A merged PR that closes an issue is a ready-made task with built-in ground truth:
+		the issue is the brief, the repo at the PR's base commit is the starting point, and
+		the PR's tests are the oracle. The framework is still the only variable. The question
+		is whether it helps someone produce a better PR on real code. Results are compared
+		with the <em>original PR</em> that was merged upstream.
+	</p>
+	<div class="grid">
+		<div class="card"><h3>The issue as it read back then</h3><p>Merged PR ↔ issue pairs are mined from the repo. Each issue is rebuilt as of the first fix commit, replaying its edit history and dropping later comments and links to the future.</p></div>
+		<div class="card"><h3>A sealed repo</h3><p>The workspace is rebuilt at the PR's base commit with one branch and no tags, remotes or reflog, then checked to confirm the fix isn't hiding in git history.</p></div>
+		<div class="card"><h3>Hidden tests decide</h3><p>A trial is <em>resolved</em> only if every fail-to-pass test now passes and every pass-to-pass test still does. Grading replays the framework's patch onto a clean base, offline. Edits to test files are reverted and flagged.</p></div>
+		<div class="card"><h3>Harness PR vs. original PR</h3><p>A blind A/B judge scores both diffs on correctness, scope, clarity, codebase fit, robustness and tests. Judge ≠ worker model. Quality is a secondary signal and never changes the verdict.</p></div>
+		<div class="card"><h3>Did the framework engage?</h3><p>A post-install check stops a run before spend if a framework's plugins or skills aren't visible. The session log then records which skills and commands actually ran, so plain Claude Code in a framework's clothing shows up as <em>not engaged</em>.</p></div>
+		<div class="card"><h3>No looking up the answer</h3><p>A run-owned model gateway holds the credential, so the sandbox only sees a placeholder. It refuses provider-side tools, and Docker trials can reach only the gateway. A transcript audit disqualifies any trial that reaches for the upstream fix.</p></div>
+		<div class="card"><h3>Discussion as a variable</h3><p>Issue threads can give the fix away. Each run picks one prompt variant (<code>body</code>, <code>body+human</code>, <code>body+all</code>), identical across candidates, and each item is labelled from <em>noise</em> up to <em>fix_code</em>.</p></div>
+	</div>
+	<div class="note">
+		<strong>Where this stands.</strong> 111 task bundles are frozen across
+		<a href="https://github.com/Future-House/paper-qa">paper-qa</a>,
+		<a href="https://github.com/pydata/xarray">xarray</a> and
+		<a href="https://github.com/zarr-developers/zarr-python">zarr-python</a>; 86 pass validation
+		(on the tests each PR touches; full-suite validation is still open), and 106 are still marked
+		provisional. Trials so far are a handful on paper-qa with Claude models, so treat the numbers
+		below as a demonstration of the method, not a ranking of frameworks.
+	</div>
+	<div class="shots">
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-10-brownfield-run.png" target="_blank" rel="noopener"><img src="./assets/gallery-10-brownfield-run.png" alt="Brownfield run view: three frameworks on one paper-qa task, with hidden-test verdict, whether the framework engaged, quality against the original PR, diff size, file overlap, agent time and cost; two trials are marked as infrastructure failures and not scored" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Brownfield · Run</span>
+				<h3>Resolved, engaged, and better than the original?</h3>
+				<p>One row per framework and task, with each signal kept separate rather than blended into a composite. In this run GSD engaged and passed the hidden tests, but the judge still preferred the original PR, 78 to 57: passing the tests and writing the better PR are different questions. The other two trials hit infrastructure failures, so they're reported as not scored rather than counted as losses.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-11-brownfield-trial.png" target="_blank" rel="noopener"><img src="./assets/gallery-11-brownfield-trial.png" alt="Brownfield trial: harness activity showing the framework engaged, the hidden test passing, a criterion-by-criterion code-quality comparison against the original PR with judge notes, the two diffs side by side, and a clean audit" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Brownfield · Trial</span>
+				<h3>Harness PR vs. original PR, side by side</h3>
+				<p>Everything behind one verdict: which framework skills actually fired, the hidden test result, the judge's score and note for each criterion, both diffs, and the audit. Here Superpowers fixed a JSON parsing bug with a one-parameter change and scored 93 to the original PR's 72, which also carried an unrelated version bump. It edited a test file, which was reverted before grading and flagged. One trial says little: an earlier run of the same framework on the same task also resolved it, but the judge preferred the original PR, 75 to 68.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-12-brownfield-review.png" target="_blank" rel="noopener"><img src="./assets/gallery-12-brownfield-review.png" alt="Task review screen: the reconstructed issue and comments on the left with leak labels to assign, and the reference fix, hidden tests and worker-visible issue in tabs on the right" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Brownfield · Task review</span>
+				<h3>People check the tasks before anything runs</h3>
+				<p>A reviewer reads each issue and comment beside the reference fix and labels how much of the fix it gives away, then says whether the hidden tests only check behavior the issue describes. Review is blind: the LLM's labels stay hidden until the reviewer submits.</p>
+			</figcaption>
+		</figure>
+
+		<figure class="shot">
+			<a class="frame" href="./assets/gallery-13-brownfield-agreement.png" target="_blank" rel="noopener"><img src="./assets/gallery-13-brownfield-agreement.png" alt="Agreement view: exact agreement, Cohen's kappa and weighted kappa between reviewer and LLM leak labels, the fairness tally, and a confusion matrix by leak level" loading="lazy" /></a>
+			<figcaption class="cap">
+				<span class="step">Brownfield · Agreement</span>
+				<h3>Measuring the labeller, too</h3>
+				<p>Reviewer and LLM leak labels are compared directly. Across the 14 tasks reviewed so far, agreement is modest (κ = 0.34), and the LLM rated all three items people called <code>fix_code</code> as mere <code>symptom</code>. That's why the labels get human review instead of being taken on trust.</p>
+			</figcaption>
+		</figure>
+
+	</div>
+
 	<h2>Architecture</h2>
 	<p class="pipeline">Designed in Excalidraw (<a href="https://github.com/natea/harness-eval/blob/main/docs/architecture.excalidraw.json">editable scene</a>); one pipeline, every variable held fixed except the framework under test.</p>
 	<img src="./assets/architecture.svg" alt="harness-eval architecture: registry, targets and run config feed the orchestrator; trials run on pluggable sandbox providers from a shared image; headless Claude Code builds are archived then graded by an evaluator agent and a blind judge; results feed scorecards and the dashboard" style="width:100%; border:1px solid #21262d; border-radius:10px; margin-top:10px" />
@@ -190,6 +266,7 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		<div class="card"><h3>Speed — 17.5%</h3><p>Agent working time from the harness's own session telemetry (sandbox setup excluded), min-max normalized within the run: fastest 100, slowest 0.</p></div>
 		<div class="card"><h3>Token spend — 17.5%</h3><p>Total session cost from harness telemetry, normalized the same way. Together with speed: the efficiency frontier.</p></div>
 	</div>
+	<p class="pipeline">These weights apply to the spec-building track. The <a href="#brownfield">brownfield track</a> reports hidden-test resolution first, with quality against the original PR, cost and agent time beside it.</p>
 
 	<h2>Fairness engineering</h2>
 	<p class="pipeline">
@@ -199,6 +276,10 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 		evaluators forbidden from repairing artifacts · evidence cited for every verdict ·
 		budget caps with explicit <code>capped</code> status, never silent truncation ·
 		rankings with overlapping variance flagged <em>inconclusive</em>.
+		On brownfield tasks: byte-identical prompts with no PR references · credentials held
+		outside the sandbox · fresh home and config per trial, with no operator plugins, memory
+		or instructions · grading from a clean base · disqualification for reaching for the
+		upstream fix.
 	</p>
 
 	<h2>Pluggable by design</h2>
@@ -216,7 +297,12 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 bun install && cp .env.example .env
 bun run src/cli.ts run --candidates superpowers --trials 1 --provider docker
 bun scripts/grade-trial.ts runs/&lt;run-dir&gt; superpowers-t1
-bun run dashboard   # full interactive dashboard on localhost</pre>
+bun run dashboard   # full interactive dashboard on localhost
+
+# brownfield: replay a real PR (real spend; needs a local clone of the repo)
+bun run src/cli.ts run --brownfield Future-House/paper-qa --tasks pr293-issue292 \
+  --variant body --candidates bare --provider docker \
+  --worker-model claude-sonnet-4-6 --judge claude-opus-4-6 --clone ../paper-qa</pre>
 
 	<h2>Hosted evals <span class="badge">coming soon</span></h2>
 	<p class="pipeline">

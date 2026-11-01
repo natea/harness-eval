@@ -27,6 +27,37 @@ const NETWORK_CMD_RE =
 const WEB_TOOL_RE = /"(WebSearch|WebFetch|web_search|web_fetch)"/;
 const PR_URL_RE = /github\.com\/([\w.-]+\/[\w.-]+)\/(pull|issues)\/\d+/i;
 
+/**
+ * Text the worker actually emitted (assistant tool calls), not content it read.
+ * Repository files often quote the project's own issue URLs; only fetching them
+ * counts as reaching. Falls back to the whole text for non-JSON transcripts.
+ */
+export function actionText(text: string): string {
+	const actions: string[] = [];
+	let sawTranscript = false;
+	for (const line of text.split("\n")) {
+		if (!line.trim().startsWith("{")) continue;
+		let obj: { type?: string; message?: { content?: unknown } };
+		try {
+			obj = JSON.parse(line) as typeof obj;
+		} catch {
+			continue;
+		}
+		if (!obj.type) continue;
+		sawTranscript = true;
+		if (obj.type !== "assistant") continue;
+		const content = obj.message?.content;
+		if (!Array.isArray(content)) continue;
+		for (const c of content) {
+			const block = c as { type?: string; name?: string; input?: unknown };
+			if (block.type === "tool_use")
+				actions.push(JSON.stringify({ name: block.name, input: block.input }));
+		}
+	}
+	if (sawTranscript) return actions.join("\n");
+	return text;
+}
+
 /** Audit one trial's transcript text. */
 export function auditTranscript(
 	text: string,
@@ -34,7 +65,7 @@ export function auditTranscript(
 ): AuditResult {
 	const findings: AuditFinding[] = [];
 	const attempts: AuditFinding[] = [];
-	const lines = text.split("\n");
+	const lines = actionText(text).split("\n");
 
 	const shaPrefixes = (opts.futureShas ?? [])
 		.filter((s) => s.length >= 7)
@@ -51,15 +82,15 @@ export function auditTranscript(
 		? new RegExp(`(^|[^\\d])${opts.prNumber}([^\\d]|$)`)
 		: null;
 	for (const line of lines) {
-		const url = PR_URL_RE.exec(line);
-		if (url) {
-			// A PR/issue URL for a different project is not the future for THIS task.
-			const sameRepo = opts.repo
-				? line.includes(`github.com/${opts.repo}/`)
-				: true;
-			if (sameRepo) findings.push({ kind: "pull-request", evidence: url[0] });
-			continue;
+		const urls = [...line.matchAll(new RegExp(PR_URL_RE.source, "gi"))];
+		// Only this project's PRs/issues are the future; a dependency's upstream
+		// (e.g. litellm) is legitimate reference material.
+		for (const u of urls) {
+			const slug = u[1]?.toLowerCase();
+			if (!opts.repo || slug === opts.repo.toLowerCase())
+				findings.push({ kind: "pull-request", evidence: u[0] });
 		}
+		if (urls.length) continue;
 		// A bare PR number is only evidence together with a repository reference.
 		if (prRe && opts.repo && line.includes(opts.repo) && prRe.test(line))
 			findings.push({
@@ -75,20 +106,15 @@ export function auditTranscript(
 		}
 	}
 
-	// Dedupe by kind+evidence.
 	const dedupe = (xs: AuditFinding[]) => [
 		...new Map(xs.map((f) => [`${f.kind}:${f.evidence}`, f])).values(),
 	];
 	const found = dedupe(findings);
-	const verdict: AuditVerdict = found.some(
-		(f) => f.kind === "future-sha" || f.kind === "pull-request",
-	)
+	const verdict: AuditVerdict = found.length
 		? "disqualified:solution-reach"
-		: found.some((f) => f.kind === "web-tool")
-			? "disqualified:solution-reach"
-			: attempts.length
-				? "attempted"
-				: "clean";
+		: attempts.length
+			? "attempted"
+			: "clean";
 	return { verdict, findings: found, attempts: dedupe(attempts) };
 }
 

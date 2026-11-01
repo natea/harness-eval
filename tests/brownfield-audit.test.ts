@@ -45,3 +45,37 @@ test("web tools are disqualifying, plain network commands are attempts", () => {
 	expect(fetch.verdict).toBe("attempted");
 	expect(fetch.attempts).toHaveLength(1);
 });
+
+test("a project issue URL quoted in repository output is not reaching", () => {
+	const toolResult = JSON.stringify({
+		type: "user",
+		message: {
+			content: [
+				{
+					type: "tool_result",
+					content:
+						'pytest.xfail("Per https://github.com/Future-House/paper-qa/issues/1140")',
+				},
+			],
+		},
+	});
+	expect(auditTranscript(toolResult, opts).verdict).toBe("clean");
+});
+
+test("an assistant fetch of the project's PR disqualifies", () => {
+	const action = JSON.stringify({
+		type: "assistant",
+		message: {
+			content: [
+				{
+					type: "tool_use",
+					name: "WebFetch",
+					input: { url: "https://github.com/Future-House/paper-qa/pull/1262" },
+				},
+			],
+		},
+	});
+	expect(auditTranscript(action, opts).verdict).toBe(
+		"disqualified:solution-reach",
+	);
+});

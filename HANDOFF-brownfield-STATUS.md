@@ -59,6 +59,15 @@ paper-qa trial can run as early as possible.
 14. Added API-key Claude Code profiles (`claude-{haiku-4-5,sonnet-4-6,opus-4-6}-key`)
     because the operator has no Max OAuth token; `model probe` verified haiku.
 15. `--trial-cost` / `--run-cost` override the budget caps per run.
+16. The solution-reach audit reads **assistant tool calls only**, not tool
+    results: paper-qa's own tests quote `github.com/Future-House/paper-qa/issues/1140`,
+    so scanning everything produced false positives. `scripts/reaudit-run.ts`
+    re-audits a finished run; `scripts/grade-run.ts` grades trials left
+    ungraded (e.g. after an audit correction).
+17. `superpowers` re-pinned 5.1.0 → 7.0.1: the upstream marketplace now serves
+    7.0.1 and accepts no version pin, so the install check asserts the observed
+    version. Other candidates keep their original pins and may need the same
+    treatment; recorded here rather than silently loosening all checks.
 
 ## Real-spend runs
 
@@ -89,6 +98,15 @@ paper-qa trial can run as early as possible.
    `gpt-5-codex`/`gpt-5.1-codex`; every model 404s or reports "no credits".
    OpenAI half of the pilot is blocked on billing, not on code.
 
+7. `runs/run-2026-11-01T08-06-51-429Z` — first matrix attempt (bare +
+   superpowers × pr1262/pr1298, haiku, gateway): bare trials completed
+   ($0.63/$0.43), superpowers trials **infra-failed** because the pinned
+   `superpowers` version check expected 5.1.0 and upstream now ships 7.0.1.
+   Re-pinned the registry to 7.0.1.
+8. `runs/run-2026-11-01T08-22-37-085Z` — superpowers × pr1262/pr1298 (haiku,
+   gateway): both completed (7.9m/$0.73, 6.4m/$0.55), both unresolved after
+   re-grading. Framework install path now works end to end.
+
 Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet),
 **$0 OpenAI**. Target caps ($40/$20) untouched.
 
@@ -101,6 +119,8 @@ Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet)
 - `54b9ef1` report, API-key profiles, clean test env (5.4)
 - `59782ec` model gateway + inter-human κ (4.4/2.6)
 - `b561168` solution-reach audit + lean archives (5.3)
+- `014c46e` gateway fix + adversarial smoke (4.4/6.2)
+- `a6f9c1a` (approx) audit repo match, secondary signals, superpowers re-pin
 
 ## Labels (task 2.6)
 

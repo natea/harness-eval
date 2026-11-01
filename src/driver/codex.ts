@@ -65,6 +65,8 @@ const runCodexExec = createPrintCliSessionRunner({
 		return [auth, exec].join("; ");
 	},
 	parseOutput: parseCodexJsonl,
+	// [c] keeps the pattern from matching the shell running this very command.
+	stopCommand: 'pkill -TERM -f "[c]odex exec" || true',
 });
 
 export const codexDriver: HarnessDriver = {

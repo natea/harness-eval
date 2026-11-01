@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { parsePartialStreamJson } from "../src/driver/claude";
+import { codexDriver } from "../src/driver/codex";
 import { executeSessionScript } from "../src/driver/session";
 import {
 	aggregateTelemetry,
@@ -53,7 +54,7 @@ function fakeSandbox(
 			commands.push(command);
 			if (command.startsWith("cat /tmp/he-out"))
 				return { exitCode: 0, stdout: outputs[i] ?? "", stderr: "" };
-			if (command.includes("claude -p")) {
+			if (command.includes("claude -p") || command.includes("codex exec")) {
 				i++;
 				if (opts.delayMs) await Bun.sleep(opts.delayMs);
 				return { exitCode: opts.exitCode ?? 0, stdout: "", stderr: "" };
@@ -247,6 +248,51 @@ describe("sessions cut off before their result message", () => {
 		expect(r.status).toBe("error");
 		expect(r.records).toHaveLength(0);
 		expect(r.notes[0]).toContain("exit 127");
+	});
+	test("wall-clock expiry with no parseable output is a cap, not an error", async () => {
+		const { sandbox } = fakeSandbox([""], {
+			exitCode: EXIT_TIMED_OUT,
+			delayMs: 40,
+		});
+		const r = await executeSessionScript(sandbox, {
+			...script([{ prompt: "a" }]),
+			wallClockBudgetMs: 20,
+		});
+		expect(r.status).toBe("capped");
+		expect(r.cappedBy).toBe("wall-clock");
+		expect(r.notes[0]).toContain("step 0 failed");
+	});
+	test("a continuation with no parseable output ends the script and keeps earlier work", async () => {
+		const gate = JSON.stringify({
+			type: "result",
+			session_id: "s",
+			duration_ms: 1,
+			num_turns: 1,
+			total_cost_usd: 1,
+			usage: { input_tokens: 1, output_tokens: 1 },
+			result: "Shall I proceed?",
+		});
+		const { sandbox } = fakeSandbox([gate, ""]);
+		const r = await executeSessionScript(sandbox, script([{ prompt: "a" }]));
+		expect(r.status).toBe("error");
+		expect(r.records).toHaveLength(1);
+		expect(r.notes.at(-1)).toContain("continuation after step 0 failed");
+	});
+	test("codex is stopped on timeout too, but never on worktree", async () => {
+		const timedOut = (id: string) =>
+			fakeSandbox([""], { id, exitCode: EXIT_TIMED_OUT });
+		const docker = timedOut("docker:test");
+		await executeSessionScript(docker.sandbox, {
+			...script([{ prompt: "a" }]),
+			driver: codexDriver,
+		});
+		expect(docker.commands).toContain('pkill -TERM -f "[c]odex exec" || true');
+		const worktree = timedOut("worktree:test");
+		await executeSessionScript(worktree.sandbox, {
+			...script([{ prompt: "a" }]),
+			driver: codexDriver,
+		});
+		expect(worktree.commands.some((c) => c.startsWith("pkill"))).toBe(false);
 	});
 	test("unverified models report tokens with no invented cost", () => {
 		const out = assistant("s", "m1", 100).replace(

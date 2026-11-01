@@ -118,8 +118,7 @@ export async function executeSessionScript(
 			// scheduler classifies the trial as infra-failed (and retries), rather
 			// than grading a broken workspace as a candidate result.
 			if (isInfraError(err)) throw err;
-			notes.push(`step ${i} failed: ${err}`);
-			return { records, transcripts, status: "error", cappedBy: null, notes };
+			return failed(`step ${i} failed: ${err}`);
 		}
 		ownCost(result, resumedFrom);
 		records.push(result.record);
@@ -147,16 +146,22 @@ export async function executeSessionScript(
 				`step ${i}: continuation ${continuations + 1} ('${continuationPrompt}')`,
 			);
 			const contFrom = sessionId;
-			const cont = await run(sandbox, {
-				model: opts.model,
-				prompt: continuationPrompt,
-				stepIndex: stepIndex++,
-				resumeSessionId: contFrom,
-				timeoutMs: remainingMs(),
-				env: opts.env,
-				isolated: opts.isolated,
-				netns: opts.netns,
-			});
+			let cont: DriverResult;
+			try {
+				cont = await run(sandbox, {
+					model: opts.model,
+					prompt: continuationPrompt,
+					stepIndex: stepIndex++,
+					resumeSessionId: contFrom,
+					timeoutMs: remainingMs(),
+					env: opts.env,
+					isolated: opts.isolated,
+					netns: opts.netns,
+				});
+			} catch (err) {
+				if (isInfraError(err)) throw err;
+				return failed(`continuation after step ${i} failed: ${err}`);
+			}
 			ownCost(cont, contFrom);
 			records.push(cont.record);
 			transcripts.push(cont.transcript);

@@ -40,6 +40,40 @@ export class WorktreeProvider implements SandboxProvider {
 	}
 }
 
+/** Host vars a trial inherits; all others (credentials, proxies) are dropped. */
+const INHERITED_ENV = [
+	"PATH",
+	"LANG",
+	"LC_ALL",
+	"LC_CTYPE",
+	"TERM",
+	"TZ",
+	"SHELL",
+	"TMPDIR",
+];
+
+function trialEnv(
+	home: string,
+	claudeConfigDir: string,
+	extra?: Record<string, string>,
+) {
+	const env: Record<string, string> = {};
+	for (const key of INHERITED_ENV) {
+		const v = process.env[key];
+		if (v !== undefined) env[key] = v;
+	}
+	return {
+		...env,
+		HOME: home,
+		CLAUDE_CONFIG_DIR: claudeConfigDir,
+		npm_config_prefix: join(home, ".npm-global"),
+		XDG_CONFIG_HOME: join(home, ".config"),
+		XDG_CACHE_HOME: join(home, ".cache"),
+		XDG_DATA_HOME: join(home, ".local", "share"),
+		...extra,
+	};
+}
+
 class WorktreeSandbox implements Sandbox {
 	readonly id: string;
 
@@ -54,13 +88,7 @@ class WorktreeSandbox implements Sandbox {
 	}
 
 	async exec(command: string, opts: ExecOptions = {}): Promise<ExecResult> {
-		const env = {
-			...process.env,
-			HOME: this.home,
-			CLAUDE_CONFIG_DIR: this.claudeConfigDir,
-			npm_config_prefix: join(this.home, ".npm-global"),
-			...opts.env,
-		};
+		const env = trialEnv(this.home, this.claudeConfigDir, opts.env);
 		try {
 			const { stdout, stderr } = await execFileAsync("zsh", ["-c", command], {
 				cwd: opts.cwd ?? this.workspacePath,

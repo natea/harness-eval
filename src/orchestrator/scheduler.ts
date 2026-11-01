@@ -361,6 +361,7 @@ export async function runTrial(
 				wallClockBudgetMs: config.budget.trialWallClockMs,
 				costBudgetUsd: config.budget.trialCostUsd,
 				env: workerAuth,
+				isolated: plan.task !== undefined,
 			});
 
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);

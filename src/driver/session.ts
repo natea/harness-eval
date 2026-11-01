@@ -27,6 +27,8 @@ export interface SessionScriptOptions {
 	driver?: HarnessDriver;
 	/** Injected for focused tests; overrides `driver`. */
 	runSession?: RunDriverSession;
+	/** Trial isolation: no operator MCP config, no provider-side web tools. */
+	isolated?: boolean;
 }
 
 /** Heuristic gate detection: the framework paused awaiting approval. */
@@ -81,6 +83,7 @@ export async function executeSessionScript(
 				resumeSessionId: step.newSession ? undefined : sessionId,
 				timeoutMs: remainingMs(),
 				env: opts.env,
+				isolated: opts.isolated,
 			});
 		} catch (err) {
 			// Environmental failures (dead daemon, unreachable socket, ACP
@@ -120,6 +123,7 @@ export async function executeSessionScript(
 				resumeSessionId: sessionId,
 				timeoutMs: remainingMs(),
 				env: opts.env,
+				isolated: opts.isolated,
 			});
 			records.push(cont.record);
 			transcripts.push(cont.transcript);

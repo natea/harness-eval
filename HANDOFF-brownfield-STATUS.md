@@ -11,9 +11,9 @@ paper-qa trial can run as early as possible.
 - [x] **Run config + issue variants** — `run --brownfield <repo> --tasks <ids|all> --variant body|body+human|body+all`
 - [x] **Workspace seeding + brownfield prompt** — sealed repo + `ISSUE.md` + anti-cheat template; byte-identical prompts across candidates
 - [x] **Patch capture** — candidate diff saved at trial end
-- [ ] **Trial isolation** — fresh HOME/config, no operator MCP/plugins/skills/memory/instructions
+- [x] **Trial isolation** — fresh HOME/config, no operator MCP/plugins/skills/memory/instructions
 - [ ] **Hidden-test grading** — restore test infra, apply `tests.patch`, offline suite, resolution verdict, `cassette-miss`
-- [ ] **Web-tool kill-switch** — per harness; refuse candidates that can't comply
+- [x] **Web-tool kill-switch** — per harness; refuse candidates that can't comply
 - [ ] **Gateway + probe** — credential injection, model/tool enforcement, `model probe` extension (4.3/4.4/4.5)
 - [ ] **Wet evals** — n=1 smoke (6.2) then adversarial smoke (6.1), real Anthropic spend; OpenAI if the key works
 - [ ] **Reporting + secondary signals + audit + κ** — 5.4, 5.2, 5.3, 2.6
@@ -41,6 +41,13 @@ paper-qa trial can run as early as possible.
    exists, rather than silently skipping grading.
 6. Trial env artifacts are kept out of the diff via `.git/info/exclude` (local
    only, untracked) because `git add` rejects pathspecs naming ignored paths.
+7. Isolation/kill-switch flags are passed only for brownfield trials (`isolated`),
+   so PRD sessions keep their frozen command surface; HOME/config env scrubbing
+   applies to every worktree trial.
+8. Harnesses without a verified web kill-switch (zeroclaw) are refused for
+   brownfield; codex's `tools.web_search=false` is unverified pending 6.1.
+9. Trial isolation drops all host env except a PATH/locale allowlist; worker
+   auth arrives only through the explicit env argument.
 
 ## Real-spend runs
 
@@ -49,7 +56,8 @@ paper-qa trial can run as early as possible.
 ## Commits
 
 - `543742f` kickoff status file and plan
-- (next) run config, seeding, prompt + patch capture (4.1/4.2/4.7)
+- `98d1d78` run config, seeding, prompt + patch capture (4.1/4.2/4.7)
+- (next) trial isolation + web-tool kill-switch (4.6/4.8)
 
 ## Blockers
 

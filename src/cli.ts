@@ -62,6 +62,7 @@ import {
 	loadCatalog,
 } from "./catalog";
 import { type LoadedDesign, loadDesign } from "./designs";
+import { assertWebToolKillSwitch } from "./driver/toolpolicy";
 import { loadManifest } from "./grading/integration";
 import { loadHarnesses, resolveHarness } from "./harnesses";
 import {
@@ -476,6 +477,7 @@ async function cmdRunBrownfield(): Promise<void> {
 		harnesses,
 	);
 	const harness = resolveHarness(config.harness, harnesses);
+	assertWebToolKillSwitch(config.harness);
 	const models = loadModels();
 	const workerProfile = resolveProfile(
 		arg("worker-model") ?? config.model,

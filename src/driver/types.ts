@@ -18,6 +18,11 @@ export interface DriverRunOptions {
 	resumeSessionId?: string;
 	timeoutMs: number;
 	env?: Record<string, string>;
+	/**
+	 * Trial isolation (task 4.8): ignore operator MCP configuration and disable
+	 * provider-side web tools (task 4.6). Brownfield trials always set this.
+	 */
+	isolated?: boolean;
 }
 
 export type RunDriverSession = (

@@ -11,6 +11,10 @@ const runClaudePrintCli = createPrintCliSessionRunner({
 		const resume = opts.resumeSessionId
 			? `--resume ${JSON.stringify(opts.resumeSessionId)}`
 			: "";
+		// Isolated trials: no MCP config, no provider-side web tools (4.6/4.8).
+		const isolation = opts.isolated
+			? ["--strict-mcp-config", '--disallowedTools "WebSearch" "WebFetch"']
+			: [];
 		// Output goes to a FILE, not the exec stream: agents routinely spawn
 		// daemons (e.g. the service they just built) that inherit stdout and
 		// would otherwise hold the exec stream open forever after claude exits.
@@ -20,6 +24,7 @@ const runClaudePrintCli = createPrintCliSessionRunner({
 			`--model ${JSON.stringify(opts.model)}`,
 			"--output-format stream-json --verbose",
 			"--dangerously-skip-permissions",
+			...isolation,
 			resume,
 			`> ${opts.outFile} 2>&1`,
 		]

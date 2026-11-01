@@ -36,6 +36,7 @@ import {
 	mkdirSync,
 	readdirSync,
 	readFileSync,
+	rmSync,
 	writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -63,6 +64,7 @@ import {
 	seedWorkspace as seedTrialWorkspace,
 	writePatchCapture,
 } from "./brownfield/seed";
+import { diffSizeRatio, diffStats, localization } from "./brownfield/signals";
 import {
 	CATALOG_PATH,
 	checkCatalog,
@@ -656,6 +658,27 @@ async function cmdRunBrownfield(): Promise<void> {
 			join(trialDir, "audit.json"),
 			`${JSON.stringify(audit, null, 2)}\n`,
 		);
+		// Secondary signals (5.2): file localization + diff size vs the reference.
+		const patch = existsSync(join(trialDir, "candidate.patch"))
+			? readFileSync(join(trialDir, "candidate.patch"), "utf8")
+			: "";
+		const candidateDiff = diffStats(patch);
+		const referenceDiff = diffStats(
+			readText(bundle.dir, "reference.patch") ?? "",
+		);
+		writeFileSync(
+			join(trialDir, "signals.json"),
+			`${JSON.stringify(
+				{
+					candidate: candidateDiff,
+					reference: referenceDiff,
+					localization: localization(candidateDiff.files, referenceDiff.files),
+					diffSizeRatio: diffSizeRatio(candidateDiff, referenceDiff),
+				},
+				null,
+				2,
+			)}\n`,
+		);
 		if (audit.verdict !== "clean") {
 			trial.provenance.notes.push(`audit: ${audit.verdict}`);
 			console.log(`audit ${trial.provenance.trialId}: ${audit.verdict}`);
@@ -709,6 +732,11 @@ async function cmdRunBrownfield(): Promise<void> {
 				workDir: join(runDir, "grading", trial.provenance.trialId),
 			});
 			writeGrade(trialDir, grade);
+			// The graded tree's venv is ~8 GB; logs and the grade are what matter.
+			rmSync(join(runDir, "grading", trial.provenance.trialId, "repo"), {
+				recursive: true,
+				force: true,
+			});
 			trial.resolution = {
 				verdict: grade.verdict,
 				reason: grade.reason,
@@ -758,7 +786,27 @@ async function cmdModel(): Promise<void> {
 			`probe supports claude-code transport only (profile '${profile.name}' is ${profile.transport})`,
 		);
 	}
-	const { env, modelFlag } = resolveClaudeCodeEnv(profile);
+	const { env: profileEnv, modelFlag } = resolveClaudeCodeEnv(profile);
+	// Gateway preflight (4.5): the probe runs through the gateway the run would
+	// use, and the gateway is checked to reject a different model.
+	const gateway = flag("gateway")
+		? startGateway({
+				upstream: profile.baseUrl ?? "https://api.anthropic.com",
+				apiKey: process.env[profile.authEnv] ?? "",
+				model: profile.modelId,
+				logPath: join("runs", "model-probe-gateway.jsonl"),
+			})
+		: null;
+	const env = gateway
+		? {
+				...profileEnv,
+				ANTHROPIC_BASE_URL: gateway.url,
+				ANTHROPIC_API_KEY: "gateway-placeholder",
+				ANTHROPIC_DEFAULT_OPUS_MODEL: profile.modelId,
+				ANTHROPIC_DEFAULT_SONNET_MODEL: profile.modelId,
+				ANTHROPIC_DEFAULT_HAIKU_MODEL: profile.modelId,
+			}
+		: profileEnv;
 	console.log(
 		`probing ${profile.name} (${profile.provider}, model ${modelFlag})${profile.baseUrl ? ` via ${profile.baseUrl}` : ""}…`,
 	);
@@ -797,7 +845,18 @@ async function cmdModel(): Promise<void> {
 	} else {
 		console.error(`✗ probe FAILED (exit ${code})`);
 		if (err.trim()) console.error(err.trim().split("\n").slice(-5).join("\n"));
+		gateway?.stop();
 		process.exit(1);
+	}
+	if (gateway) {
+		const rejected = await fetch(`${gateway.url}/v1/messages`, {
+			method: "POST",
+			body: JSON.stringify({ model: "not-the-run-model", messages: [] }),
+		});
+		console.log(
+			`gateway: ${gateway.requests.length} request(s), wrong-model check ${rejected.status === 403 ? "rejected ✓" : `NOT rejected (${rejected.status}) ✗`}`,
+		);
+		gateway.stop();
 	}
 }
 

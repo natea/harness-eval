@@ -25,7 +25,7 @@ export interface AuditResult {
 const NETWORK_CMD_RE =
 	/\b(curl|wget|git\s+(fetch|pull|clone|ls-remote)|pip\s+download|npm\s+(view|pack)|gh\s+(pr|api|issue|search))\b/;
 const WEB_TOOL_RE = /"(WebSearch|WebFetch|web_search|web_fetch)"/;
-const PR_URL_RE = /github\.com\/[\w.-]+\/[\w.-]+\/(pull|issues)\/\d+/i;
+const PR_URL_RE = /github\.com\/([\w.-]+\/[\w.-]+)\/(pull|issues)\/\d+/i;
 
 /** Audit one trial's transcript text. */
 export function auditTranscript(

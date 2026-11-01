@@ -34,6 +34,11 @@
  *       [--pkg <dist>] [--extras io,etc] [--work <dir>]
  *       Grade each bundle's reference patch (must resolve) and an empty patch
  *       (must not). No spend; catches broken tasks before trials.
+ *
+ *   bun run src/cli.ts brownfield image --repo owner/name --clone <dir> --ids <id,...> \
+ *       [--pkg <dist>] [--extras io,etc] [--base-image <tag>] [--force]
+ *       Build each task's trial image (trial image + sealed repo on branch `work` +
+ *       prebuilt env). Cached by bundle/base-image/uv/recipe hash. No model spend.
  */
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -167,13 +172,39 @@ async function brownfieldSelfCheck(): Promise<void> {
 		);
 }
 
+async function brownfieldImages(): Promise<void> {
+	const repo = arg("repo");
+	const clone = arg("clone");
+	const ids = arg("ids")?.split(",");
+	if (!repo || !clone || !ids?.length)
+		throw new Error("brownfield image needs --repo, --clone and --ids");
+	const { bundleDir, repoDirName } = await import("./brownfield/bundle");
+	const { buildTaskImage } = await import("./brownfield/image");
+	const { DEFAULT_TRIAL_IMAGE } = await import("./providers/docker");
+	for (const id of ids) {
+		const bundle = loadBundle(bundleDir(repoDirName(repo), id));
+		const r = await buildTaskImage(bundle, {
+			clone,
+			baseImage: arg("base-image") ?? DEFAULT_TRIAL_IMAGE,
+			pkg: arg("pkg"),
+			extras: arg("extras"),
+			force: flag("force"),
+			log: (m) => console.log(`  ${id}: ${m}`),
+		});
+		console.log(
+			`✓ ${id}: ${r.image}${r.cached ? " (cached)" : ` (${r.method}, ${r.seconds}s)`}`,
+		);
+	}
+}
+
 async function cmdBrownfield(): Promise<void> {
 	const sub = process.argv[3];
 	if (sub === "verify") return verifyBrownfieldBundles();
 	if (sub === "selfcheck") return brownfieldSelfCheck();
+	if (sub === "image") return brownfieldImages();
 	if (sub !== "mine") {
 		console.error(
-			"usage: brownfield <mine|verify|selfcheck> [options]   (see file header)",
+			"usage: brownfield <mine|verify|selfcheck|image> [options]   (see file header)",
 		);
 		process.exit(2);
 	}

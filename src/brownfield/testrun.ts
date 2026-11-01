@@ -64,6 +64,39 @@ export interface RunOptions {
 	wallClockMs?: number;
 }
 
+function killGroup(pid: number, signal: NodeJS.Signals): void {
+	try {
+		process.kill(-pid, signal);
+	} catch {
+		// Group already gone.
+	}
+}
+
+/**
+ * Wait for a child spawned with `detached: true` (its own process group). On
+ * timeout the whole group gets SIGTERM, then SIGKILL after a grace period. After
+ * the child exits, any leftovers in its group (mock servers, workers) are killed
+ * too. Returns true if the wall clock fired.
+ */
+export async function waitWithGroupKill(
+	p: { pid: number; exited: Promise<number> },
+	wallClockMs: number,
+	graceMs = 10_000,
+): Promise<boolean> {
+	let timedOut = false;
+	let hard: ReturnType<typeof setTimeout> | undefined;
+	const soft = setTimeout(() => {
+		timedOut = true;
+		killGroup(p.pid, "SIGTERM");
+		hard = setTimeout(() => killGroup(p.pid, "SIGKILL"), graceMs);
+	}, wallClockMs);
+	await p.exited;
+	clearTimeout(soft);
+	clearTimeout(hard);
+	killGroup(p.pid, "SIGKILL");
+	return timedOut;
+}
+
 /** Run pytest in a built task environment. Returns null when pytest produced no junit (crash). */
 export async function runPytest(
 	dir: string,
@@ -93,14 +126,15 @@ export async function runPytest(
 		],
 		{
 			cwd: dir,
+			// Own process group: `uv run` does not forward signals to pytest, so killing
+			// uv alone leaves pytest (and any servers it started) running.
+			detached: true,
 			env: { ...process.env, ...OFFLINE_TEST_ENV },
 			stdout: Bun.file(opts.logPath),
 			stderr: Bun.file(`${opts.logPath}.err`),
 		},
 	);
-	const killer = setTimeout(() => p.kill(), opts.wallClockMs ?? 30 * 60_000);
-	await p.exited;
-	clearTimeout(killer);
+	await waitWithGroupKill(p, opts.wallClockMs ?? 30 * 60_000);
 	return existsSync(opts.junitPath)
 		? parseJunit(readFileSync(opts.junitPath, "utf8"))
 		: null;

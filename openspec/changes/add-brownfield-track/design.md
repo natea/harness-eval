@@ -199,12 +199,11 @@ actually differ (~15/37 in spike).
   enables provider-side tools, and logs every request. Without it, a worker
   able to reach the model API could call it directly with web search enabled,
   bypassing harness config.
-- **Credential: an API key by default.** Workers elsewhere authenticate with
-  `CLAUDE_CODE_OAUTH_TOKEN`, but nobody has verified that Claude Code works
-  against an `ANTHROPIC_BASE_URL` proxy that swaps in an OAuth token. The
-  required headers are unknown, and so is whether the subscription terms allow
-  it. A spike (task 4.3) checks this before the gateway is built. Until it
-  passes, brownfield runs bill an API key, which costs real money (see Risks).
+- **Credential: an API key.** Workers elsewhere authenticate with
+  `CLAUDE_CODE_OAUTH_TOKEN`. The gateway instead injects `ANTHROPIC_API_KEY`
+  (decided 2026-11-01, after the task 4.3 spike), so brownfield runs bill the
+  API account, which costs real money (see Risks). The sandbox only ever holds
+  a placeholder key.
 - **Model slots.** Claude Code sends some background requests to its haiku
   slot, which a strict model check would reject. Every Claude Code candidate
   therefore has all slots pinned to the run's model, as `resolveClaudeCodeEnv`
@@ -253,10 +252,10 @@ All three runs answered correctly, for about $0.0024 in Haiku calls:
   and the `mid-conversation-tool-changes` beta is set. The rejection check
   therefore runs on **every** request. Whether a loaded WebSearch shows up as a
   server-tool type is checked in 4.4.
-- **Permission is unresolved.** OAuth works technically, but whether routing a
-  subscription token through a gateway is within the plan's terms is a policy
-  question for the operator. The gateway defaults to the **API key** until that
-  is confirmed.
+- **Decision: API key, not OAuth.** OAuth works technically, but whether
+  routing a subscription token through a gateway is within the plan's terms was
+  not verified. The operator chose the API key (2026-11-01). The gateway
+  supports only the API key; OAuth injection is not built.
 
 ### D12. Grading
 After the trial, test infrastructure is restored to base before `tests.patch` is
@@ -302,6 +301,19 @@ the manifest's leak strata in the task list, since they are derived from the
 classifier. Agreement also reports quadratic-weighted κ, because the leak scale
 is ordinal.
 
+**Pilot result (task 2.6, 2026-11-01).** One reviewer labeled the 14 valid
+paper-qa tasks (50 items) against the `claude-sonnet-5-5` classifier:
+observed agreement 0.52, Cohen's κ 0.34, quadratic-weighted κ 0.40 (fair, not
+good). The disagreements are lopsided: where the human saw a diagnosis or fix
+the classifier often said symptom (5 diagnosis→symptom, 3 fix_code→symptom), so
+it under-reports leaks, the unsafe direction for stratification. Human labels
+are therefore authoritative for paper-qa, and classifier labels for xarray/zarr
+stay provisional until the classifier prompt is revised and re-scored against
+these 50 items (or those tasks are human-labeled). Only pr293 has two human
+reviews, and they disagree (diagnosis vs symptom), so human–human agreement is
+unmeasured. Test fairness: 9 yes, 4 unsure, 1 no (pr1186: hidden tests extend
+dedup beyond the field the issue names).
+
 ### D16. Human baseline
 Computed at mining time from data the miner already fetches (PR commits,
 reviews, timeline) and stored in `task.yaml`:
@@ -336,8 +348,8 @@ time to dollars (any rate would be a guess).
 - **Classifier error:** LLM labels need human calibration before analysis relies
   on them (D15).
 - **Env drift for old commits:** mitigated by lockfiles; 2023–24 tasks are riskier.
-- **API-key billing:** until the OAuth-through-gateway spike passes, brownfield
-  workers bill an API key instead of the subscription. Mitigation: per-run
+- **API-key billing:** brownfield workers bill an API key instead of the
+  subscription (D11). Mitigation: per-run
   USD caps (already enforced), a smoke run with n=1 before any matrix, and a
   measured cost per trial before scaling up.
 - **Selection bias:** rejecting doc-only, test-only, and dependency-change PRs

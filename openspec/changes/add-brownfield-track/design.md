@@ -134,6 +134,27 @@ makes the trial **unresolved**, flagged for review. Excluding those trials
 instead would let a broken fix that happens to miss a recording avoid failing.
 Reports show resolution both as scored and with those trials excluded.
 
+**Per-task trial images (task 4.1, `src/brownfield/image.ts`).** Trials don't
+build environments. `brownfield image` builds one Docker image per task:
+- Base: the trial image. On top: the sealed repo on branch `work`, uv pinned to
+  the validating host's version, and the environment built inside the container
+  with the same recipe as validation (`buildEnvWith`).
+- The tag hashes `task.yaml`, the base image id, the uv version and a recipe
+  version, so any change rebuilds and an unchanged task is cached.
+- The build fails if it modified tracked files. Anything it generated (`.venv`,
+  egg-info) goes into `.git/info/exclude`, so it never appears in a candidate
+  patch.
+- Offline test settings for replaying recordings are baked in. Proxy and
+  credential variables are not, because a dead proxy would also cut the harness
+  off from the gateway.
+- The issue file is written at trial time, so one image serves every variant.
+- Tasks whose fix needs new software stay excluded (`dependency-change`,
+  decided 2026-11-01), since a locked trial can't install anything.
+
+Check on paper-qa #1311 (5.1 GB image, built in 198 s): with no network, the
+target test fails at base and passes with the reference patch, matching
+host validation.
+
 ### D8. Validation
 Run the test command at base+tests.patch (before) and base+tests+reference twice
 (gold). Per test: fail→pass in both gold runs = FAIL_TO_PASS; pass→pass =

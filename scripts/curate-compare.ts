@@ -43,13 +43,15 @@ const roleVotes: Record<string, { human: LeakLevel; vote: LeakLevel }[]> = {
 const variantHits = { body: 0, "body+human": 0, "body+all": 0, n: 0 };
 const exclusions: Record<string, string[]> = { single: [], controller: [], collective: [] };
 const labelers = new Set<string>();
+const multiLabeled: string[] = [];
 
 for (const task of freeze.tasks as string[]) {
 	const dir = join(repoRoot, "tasks", task);
 	const reviews = readReviews(dir);
 	const last = reviews.at(-1);
 	if (!last) continue;
-	for (const r of reviews) labelers.add(r.reviewer);
+	labelers.add(last.reviewer);
+	if (new Set(reviews.map((r) => r.reviewer)).size > 1) multiLabeled.push(task);
 	const human = Object.fromEntries(last.items.map((i) => [i.id, i.label])) as Record<string, LeakLevel>;
 	const b: BundleLabels = {
 		task,
@@ -116,6 +118,10 @@ const diffs = {
 	"collective - controller": kappaDiffCI(shared, "collective", "controller", draws),
 	"controller - single": kappaDiffCI(shared, "controller", "single", draws),
 };
+// Secondary (D8 / review item 9): all labeled bundles, over-budget arms scored on their partial outputs.
+const allDraws = bundleResamples(all.length, 2000);
+const scoresAll = ARMS.map((a) => scoreArm(all, a, allDraws));
+const diffsAll = { "collective - single": kappaDiffCI(all, "collective", "single", allDraws), "collective - controller": kappaDiffCI(all, "collective", "controller", allDraws), "controller - single": kappaDiffCI(all, "controller", "single", allDraws) };
 const roles = Object.fromEntries(Object.entries(roleVotes).map(([k, v]) => [k, roleAccuracy(v)]));
 const report = {
 	generatedAt: new Date().toISOString(),
@@ -126,6 +132,8 @@ const report = {
 	exclusions,
 	scores,
 	kappaDiffs: diffs,
+	secondaryAllBundles: { scores: scoresAll, kappaDiffs: diffsAll },
+	multiLabeled,
 	roles,
 	variantLocalization: variantHits,
 };
@@ -137,7 +145,7 @@ const md = [
 	"",
 	`Generated ${report.generatedAt}. Inputs frozen ${freeze.frozenAt} (cap $${freeze.capUsd}/bundle = 4× single-arm median; rule hash \`${freeze.quorumRuleHash.slice(0, 12)}\`). Model ${freeze.model} for every agent.`,
 	"",
-	`Human labels: ${all.length} paper-qa bundles, labeler(s): ${[...labelers].join(", ")}. ${labelers.size === 1 ? "**Single labeler: no human-to-human agreement ceiling is available.**" : ""}`,
+	`Human labels: ${all.length} paper-qa bundles, labeler(s): ${[...labelers].join(", ")}. ${labelers.size === 1 ? `**Single labeler: no human-to-human agreement ceiling is available**${multiLabeled.length ? ` (only ${multiLabeled.length} bundle has a second label: ${multiLabeled.join(", ")})` : ""}.` : ""}`,
 	`Shared comparison: ${shared.length} bundles where every arm stayed within the cap. Bootstrap CIs resample bundles (B=2000).`,
 	"",
 	"| Arm | Items | Accuracy [95% CI] | κ [95% CI] | weighted κ | within ±1 | Fairness agree | Mean $/bundle | Acc per $ |",
@@ -149,7 +157,19 @@ const md = [
 	"",
 	"`d9` is the existing `leaks.json` classifier output (leak levels only), shown for reference.",
 	"",
-	"## κ differences (same bundle resamples)",
+	"## Secondary: all labeled bundles, including over-budget partial outputs",
+	"",
+	`Excluding over-budget bundles drops the largest threads (${all.reduce((n, b) => n + Object.keys(b.human).length, 0) - scores[0]!.items} of ${all.reduce((n, b) => n + Object.keys(b.human).length, 0)} items), which skews the shared comparison toward easy bundles. Here every arm is scored on all ${all.length} bundles; the collective's over-budget outputs are partial (later calls were blocked by the cap).`,
+	"",
+	"| Arm | Items | Accuracy [95% CI] | κ [95% CI] | weighted κ | within ±1 | Fairness agree | Mean $/bundle |",
+	"|---|---|---|---|---|---|---|---|",
+	...scoresAll.map((s) => `| ${s.arm} | ${s.items}${s.unlabeled ? ` (+${s.unlabeled} unlabeled)` : ""} | ${f2(s.accuracy)} [${f2(s.ci.accuracy[0])}, ${f2(s.ci.accuracy[1])}] | ${f2(s.kappa)} [${f2(s.ci.kappa[0])}, ${f2(s.ci.kappa[1])}] | ${f2(s.weightedKappa)} | ${f2(s.withinOne)} | ${s.arm === "d9" ? "—" : f2(s.fairnessAgreement)} | ${s.meanSpendUsd.toFixed(3)} |`),
+	"",
+	"| Contrast (all bundles) | Δκ | 95% CI |",
+	"|---|---|---|",
+	...Object.entries(diffsAll).map(([k, [p, lo, hi]]) => `| ${k} | ${f2(p)} | [${f2(lo)}, ${f2(hi)}] |`),
+	"",
+	"## κ differences (shared bundles, same resamples)",
 	"",
 	"| Contrast | Δκ | 95% CI |",
 	"|---|---|---|",

@@ -31,9 +31,16 @@
  *   bun run src/cli.ts brownfield verify
  *       Hash-verify every bundle.
  */
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
+import { auditFiles } from "./brownfield/audit";
 import { listBundleDirs, loadBundle, readText } from "./brownfield/bundle";
 import { gradeCandidate, writeGrade } from "./brownfield/grade";
 import {
@@ -526,6 +533,10 @@ async function cmdRunBrownfield(): Promise<void> {
 			...rw.env,
 			ANTHROPIC_BASE_URL: gateway.url,
 			ANTHROPIC_API_KEY: "gateway-placeholder",
+			// Every Claude Code slot resolves to the one model the gateway allows.
+			ANTHROPIC_DEFAULT_OPUS_MODEL: workerProfile.modelId,
+			ANTHROPIC_DEFAULT_SONNET_MODEL: workerProfile.modelId,
+			ANTHROPIC_DEFAULT_HAIKU_MODEL: workerProfile.modelId,
 		};
 		console.log(
 			`gateway: ${gateway.url} → api.anthropic.com (model ${workerProfile.modelId})`,
@@ -606,12 +617,57 @@ async function cmdRunBrownfield(): Promise<void> {
 	);
 
 	gateway?.stop();
+	// Solution-reach audit (5.3): did the trial reach the upstream fix?
+	for (const trial of trials) {
+		const ref = trial.provenance.brownfield;
+		if (!ref) continue;
+		const bundle = byId.get(ref.taskId);
+		if (!bundle) continue;
+		const trialDir = join(runDir, "trials", trial.provenance.trialId);
+		const transcriptDir = join(trialDir, "transcripts");
+		const files = existsSync(transcriptDir)
+			? readdirSync(transcriptDir).map((f) => join(transcriptDir, f))
+			: [];
+		const audit = auditFiles(
+			files.filter((f) => f.endsWith(".jsonl")),
+			{
+				futureShas: [ref.mergeSha],
+				prNumber: bundle.manifest.pr,
+				repo: bundle.manifest.repo,
+			},
+		);
+		writeFileSync(
+			join(trialDir, "audit.json"),
+			`${JSON.stringify(audit, null, 2)}\n`,
+		);
+		if (audit.verdict !== "clean") {
+			trial.provenance.notes.push(`audit: ${audit.verdict}`);
+			console.log(`audit ${trial.provenance.trialId}: ${audit.verdict}`);
+		}
+		if (audit.verdict === "disqualified:solution-reach") {
+			trial.resolution = {
+				verdict: "unresolved",
+				reason: "solution-reach",
+				failToPass: {},
+				passToPass: {},
+				testInfraModified: [],
+				cassetteMiss: [],
+			};
+		}
+	}
+
 	// Hidden-test grading (5.1): each trial's captured patch is replayed onto a
 	// pristine sealed base, test infrastructure restored, tests.patch applied.
 	if (!flag("no-grade")) {
 		for (const trial of trials) {
 			const ref = trial.provenance.brownfield;
 			if (!ref) continue;
+			if (trial.resolution?.reason === "solution-reach") {
+				console.log(
+					`grade ${trial.provenance.trialId}: skipped (solution-reach)`,
+				);
+				continue;
+			}
 			const bundle = byId.get(ref.taskId);
 			if (!bundle) continue;
 			const trialDir = join(runDir, "trials", trial.provenance.trialId);

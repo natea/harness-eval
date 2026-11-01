@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import type {
 	ExecOptions,
@@ -10,6 +10,14 @@ import type {
 } from "./types";
 
 const execFileAsync = promisify(execFile);
+
+/** Rebuildable, large dirs that never belong in an archived workspace. */
+const NON_ARCHIVE_DIRS = new Set([
+	".venv",
+	".pytest_cache",
+	"__pycache__",
+	".ruff_cache",
+]);
 
 /**
  * Local fallback isolation. Each trial gets:
@@ -116,7 +124,13 @@ class WorktreeSandbox implements Sandbox {
 			? sandboxPath
 			: join(this.workspacePath, sandboxPath);
 		mkdirSync(hostDest, { recursive: true });
-		cpSync(src, hostDest, { recursive: true });
+		// Environment dirs are rebuildable and gigabytes each (paper-qa: ~8 GB);
+		// archiving them costs minutes and fills the disk. The candidate patch is
+		// captured separately, so the archive never needs them.
+		cpSync(src, hostDest, {
+			recursive: true,
+			filter: (p) => !NON_ARCHIVE_DIRS.has(basename(p)),
+		});
 	}
 
 	async copyIn(hostSrc: string, sandboxPath: string): Promise<void> {

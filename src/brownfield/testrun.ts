@@ -28,6 +28,16 @@ export const OFFLINE_TEST_ENV: Record<string, string> = {
 	NO_PROXY: "",
 };
 
+/** Host vars a test run may inherit; nothing else from the operator. */
+export function hostEnv(): Record<string, string> {
+	const out: Record<string, string> = {};
+	for (const key of ["PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "TZ"]) {
+		const v = process.env[key];
+		if (v !== undefined) out[key] = v;
+	}
+	return out;
+}
+
 export type Outcome = "pass" | "fail" | "fail-live" | "skip" | "skip-gpu";
 
 /** A failure caused by a blocked or unauthenticated network call: the test needs a live API. */
@@ -93,7 +103,9 @@ export async function runPytest(
 		],
 		{
 			cwd: dir,
-			env: { ...process.env, ...OFFLINE_TEST_ENV },
+			// Only a curated host env: an ambient var such as AGENT=1 leaks into
+			// project settings and invalidates the run (paper-qa pydantic Settings).
+			env: { ...hostEnv(), ...OFFLINE_TEST_ENV },
 			stdout: Bun.file(opts.logPath),
 			stderr: Bun.file(`${opts.logPath}.err`),
 		},

@@ -83,6 +83,7 @@ import {
 	resolveProviderSnapshot,
 } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
+import { writeBrownfieldReport } from "./report/brownfield";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
 import { loadTarget, renderTargetPrompt, scaffoldTarget } from "./targets";
@@ -445,10 +446,14 @@ async function cmdRunBrownfield(): Promise<void> {
 		throw new Error(
 			`--trial-minutes must be a positive number, got ${trialMinutes}`,
 		);
-	const budget =
-		trialMinutes !== undefined
-			? { ...baseBudget, trialWallClockMs: Number(trialMinutes) * 60000 }
-			: baseBudget;
+	const budget = {
+		...baseBudget,
+		...(trialMinutes !== undefined
+			? { trialWallClockMs: Number(trialMinutes) * 60000 }
+			: {}),
+		...(arg("trial-cost") ? { trialCostUsd: Number(arg("trial-cost")) } : {}),
+		...(arg("run-cost") ? { runCostUsd: Number(arg("run-cost")) } : {}),
+	};
 
 	const config = RunConfig.parse({
 		...defaults,
@@ -629,6 +634,8 @@ async function cmdRunBrownfield(): Promise<void> {
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+	if (results.trials.some((t) => t.provenance.brownfield))
+		console.log(`brownfield report: ${writeBrownfieldReport(runDir, results)}`);
 }
 
 async function cmdModel(): Promise<void> {
@@ -753,6 +760,8 @@ async function cmdReport(): Promise<void> {
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+	if (results.trials.some((t) => t.provenance.brownfield))
+		console.log(`brownfield report: ${writeBrownfieldReport(runDir, results)}`);
 }
 
 async function cmdCleanup(): Promise<void> {

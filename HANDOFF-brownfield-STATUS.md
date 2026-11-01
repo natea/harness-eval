@@ -54,17 +54,27 @@ paper-qa trial can run as early as possible.
 11. `pyproject.toml` is restored only when `[tool.pytest.ini_options]` changed,
     so a legitimate dependency edit survives grading.
 12. Grading runs automatically for brownfield runs (`--no-grade` opts out).
+13. Test runs get a curated host env (PATH/HOME/locale only): an ambient
+    `AGENT=1` in the operator shell invalidated paper-qa's pydantic Settings.
+14. Added API-key Claude Code profiles (`claude-{haiku-4-5,sonnet-4-6,opus-4-6}-key`)
+    because the operator has no Max OAuth token; `model probe` verified haiku.
+15. `--trial-cost` / `--run-cost` override the budget caps per run.
 
 ## Real-spend runs
 
-(none yet)
+1. `runs/run-2026-11-01T06-58-39-202Z` — bare × paper-qa `pr1262-issue1257`,
+   claude-haiku-4-5-key (Anthropic API), 8.2m, $0.71, **unresolved
+   (fail-to-pass)**. Patch touched `src/paperqa/agents/search.py`; hidden test
+   genuinely fails on the candidate tree. Proves the full loop: seed → agent →
+   patch → hidden-test grading → report.
 
 ## Commits
 
 - `543742f` kickoff status file and plan
 - `98d1d78` run config, seeding, prompt + patch capture (4.1/4.2/4.7)
 - `8a2e489` trial isolation + web-tool kill-switch (4.6/4.8)
-- (next) hidden-test grading (5.1)
+- `b39d0d5` hidden-test grading from a pristine base (5.1)
+- (next) brownfield report + test-run env fix
 
 ## Blockers
 

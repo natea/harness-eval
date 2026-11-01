@@ -121,6 +121,9 @@ import { loadTarget, renderTargetPrompt, scaffoldTarget } from "./targets";
 import { RunConfig, type TrialResult, Weights } from "./types";
 
 const REGISTRY_PATH = "config/registry.yaml";
+/** Brownfield budget defaults (override with --trial-cost / --run-cost). */
+const BROWNFIELD_TRIAL_COST_USD = 5;
+const BROWNFIELD_RUN_COST_USD = 25;
 const MANIFEST_PATH = "config/fixtures-manifest.yaml";
 const DEFAULTS_PATH = "config/run.defaults.yaml";
 
@@ -541,8 +544,12 @@ async function cmdRunBrownfield(): Promise<void> {
 		throw new Error(
 			`--trial-minutes must be a positive number, got ${trialMinutes}`,
 		);
+	// Brownfield trials have cost $0.40–2.20 each so far; the PRD-run caps in
+	// run.defaults.yaml ($50/trial, $400/run) are far too loose here.
 	const budget = {
 		...baseBudget,
+		trialCostUsd: BROWNFIELD_TRIAL_COST_USD,
+		runCostUsd: BROWNFIELD_RUN_COST_USD,
 		...(trialMinutes !== undefined
 			? { trialWallClockMs: Number(trialMinutes) * 60000 }
 			: {}),
@@ -862,6 +869,12 @@ async function cmdRunBrownfield(): Promise<void> {
 		for (const trial of trials) {
 			const ref = trial.provenance.brownfield;
 			if (!ref) continue;
+			if (trial.provenance.status === "infra-failed") {
+				console.log(
+					`grade ${trial.provenance.trialId}: skipped (infra-failed: ${trial.provenance.notes[0] ?? ""})`,
+				);
+				continue;
+			}
 			if (trial.resolution?.reason === "solution-reach") {
 				console.log(
 					`grade ${trial.provenance.trialId}: skipped (solution-reach)`,

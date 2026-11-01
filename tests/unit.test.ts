@@ -764,3 +764,33 @@ describe("scheduler: model gateway egress hook (brownfield D11)", () => {
 		expect(trial.provenance.notes.join(" ")).toContain("did not hold");
 	});
 });
+
+describe("harnessNeverStarted", () => {
+	test("only a missing harness binary with no session result counts", async () => {
+		const { harnessNeverStarted } = await import(
+			"../src/orchestrator/scheduler"
+		);
+		const missing = [
+			"step 0 failed: Error: no result message in session output (exit 127); last 500 chars: zsh:1: command not found: claude",
+		];
+		expect(
+			harnessNeverStarted({ status: "error", records: [], notes: missing }),
+		).toBe(true);
+		// Ran and crashed: the candidate's result, still graded.
+		expect(
+			harnessNeverStarted({
+				status: "error",
+				records: [],
+				notes: [
+					"step 0 failed: Error: no result message in session output (exit 1)",
+				],
+			}),
+		).toBe(false);
+		expect(
+			harnessNeverStarted({ status: "error", records: [{}], notes: missing }),
+		).toBe(false);
+		expect(
+			harnessNeverStarted({ status: "completed", records: [], notes: missing }),
+		).toBe(false);
+	});
+});

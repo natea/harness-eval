@@ -400,6 +400,17 @@ export async function runTrial(
 			deps.onStage?.(plan.trialId, "archiving");
 			await archive(sandbox, trialDir, result.transcripts);
 
+			if (harnessNeverStarted(result)) {
+				// Not the candidate's fault, so never graded as an empty patch.
+				provenance.status = "infra-failed";
+				provenance.notes.push(
+					"harness did not start (command not found / exit 127); not graded",
+					...result.notes,
+				);
+				provenance.endedAt = new Date().toISOString();
+				persistProvenance(deps.runDir, provenance);
+				return { provenance, telemetry, grades: null };
+			}
 			provenance.status = result.status === "capped" ? "capped" : "completed";
 			provenance.cappedBy = result.cappedBy;
 			provenance.notes.push(...result.notes);
@@ -471,6 +482,23 @@ export async function runTrial(
 			}
 		}
 	}
+}
+
+/**
+ * The harness binary could not be launched at all: no session produced a result
+ * and the shell reported the command missing. A harness that ran and then crashed
+ * is a candidate failure and is NOT matched here.
+ */
+export function harnessNeverStarted(result: {
+	status: string;
+	records: unknown[];
+	notes: string[];
+}): boolean {
+	return (
+		result.status === "error" &&
+		result.records.length === 0 &&
+		result.notes.some((n) => /\(exit 127\)|command not found/.test(n))
+	);
 }
 
 export function persistProvenance(

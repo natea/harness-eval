@@ -50,9 +50,13 @@ export function writeBrownfieldReport(
 }
 
 export function renderBrownfieldReport(results: RunResults): string {
-	const trials = results.trials.filter((t) => t.provenance.brownfield);
+	const all = results.trials.filter((t) => t.provenance.brownfield);
+	// Trials that never got a fair attempt (harness missing, sandbox failure) are
+	// not scored; they are listed separately so they can't pass as unresolved.
+	const infraFailed = all.filter((t) => t.provenance.status === "infra-failed");
+	const trials = all.filter((t) => t.provenance.status !== "infra-failed");
 	const info = new Map(
-		trials.map((t) => {
+		all.map((t) => {
 			const b = t.provenance.brownfield!;
 			return [t.provenance.trialId, taskInfo(b.repoDir, b.taskId)];
 		}),
@@ -61,7 +65,7 @@ export function renderBrownfieldReport(results: RunResults): string {
 	const lines: string[] = [];
 	lines.push(`# Brownfield report — ${results.runId}`, "");
 	const workerModels = [
-		...new Set(trials.map((t) => t.provenance.model ?? "unknown")),
+		...new Set(all.map((t) => t.provenance.model ?? "unknown")),
 	];
 	lines.push(
 		`Model: ${workerModels.join(", ")} · provider: ${results.trials[0]?.provenance.provider ?? "unknown"} · trials: ${trials.length}`,
@@ -69,6 +73,17 @@ export function renderBrownfieldReport(results: RunResults): string {
 		"Contamination flags apply per worker model; a trial disqualified for solution reach is counted as unresolved, not resolved.",
 		"",
 	);
+	if (infraFailed.length) {
+		lines.push(
+			`**Not scored — infra-failed: ${infraFailed.length}** (excluded from every table below)`,
+			"",
+		);
+		for (const t of infraFailed)
+			lines.push(
+				`- ${t.provenance.candidate} × ${t.provenance.brownfield?.taskId}: ${t.provenance.notes[0] ?? "no detail"}`,
+			);
+		lines.push("");
+	}
 
 	// Resolution by candidate.
 	const candidates = [...new Set(trials.map((t) => t.provenance.candidate))];

@@ -30,8 +30,6 @@ export interface GatewayOptions {
 	model: string;
 	/** Real credential; never leaves the gateway. */
 	apiKey: string;
-	/** Placeholder the sandbox presents; requests without it are refused. */
-	placeholder: string;
 	/** JSONL request log. */
 	logPath: string;
 	upstream?: string;
@@ -41,6 +39,8 @@ export interface GatewayOptions {
 
 export interface GatewayLogEntry {
 	at: string;
+	/** Trial whose placeholder the request carried (absent for unauthenticated requests). */
+	trialId?: string;
 	method: string;
 	path: string;
 	model?: string;
@@ -78,9 +78,16 @@ const MODEL_PATHS = new Set(["/v1/messages", "/v1/messages/count_tokens"]);
 const PASSTHROUGH_PATHS = new Set(["/api/hello"]);
 
 export type Decision =
-	| { ok: true; model?: string; serverTools: string[]; toolCount: number }
+	| {
+			ok: true;
+			trialId?: string;
+			model?: string;
+			serverTools: string[];
+			toolCount: number;
+	  }
 	| {
 			ok: false;
+			trialId?: string;
 			status: number;
 			reason: string;
 			model?: string;
@@ -90,7 +97,9 @@ export type Decision =
 
 /** Pure policy check for one request. */
 export function decide(
-	opts: Pick<GatewayOptions, "model" | "placeholder">,
+	opts: Pick<GatewayOptions, "model">,
+	/** Placeholder → trial id for the trials currently allowed to call. */
+	trials: ReadonlyMap<string, string>,
 	method: string,
 	path: string,
 	headers: Headers,
@@ -102,19 +111,22 @@ export function decide(
 		headers.get("x-api-key") ??
 		headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
 		null;
-	if (presented !== opts.placeholder)
+	const trialId = presented == null ? undefined : trials.get(presented);
+	if (trialId === undefined)
 		return {
 			ok: false,
 			status: 401,
-			reason: "missing or unknown placeholder credential",
+			reason: "missing, unknown or revoked placeholder credential",
 		};
 	if (!MODEL_PATHS.has(path) || method !== "POST")
 		return {
 			ok: false,
+			trialId,
 			status: 403,
 			reason: `path not allowed: ${method} ${path}`,
 		};
-	if (!body) return { ok: false, status: 400, reason: "body is not JSON" };
+	if (!body)
+		return { ok: false, trialId, status: 400, reason: "body is not JSON" };
 	const model = typeof body.model === "string" ? body.model : undefined;
 	const toolCount = Array.isArray(body.tools) ? body.tools.length : 0;
 	if (model !== opts.model)
@@ -122,6 +134,7 @@ export function decide(
 			ok: false,
 			status: 403,
 			reason: `model not allowed: ${model ?? "(none)"} (run model is ${opts.model})`,
+			trialId,
 			model,
 			toolCount,
 		};
@@ -131,11 +144,12 @@ export function decide(
 			ok: false,
 			status: 403,
 			reason: `provider-side tools not allowed: ${serverTools.join(", ")}`,
+			trialId,
 			model,
 			serverTools,
 			toolCount,
 		};
-	return { ok: true, model, serverTools, toolCount };
+	return { ok: true, trialId, model, serverTools, toolCount };
 }
 
 const anthropicError = (status: number, message: string) =>
@@ -158,19 +172,20 @@ const anthropicError = (status: number, message: string) =>
 export interface Gateway {
 	url: string;
 	port: number;
-	/** Rejections so far (any one flags the trial for review). */
-	rejections(): GatewayLogEntry[];
+	/** A fresh placeholder key that only this trial may present. */
+	issue(trialId: string): string;
+	/** Stop accepting the trial's placeholder (a leftover container can't keep calling). */
+	revoke(trialId: string): void;
+	/** Rejections so far, optionally for one trial (any one flags that trial for review). */
+	rejections(trialId?: string): GatewayLogEntry[];
 	stop(): void;
 }
 
 export function startGateway(opts: GatewayOptions): Gateway {
-	if (!opts.placeholder.startsWith(PLACEHOLDER_PREFIX))
-		throw new Error(
-			`gateway placeholder must start with ${PLACEHOLDER_PREFIX}`,
-		);
 	if (!opts.apiKey) throw new Error("gateway needs a real API key");
 	const upstream = opts.upstream ?? UPSTREAM_ANTHROPIC;
 	const rejected: GatewayLogEntry[] = [];
+	const trials = new Map<string, string>();
 	const log = (e: GatewayLogEntry) => {
 		appendFileSync(opts.logPath, `${JSON.stringify(e)}\n`);
 		if (e.verdict === "rejected") rejected.push(e);
@@ -192,9 +207,17 @@ export function startGateway(opts: GatewayOptions): Gateway {
 					body = null;
 				}
 			}
-			const d = decide(opts, req.method, url.pathname, req.headers, body);
+			const d = decide(
+				opts,
+				trials,
+				req.method,
+				url.pathname,
+				req.headers,
+				body,
+			);
 			const base = {
 				at: new Date().toISOString(),
+				trialId: d.trialId,
 				method: req.method,
 				path: url.pathname,
 			};
@@ -252,7 +275,16 @@ export function startGateway(opts: GatewayOptions): Gateway {
 	return {
 		url: `http://${host}:${server.port}`,
 		port: server.port as number,
-		rejections: () => [...rejected],
+		issue: (trialId) => {
+			const p = newPlaceholder();
+			trials.set(p, trialId);
+			return p;
+		},
+		revoke: (trialId) => {
+			for (const [p, t] of trials) if (t === trialId) trials.delete(p);
+		},
+		rejections: (trialId) =>
+			rejected.filter((e) => trialId === undefined || e.trialId === trialId),
 		stop: () => server.stop(true),
 	};
 }

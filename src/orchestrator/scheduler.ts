@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getHarnessDriver, type HarnessDriver } from "../driver";
+import { EgressLockError, type TrialEgress } from "../gateway/run";
 import { archiveTrial } from "../driver/archive";
 import { executeSessionScript } from "../driver/session";
 import { aggregateTelemetry } from "../driver/telemetry";
@@ -48,6 +49,12 @@ export interface SchedulerDeps {
 	workerModelFlag?: string;
 	/** Resolved worker profile identity for provenance (never the key). */
 	workerModelRef?: import("../types").ModelRef;
+	/**
+	 * Model gateway + egress lock (brownfield, D11). When set, each trial is
+	 * locked after install and before the agent starts, runs on the gateway's
+	 * env instead of workerEnv, and gets review flags for gateway rejections.
+	 */
+	egress?: TrialEgress;
 	/** Injectable for tests. */
 	driver?: HarnessDriver;
 	executeScript?: typeof executeSessionScript;
@@ -194,6 +201,7 @@ function baseProvenance(
 		status,
 		cappedBy: null,
 		notes: [],
+		flags: [],
 	};
 }
 
@@ -285,10 +293,21 @@ export async function runTrial(
 					workerAuth.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 				}
 			}
+			let modelFlag = deps.workerModelFlag ?? config.model;
+			if (deps.egress) {
+				// After install (which may need the network), before the agent.
+				const g = await deps.egress.enter(
+					plan.trialId,
+					config.harness,
+					sandbox,
+				);
+				workerAuth = g.env;
+				modelFlag = g.modelFlag;
+			}
 			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {
 				driver,
-				model: deps.workerModelFlag ?? config.model,
+				model: modelFlag,
 				steps: script,
 				continuation: setup.continuation,
 				wallClockBudgetMs: config.budget.trialWallClockMs,
@@ -296,6 +315,7 @@ export async function runTrial(
 				env: workerAuth,
 			});
 
+			if (deps.egress) provenance.flags.push(...deps.egress.exit(plan.trialId));
 			const telemetry = aggregateTelemetry(result.records, setupDurationMs);
 			ledger.add(telemetry.totalCostUsd);
 			deps.onStage?.(plan.trialId, "archiving");
@@ -325,7 +345,13 @@ export async function runTrial(
 				persistProvenance(deps.runDir, provenance);
 				return { provenance, telemetry: null, grades: null };
 			}
-			if (isInfraFailure(err) && attempt < config.infraRetryLimit) {
+			// A lock that doesn't hold, or an incompatible harness, is a setup
+			// error: retrying can't fix it.
+			if (
+				!(err instanceof EgressLockError) &&
+				isInfraFailure(err) &&
+				attempt < config.infraRetryLimit
+			) {
 				provenance.notes.push(
 					`infra retry ${attempt + 1}: ${String(err).slice(0, 200)}`,
 				);
@@ -341,23 +367,28 @@ export async function runTrial(
 			return { provenance, telemetry: null, grades: null };
 		} finally {
 			if (onAbort) deps.abortSignal?.removeEventListener("abort", onAbort);
+			deps.egress?.exit(plan.trialId); // revoke even on failure (idempotent)
 			// Time-box teardown: destroy() is itself bounded + escalating, but cap
 			// the whole thing so an unexpected hang (e.g. a slow OS-level reap) can
 			// never stall the run. A sandbox that outlives the cap is logged as a
 			// leak rather than silently awaited forever (harden-container-teardown).
 			if (sandbox) {
 				const s = sandbox;
+				let capTimer: ReturnType<typeof setTimeout> | undefined;
 				await Promise.race([
 					s.destroy().catch(() => {}),
-					new Promise<void>((resolve) =>
-						setTimeout(() => {
+					new Promise<void>((resolve) => {
+						capTimer = setTimeout(() => {
 							console.warn(
 								`[scheduler] teardown of ${s.id} exceeded ${TEARDOWN_CAP_MS / 1000}s — moving on; run \`bun run src/cli.ts cleanup\` to reap any leaked VM`,
 							);
 							resolve();
-						}, TEARDOWN_CAP_MS),
-					),
+						}, TEARDOWN_CAP_MS);
+					}),
 				]);
+				// Without this the cap fires (falsely) after every fast teardown and
+				// holds the process open for 90s.
+				clearTimeout(capTimer);
 			}
 		}
 	}

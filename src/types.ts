@@ -224,6 +224,8 @@ export const TrialProvenance = z.object({
 	status: TrialStatus,
 	cappedBy: z.enum(["wall-clock", "cost"]).nullable().default(null),
 	notes: z.array(z.string()).default([]),
+	/** Review flags (e.g. `gateway-rejected: …`); any flag means a human looks at the trial. */
+	flags: z.array(z.string()).default([]),
 });
 export type TrialProvenance = z.infer<typeof TrialProvenance>;
 

@@ -289,6 +289,30 @@ reach the gateway, which still enforces its policy. Docker Desktop for Mac
 reaches a gateway bound to 127.0.0.1 via `host.docker.internal`; on Linux the
 gateway must bind the docker bridge address.
 
+**Run wiring (task 4.4, `src/gateway/run.ts`, `runTrial`).** One gateway and one
+lock per run, but a **separate placeholder key per trial**, so rejections are
+attributed to the trial that caused them even when trials run concurrently. The
+key is revoked when the trial ends, so a leftover container can't keep calling.
+In `runTrial`, the optional `egress` step runs after the harness install (which
+may need the network) and before the agent:
+1. Refuse a harness that doesn't speak the gateway's protocol.
+2. Lock the sandbox, then run the leak probes. If any probe succeeds, the trial
+   fails closed with no retry, and the agent never starts.
+3. The agent gets the gateway env in place of the run's worker credentials.
+
+Afterwards, each rejection becomes a `gateway-rejected: …` entry in
+`provenance.flags` (new field; any flag means a human reviews the trial).
+
+End-to-end check (2026-11-01, real Docker trial through `runTrial`, Claude Code
+2.1.170, Haiku):
+- The agent's curl to pypi.org failed (no DNS), WebSearch was rejected (403) and
+  flagged, and the file write succeeded.
+- Every model request carried the trial's key.
+- Cost $0.36 for 5 requests. Claude Code sent 25 tools per request in the trial
+  image, so even tiny trials are not free on the API key.
+- Claude Code also sends an unauthenticated `HEAD /` connectivity check; it is
+  rejected, has no trial attribution, and is harmless.
+
 ### D12. Grading
 After the trial, test infrastructure is restored to base before `tests.patch` is
 applied: the bundle's recorded `testPaths` (not inferred — paper-qa has

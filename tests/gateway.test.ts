@@ -5,7 +5,6 @@ import { join } from "node:path";
 import {
 	claudeCodeGatewayEnv,
 	type Gateway,
-	newPlaceholder,
 	serverSideFeatures,
 	startGateway,
 } from "../src/gateway/anthropic";
@@ -43,14 +42,13 @@ beforeAll(() => {
 			);
 		},
 	});
-	placeholder = newPlaceholder();
 	gw = startGateway({
 		model: MODEL,
 		apiKey: REAL_KEY,
-		placeholder,
 		logPath: join(dir, "gateway.jsonl"),
 		upstream: `http://127.0.0.1:${upstream.port}`,
 	});
+	placeholder = gw.issue("t1");
 });
 afterAll(() => {
 	gw.stop();
@@ -145,6 +143,20 @@ describe("model gateway (task 4.4)", () => {
 	test("refuses paths outside the Messages API; passes the health check", async () => {
 		expect((await post({}, placeholder, "/v1/files")).status).toBe(403);
 		expect((await fetch(`${gw.url}/api/hello`)).status).toBe(200);
+	});
+});
+
+describe("per-trial keys", () => {
+	test("each trial gets its own key; rejections are attributed; revoked keys stop working", async () => {
+		const k2 = gw.issue("t2");
+		expect(k2).not.toBe(placeholder);
+		expect((await post({ model: "nope", messages: [] }, k2)).status).toBe(403);
+		expect(gw.rejections("t2").map((e) => e.trialId)).toEqual(["t2"]);
+		expect(gw.rejections("t1").every((e) => e.trialId === "t1")).toBe(true);
+		expect((await post({ model: MODEL, messages: [] }, k2)).status).toBe(200);
+		gw.revoke("t2");
+		expect((await post({ model: MODEL, messages: [] }, k2)).status).toBe(401);
+		expect((await post({ model: MODEL, messages: [] })).status).toBe(200); // t1 unaffected
 	});
 });
 

@@ -3,11 +3,7 @@ import { afterAll, beforeAll, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	type Gateway,
-	newPlaceholder,
-	startGateway,
-} from "../src/gateway/anthropic";
+import { type Gateway, startGateway } from "../src/gateway/anthropic";
 import {
 	createDockerProvider,
 	DEFAULT_TRIAL_IMAGE,
@@ -23,7 +19,7 @@ let upstream: ReturnType<typeof Bun.serve>;
 let gw: Gateway;
 let lock: DockerEgressLock;
 let sb: Sandbox;
-const placeholder = newPlaceholder();
+let placeholder = "";
 
 beforeAll(async () => {
 	if (!enabled) return;
@@ -35,10 +31,10 @@ beforeAll(async () => {
 	gw = startGateway({
 		model: "m1",
 		apiKey: "sk-ant-api03-fake",
-		placeholder,
 		logPath: join(dir, "gw.jsonl"),
 		upstream: `http://127.0.0.1:${upstream.port}`,
 	});
+	placeholder = gw.issue("egress-test");
 	lock = new DockerEgressLock({
 		runId: `test-${Date.now().toString(36)}`,
 		image: DEFAULT_TRIAL_IMAGE,

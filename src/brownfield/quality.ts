@@ -332,7 +332,7 @@ export async function compareRunQuality(
 		compared++;
 		costUsd += q.costUsd;
 		log(
-			`quality ${t.provenance.candidate} ${ref.taskId}: harness ${q.harnessScore} vs human ${q.humanScore} → prefers ${q.preference} (${q.votes.harness}/${q.votes.human}/${q.votes.tie}), $${q.costUsd.toFixed(3)}`,
+			`quality ${t.provenance.candidate} ${ref.taskId}: harness ${q.harnessScore} vs original PR ${q.humanScore} → prefers ${q.preference === "human" ? "original PR" : q.preference} (${q.votes.harness}/${q.votes.human}/${q.votes.tie}), $${q.costUsd.toFixed(3)}`,
 		);
 	}
 	return { compared, skipped, costUsd };

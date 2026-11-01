@@ -62,6 +62,9 @@ export function startGateway(opts: GatewayOptions): Gateway {
 	const server = Bun.serve({
 		hostname: "127.0.0.1",
 		port: opts.port ?? 0,
+		// Model responses can sit idle >10s (Bun's default) before the first
+		// token; a cut here looks like a provider error to the worker.
+		idleTimeout: 255,
 		async fetch(req) {
 			const url = new URL(req.url);
 			const entry: GatewayLogEntry = {
@@ -143,7 +146,11 @@ export function startGateway(opts: GatewayOptions): Gateway {
 			// `content-encoding` makes the client decompress it again
 			// (BrotliDecompressionError in Claude Code).
 			const outHeaders = new Headers(upstream.headers);
-			for (const h of ["content-encoding", "content-length", "transfer-encoding"])
+			for (const h of [
+				"content-encoding",
+				"content-length",
+				"transfer-encoding",
+			])
 				outHeaders.delete(h);
 			return new Response(upstream.body, {
 				status: upstream.status,

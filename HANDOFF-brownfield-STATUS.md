@@ -64,7 +64,11 @@ paper-qa trial can run as early as possible.
     so scanning everything produced false positives. `scripts/reaudit-run.ts`
     re-audits a finished run; `scripts/grade-run.ts` grades trials left
     ungraded (e.g. after an audit correction).
-17. `superpowers` re-pinned 5.1.0 → 7.0.1: the upstream marketplace now serves
+17. The gateway sets `idleTimeout: 255`: Bun's 10-second default cut a slow
+    first-token response (a `Bun.serve timed out` warning mid-run).
+18. `pr724-issue709` has an env-level import failure (`ldp`) under a fresh build;
+    flagged for re-validation instead of being counted as a candidate failure.
+19. `superpowers` re-pinned 5.1.0 → 7.0.1: the upstream marketplace now serves
     7.0.1 and accepts no version pin, so the install check asserts the observed
     version. Other candidates keep their original pins and may need the same
     treatment; recorded here rather than silently loosening all checks.
@@ -107,6 +111,12 @@ paper-qa trial can run as early as possible.
    gateway): both completed (7.9m/$0.73, 6.4m/$0.55), both unresolved after
    re-grading. Framework install path now works end to end.
 
+9. `runs/run-2026-11-01T08-40-42-115Z` — bare × `pr724-issue709` (smallest
+   reference patch), sonnet + gateway: completed, **unresolved
+   (pytest-crashed)**. The grade log shows an ImportError from `ldp` in the
+   freshly built env, i.e. a task-environment problem, not a candidate failure;
+   this bundle needs re-validation before it is used in a matrix.
+
 Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet),
 **$0 OpenAI**. Target caps ($40/$20) untouched.
 
@@ -120,7 +130,8 @@ Total real spend: **≈$3.50 Anthropic** (haiku probes + two mini runs + sonnet)
 - `59782ec` model gateway + inter-human κ (4.4/2.6)
 - `b561168` solution-reach audit + lean archives (5.3)
 - `014c46e` gateway fix + adversarial smoke (4.4/6.2)
-- `a6f9c1a` (approx) audit repo match, secondary signals, superpowers re-pin
+- `708aa8b` audit repo match, secondary signals, superpowers re-pin (5.2)
+- `b611caa` audit assistant-actions only, reaudit/grade scripts
 
 ## Labels (task 2.6)
 

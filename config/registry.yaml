@@ -44,7 +44,9 @@ candidates:
   - id: superpowers
     name: Superpowers
     repo: https://github.com/obra/superpowers
-    pinnedVersion: 5.1.0
+    # Upstream marketplace moved past 5.1.0; re-pinned to the observed 7.0.1
+    # (2026-11-01). Recorded in provenance; see status doc.
+    pinnedVersion: 7.0.1
     markerPaths:
       - docs/plans/
       - .worktrees/
@@ -54,7 +56,7 @@ candidates:
           - "git config --global url.https://github.com/.insteadOf git@github.com: && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com/"
           - claude plugin marketplace add obra/superpowers-marketplace
           - claude plugin install superpowers@superpowers-marketplace
-          - "claude plugin list | grep -A1 'superpowers@' | grep -q 'Version: 5.1.0'"
+          - "claude plugin list | grep -A1 'superpowers@' | grep -q 'Version: 7.0.1'"
         session:
           - prompt: "{{BASE_PROMPT}}"
         continuation:

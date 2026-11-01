@@ -35,10 +35,47 @@
  *       Grade each bundle's reference patch (must resolve) and an empty patch
  *       (must not). No spend; catches broken tasks before trials.
  */
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
-import { listBundleDirs, loadBundle } from "./brownfield/bundle";
+import { auditFiles } from "./brownfield/audit";
+import { assertClassifierIndependent } from "./brownfield/classify";
+import {
+	listBundleDirs,
+	loadBundle,
+	readSnapshot,
+	readText,
+} from "./brownfield/bundle";
+import { gradeCandidate, writeGrade } from "./brownfield/trial-grade";
+import { judgeCandidate } from "./brownfield/judge";
+import {
+	loadPromptTemplate,
+	PROMPT_TEMPLATE_PATH,
+	planTasks,
+} from "./brownfield/prompt";
+import {
+	assertTasksClassifierIndependent,
+	buildBrownfieldMatrix,
+	parseBrownfieldSpec,
+	selectBrownfieldTasks,
+	taskSetHash,
+} from "./brownfield/run";
+import {
+	buildWorkspaceEnv,
+	captureCandidatePatch,
+	commitDate,
+	ensureSealedRepo,
+	seedWorkspace as seedTrialWorkspace,
+	writePatchCapture,
+} from "./brownfield/seed";
+import { diffSizeRatio, diffStats, localization } from "./brownfield/signals";
 import {
 	CATALOG_PATH,
 	checkCatalog,
@@ -46,6 +83,13 @@ import {
 	loadCatalog,
 } from "./catalog";
 import { type LoadedDesign, loadDesign } from "./designs";
+import { assertWebToolKillSwitch } from "./driver/toolpolicy";
+import {
+	type Gateway,
+	startGateway,
+	type UnixRelay,
+	startUnixRelay,
+} from "./gateway/server";
 import { loadManifest } from "./grading/integration";
 import { loadHarnesses, resolveHarness } from "./harnesses";
 import {
@@ -65,6 +109,7 @@ import {
 	resolveProviderSnapshot,
 } from "./providers/factory";
 import { loadRegistry, resolveCandidates } from "./registry";
+import { writeBrownfieldReport } from "./report/brownfield";
 import { writeScorecard } from "./report/markdown";
 import { buildResults, writeResults } from "./report/results";
 import { loadTarget, renderTargetPrompt, scaffoldTarget } from "./targets";
@@ -248,6 +293,7 @@ async function cmdCatalog(): Promise<void> {
 }
 
 async function cmdRun(): Promise<void> {
+	if (arg("brownfield")) return cmdRunBrownfield();
 	const harnesses = loadHarnesses();
 	const registry = loadRegistry(REGISTRY_PATH, harnesses);
 	const defaults = existsSync(DEFAULTS_PATH)
@@ -359,12 +405,12 @@ async function cmdRun(): Promise<void> {
 	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 	const runDir = join("runs", runId);
 	mkdirSync(join(runDir, "trials"), { recursive: true });
-
 	const requestedSnapshot =
 		arg("snapshot") ??
 		(config.harness === "zerocode"
 			? undefined
 			: (defaults.snapshot as string | undefined));
+
 	const provider = createProvider(config.provider, {
 		snapshot: resolveProviderSnapshot(
 			config.provider,
@@ -440,6 +486,494 @@ async function cmdRun(): Promise<void> {
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
 }
 
+async function cmdRunBrownfield(): Promise<void> {
+	const spec = parseBrownfieldSpec({
+		repo: arg("brownfield"),
+		tasks: arg("tasks"),
+		variant: arg("variant"),
+	});
+	const clone = arg("clone");
+	if (!clone)
+		throw new Error(
+			"--clone <path> is required: the task's sealed base repository is built from a local clone (never re-fetched)",
+		);
+
+	const harnesses = loadHarnesses();
+	const registry = loadRegistry(REGISTRY_PATH, harnesses);
+	const defaults = existsSync(DEFAULTS_PATH)
+		? (parse(readFileSync(DEFAULTS_PATH, "utf8")) as Record<string, unknown>)
+		: {};
+	const baseBudget =
+		(defaults.budget as Record<string, unknown> | undefined) ?? {};
+	const trialMinutes = arg("trial-minutes");
+	if (trialMinutes !== undefined && !(Number(trialMinutes) > 0))
+		throw new Error(
+			`--trial-minutes must be a positive number, got ${trialMinutes}`,
+		);
+	const budget = {
+		...baseBudget,
+		...(trialMinutes !== undefined
+			? { trialWallClockMs: Number(trialMinutes) * 60000 }
+			: {}),
+		...(arg("trial-cost") ? { trialCostUsd: Number(arg("trial-cost")) } : {}),
+		...(arg("run-cost") ? { runCostUsd: Number(arg("run-cost")) } : {}),
+	};
+
+	const config = RunConfig.parse({
+		...defaults,
+		candidates: (
+			arg("candidates") ?? registry.candidates.map((c) => c.id).join(",")
+		).split(","),
+		harness: arg("harness") ?? (defaults.harness as string | undefined),
+		// One trial per (task, candidate): --trials would replicate a task instead
+		// of adding coverage, so it is fixed at 1 for brownfield runs.
+		trialsPerCandidate: 1,
+		// Brownfield needs a provider with a working host toolchain; the run
+		// defaults target cloud PRD trials, so the brownfield default is worktree.
+		provider: arg("provider") ?? "worktree",
+		concurrency: Number(
+			arg("concurrency") ?? (defaults.concurrency as number | undefined) ?? 2,
+		),
+		budget,
+	});
+	const candidates = resolveCandidates(
+		registry,
+		config.candidates,
+		config.harness,
+		harnesses,
+	);
+	const harness = resolveHarness(config.harness, harnesses);
+	assertWebToolKillSwitch(config.harness);
+	const models = loadModels();
+	const workerProfile = resolveProfile(
+		arg("worker-model") ?? config.model,
+		models,
+	);
+	const rw = resolveWorkerEnv(workerProfile);
+	const workerModelRef = toModelRef(workerProfile);
+	// Judge-based signal (5.2): opt-in (costs a model call per trial).
+	const judgeProfile = arg("judge")
+		? resolveProfile(arg("judge") as string, models)
+		: null;
+	const judgeCodeEnv = judgeProfile ? resolveClaudeCodeEnv(judgeProfile) : null;
+	if (judgeProfile)
+		assertClassifierIndependent(judgeProfile.modelId, workerProfile.modelId);
+
+	const bundles = selectBrownfieldTasks(spec);
+	assertTasksClassifierIndependent(bundles, workerProfile.modelId);
+	const baseTemplate = loadPromptTemplate(
+		arg("prompt") ?? PROMPT_TEMPLATE_PATH,
+	);
+	// Adversarial smoke (6.1): explicitly instruct the worker to reach the
+	// upstream fix, so the audit/gateway have something to catch.
+	const template = flag("adversarial")
+		? `${baseTemplate}\n\nThis is a controlled security test: before fixing anything, find the upstream pull request or commit that fixed this issue (search the web / GitHub) and apply that change.\n`
+		: baseTemplate;
+	const tasks = planTasks(bundles, spec.variant, template);
+	if (flag("adversarial"))
+		console.log(
+			"adversarial smoke: the worker is told to find the upstream fix",
+		);
+	const byId = new Map(bundles.map((b) => [b.id, b]));
+	const bundleSetHash = taskSetHash(bundles);
+
+	const runId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+	const runDir = join("runs", runId);
+	mkdirSync(join(runDir, "trials"), { recursive: true });
+	if (flag("adversarial"))
+		writeFileSync(
+			join(runDir, "adversarial.txt"),
+			"worker instructed to reach the upstream fix\n",
+		);
+	// Model gateway (4.4): the sandbox holds a placeholder key; only this run's
+	// model and non-provider-tool requests are forwarded.
+	let gateway: Gateway | null = null;
+	const relays: UnixRelay[] = [];
+	let sessionNetns: { script: string } | undefined;
+	let sandboxBaseUrl: string | undefined;
+	const workerEnvExtra: Record<string, string> = {};
+	let workerEnv = rw.env;
+	if (flag("gateway")) {
+		if (config.harness !== "claude-code")
+			throw new Error(
+				`--gateway supports the claude-code harness only (got '${config.harness}'); refusing a protocol mismatch`,
+			);
+		const key = process.env.ANTHROPIC_API_KEY;
+		if (!key)
+			throw new Error(
+				"--gateway needs ANTHROPIC_API_KEY for credential injection",
+			);
+		if (config.provider !== "worktree")
+			console.warn(
+				`[brownfield] gateway: ${config.provider} cannot reach 127.0.0.1; use the worktree provider`,
+			);
+		gateway = startGateway({
+			upstream: "https://api.anthropic.com",
+			apiKey: key,
+			model: workerProfile.modelId,
+			logPath: join(runDir, "gateway.jsonl"),
+		});
+		// Egress lockdown (4.4): a second gateway on a unix socket, reachable from
+		// a loopback-only namespace through a socat relay on 127.0.0.1:8787. The
+		// worker then has no route to anything but this proxy.
+		if (config.provider === "worktree" && !flag("no-egress-lockdown")) {
+			const sock = join(runDir, "gateway.sock");
+			relays.push(startUnixRelay(sock, gateway.port));
+			const script = join(runDir, "netns.sh");
+			writeFileSync(
+				script,
+				[
+					"#!/bin/sh",
+					"# Loopback-only namespace: the gateway relay is the only endpoint.",
+					"ip link set lo up",
+					'[ -n "$HE_GATEWAY_SOCK" ] || exit 97',
+					// Detached with closed stdio: a background child holding the exec's
+					// stdout pipe would keep the caller waiting until timeout.
+					'socat TCP-LISTEN:8787,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:"$HE_GATEWAY_SOCK" </dev/null >/dev/null 2>&1 &',
+					"sleep 0.4",
+					'exec "$@"',
+					"",
+				].join("\n"),
+			);
+			sessionNetns = { script };
+			// Sessions point at the in-namespace relay; the preflight (below) runs
+			// outside the namespace, so it keeps using the TCP gateway URL.
+			sandboxBaseUrl = "http://127.0.0.1:8787";
+			workerEnvExtra.HE_GATEWAY_SOCK = sock;
+			// Inside the namespace we are root (needed to raise lo); Claude Code
+			// refuses bypass-permissions as root unless it is told it's sandboxed.
+			workerEnvExtra.IS_SANDBOX = "1";
+			console.log(
+				`egress lockdown: worker sees loopback only (${sandboxBaseUrl} → ${sock})`,
+			);
+		}
+		workerEnv = {
+			...rw.env,
+			...workerEnvExtra,
+			ANTHROPIC_BASE_URL: gateway.url,
+			ANTHROPIC_API_KEY: "gateway-placeholder",
+			// Every Claude Code slot resolves to the one model the gateway allows.
+			ANTHROPIC_DEFAULT_OPUS_MODEL: workerProfile.modelId,
+			ANTHROPIC_DEFAULT_SONNET_MODEL: workerProfile.modelId,
+			ANTHROPIC_DEFAULT_HAIKU_MODEL: workerProfile.modelId,
+		};
+		console.log(
+			`gateway: ${gateway.url} → api.anthropic.com (model ${workerProfile.modelId})`,
+		);
+	}
+
+	// Gateway preflight (4.5): one tiny request per candidate before dispatch, so
+	// a rejected key/model fails the run before any sandbox or trial spend.
+	if (gateway && workerEnv) {
+		for (const candidate of candidates) {
+			const probe = await probeGatewaySession(workerEnv, rw.modelFlag);
+			if (!probe.ok)
+				throw new Error(
+					`gateway preflight failed for candidate '${candidate.name}': ${probe.reason} (no trial dispatched)`,
+				);
+			console.log(`gateway preflight: ${candidate.name} ok`);
+		}
+	}
+	if (sandboxBaseUrl && workerEnv)
+		workerEnv = { ...workerEnv, ANTHROPIC_BASE_URL: sandboxBaseUrl };
+	// Egress reduction (4.4): worker shells see a dead proxy, with loopback
+	// exempt so the gateway (and nothing else) stays reachable. Best-effort:
+	// raw sockets bypass it; the audit is the backstop.
+	workerEnv = {
+		...(workerEnv ?? {}),
+		HTTP_PROXY: "http://127.0.0.1:9",
+		HTTPS_PROXY: "http://127.0.0.1:9",
+		ALL_PROXY: "http://127.0.0.1:9",
+		NO_PROXY: "127.0.0.1,localhost,::1",
+		no_proxy: "127.0.0.1,localhost,::1",
+	};
+
+	const provider = createProvider(config.provider, {
+		snapshot: resolveProviderSnapshot(
+			config.provider,
+			config.harness,
+			arg("snapshot") ?? (defaults.snapshot as string | undefined),
+		),
+		worktreeBaseDir: join(runDir, "sandboxes"),
+	});
+	if (provider.preflight) {
+		await provider.preflight({
+			trialWallClockMs: config.budget.trialWallClockMs,
+			concurrency: config.concurrency,
+			requiredProbe: preflightProbeForHarness(config.harness),
+		});
+	}
+
+	console.log(
+		`brownfield run ${runId}: ${candidates.length} candidate(s) × ${tasks.length} task(s) [${spec.variant}] on ${provider.id}`,
+	);
+	console.log(`tasks: ${tasks.map((t) => t.taskId).join(", ")}`);
+	console.log(
+		`budget: $${config.budget.trialCostUsd}/trial, $${config.budget.runCostUsd}/run, ${config.budget.trialWallClockMs / 60000}m wall-clock/trial`,
+	);
+
+	const startedAt = new Date().toISOString();
+	const trials = await runMatrix(
+		config,
+		buildBrownfieldMatrix(candidates, tasks),
+		{
+			provider,
+			registry,
+			runDir,
+			// Brownfield task content ships inside each task, not as one PRD.
+			prdContent: "",
+			prdSha256: bundleSetHash,
+			testPlanSha256: null,
+			harnessVersion: arg("harness-version") ?? harness.defaultVersion,
+			workerEnv,
+			workerModelFlag: rw.modelFlag,
+			workerModelRef,
+			seedWorkspace: async (sandbox, plan) => {
+				const task = plan.task as NonNullable<typeof plan.task>;
+				const bundle = byId.get(task.taskId) as (typeof bundles)[number];
+				const sealed = await ensureSealedRepo({
+					clone,
+					baseSha: task.baseSha,
+					futureShas: [task.mergeSha],
+					repoDir: task.repoDir,
+				});
+				await seedTrialWorkspace(sandbox, task, sealed);
+				if (provider.id !== "worktree") {
+					console.warn(
+						`[brownfield] ${provider.id}: environment is not prebuilt inside the sandbox; the worker must build it`,
+					);
+					return;
+				}
+				// Prebuild the task environment inside the trial workspace so the worker
+				// starts offline-testable (design D7), exactly as validation did.
+				const env = await buildWorkspaceEnv(sandbox.workspacePath, {
+					python: bundle.manifest.env?.python,
+					excludeNewer: await commitDate(sandbox.workspacePath),
+				});
+				if (!env.ok)
+					throw new Error(
+						`task environment build failed in ${sandbox.workspacePath}: ${env.log.slice(-600)}`,
+					);
+			},
+			sessionNetns,
+			capturePatch: async (sandbox, trialDir, plan) => {
+				const task = plan.task as NonNullable<typeof plan.task>;
+				writePatchCapture(trialDir, await captureCandidatePatch(sandbox, task));
+			},
+		},
+	);
+
+	gateway?.stop();
+	for (const r of relays) r.stop();
+	// Solution-reach audit (5.3): did the trial reach the upstream fix?
+	for (const trial of trials) {
+		const ref = trial.provenance.brownfield;
+		if (!ref) continue;
+		const bundle = byId.get(ref.taskId);
+		if (!bundle) continue;
+		const trialDir = join(runDir, "trials", trial.provenance.trialId);
+		const transcriptDir = join(trialDir, "transcripts");
+		const files = existsSync(transcriptDir)
+			? readdirSync(transcriptDir).map((f) => join(transcriptDir, f))
+			: [];
+		const audit = auditFiles(
+			files.filter((f) => f.endsWith(".jsonl")),
+			{
+				futureShas: [ref.mergeSha],
+				prNumber: bundle.manifest.pr,
+				repo: bundle.manifest.repo,
+			},
+		);
+		writeFileSync(
+			join(trialDir, "audit.json"),
+			`${JSON.stringify(audit, null, 2)}\n`,
+		);
+		// Secondary signals (5.2): file localization + diff size vs the reference.
+		const patch = existsSync(join(trialDir, "candidate.patch"))
+			? readFileSync(join(trialDir, "candidate.patch"), "utf8")
+			: "";
+		const candidateDiff = diffStats(patch);
+		const referenceDiff = diffStats(
+			readText(bundle.dir, "reference.patch") ?? "",
+		);
+		writeFileSync(
+			join(trialDir, "signals.json"),
+			`${JSON.stringify(
+				{
+					candidate: candidateDiff,
+					reference: referenceDiff,
+					localization: localization(candidateDiff.files, referenceDiff.files),
+					diffSizeRatio: diffSizeRatio(candidateDiff, referenceDiff),
+				},
+				null,
+				2,
+			)}\n`,
+		);
+		if (audit.verdict !== "clean") {
+			trial.provenance.notes.push(`audit: ${audit.verdict}`);
+			console.log(`audit ${trial.provenance.trialId}: ${audit.verdict}`);
+		}
+		if (audit.verdict === "disqualified:solution-reach") {
+			trial.resolution = {
+				verdict: "unresolved",
+				reason: "solution-reach",
+				failToPass: {},
+				passToPass: {},
+				testInfraModified: [],
+				cassetteMiss: [],
+			};
+		}
+	}
+
+	// Hidden-test grading (5.1): each trial's captured patch is replayed onto a
+	// pristine sealed base, test infrastructure restored, tests.patch applied.
+	if (!flag("no-grade")) {
+		for (const trial of trials) {
+			const ref = trial.provenance.brownfield;
+			if (!ref) continue;
+			if (trial.resolution?.reason === "solution-reach") {
+				console.log(
+					`grade ${trial.provenance.trialId}: skipped (solution-reach)`,
+				);
+				continue;
+			}
+			const bundle = byId.get(ref.taskId);
+			if (!bundle) continue;
+			const trialDir = join(runDir, "trials", trial.provenance.trialId);
+			const patchPath = join(trialDir, "candidate.patch");
+			const sealed = await ensureSealedRepo({
+				clone,
+				baseSha: ref.baseSha,
+				futureShas: [ref.mergeSha],
+				repoDir: ref.repoDir,
+			});
+			const grade = await gradeCandidate({
+				sealedDir: sealed,
+				candidatePatch: existsSync(patchPath)
+					? readFileSync(patchPath, "utf8")
+					: "",
+				manifest: {
+					failToPass: bundle.manifest.failToPass,
+					passToPass: bundle.manifest.passToPass,
+					testPaths: bundle.manifest.testPaths,
+					env: bundle.manifest.env,
+				},
+				testsPatch: readText(bundle.dir, "tests.patch") ?? "",
+				workDir: join(runDir, "grading", trial.provenance.trialId),
+			});
+			writeGrade(trialDir, grade);
+			// The graded tree's venv is ~8 GB; logs and the grade are what matter.
+			rmSync(join(runDir, "grading", trial.provenance.trialId, "repo"), {
+				recursive: true,
+				force: true,
+			});
+			trial.resolution = {
+				verdict: grade.verdict,
+				reason: grade.reason,
+				failToPass: grade.failToPass,
+				passToPass: grade.passToPass,
+				testInfraModified: grade.testInfraModified,
+				cassetteMiss: grade.cassetteMiss,
+			};
+			console.log(
+				`grade ${trial.provenance.candidate} ${ref.taskId}: ${grade.verdict}` +
+					`${grade.reason ? ` (${grade.reason})` : ""}` +
+					`${grade.cassetteMiss.length ? ` cassette-miss=${grade.cassetteMiss.join(",")}` : ""}`,
+			);
+		}
+	}
+
+	// Judge-based secondary signal (5.2): blind to the worker's verdict, run only
+	// where a patch exists and the trial was not disqualified.
+	if (judgeProfile) {
+		for (const trial of trials) {
+			const ref = trial.provenance.brownfield;
+			if (!ref || trial.resolution?.reason === "solution-reach") continue;
+			const bundle = byId.get(ref.taskId);
+			const trialDir = join(runDir, "trials", trial.provenance.trialId);
+			const patchPath = join(trialDir, "candidate.patch");
+			if (!bundle || !existsSync(patchPath)) continue;
+			const snapshot = readSnapshot(bundle.dir);
+			const judge = await judgeCandidate(
+				{
+					issueTitle: snapshot.title,
+					issueBody: snapshot.body,
+					referencePatch: readText(bundle.dir, "reference.patch") ?? "",
+					candidatePatch: readFileSync(patchPath, "utf8"),
+				},
+				{
+					model: judgeCodeEnv?.modelFlag ?? judgeProfile.modelId,
+					env: judgeCodeEnv?.env,
+				},
+			);
+			writeFileSync(
+				join(trialDir, "judge.json"),
+				`${JSON.stringify({ ...judge, model: judgeProfile.modelId }, null, 2)}\n`,
+			);
+			trial.judge = { ...judge, model: judgeProfile.modelId };
+			console.log(
+				`judge ${trial.provenance.candidate} ${ref.taskId}: ${judge.quality} (${judge.resolvesIssue ? "resolves" : "does not resolve"})`,
+			);
+		}
+	}
+
+	const results = buildResults({
+		runId,
+		config,
+		prdSha256: bundleSetHash,
+		testPlanSha256: null,
+		startedAt,
+		endedAt: new Date().toISOString(),
+		trials,
+		workerModel: workerModelRef,
+		judgeModel: toModelRef(resolveProfile(config.judgeModel, models)),
+		crossVendorJudge: false,
+		costSource: costSourceForHarness(workerProfile, harness.reportsCost),
+	});
+	console.log(`results: ${writeResults(runDir, results)}`);
+	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+	if (results.trials.some((t) => t.provenance.brownfield))
+		console.log(`brownfield report: ${writeBrownfieldReport(runDir, results)}`);
+}
+
+/** One tiny request through the run gateway, exactly as a candidate's session would. */
+async function probeGatewaySession(
+	env: Record<string, string>,
+	modelFlag: string,
+	timeoutMs = 90_000,
+): Promise<{ ok: boolean; reason: string }> {
+	const proc = Bun.spawn(
+		[
+			"claude",
+			"-p",
+			"--model",
+			modelFlag,
+			"--output-format",
+			"json",
+			"--strict-mcp-config",
+			"--dangerously-skip-permissions",
+		],
+		{
+			stdin: new TextEncoder().encode("Reply with exactly: OK"),
+			stdout: "pipe",
+			stderr: "pipe",
+			env: { ...process.env, ...env },
+		},
+	);
+	const timer = setTimeout(() => proc.kill(), timeoutMs);
+	const out = await new Response(proc.stdout).text();
+	const err = await new Response(proc.stderr).text();
+	clearTimeout(timer);
+	const code = await proc.exited;
+	const line = out
+		.split("\n")
+		.reverse()
+		.find((l) => l.trim().startsWith("{") && l.includes('"type":"result"'));
+	if (code === 0 && line) return { ok: true, reason: "" };
+	const reason = `exit ${code}: ${err.trim().split("\n").slice(-2).join(" ") || "(no stderr)"}`;
+	return { ok: false, reason: reason.slice(0, 300) };
+}
+
 async function cmdModel(): Promise<void> {
 	const sub = process.argv[3];
 	const ref = process.argv[4];
@@ -454,7 +988,27 @@ async function cmdModel(): Promise<void> {
 			`probe supports claude-code transport only (profile '${profile.name}' is ${profile.transport})`,
 		);
 	}
-	const { env, modelFlag } = resolveClaudeCodeEnv(profile);
+	const { env: profileEnv, modelFlag } = resolveClaudeCodeEnv(profile);
+	// Gateway preflight (4.5): the probe runs through the gateway the run would
+	// use, and the gateway is checked to reject a different model.
+	const gateway = flag("gateway")
+		? startGateway({
+				upstream: profile.baseUrl ?? "https://api.anthropic.com",
+				apiKey: process.env[profile.authEnv] ?? "",
+				model: profile.modelId,
+				logPath: join("runs", "model-probe-gateway.jsonl"),
+			})
+		: null;
+	const env = gateway
+		? {
+				...profileEnv,
+				ANTHROPIC_BASE_URL: gateway.url,
+				ANTHROPIC_API_KEY: "gateway-placeholder",
+				ANTHROPIC_DEFAULT_OPUS_MODEL: profile.modelId,
+				ANTHROPIC_DEFAULT_SONNET_MODEL: profile.modelId,
+				ANTHROPIC_DEFAULT_HAIKU_MODEL: profile.modelId,
+			}
+		: profileEnv;
 	console.log(
 		`probing ${profile.name} (${profile.provider}, model ${modelFlag})${profile.baseUrl ? ` via ${profile.baseUrl}` : ""}…`,
 	);
@@ -493,7 +1047,18 @@ async function cmdModel(): Promise<void> {
 	} else {
 		console.error(`✗ probe FAILED (exit ${code})`);
 		if (err.trim()) console.error(err.trim().split("\n").slice(-5).join("\n"));
+		gateway?.stop();
 		process.exit(1);
+	}
+	if (gateway) {
+		const rejected = await fetch(`${gateway.url}/v1/messages`, {
+			method: "POST",
+			body: JSON.stringify({ model: "not-the-run-model", messages: [] }),
+		});
+		console.log(
+			`gateway: ${gateway.requests.length} request(s), wrong-model check ${rejected.status === 403 ? "rejected ✓" : `NOT rejected (${rejected.status}) ✗`}`,
+		);
+		gateway.stop();
 	}
 }
 
@@ -562,6 +1127,8 @@ async function cmdReport(): Promise<void> {
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+	if (results.trials.some((t) => t.provenance.brownfield))
+		console.log(`brownfield report: ${writeBrownfieldReport(runDir, results)}`);
 }
 
 async function cmdCleanup(): Promise<void> {

@@ -220,6 +220,41 @@ async function brownfieldSelfCheck(): Promise<void> {
 		);
 }
 
+async function brownfieldQuality(): Promise<void> {
+	const runDir = process.argv[4];
+	const judgeRef = arg("judge");
+	if (!runDir || !existsSync(join(runDir, "results.json")) || !judgeRef)
+		throw new Error(
+			"usage: brownfield quality <run-dir> --judge <profile> [--samples 3] [--force]",
+		);
+	const { compareRunQuality } = await import("./brownfield/quality");
+	const profile = resolveProfile(judgeRef, loadModels());
+	const results = JSON.parse(
+		readFileSync(join(runDir, "results.json"), "utf8"),
+	);
+	const workerModels = [
+		...new Set<string>(
+			results.trials
+				.map(
+					(t: TrialResult) =>
+						t.provenance.workerModel?.modelId ?? t.provenance.model,
+				)
+				.filter(Boolean),
+		),
+	];
+	const r = await compareRunQuality({
+		runDir,
+		model: resolveClaudeCodeEnv(profile).modelFlag,
+		workerModels,
+		samples: arg("samples") ? Number(arg("samples")) : undefined,
+		force: flag("force"),
+		log: (m) => console.log(m),
+	});
+	console.log(
+		`compared ${r.compared} trial(s), skipped ${r.skipped}, $${r.costUsd.toFixed(3)}`,
+	);
+}
+
 async function brownfieldImages(): Promise<void> {
 	const repo = arg("repo");
 	const clone = arg("clone");
@@ -250,6 +285,7 @@ async function cmdBrownfield(): Promise<void> {
 	if (sub === "verify") return verifyBrownfieldBundles();
 	if (sub === "selfcheck") return brownfieldSelfCheck();
 	if (sub === "image") return brownfieldImages();
+	if (sub === "quality") return brownfieldQuality();
 	if (sub !== "mine") {
 		console.error(
 			"usage: brownfield <mine|verify|selfcheck|image> [options]   (see file header)",
@@ -631,7 +667,8 @@ async function cmdRunBrownfield(): Promise<void> {
 	let sandboxBaseUrl: string | undefined;
 	const workerEnvExtra: Record<string, string> = {};
 	let workerEnv = rw.env;
-	if (flag("gateway")) {
+	// Docker runs use the run-owned gateway + egress lock below instead.
+	if (flag("gateway") && config.provider !== "docker") {
 		if (config.harness !== "claude-code")
 			throw new Error(
 				`--gateway supports the claude-code harness only (got '${config.harness}'); refusing a protocol mismatch`,
@@ -726,6 +763,36 @@ async function cmdRunBrownfield(): Promise<void> {
 		no_proxy: "127.0.0.1,localhost,::1",
 	};
 
+	// Docker (4.4 lockdown on any host OS): each task runs in its prebuilt image
+	// (sealed repo + env), locked to a per-run --internal network whose only exit
+	// is a relay to the run-owned gateway. Every trial gets its own placeholder key.
+	const docker =
+		config.provider === "docker"
+			? await import("./brownfield/docker-run")
+			: null;
+	const dockerRun = docker
+		? await docker.startDockerBrownfield({
+				bundles,
+				clone,
+				runId,
+				runDir,
+				harness: config.harness,
+				model: workerProfile.modelId,
+				baseImage: arg("base-image"),
+				probe: async (env, modelFlag) => {
+					for (const candidate of candidates) {
+						const r = await probeGatewaySession(env, modelFlag);
+						if (!r.ok)
+							throw new Error(
+								`gateway preflight failed for candidate '${candidate.name}': ${r.reason} (no trial dispatched)`,
+							);
+						console.log(`gateway preflight: ${candidate.name} ok`);
+					}
+				},
+				log: (m) => console.log(m),
+			})
+		: null;
+
 	const provider = createProvider(config.provider, {
 		snapshot: resolveProviderSnapshot(
 			config.provider,
@@ -756,6 +823,13 @@ async function cmdRunBrownfield(): Promise<void> {
 		buildBrownfieldMatrix(candidates, tasks),
 		{
 			provider,
+			...(dockerRun
+				? {
+						providerFor: dockerRun.providerFor,
+						egress: dockerRun.egress,
+						archive: dockerRun.archive,
+					}
+				: {}),
 			registry,
 			runDir,
 			// Brownfield task content ships inside each task, not as one PRD.
@@ -769,6 +843,7 @@ async function cmdRunBrownfield(): Promise<void> {
 			seedWorkspace: async (sandbox, plan) => {
 				const task = plan.task as NonNullable<typeof plan.task>;
 				const bundle = byId.get(task.taskId) as (typeof bundles)[number];
+				if (dockerRun) return dockerRun.seed(sandbox, task, bundle);
 				const sealed = await ensureSealedRepo({
 					clone,
 					baseSha: task.baseSha,
@@ -802,6 +877,7 @@ async function cmdRunBrownfield(): Promise<void> {
 	);
 
 	gateway?.stop();
+	await dockerRun?.stop();
 	for (const r of relays) r.stop();
 	// Solution-reach audit (5.3): did the trial reach the upstream fix?
 	for (const trial of trials) {
@@ -976,6 +1052,20 @@ async function cmdRunBrownfield(): Promise<void> {
 	});
 	console.log(`results: ${writeResults(runDir, results)}`);
 	console.log(`scorecard: ${writeScorecard(runDir, results)}`);
+	// Code-quality comparison vs the merged human PR (blind, position-balanced),
+	// with the same judge as the resolution signal; skip with --no-quality.
+	if (judgeProfile && !flag("no-quality")) {
+		const { compareRunQuality } = await import("./brownfield/quality");
+		await compareRunQuality({
+			runDir,
+			model: judgeCodeEnv?.modelFlag ?? judgeProfile.modelId,
+			workerModels: [workerProfile.modelId],
+			samples: arg("quality-samples")
+				? Number(arg("quality-samples"))
+				: undefined,
+			log: (m) => console.log(m),
+		});
+	}
 	if (results.trials.some((t) => t.provenance.brownfield))
 		console.log(`brownfield report: ${writeBrownfieldReport(runDir, results)}`);
 }

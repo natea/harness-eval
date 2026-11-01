@@ -35,6 +35,19 @@ export interface TrialEgress {
  */
 const AGENT_TEST_ENV_PATH = "/tmp/harness-eval/agent-test-env.sh";
 
+/**
+ * Where the gateway listens so the relay can reach it. Docker Desktop and Colima
+ * forward the host's loopback to containers; on Linux host-gateway is the bridge
+ * address, and a loopback bind answers nothing. Never 0.0.0.0: the bridge address
+ * keeps the gateway off the machine's public interface.
+ */
+export function gatewayBindAddress(
+	platform: string,
+	bridgeGateway: string,
+): string | undefined {
+	return platform === "linux" ? bridgeGateway : undefined;
+}
+
 /** Harnesses that speak the Anthropic protocol natively (no translation, D11). */
 const ANTHROPIC_PROTOCOL: ReadonlySet<HarnessId> = new Set(["claude-code"]);
 
@@ -67,7 +80,7 @@ export interface DockerGatewayEgressOptions {
 	credential: import("./credential").GatewayCredential;
 	logPath: string;
 	upstream?: string;
-	/** Address the gateway binds; Docker Desktop for Mac reaches 127.0.0.1. */
+	/** Address the gateway binds; see `gatewayBindAddress`. */
 	hostname?: string;
 }
 
@@ -116,6 +129,16 @@ export async function startDockerGatewayEgress(
 						`egress lock did not hold: \`${probe}\` succeeded`,
 					);
 			}
+			// The relay answers 502 when it can't reach the gateway. Stop here rather
+			// than let the agent fail on its first request and be graded as a real try.
+			const relay = await sandbox.exec(
+				`curl -s -o /dev/null -w '%{http_code}' --max-time 15 ${lock.baseUrl}/v1/messages`,
+				{ timeoutMs: 30_000 },
+			);
+			if (relay.stdout.trim() === "502" || relay.stdout.trim() === "000")
+				throw new EgressLockError(
+					`relay cannot reach the gateway (HTTP ${relay.stdout.trim()})`,
+				);
 			const placeholder = gateway.issue(trialId);
 			await sandbox.writeFile(AGENT_TEST_ENV_PATH, agentTestEnvScript());
 			const worker = claudeCodeGatewayEnv(

@@ -16,6 +16,7 @@ import { resolveGatewayCredential } from "../gateway/credential";
 import {
 	gatewayIncompatibility,
 	type RunEgress,
+	gatewayBindAddress,
 	startDockerGatewayEgress,
 	type TrialEgress,
 } from "../gateway/run";
@@ -85,7 +86,12 @@ export async function startDockerBrownfield(
 		);
 	}
 
+	const bridge =
+		await Bun.$`docker network inspect bridge --format ${"{{(index .IPAM.Config 0).Gateway}}"}`
+			.text()
+			.then((t) => t.trim());
 	const run: RunEgress = await startDockerGatewayEgress({
+		hostname: gatewayBindAddress(process.platform, bridge),
 		runId: opts.runId,
 		image: baseImage,
 		model: opts.model,

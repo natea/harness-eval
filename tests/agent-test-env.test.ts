@@ -4,6 +4,7 @@ import {
 	agentTestEnvScript,
 	OFFLINE_TEST_ENV,
 } from "../src/brownfield/testrun";
+import { gatewayBindAddress } from "../src/gateway/run";
 
 test("agents get the offline switches but no proxy or Anthropic key", () => {
 	expect(AGENT_TEST_ENV.PQA_OFFLINE_TESTS).toBe("true");
@@ -22,4 +23,9 @@ test("the script exports each switch", () => {
 	expect(script).toContain("export PQA_OFFLINE_TESTS='true'\n");
 	expect(script).toContain("export OPENAI_API_KEY=''\n");
 	expect(script).not.toContain("PROXY");
+});
+
+test("the gateway binds the bridge address on Linux, loopback elsewhere", () => {
+	expect(gatewayBindAddress("linux", "172.17.0.1")).toBe("172.17.0.1");
+	expect(gatewayBindAddress("darwin", "172.17.0.1")).toBeUndefined();
 });

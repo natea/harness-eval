@@ -145,7 +145,7 @@ candidates:
     harnesses:
       claude-code:
         install:
-          - npx --yes @opengsd/gsd-core@1.4.3 --runtime=claude-code --scope=project --profile=standard --non-interactive
+          - npx --yes @opengsd/gsd-core@1.4.3 --runtime=claude-code --scope=project --profile=full --non-interactive
         session:
           - prompt: "/gsd-new-project --auto {{BASE_PROMPT}}"
           - prompt: "/gsd-plan-phase"

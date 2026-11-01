@@ -38,6 +38,24 @@ export function hostEnv(): Record<string, string> {
 	return out;
 }
 
+/**
+ * The offline switches for test commands an agent runs in a trial. No proxy: the
+ * egress lock already blocks outside traffic, and a dead proxy would break any
+ * `claude` the agent starts itself. No Anthropic keys: they belong to Claude Code.
+ */
+export const AGENT_TEST_ENV: Record<string, string> = Object.fromEntries(
+	Object.entries(OFFLINE_TEST_ENV).filter(
+		([k]) => !/PROXY$/.test(k) && k !== "ANTHROPIC_API_KEY",
+	),
+);
+
+/** Shell script form of `AGENT_TEST_ENV`, for `CLAUDE_ENV_FILE`. */
+export function agentTestEnvScript(): string {
+	return Object.entries(AGENT_TEST_ENV)
+		.map(([k, v]) => `export ${k}='${v}'\n`)
+		.join("");
+}
+
 export type Outcome = "pass" | "fail" | "fail-live" | "skip" | "skip-gpu";
 
 /** A failure caused by a blocked or unauthenticated network call: the test needs a live API. */

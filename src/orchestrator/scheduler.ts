@@ -391,6 +391,7 @@ export async function runTrial(
 				);
 				workerAuth = g.env;
 				modelFlag = g.modelFlag;
+				provenance.notes.push(...(g.notes ?? []));
 			}
 			deps.onStage?.(plan.trialId, "building");
 			const result = await exec(sandbox, {

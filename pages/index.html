@@ -129,7 +129,7 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 			<figcaption class="cap">
 				<span class="step">Stage 2 · Launch &amp; monitor</span>
 				<h3>Watch runs execute live</h3>
-				<p>Launched runs stream their status here — provisioning → installing → building → grading — with a spinner, running cost, and a Cancel that tears down the in-flight sandbox. Historical runs from disk sit alongside the live ones; completed runs link straight to their scorecard.</p>
+				<p>Launched runs stream their status here — provisioning → installing → building → grading — with a spinner, running cost, and a Cancel that tears down the in-flight sandbox. Historical runs from disk sit alongside the live ones, and completed runs link straight to their scorecard. The list filters by app or PRD: this view shows every run of the barber-shop target.</p>
 			</figcaption>
 		</figure>
 
@@ -218,11 +218,11 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 	<div class="shots">
 
 		<figure class="shot">
-			<a class="frame" href="./assets/gallery-10-brownfield-run.png" target="_blank" rel="noopener"><img src="./assets/gallery-10-brownfield-run.png" alt="Brownfield run view: three frameworks on one paper-qa task, with hidden-test verdict, whether the framework engaged, quality against the original PR, diff size, file overlap, agent time and cost; two trials are marked as infrastructure failures and not scored" loading="lazy" /></a>
+			<a class="frame" href="./assets/gallery-10-brownfield-run.png" target="_blank" rel="noopener"><img src="./assets/gallery-10-brownfield-run.png" alt="Brownfield run view: three frameworks on one paper-qa task, all resolved, with whether each framework engaged, quality against the original PR, diff size, file overlap, agent time and cost; GSD is marked not engaged and agent-skills is flagged for editing test files" loading="lazy" /></a>
 			<figcaption class="cap">
 				<span class="step">Brownfield · Run</span>
 				<h3>Resolved, engaged, and better than the original?</h3>
-				<p>One row per framework and task, with each signal kept separate rather than blended into a composite. In this run GSD engaged and passed the hidden tests, but the judge still preferred the original PR, 78 to 57: passing the tests and writing the better PR are different questions. The other two trials hit infrastructure failures, so they're reported as not scored rather than counted as losses.</p>
+				<p>One row per framework and task, with each signal kept separate rather than blended into a composite. All three frameworks passed the hidden tests on this task, so the other columns tell them apart. <code>superpowers</code> made a 2-line fix, against 13 lines in the original PR, and edged it 72 to 68. <code>agent-skills</code> wrote 108 lines, edited a test file, and lost 60 to 78, with every judge sample preferring the original. <code>gsd</code> scored 72 to 77 on a split vote, but its <em>not engaged</em> badge means the framework itself did little, so that score says little about GSD.</p>
 			</figcaption>
 		</figure>
 
@@ -231,7 +231,7 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #21262d; col
 			<figcaption class="cap">
 				<span class="step">Brownfield · Trial</span>
 				<h3>Harness PR vs. original PR, side by side</h3>
-				<p>Everything behind one verdict: which framework skills actually fired, the hidden test result, the judge's score and note for each criterion, both diffs, and the audit. Here Superpowers fixed a JSON parsing bug with a one-parameter change and scored 93 to the original PR's 72, which also carried an unrelated version bump. It edited a test file, which was reverted before grading and flagged. One trial says little: an earlier run of the same framework on the same task also resolved it, but the judge preferred the original PR, 75 to 68.</p>
+				<p>Everything behind one verdict: which framework skills actually fired, the hidden test result, the judge's score and note for each criterion, both diffs, and the audit. Here Superpowers fixed a JSON parsing bug with a one-parameter change and scored 93 to the original PR's 72, which also carried an unrelated version bump. It edited a test file, which was reverted before grading and flagged. One trial says little: Superpowers has resolved this task in all three scored runs so far, but it scored 93 to 72 here, 72 to 68 in the run above, and 68 to 75 in a run where it didn't engage.</p>
 			</figcaption>
 		</figure>
 

@@ -1,0 +1,987 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-11-01T16:10:16.240Z",
+	"title": "Design System: CodingHarness Eval Studio",
+	"extensions": {
+		"themes": {
+			"light": ":root",
+			"dark": ".dark",
+			"switch": "light / dark / system, persisted as localStorage 'studio-theme', applied before first paint"
+		},
+		"colorMeta": {
+			"primary": {
+				"role": "primary",
+				"displayName": "Working Blue",
+				"canonical": "#2f6fed",
+				"oklch": "oklch(57.4% 0.202 262.0)",
+				"theme": "light",
+				"tonalRamp": [
+					"#000729",
+					"#001c5d",
+					"#003398",
+					"#1151cc",
+					"#3777f6",
+					"#72a3fe",
+					"#afcbfe",
+					"#e6efff"
+				]
+			},
+			"primary-dark": {
+				"role": "primary",
+				"displayName": "Working Blue (dark)",
+				"canonical": "#5b8def",
+				"oklch": "oklch(65.5% 0.156 262.5)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#00062a",
+					"#001a5f",
+					"#0b3690",
+					"#2a57b4",
+					"#4b7cdc",
+					"#73a3fe",
+					"#afcbfe",
+					"#e7effe"
+				]
+			},
+			"primary-soft": {
+				"role": "primary",
+				"displayName": "Selection Tint",
+				"canonical": "#e8effd",
+				"oklch": "oklch(95.1% 0.020 264.5)",
+				"theme": "light",
+				"tonalRamp": [
+					"#070b14",
+					"#1f242e",
+					"#3a404b",
+					"#585e69",
+					"#7a808d",
+					"#9ea5b2",
+					"#c4cbd8",
+					"#e8effd"
+				]
+			},
+			"primary-soft-dark": {
+				"role": "primary",
+				"displayName": "Selection Tint (dark)",
+				"canonical": "#18233a",
+				"oklch": "oklch(25.8% 0.046 264.0)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#030a1e",
+					"#18233a",
+					"#334059",
+					"#505e78",
+					"#72809d",
+					"#96a5c2",
+					"#bbcbea",
+					"#e7effe"
+				]
+			},
+			"foreground": {
+				"role": "neutral",
+				"displayName": "Ink",
+				"canonical": "#111318",
+				"oklch": "oklch(18.7% 0.011 268.1)",
+				"theme": "light",
+				"tonalRamp": [
+					"#090b10",
+					"#222429",
+					"#3d4046",
+					"#5b5d64",
+					"#7d8087",
+					"#a2a4ac",
+					"#c7cad2",
+					"#ebeef6"
+				]
+			},
+			"foreground-dark": {
+				"role": "neutral",
+				"displayName": "Ink (dark)",
+				"canonical": "#ececee",
+				"oklch": "oklch(94.4% 0.003 286.3)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#0b0b0c",
+					"#242425",
+					"#3f3f41",
+					"#5d5d5f",
+					"#808082",
+					"#a4a4a6",
+					"#cacacc",
+					"#eeeef0"
+				]
+			},
+			"background": {
+				"role": "neutral",
+				"displayName": "Canvas",
+				"canonical": "#ffffff",
+				"oklch": "oklch(100.0% 0.000 89.9)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0b0b0b",
+					"#242424",
+					"#404040",
+					"#5d5d5d",
+					"#808080",
+					"#a4a4a4",
+					"#cacaca",
+					"#eeeeee"
+				]
+			},
+			"background-dark": {
+				"role": "neutral",
+				"displayName": "Canvas (dark)",
+				"canonical": "#0b0c0e",
+				"oklch": "oklch(15.4% 0.005 264.4)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#0a0b0d",
+					"#232426",
+					"#3e4042",
+					"#5c5e60",
+					"#7f8083",
+					"#a3a4a7",
+					"#c9cacd",
+					"#edeef2"
+				]
+			},
+			"sidebar": {
+				"role": "neutral",
+				"displayName": "Sidebar Grey",
+				"canonical": "#f8f9fa",
+				"oklch": "oklch(98.2% 0.002 247.8)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0b0b0c",
+					"#232425",
+					"#3f4041",
+					"#5d5e5e",
+					"#7f8081",
+					"#a4a5a5",
+					"#cacacb",
+					"#edeeef"
+				]
+			},
+			"sidebar-dark": {
+				"role": "neutral",
+				"displayName": "Sidebar Grey (dark)",
+				"canonical": "#0f1013",
+				"oklch": "oklch(17.3% 0.006 271.0)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#0a0b0e",
+					"#232427",
+					"#3e4043",
+					"#5c5d61",
+					"#7f8084",
+					"#a3a4a9",
+					"#c9cacf",
+					"#edeef3"
+				]
+			},
+			"card": {
+				"role": "neutral",
+				"displayName": "Card White / Card Graphite",
+				"canonical": "#ffffff",
+				"oklch": "oklch(100.0% 0.000 89.9)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0b0b0b",
+					"#242424",
+					"#404040",
+					"#5d5d5d",
+					"#808080",
+					"#a4a4a4",
+					"#cacaca",
+					"#eeeeee"
+				]
+			},
+			"card-dark": {
+				"role": "neutral",
+				"displayName": "Card White / Card Graphite (dark)",
+				"canonical": "#111317",
+				"oklch": "oklch(18.6% 0.009 264.3)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#090b0f",
+					"#222428",
+					"#3d4045",
+					"#5b5e63",
+					"#7d8086",
+					"#a2a5aa",
+					"#c8cbd0",
+					"#ebeef5"
+				]
+			},
+			"popover": {
+				"role": "neutral",
+				"displayName": "Popover",
+				"canonical": "#ffffff",
+				"oklch": "oklch(100.0% 0.000 89.9)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0b0b0b",
+					"#242424",
+					"#404040",
+					"#5d5d5d",
+					"#808080",
+					"#a4a4a4",
+					"#cacaca",
+					"#eeeeee"
+				]
+			},
+			"popover-dark": {
+				"role": "neutral",
+				"displayName": "Popover (dark)",
+				"canonical": "#17191e",
+				"oklch": "oklch(21.4% 0.010 268.2)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#090b10",
+					"#222429",
+					"#3d4045",
+					"#5b5d64",
+					"#7d8087",
+					"#a2a4ab",
+					"#c7cad1",
+					"#ebeef6"
+				]
+			},
+			"secondary": {
+				"role": "neutral",
+				"displayName": "Quiet Fill",
+				"canonical": "#f2f3f5",
+				"oklch": "oklch(96.4% 0.003 264.5)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0a0b0c",
+					"#232425",
+					"#3f4041",
+					"#5d5e5f",
+					"#7f8082",
+					"#a4a4a6",
+					"#c9cacc",
+					"#edeef0"
+				]
+			},
+			"secondary-dark": {
+				"role": "neutral",
+				"displayName": "Quiet Fill (dark)",
+				"canonical": "#1a1c21",
+				"oklch": "oklch(22.7% 0.010 268.2)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#090b10",
+					"#222429",
+					"#3d4045",
+					"#5b5d64",
+					"#7d8086",
+					"#a2a4ab",
+					"#c8cad1",
+					"#ebeef6"
+				]
+			},
+			"muted": {
+				"role": "neutral",
+				"displayName": "Muted Fill",
+				"canonical": "#f6f7f9",
+				"oklch": "oklch(97.6% 0.003 264.5)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0b0b0c",
+					"#232425",
+					"#3f4041",
+					"#5d5e5f",
+					"#7f8082",
+					"#a4a4a6",
+					"#c9cacc",
+					"#edeef0"
+				]
+			},
+			"muted-dark": {
+				"role": "neutral",
+				"displayName": "Muted Fill (dark)",
+				"canonical": "#15171b",
+				"oklch": "oklch(20.4% 0.009 264.4)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#090b0f",
+					"#222428",
+					"#3d4044",
+					"#5b5e63",
+					"#7e8085",
+					"#a2a5aa",
+					"#c8cbd0",
+					"#eceef4"
+				]
+			},
+			"muted-foreground": {
+				"role": "neutral",
+				"displayName": "Muted Ink",
+				"canonical": "#5f6672",
+				"oklch": "oklch(50.8% 0.021 261.3)",
+				"theme": "light",
+				"tonalRamp": [
+					"#070b14",
+					"#1e242e",
+					"#3a404b",
+					"#575e6a",
+					"#79818d",
+					"#9da5b2",
+					"#c3cbd9",
+					"#e7effd"
+				]
+			},
+			"muted-foreground-dark": {
+				"role": "neutral",
+				"displayName": "Muted Ink (dark)",
+				"canonical": "#8e949e",
+				"oklch": "oklch(66.5% 0.016 260.7)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#070b12",
+					"#20242c",
+					"#3b4049",
+					"#585e67",
+					"#7b818a",
+					"#9fa5af",
+					"#c5cbd5",
+					"#e8effa"
+				]
+			},
+			"border": {
+				"role": "neutral",
+				"displayName": "Hairline",
+				"canonical": "#e7e9ed",
+				"oklch": "oklch(93.4% 0.006 264.5)",
+				"theme": "light",
+				"tonalRamp": [
+					"#0a0b0e",
+					"#232427",
+					"#3e4043",
+					"#5c5e61",
+					"#7e8084",
+					"#a3a5a8",
+					"#c8cace",
+					"#eceef2"
+				]
+			},
+			"border-dark": {
+				"role": "neutral",
+				"displayName": "Hairline (dark)",
+				"canonical": "#23262c",
+				"oklch": "oklch(26.8% 0.012 264.4)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#090b10",
+					"#21242a",
+					"#3d4046",
+					"#5a5e65",
+					"#7d8088",
+					"#a1a5ac",
+					"#c7cbd3",
+					"#eaeff7"
+				]
+			},
+			"input": {
+				"role": "neutral",
+				"displayName": "Input Edge",
+				"canonical": "#d9dce2",
+				"oklch": "oklch(89.4% 0.009 264.5)",
+				"theme": "light",
+				"tonalRamp": [
+					"#090b0f",
+					"#222428",
+					"#3d4045",
+					"#5b5e63",
+					"#7d8086",
+					"#a2a5aa",
+					"#c8cad0",
+					"#ebeef5"
+				]
+			},
+			"input-dark": {
+				"role": "neutral",
+				"displayName": "Input Edge (dark)",
+				"canonical": "#2e3138",
+				"oklch": "oklch(31.3% 0.013 267.1)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#090b11",
+					"#21242b",
+					"#3d4047",
+					"#5a5e65",
+					"#7d8088",
+					"#a1a5ad",
+					"#c7cad3",
+					"#eaeef8"
+				]
+			},
+			"span-setup": {
+				"role": "neutral",
+				"displayName": "Setup Grey",
+				"canonical": "#b7bdc7",
+				"oklch": "oklch(79.7% 0.016 260.7)",
+				"theme": "light",
+				"tonalRamp": [
+					"#080b12",
+					"#20242c",
+					"#3b4048",
+					"#595e67",
+					"#7b818a",
+					"#9fa5af",
+					"#c5cbd5",
+					"#e9eff9"
+				]
+			},
+			"span-setup-dark": {
+				"role": "neutral",
+				"displayName": "Setup Grey (dark)",
+				"canonical": "#4a4f58",
+				"oklch": "oklch(42.6% 0.016 262.3)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#080b12",
+					"#20242c",
+					"#3b4049",
+					"#595e67",
+					"#7b808a",
+					"#9fa5af",
+					"#c5cbd5",
+					"#e9effa"
+				]
+			},
+			"success": {
+				"role": "semantic",
+				"displayName": "Pass Green",
+				"canonical": "#15803d",
+				"oklch": "oklch(52.7% 0.137 150.1)",
+				"theme": "light",
+				"tonalRamp": [
+					"#001003",
+					"#002d10",
+					"#014e20",
+					"#027132",
+					"#349652",
+					"#5dbc75",
+					"#84e49a",
+					"#c7ffd1"
+				]
+			},
+			"success-dark": {
+				"role": "semantic",
+				"displayName": "Pass Green (dark)",
+				"canonical": "#6fdc97",
+				"oklch": "oklch(81.2% 0.141 154.0)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#000f05",
+					"#002d15",
+					"#004d28",
+					"#05703d",
+					"#1f9857",
+					"#4fbe7b",
+					"#78e5a0",
+					"#c6ffd7"
+				]
+			},
+			"success-bg": {
+				"role": "semantic",
+				"displayName": "Pass Tint",
+				"canonical": "#e8f6ed",
+				"oklch": "oklch(96.0% 0.019 157.9)",
+				"theme": "light",
+				"tonalRamp": [
+					"#050e08",
+					"#1c2720",
+					"#38433c",
+					"#556159",
+					"#77847c",
+					"#9ba8a0",
+					"#c1cec6",
+					"#e5f3ea"
+				]
+			},
+			"success-bg-dark": {
+				"role": "semantic",
+				"displayName": "Pass Tint (dark)",
+				"canonical": "#13281b",
+				"oklch": "oklch(25.5% 0.037 155.5)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#001005",
+					"#14291c",
+					"#304637",
+					"#4d6455",
+					"#6f8777",
+					"#93ac9b",
+					"#b8d2c0",
+					"#dcf6e4"
+				]
+			},
+			"success-mark": {
+				"role": "semantic",
+				"displayName": "Pass Mark",
+				"canonical": "#22a55b",
+				"oklch": "oklch(63.7% 0.154 152.6)",
+				"theme": "light",
+				"tonalRamp": [
+					"#001004",
+					"#012d13",
+					"#034d26",
+					"#007139",
+					"#059950",
+					"#46c074",
+					"#71e799",
+					"#c6ffd5"
+				]
+			},
+			"success-mark-dark": {
+				"role": "semantic",
+				"displayName": "Pass Mark (dark)",
+				"canonical": "#3fbf6e",
+				"oklch": "oklch(71.5% 0.162 151.8)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#001004",
+					"#012d12",
+					"#004e24",
+					"#027137",
+					"#029a4d",
+					"#41c16f",
+					"#6de894",
+					"#c7ffd4"
+				]
+			},
+			"warn": {
+				"role": "semantic",
+				"displayName": "Partial Amber",
+				"canonical": "#a15c07",
+				"oklch": "oklch(54.3% 0.123 61.8)",
+				"theme": "light",
+				"tonalRamp": [
+					"#150700",
+					"#381c01",
+					"#5f3301",
+					"#894c00",
+					"#b46d24",
+					"#db924d",
+					"#ffba7d",
+					"#feeada"
+				]
+			},
+			"warn-dark": {
+				"role": "semantic",
+				"displayName": "Partial Amber (dark)",
+				"canonical": "#f3c164",
+				"oklch": "oklch(83.7% 0.125 81.2)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#120a00",
+					"#312101",
+					"#543b03",
+					"#7a5701",
+					"#a57705",
+					"#cc9c3c",
+					"#f4c265",
+					"#ffeccc"
+				]
+			},
+			"warn-bg": {
+				"role": "semantic",
+				"displayName": "Partial Tint",
+				"canonical": "#fdf5e6",
+				"oklch": "oklch(97.2% 0.022 83.3)",
+				"theme": "light",
+				"tonalRamp": [
+					"#100a03",
+					"#292318",
+					"#453f33",
+					"#645d50",
+					"#867f72",
+					"#aba496",
+					"#d1cabb",
+					"#f6eedf"
+				]
+			},
+			"warn-bg-dark": {
+				"role": "semantic",
+				"displayName": "Partial Tint (dark)",
+				"canonical": "#2d2210",
+				"oklch": "oklch(26.0% 0.034 78.7)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#120900",
+					"#2d2210",
+					"#4a3e2b",
+					"#685c48",
+					"#8c7e6a",
+					"#b0a38d",
+					"#d7c8b2",
+					"#fbecd5"
+				]
+			},
+			"warn-mark": {
+				"role": "semantic",
+				"displayName": "Partial Mark",
+				"canonical": "#e0a00f",
+				"oklch": "oklch(74.8% 0.153 79.3)",
+				"theme": "light",
+				"tonalRamp": [
+					"#120900",
+					"#312001",
+					"#553a00",
+					"#7b5602",
+					"#a77607",
+					"#d59804",
+					"#febe45",
+					"#ffecce"
+				]
+			},
+			"warn-mark-dark": {
+				"role": "semantic",
+				"displayName": "Partial Mark (dark)",
+				"canonical": "#e0a00f",
+				"oklch": "oklch(74.8% 0.153 79.3)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#120900",
+					"#312001",
+					"#553a00",
+					"#7b5602",
+					"#a77607",
+					"#d59804",
+					"#febe45",
+					"#ffecce"
+				]
+			},
+			"danger": {
+				"role": "semantic",
+				"displayName": "Fail Red",
+				"canonical": "#c4291f",
+				"oklch": "oklch(53.5% 0.192 29.1)",
+				"theme": "light",
+				"tonalRamp": [
+					"#1f0000",
+					"#4b0000",
+					"#7c0202",
+					"#b10a07",
+					"#db4235",
+					"#ff7362",
+					"#ffb5aa",
+					"#ffe9e5"
+				]
+			},
+			"danger-dark": {
+				"role": "semantic",
+				"displayName": "Fail Red (dark)",
+				"canonical": "#ff9b94",
+				"oklch": "oklch(79.1% 0.121 24.5)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#1f0001",
+					"#4b0007",
+					"#721b1d",
+					"#963d3a",
+					"#be605b",
+					"#e7857f",
+					"#feb5af",
+					"#fee9e7"
+				]
+			},
+			"danger-bg": {
+				"role": "semantic",
+				"displayName": "Fail Tint",
+				"canonical": "#fdecec",
+				"oklch": "oklch(95.7% 0.018 17.5)",
+				"theme": "light",
+				"tonalRamp": [
+					"#120808",
+					"#2c2121",
+					"#493c3c",
+					"#685a5a",
+					"#8b7c7c",
+					"#b0a0a0",
+					"#d6c6c6",
+					"#fbeaea"
+				]
+			},
+			"danger-bg-dark": {
+				"role": "semantic",
+				"displayName": "Fail Tint (dark)",
+				"canonical": "#3a1717",
+				"oklch": "oklch(25.7% 0.056 21.7)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#1d0103",
+					"#3b1818",
+					"#5a3332",
+					"#7a5150",
+					"#9f7371",
+					"#c59795",
+					"#edbdba",
+					"#fee9e7"
+				]
+			},
+			"danger-mark": {
+				"role": "semantic",
+				"displayName": "Fail Mark",
+				"canonical": "#e5484d",
+				"oklch": "oklch(62.6% 0.193 23.0)",
+				"theme": "light",
+				"tonalRamp": [
+					"#1f0002",
+					"#4b0008",
+					"#7c0015",
+					"#b10122",
+					"#dc3f46",
+					"#ff7170",
+					"#ffb4b0",
+					"#fee9e7"
+				]
+			},
+			"danger-mark-dark": {
+				"role": "semantic",
+				"displayName": "Fail Mark (dark)",
+				"canonical": "#ef5b55",
+				"oklch": "oklch(66.4% 0.184 25.7)",
+				"theme": "dark",
+				"tonalRamp": [
+					"#1f0001",
+					"#4b0005",
+					"#7c010d",
+					"#ae151e",
+					"#d84542",
+					"#ff726a",
+					"#ffb5ad",
+					"#fee9e6"
+				]
+			}
+		},
+		"typographyMeta": {
+			"headline": {
+				"displayName": "Page title",
+				"purpose": "The one page title in the page header."
+			},
+			"title": {
+				"displayName": "Section title",
+				"purpose": "Section headings inside a page; detail-panel headings step to 16px."
+			},
+			"body": {
+				"displayName": "Body",
+				"purpose": "Base text and page descriptions, capped at 72ch."
+			},
+			"body-sm": {
+				"displayName": "Control text",
+				"purpose": "Buttons, chips, selects, table cells."
+			},
+			"label": {
+				"displayName": "Label",
+				"purpose": "Table headers, field labels, legends, sidebar group headers; sentence case, muted."
+			},
+			"mono": {
+				"displayName": "Machine value",
+				"purpose": "Every id, hash, score, $, token count, model id and duration; tabular figures."
+			}
+		},
+		"shadows": [
+			{
+				"name": "overlay",
+				"value": "0 8px 24px rgba(0,0,0,0.12)",
+				"purpose": "Tooltips and select menus."
+			},
+			{
+				"name": "dialog",
+				"value": "0 16px 48px rgba(0,0,0,0.25)",
+				"purpose": "Run-confirmation dialog over a 50% black scrim with a 2px backdrop blur."
+			},
+			{
+				"name": "handle",
+				"value": "0 1px 3px rgba(0,0,0,0.15)",
+				"purpose": "Slider thumbs."
+			}
+		],
+		"focus": {
+			"value": "outline: 2px solid var(--ring); outline-offset: 2px",
+			"purpose": "Global :focus-visible; --ring equals --primary."
+		},
+		"motion": [
+			{
+				"name": "state-transition",
+				"value": "150ms cubic-bezier(0.4, 0, 0.2, 1) on color, background, opacity, transform",
+				"purpose": "Hover fills, chevron rotation, progress width."
+			},
+			{
+				"name": "live-pulse",
+				"value": "ping animation on a primary dot",
+				"purpose": "A run in progress (sidebar live card, runs list, run detail)."
+			},
+			{
+				"name": "reduced-motion",
+				"value": "animation and transition durations forced to 0.01ms",
+				"purpose": "prefers-reduced-motion: reduce."
+			}
+		],
+		"breakpoints": [
+			{
+				"name": "sm",
+				"value": "640px"
+			},
+			{
+				"name": "lg",
+				"value": "1024px",
+				"note": "Sidebar becomes a fixed 232px column."
+			},
+			{
+				"name": "xl",
+				"value": "1280px",
+				"note": "Run detail places a 340px detail panel beside the waterfall."
+			}
+		]
+	},
+	"components": [
+		{
+			"name": "Primary Button",
+			"kind": "button",
+			"refersTo": "button-primary",
+			"description": "The page's main action; ink fill, not the accent.",
+			"html": "<button class=\"ds-btn-primary\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>New run</button>",
+			"css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:13px;font-weight:500;cursor:pointer;border:none;background:var(--foreground,#111318);color:var(--background,#fff);transition:opacity .15s}.ds-btn-primary:hover{opacity:.9}.ds-btn-primary:focus-visible{outline:2px solid var(--ring,#2f6fed);outline-offset:2px;}.ds-btn-primary:disabled{opacity:.4;cursor:not-allowed}"
+		},
+		{
+			"name": "Secondary Button",
+			"kind": "button",
+			"refersTo": "button-secondary",
+			"description": "Secondary actions beside the primary.",
+			"html": "<button class=\"ds-btn-secondary\">Regrade</button>",
+			"css": ".ds-btn-secondary{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border,#e7e9ed);background:var(--background,#fff);color:var(--foreground,#111318);transition:background-color .15s}.ds-btn-secondary:hover{background:var(--secondary,#f2f3f5)}.ds-btn-secondary:focus-visible{outline:2px solid var(--ring,#2f6fed);outline-offset:2px;}"
+		},
+		{
+			"name": "Ghost Button",
+			"kind": "button",
+			"refersTo": "button-ghost",
+			"description": "Tertiary actions; muted until hovered.",
+			"html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+			"css": ".ds-btn-ghost{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:13px;font-weight:500;cursor:pointer;padding:0 10px;border:none;background:transparent;color:var(--muted-foreground,#5f6672);transition:background-color .15s,color .15s}.ds-btn-ghost:hover{background:var(--secondary,#f2f3f5);color:var(--foreground,#111318)}.ds-btn-ghost:focus-visible{outline:2px solid var(--ring,#2f6fed);outline-offset:2px;}"
+		},
+		{
+			"name": "Meta Chip",
+			"kind": "chip",
+			"refersTo": "meta-chip",
+			"description": "Read-only page context in the header, level with buttons.",
+			"html": "<span class=\"ds-meta-chip\"><span class=\"ds-meta-label\">Spend</span><span class=\"ds-meta-value\">$4.82</span></span>",
+			"css": ".ds-meta-chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--border,#e7e9ed);border-radius:8px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:13px;color:var(--foreground,#111318)}.ds-meta-label{color:var(--muted-foreground,#5f6672)}.ds-meta-value{font-weight:500;font-family:var(--font-mono,'Geist Mono',ui-monospace,monospace);font-variant-numeric:tabular-nums}"
+		},
+		{
+			"name": "Outcome Badges",
+			"kind": "chip",
+			"refersTo": "badge-ok",
+			"description": "Run and trial state on a tinted semantic surface, always with a word.",
+			"html": "<span class=\"ds-badge ds-badge-ok\">graded</span> <span class=\"ds-badge ds-badge-warn\">capped</span> <span class=\"ds-badge ds-badge-danger\">infra-failed</span>",
+			"css": ".ds-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:8px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:11.5px;font-weight:500;white-space:nowrap}.ds-badge-ok{background:var(--success-bg,#e8f6ed);color:var(--success,#15803d)}.ds-badge-warn{background:var(--warn-bg,#fdf5e6);color:var(--warn,#a15c07)}.ds-badge-danger{background:var(--danger-bg,#fdecec);color:var(--danger,#c4291f)}"
+		},
+		{
+			"name": "Select",
+			"kind": "input",
+			"refersTo": "select-trigger",
+			"description": "Configure and filter fields.",
+			"html": "<button class=\"ds-select\" type=\"button\">opus-4.6<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></button>",
+			"css": ".ds-select{display:flex;align-items:center;justify-content:space-between;gap:8px;height:32px;min-width:180px;padding:0 10px;border:1px solid var(--border,#e7e9ed);border-radius:8px;background:var(--background,#fff);color:var(--foreground,#111318);font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:13px;cursor:pointer}.ds-select svg{color:var(--muted-foreground,#5f6672)}.ds-select:hover{background:var(--secondary,#f2f3f5)}.ds-select:focus-visible{outline:none;box-shadow:0 0 0 2px var(--ring,#2f6fed)}"
+		},
+		{
+			"name": "Sidebar Nav",
+			"kind": "nav",
+			"refersTo": "nav-item",
+			"description": "Primary navigation; the current page lifts to card fill with a hairline ring.",
+			"html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" aria-current=\"page\" href=\"#\">Leaderboard</a><a class=\"ds-nav-item\" href=\"#\">Runs</a><a class=\"ds-nav-item\" href=\"#\">New run</a><span class=\"ds-nav-group\">Analysis</span><a class=\"ds-nav-item\" href=\"#\">Trends</a><a class=\"ds-nav-item\" href=\"#\">Tournament</a></nav>",
+			"css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:208px;padding:12px;background:var(--sidebar,#f8f9fa);font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif)}.ds-nav-item{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--muted-foreground,#5f6672);text-decoration:none;transition:background-color .15s,color .15s}.ds-nav-item:hover{background:var(--secondary,#f2f3f5);color:var(--foreground,#111318)}.ds-nav-item[aria-current=page]{background:var(--card,#fff);color:var(--foreground,#111318);box-shadow:0 0 0 1px var(--border,#e7e9ed)}.ds-nav-item:focus-visible{outline:2px solid var(--ring,#2f6fed);outline-offset:2px;}.ds-nav-group{padding:16px 10px 4px;font-size:11.5px;font-weight:500;color:var(--muted-foreground,#5f6672)}"
+		},
+		{
+			"name": "Truth Callout",
+			"kind": "card",
+			"refersTo": "callout-warn",
+			"description": "Not-separable, single-trial and inconclusive caveats above a ranking.",
+			"html": "<div class=\"ds-callout\" role=\"note\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg><p><strong>Top two not separable.</strong> Their composites sit inside each other's score ranges. Run 3+ trials per framework before treating the order as a result.</p></div>",
+			"css": ".ds-callout{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid color-mix(in srgb,var(--warn,#a15c07) 25%,transparent);border-radius:12px;background:var(--warn-bg,#fdf5e6);color:var(--foreground,#111318);font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:13.5px}.ds-callout svg{flex-shrink:0;margin-top:2px;color:var(--warn,#a15c07)}.ds-callout p{margin:0}"
+		},
+		{
+			"name": "Composite Chart",
+			"kind": "custom",
+			"refersTo": "card",
+			"description": "Dot at the composite, primary band over its min-max range, mono value.",
+			"html": "<div class=\"ds-chart\"><div class=\"ds-chart-row\"><span class=\"ds-chart-label\">agent-skills</span><div class=\"ds-chart-track\"><span class=\"ds-chart-band\" style=\"left:58%;width:14%\"></span><span class=\"ds-chart-dot\" style=\"left:66%\"></span></div><span class=\"ds-chart-value\">66.4</span></div><div class=\"ds-chart-row\"><span class=\"ds-chart-label\">gsd</span><div class=\"ds-chart-track\"><span class=\"ds-chart-band\" style=\"left:55%;width:16%\"></span><span class=\"ds-chart-dot\" style=\"left:63%\"></span></div><span class=\"ds-chart-value\">63.1</span></div></div>",
+			"css": ".ds-chart{display:grid;gap:4px;padding:20px;border:1px solid var(--border,#e7e9ed);border-radius:12px;background:var(--card,#fff);font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif)}.ds-chart-row{display:grid;grid-template-columns:140px 1fr 52px;align-items:center;gap:16px}.ds-chart-label{font-size:13.5px;font-weight:500}.ds-chart-track{position:relative;height:36px;background:linear-gradient(90deg,var(--border,#e7e9ed) 1px,transparent 1px);background-size:25% 100%}.ds-chart-band{position:absolute;top:50%;height:6px;transform:translateY(-50%);border-radius:9999px;background:color-mix(in srgb,var(--primary,#2f6fed) 25%,transparent)}.ds-chart-dot{position:absolute;top:50%;width:12px;height:12px;transform:translate(-50%,-50%);border-radius:9999px;background:var(--primary,#2f6fed);box-shadow:0 0 0 3px var(--card,#fff)}.ds-chart-value{text-align:right;font-family:var(--font-mono,'Geist Mono',ui-monospace,monospace);font-variant-numeric:tabular-nums;font-size:13.5px;font-weight:500}"
+		},
+		{
+			"name": "Trace Waterfall Row",
+			"kind": "custom",
+			"refersTo": "card",
+			"description": "Run detail signature: telemetry spans on a time axis, untimed graded step marks.",
+			"html": "<div class=\"ds-trace\"><span class=\"ds-trace-id\">superpowers-t1<small>42.3m · $3.10</small></span><div class=\"ds-trace-track\"><button class=\"ds-span ds-span-setup\" style=\"left:0;width:8%\" title=\"Setup\"></button><button class=\"ds-span ds-span-session\" style=\"left:8%;width:62%\" title=\"Session 1\"></button><button class=\"ds-span ds-span-session\" style=\"left:70%;width:20%\" title=\"Session 2\"></button><button class=\"ds-span ds-span-setup\" style=\"left:90%;width:6%\" title=\"Archive &amp; teardown\"></button></div><span class=\"ds-trace-graded\"><b>84</b><i class=\"ds-m ds-pass\"></i><i class=\"ds-m ds-pass\"></i><i class=\"ds-m ds-partial\"></i><i class=\"ds-m ds-pass\"></i><i class=\"ds-m ds-fail\"></i></span></div>",
+			"css": ".ds-trace{display:grid;grid-template-columns:200px 1fr 150px;align-items:center;border:1px solid var(--border,#e7e9ed);border-radius:12px;background:var(--card,#fff);font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);overflow:hidden;transition:background-color .15s}.ds-trace:hover{background:var(--muted,#f6f7f9)}.ds-trace-id{display:grid;padding:10px 12px 10px 20px;font-family:var(--font-mono,'Geist Mono',ui-monospace,monospace);font-size:12.5px;font-weight:500}.ds-trace-id small{font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:12px;font-weight:400;color:var(--muted-foreground,#5f6672)}.ds-trace-track{position:relative;height:44px;background:linear-gradient(90deg,var(--border,#e7e9ed) 1px,transparent 1px);background-size:20% 100%}.ds-span{position:absolute;top:50%;height:12px;padding:0;border:0;border-right:1px solid var(--card,#fff);transform:translateY(-50%);cursor:pointer}.ds-span:first-child{border-radius:3px 0 0 3px}.ds-span:last-child{border-radius:0 3px 3px 0;border-right:0}.ds-span:focus-visible{outline:2px solid var(--ring,#2f6fed);outline-offset:1px}.ds-span-setup{background:var(--span-setup,#b7bdc7)}.ds-span-session{background:var(--primary,#2f6fed)}.ds-trace-graded{display:flex;align-items:center;gap:1px;padding:0 12px}.ds-trace-graded b{width:28px;margin-right:8px;text-align:right;font-family:var(--font-mono,'Geist Mono',ui-monospace,monospace);font-size:13px}.ds-m{display:inline-block;width:3px;height:12px;border-radius:1px}.ds-pass{background:var(--success-mark,#22a55b)}.ds-partial{background:var(--warn-mark,#e0a00f)}.ds-fail{background:var(--danger-mark,#e5484d)}"
+		}
+	],
+	"narrative": {
+		"northStar": "The Audited Ledger",
+		"overview": "The Studio is a category-standard eval dashboard built to the craft level of Braintrust, Linear and Vercel: one sidebar, one page header, a chart above a table. Nothing on a page is decorative; every mark is a number, a state, or the way to its evidence. Density is desk-grade (14px body, 32px controls, 13px table text), tuned for long operator sessions on a laptop or large monitor and for screenshots in demos.\n\nNeutrals are cool greys that differ only by lightness. A single blue carries data marks, the primary action's surrounding affordances and focus; green, amber and red speak only for outcomes and run state. Geist sets the interface and Geist Mono sets every machine value. Depth comes from 1px borders and tonal steps between sidebar, canvas and card, not from shadows.\n\nThe one exception to the canon is run detail, which is a trace waterfall: trials as traces, setup and build sessions as timed spans drawn from real telemetry, grading as untimed outcome marks. Light and dark are both first-class and chosen by a light / dark / system switch.",
+		"keyCharacteristics": [
+			"Sidebar + page header + chart over table, at 1280px max content width.",
+			"One accent (primary blue) for data marks, focus and selection; semantic colour only for outcomes and run state.",
+			"Geist for UI, Geist Mono with tabular figures for every id, hash, score, $ and duration.",
+			"Flat surfaces: 1px borders, 8px controls, 12px cards, shadows only on floating layers.",
+			"The numbers tell the truth: not-separable callouts, \"—\" for undefined statistics, \"*\" on within-run-normalized dimensions."
+		],
+		"rules": [
+			{
+				"name": "The One Accent Rule",
+				"body": "Primary blue is for data marks, focus and selection. It is never a page decoration, a heading colour or a button fill.",
+				"section": "colors"
+			},
+			{
+				"name": "The Reserved Semantics Rule",
+				"body": "Green, amber and red mean pass, partial and fail, or run state (graded, capped, inconclusive, infra-failed). They never decorate, and they never appear without a shape or a word beside them.",
+				"section": "colors"
+			},
+			{
+				"name": "The Machine Value Rule",
+				"body": "Every id, hash, score, cost, token count, model id and duration is set in Geist Mono with tabular figures. Prose is never mono.",
+				"section": "typography"
+			},
+			{
+				"name": "The One Precision Rule",
+				"body": "Each scoring dimension has one display precision everywhere, via `fmtDim`: code quality whole, the others one decimal. Durations format through `fmtMin`, money through `fmtUsd` (two decimals), run dates through `fmtRunDate`; a missing value prints \"—\".",
+				"section": "typography"
+			},
+			{
+				"name": "The Weights at the Foot Rule",
+				"body": "Re-weighting lives as an inline strip at the foot of the standings table card (muted fill, top hairline, presets left and four sliders right), on both the Leaderboard and run detail. It is part of the table it re-ranks, not a side card.",
+				"section": "layout"
+			},
+			{
+				"name": "The Flat-At-Rest Rule",
+				"body": "Cards, tables, callouts and chips carry a border and no shadow. A shadow means \"this floats over the page\".",
+				"section": "elevation"
+			}
+		],
+		"dos": [
+			"**Do** make the primary button foreground-on-background (ink fill, canvas text), 32px tall, 8px radius.",
+			"**Do** reserve primary blue for data marks, selection and the 2px focus outline.",
+			"**Do** set every machine value in Geist Mono with tabular figures, formatted through `fmtDim`, `fmtMin`, `fmtUsd` or `fmtRunDate`.",
+			"**Do** show the not-separable / single-trial callout above any ranking that overlaps or rests on n=1, and print the chart's n.",
+			"**Do** print \"—\" for σ when fewer than two trials are counted, and for any missing value.",
+			"**Do** mark within-run-normalized dimensions with \"*\" (Speed*, Token spend*) and say they do not compare across runs.",
+			"**Do** pair every semantic colour with a shape or a word (outcome icon, badge text, callout title).",
+			"**Do** keep re-weighting as the inline strip at the foot of the standings table.",
+			"**Do** define colour once in the `:root` / `.dark` blocks of index.css and reach it through tokens."
+		],
+		"donts": [
+			"**Don't** fill buttons, headings or backgrounds with the accent.",
+			"**Don't** use green, amber or red for anything but outcomes and run state.",
+			"**Don't** put shadows on cards, tables, chips or callouts; shadows are for overlays, the dialog and slider thumbs.",
+			"**Don't** set prose, labels or headings in mono, or machine values in Geist.",
+			"**Don't** add uppercase tracked kickers or eyebrows above titles; labels are sentence case.",
+			"**Don't** present an inconclusive or single-trial order as a win.",
+			"**Don't** hard-code hex colours in components."
+		]
+	}
+}

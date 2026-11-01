@@ -1,4 +1,5 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
+import { Check, ChevronDown } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../lib/utils";
 
@@ -14,14 +15,14 @@ export function SelectTrigger({
 	return (
 		<SelectPrimitive.Trigger
 			className={cn(
-				"flex h-8 items-center justify-between gap-2 rounded-md border border-input bg-card px-2.5 text-[13px] text-foreground hover:bg-muted focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50",
+				"flex h-8 items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 text-[13px] text-foreground hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
 				className,
 			)}
 			{...props}
 		>
 			{children}
 			<SelectPrimitive.Icon className="text-muted-foreground">
-				▼
+				<ChevronDown className="size-3.5" />
 			</SelectPrimitive.Icon>
 		</SelectPrimitive.Trigger>
 	);
@@ -38,7 +39,7 @@ export function SelectContent({
 			<SelectPrimitive.Content
 				position={position}
 				className={cn(
-					"z-50 max-h-72 min-w-[10rem] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-[0_4px_14px_rgba(0,0,0,0.5)]",
+					"z-50 max-h-72 min-w-[10rem] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
 					position === "popper" && "translate-y-1",
 					className,
 				)}
@@ -60,13 +61,15 @@ export function SelectItem({
 	return (
 		<SelectPrimitive.Item
 			className={cn(
-				"relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-7 pr-2 text-[13px] outline-none data-[highlighted]:bg-muted data-[state=checked]:text-foreground",
+				"relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-7 pr-2 text-[13px] outline-none data-[highlighted]:bg-secondary data-[state=checked]:text-foreground",
 				className,
 			)}
 			{...props}
 		>
-			<span className="absolute left-2 text-primary-hover">
-				<SelectPrimitive.ItemIndicator>✓</SelectPrimitive.ItemIndicator>
+			<span className="absolute left-2 text-foreground">
+				<SelectPrimitive.ItemIndicator>
+					<Check className="size-3.5" />
+				</SelectPrimitive.ItemIndicator>
 			</span>
 			<SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
 		</SelectPrimitive.Item>

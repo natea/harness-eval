@@ -20,7 +20,7 @@ export function CardHeader({
 	className,
 	...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-	return <div className={cn("px-4 pt-3.5 pb-2", className)} {...props} />;
+	return <div className={cn("px-5 pt-4 pb-2", className)} {...props} />;
 }
 
 export function CardTitle({
@@ -39,5 +39,5 @@ export function CardContent({
 	className,
 	...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-	return <div className={cn("px-4 pb-4", className)} {...props} />;
+	return <div className={cn("px-5 pb-5", className)} {...props} />;
 }

@@ -1,7 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	Check,
+	ChevronLeft,
+	ChevronRight,
+	CornerDownRight,
+	Cpu,
+	ExternalLink,
+	ListTree,
+	Play,
+	TriangleAlert,
+	X,
+} from "lucide-react";
 import type * as React from "react";
-import type { TrialResult } from "../../types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Turn } from "../../report/transcript-render";
+import type { TrialResult } from "../../types";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -12,13 +24,15 @@ import {
 	TableHeader,
 	TableRow,
 } from "../components/ui/table";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "../components/ui/tooltip";
 import { useFetch } from "../lib/api";
-import { Evidence } from "./shared";
+import {
+	Callout,
+	Evidence,
+	fmtMin,
+	fmtUsd,
+	OutcomeIcon,
+	PageHeader,
+} from "./shared";
 
 interface RunTarget {
 	name: string;
@@ -39,16 +53,19 @@ function jumpTo(id: string) {
 function PageNav({ items }: { items: { id: string; label: string }[] }) {
 	if (items.length < 2) return null;
 	return (
-		<nav className="sticky top-0 z-20 -mx-6 mb-1 flex flex-wrap items-center gap-1 border-b border-border bg-background/95 px-6 py-2 backdrop-blur">
-			<span className="mr-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-				jump to
+		<nav
+			aria-label="On this page"
+			className="sticky top-0 z-20 mb-2 flex flex-wrap items-center gap-1 border-b border-border bg-background/95 py-2 backdrop-blur"
+		>
+			<span className="mr-2 text-[12px] text-muted-foreground">
+				On this page
 			</span>
 			{items.map((it) => (
 				<button
 					key={it.id}
 					type="button"
 					onClick={() => jumpTo(it.id)}
-					className="rounded border border-border px-2 py-0.5 text-[12px] text-foreground hover:bg-muted hover:text-primary-hover"
+					className="h-7 rounded-md px-2.5 text-[12.5px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
 				>
 					{it.label}
 				</button>
@@ -72,14 +89,12 @@ function Section({
 		<>
 			<h2
 				id={id}
-				className="mt-7 flex scroll-mt-16 items-center gap-2 text-base font-semibold"
+				className="mt-8 mb-3 flex scroll-mt-16 flex-wrap items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]"
 			>
 				{title}
 				{right}
 			</h2>
-			<Card className="mt-2">
-				<CardContent className="px-2 pb-2 pt-2">{children}</CardContent>
-			</Card>
+			<Card className="overflow-hidden">{children}</Card>
 		</>
 	);
 }
@@ -95,9 +110,8 @@ export function TrialView({
 	const target = useFetch<RunTarget>(`/api/runs/${runId}/target`);
 	// Live jobs (this session's running runs) — used to show the live build stream
 	// for a trial whose run hasn't finished/indexed yet (live-build-stream).
-	const queue = useFetch<{ runId: string; status: string; stage?: string }[]>(
-		"/api/queue",
-	);
+	const queue =
+		useFetch<{ runId: string; status: string; stage?: string }[]>("/api/queue");
 	// Build-conversation state lifted here so a step row can command it: open it
 	// and jump to the turn that best explains the step's outcome.
 	const convo = useTranscript(runId, trialId);
@@ -129,7 +143,8 @@ export function TrialView({
 		[convo],
 	);
 
-	if (!t) return <p className="text-muted-foreground">loading…</p>;
+	if (!t)
+		return <p className="text-[13px] text-muted-foreground">Loading trial…</p>;
 	if (!t.provenance) {
 		// The run isn't finalized/indexed yet. If it's a running live job, show the
 		// live build stream; otherwise it's genuinely not found.
@@ -137,24 +152,31 @@ export function TrialView({
 		if (job?.status === "running") {
 			return (
 				<>
-					<p>
-						<a
-							href={`/runs/${runId}`}
-							className="text-primary-hover hover:underline"
-						>
-							← {runId}
-						</a>
-					</p>
-					<h1 className="font-mono text-lg font-bold">{trialId}</h1>
-					<p className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
-						<Spinner />
-						building{job.stage ? ` · ${job.stage}` : ""}
-					</p>
+					<PageHeader
+						back={{ href: `/runs/${runId}`, label: "Run" }}
+						title={<span className="font-mono">{trialId}</span>}
+						description={
+							<span className="flex items-center gap-2">
+								<Spinner />
+								Building{job.stage ? ` · ${job.stage}` : ""}
+							</span>
+						}
+					/>
 					<LiveStream runId={runId} trialId={trialId} />
 				</>
 			);
 		}
-		return <Badge variant="danger">not found</Badge>;
+		return (
+			<>
+				<PageHeader
+					back={{ href: `/runs/${runId}`, label: "Run" }}
+					title="Trial not found"
+				/>
+				<Callout title="No trial with this id in the run." tone="danger">
+					It may still be building, or the id is mistyped.
+				</Callout>
+			</>
+		);
 	}
 	const a = t.grades?.adherence;
 	const q = t.grades?.quality;
@@ -170,71 +192,75 @@ export function TrialView({
 
 	return (
 		<>
-			<PageNav items={navItems} />
-			<p>
-				<a
-					href={`/runs/${runId}`}
-					className="text-primary-hover hover:underline"
-				>
-					← {runId}
-				</a>
-			</p>
-			<h1 className="font-mono text-lg font-bold">{trialId}</h1>
-			{target && (
-				<p className="mt-1 text-[13px]">
-					🎯 Building <span className="font-semibold">{target.title}</span>{" "}
-					<span className="font-mono text-muted-foreground">
-						({target.name})
+			<PageHeader
+				back={{ href: `/runs/${runId}`, label: target?.title ?? "Run" }}
+				title={
+					<span className="flex flex-wrap items-baseline gap-x-3">
+						{t.provenance.candidate}
+						<span className="font-mono text-[15px] font-normal text-muted-foreground">
+							{trialId}
+						</span>
 					</span>
-				</p>
-			)}
-			<p className="font-mono text-[12px] text-muted-foreground">
-				{t.provenance.candidate}@{t.provenance.candidateVersion} ·{" "}
-				{t.provenance.harness} {t.provenance.harnessVersion} ·{" "}
-				{t.provenance.model} · {t.provenance.provider} (
-				{t.provenance.snapshotId ?? "no image"}) · status {t.provenance.status}
-			</p>
+				}
+				description={
+					<span className="font-mono text-[12.5px]">
+						{t.provenance.candidate}@{t.provenance.candidateVersion} ·{" "}
+						{t.provenance.harness} {t.provenance.harnessVersion} ·{" "}
+						{t.provenance.model} · {t.provenance.provider} (
+						{t.provenance.snapshotId ?? "no image"})
+					</span>
+				}
+			/>
+			<div className="mb-2 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
+				{(
+					[
+						["PRD adherence", a ? a.gradedScore.toFixed(1) : "—"],
+						["Code quality", q ? q.score.toFixed(0) : "—"],
+						["Agent time", tel ? fmtMin(tel.agentDurationMs) : "—"],
+						["Setup", tel ? fmtMin(tel.setupDurationMs) : "—"],
+						["Spend", fmtUsd(tel?.totalCostUsd)],
+						[
+							"Turns · tokens",
+							tel
+								? `${tel.totalTurns} · ${Math.round((tel.totalTokens.inputTokens + tel.totalTokens.outputTokens) / 1000)}k`
+								: "—",
+						],
+					] as const
+				).map(([k, v]) => (
+					<div key={k} className="bg-card px-4 py-3">
+						<div className="text-[12px] text-muted-foreground">{k}</div>
+						<div className="mt-0.5 font-mono text-[18px] font-medium tracking-[-0.01em]">
+							{v}
+						</div>
+					</div>
+				))}
+			</div>
 			{t.provenance.status !== "completed" && (
-				<div className="mt-2 rounded-md border border-danger-bg bg-danger-bg/20 px-3 py-2 text-[13px]">
-					<span className="font-semibold text-danger">
-						{t.provenance.status}
-						{t.provenance.cappedBy ? ` (${t.provenance.cappedBy})` : ""}
-					</span>{" "}
-					— this trial did not complete cleanly and is excluded from scoring.
-					{t.provenance.notes.length > 0 && (
-						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
-							{t.provenance.notes.map((n, i) => (
-								<li key={`${i}-${n.slice(0, 24)}`}>• {n}</li>
-							))}
-						</ul>
-					)}
+				<div className="mt-4">
+					<Callout
+						tone="danger"
+						title={`${t.provenance.status}${t.provenance.cappedBy ? ` (${t.provenance.cappedBy})` : ""}.`}
+					>
+						This trial did not complete cleanly and is excluded from scoring.
+						{t.provenance.notes.length > 0 && (
+							<span className="mt-1 block font-mono text-[12px] text-muted-foreground">
+								{t.provenance.notes.join(" · ")}
+							</span>
+						)}
+					</Callout>
 				</div>
 			)}
-			{tel && (
-				<p className="mt-1 text-[13px]">
-					⏱ {(tel.agentDurationMs / 60000).toFixed(1)}m agent (+
-					{(tel.setupDurationMs / 60000).toFixed(1)}m setup) · 💵 $
-					{tel.totalCostUsd.toFixed(2)} · {tel.totalTurns} turns ·{" "}
-					{(
-						tel.totalTokens.inputTokens + tel.totalTokens.outputTokens
-					).toLocaleString()}{" "}
-					tokens (+{tel.totalTokens.cacheReadTokens.toLocaleString()}{" "}
-					cache-read)
-				</p>
-			)}
+			<PageNav items={navItems} />
 
 			{a && (
 				<Section
 					id="sec-adherence"
 					title={
 						<>
-							PRD adherence: {a.gradedScore.toFixed(2)}
-							{target && (
-								<span className="font-normal text-muted-foreground">
-									{" "}
-									— {target.title}
-								</span>
-							)}
+							PRD adherence
+							<span className="font-mono font-normal text-muted-foreground">
+								{a.gradedScore.toFixed(1)}
+							</span>
 						</>
 					}
 					right={
@@ -248,8 +274,8 @@ export function TrialView({
 				>
 					<Table>
 						<TableHeader>
-							<TableRow>
-								<TableHead>Step</TableHead>
+							<TableRow className="hover:bg-transparent">
+								<TableHead className="pl-5">Step</TableHead>
 								<TableHead>Outcome</TableHead>
 								<TableHead>Credit</TableHead>
 								<TableHead>Evidence</TableHead>
@@ -258,30 +284,20 @@ export function TrialView({
 						<TableBody>
 							{a.stepResults.map((s, i) => (
 								<TableRow key={`${i}-${s.stepId}`}>
-									<TableCell className="font-mono text-[12px]">
-										{target?.steps[s.stepId] ? (
-											<Tooltip>
-												<TooltipTrigger asChild>
-													<span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
-														{s.stepId}
-													</span>
-												</TooltipTrigger>
-												<TooltipContent className="whitespace-pre-line">
-													{target.steps[s.stepId]}
-												</TooltipContent>
-											</Tooltip>
-										) : (
-											s.stepId
+									<TableCell className="max-w-[320px] pl-5 align-top">
+										<span className="font-mono text-[12.5px] font-medium">
+											{s.stepId}
+										</span>
+										{target?.steps?.[s.stepId] && (
+											<span className="mt-0.5 block text-[12.5px] text-muted-foreground">
+												{target?.steps?.[s.stepId]}
+											</span>
 										)}
 									</TableCell>
-									<TableCell className="text-[13px]">
-										<span className="flex items-center gap-1.5">
-											<span>
-												{s.outcome === "pass"
-													? "✅"
-													: s.outcome === "partial"
-														? "🟡"
-														: "❌"}{" "}
+									<TableCell className="align-top text-[13px]">
+										<span className="flex items-center gap-2">
+											<span className="inline-flex items-center gap-1.5">
+												<OutcomeIcon o={s.outcome} />
 												{s.outcome}
 											</span>
 											{s.outcome !== "pass" && (
@@ -291,20 +307,21 @@ export function TrialView({
 													onClick={() =>
 														jumpFromEvidence(
 															s.evidence,
-															target?.steps[s.stepId],
+															target?.steps?.[s.stepId],
 														)
 													}
-													className="rounded border border-border px-1 text-[11px] text-muted-foreground hover:bg-muted hover:text-primary-hover"
+													className="inline-flex h-6 items-center gap-1 rounded-md border border-border px-1.5 text-[11.5px] text-muted-foreground hover:bg-secondary hover:text-foreground"
 												>
-													↳ trace
+													<CornerDownRight className="size-3" />
+													Trace
 												</button>
 											)}
 										</span>
 									</TableCell>
-									<TableCell className="font-mono text-[12px]">
+									<TableCell className="align-top font-mono text-[12.5px]">
 										{s.credit}
 									</TableCell>
-									<TableCell className="max-w-[520px] text-[12px]">
+									<TableCell className="max-w-[520px] pr-5 align-top text-[12.5px]">
 										<Evidence text={s.evidence} />
 									</TableCell>
 								</TableRow>
@@ -317,17 +334,24 @@ export function TrialView({
 			{q && (
 				<Section
 					id="sec-quality"
-					title={`Code quality: ${q.score.toFixed(0)}`}
+					title={
+						<>
+							Code quality
+							<span className="font-mono font-normal text-muted-foreground">
+								{q.score.toFixed(0)}
+							</span>
+						</>
+					}
 					right={
-						<span className="font-normal text-muted-foreground">
-							({q.judgeModel})
+						<span className="text-[12.5px] font-normal text-muted-foreground">
+							Blind judge · {q.judgeModel}
 						</span>
 					}
 				>
 					<Table>
 						<TableHeader>
-							<TableRow>
-								<TableHead>Criterion</TableHead>
+							<TableRow className="hover:bg-transparent">
+								<TableHead className="pl-5">Criterion</TableHead>
 								<TableHead>Samples</TableHead>
 								<TableHead>Median</TableHead>
 								<TableHead>Justification</TableHead>
@@ -336,14 +360,16 @@ export function TrialView({
 						<TableBody>
 							{q.criteria.map((c, i) => (
 								<TableRow key={`${i}-${c.criterion}`}>
-									<TableCell className="text-[13px]">{c.criterion}</TableCell>
+									<TableCell className="pl-5 align-top text-[13px] font-medium">
+										{c.criterion}
+									</TableCell>
 									<TableCell className="font-mono text-[12px]">
 										{c.samples.join(", ")}
 									</TableCell>
 									<TableCell className="font-mono text-[12px]">
 										{c.score}
 									</TableCell>
-									<TableCell className="max-w-[520px] text-[12px]">
+									<TableCell className="max-w-[520px] pr-5 align-top text-[12.5px]">
 										<Evidence text={c.justification} />
 									</TableCell>
 								</TableRow>
@@ -375,10 +401,23 @@ export function TrialView({
 									<TableCell className="font-mono text-[12px]">
 										{f.fixtureId}
 									</TableCell>
-									<TableCell>{f.dispatched ? "✅" : "❌"}</TableCell>
-									<TableCell>{f.workspaceCreated ? "✅" : "❌"}</TableCell>
-									<TableCell>{f.agentRunCompleted ? "✅" : "❌"}</TableCell>
-									<TableCell>{f.handoffReached ? "✅" : "❌"}</TableCell>
+									{[
+										f.dispatched,
+										f.workspaceCreated,
+										f.agentRunCompleted,
+										f.handoffReached,
+									].map((ok, k) => (
+										<TableCell key={`${f.fixtureId}-${k}`}>
+											{ok ? (
+												<Check
+													aria-label="yes"
+													className="size-4 text-success"
+												/>
+											) : (
+												<X aria-label="no" className="size-4 text-danger" />
+											)}
+										</TableCell>
+									))}
 								</TableRow>
 							))}
 						</TableBody>
@@ -394,17 +433,16 @@ export function TrialView({
 
 			<Conversation convo={convo} />
 
-			{t.provenance.status === "completed" &&
-				t.provenance.notes.length > 0 && (
-					<>
-						<h2 className="mt-7 text-base font-semibold">Notes</h2>
-						<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
-							{t.provenance.notes.map((n, i) => (
-								<li key={`${i}-${n.slice(0, 32)}`}>{n}</li>
-							))}
-						</ul>
-					</>
-				)}
+			{t.provenance.status === "completed" && t.provenance.notes.length > 0 && (
+				<>
+					<h2 className="mt-8 mb-2 text-[15px] font-semibold">Notes</h2>
+					<ul className="mt-1 font-mono text-[12px] text-muted-foreground">
+						{t.provenance.notes.map((n, i) => (
+							<li key={`${i}-${n.slice(0, 32)}`}>{n}</li>
+						))}
+					</ul>
+				</>
+			)}
 		</>
 	);
 }
@@ -479,7 +517,17 @@ function useTranscript(runId: string, trialId: string): TranscriptCtl {
 		);
 	}, []);
 
-	return { isOpen, data, busy, err, highlightId, open, toggle, load, highlight };
+	return {
+		isOpen,
+		data,
+		busy,
+		err,
+		highlightId,
+		open,
+		toggle,
+		load,
+		highlight,
+	};
 }
 
 /** Concatenated searchable text for a turn (used for step→conversation jumps). */
@@ -500,9 +548,30 @@ function turnText(t: Turn): string {
 
 // Words too common to be useful jump anchors.
 const STOP = new Set([
-	"the", "and", "for", "with", "that", "this", "from", "have", "test", "pass",
-	"fail", "check", "step", "output", "value", "values", "true", "false", "null",
-	"http", "json", "run", "log", "code",
+	"the",
+	"and",
+	"for",
+	"with",
+	"that",
+	"this",
+	"from",
+	"have",
+	"test",
+	"pass",
+	"fail",
+	"check",
+	"step",
+	"output",
+	"value",
+	"values",
+	"true",
+	"false",
+	"null",
+	"http",
+	"json",
+	"run",
+	"log",
+	"code",
 ]);
 
 /**
@@ -574,15 +643,25 @@ function buildOutline(sessions: TranscriptPayload["sessions"]): OutlineItem[] {
 		s.turns.forEach((turn, ti) => {
 			const id = `c-${si}-${ti}`;
 			if (turn.kind === "prompt")
-				items.push({ id, session: si, kind: "prompt", label: firstLine(turn.text) });
+				items.push({
+					id,
+					session: si,
+					kind: "prompt",
+					label: firstLine(turn.text),
+				});
 			else if (turn.kind === "assistant")
-				items.push({ id, session: si, kind: "chapter", label: firstLine(turn.text) });
+				items.push({
+					id,
+					session: si,
+					kind: "chapter",
+					label: firstLine(turn.text),
+				});
 			else if (turn.kind === "tool_result" && turn.isError)
 				items.push({
 					id,
 					session: si,
 					kind: "error",
-					label: `✗ ${turn.tool ?? "tool"}`,
+					label: `${turn.tool ?? "tool"} failed`,
 				});
 		});
 	});
@@ -601,7 +680,10 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 		() => (data ? buildOutline(data.sessions) : []),
 		[data],
 	);
-	const errors = useMemo(() => outline.filter((o) => o.kind === "error"), [outline]);
+	const errors = useMemo(
+		() => outline.filter((o) => o.kind === "error"),
+		[outline],
+	);
 	const [showOutline, setShowOutline] = useState(false);
 	const [errCursor, setErrCursor] = useState(0);
 
@@ -620,31 +702,34 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 		<>
 			<h2
 				id="sec-conversation"
-				className="mt-7 flex scroll-mt-16 items-center gap-2 text-base font-semibold"
+				className="mt-8 mb-3 flex scroll-mt-16 items-center gap-2 text-[15px] font-semibold"
 			>
 				<button
 					type="button"
 					onClick={convo.toggle}
-					className="flex items-center gap-2 hover:text-primary-hover"
+					aria-expanded={isOpen}
+					className="flex items-center gap-2 hover:text-foreground"
 				>
-					<span className="text-muted-foreground">{isOpen ? "▼" : "▶"}</span>
-					Conversation
-					<span className="font-normal text-muted-foreground">
-						(build replay — request / response)
+					<ChevronRight
+						className={`size-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`}
+					/>
+					Build conversation
+					<span className="text-[12.5px] font-normal text-muted-foreground">
+						Every request and response, in order
 					</span>
 				</button>
 			</h2>
 			{isOpen && (
-				<Card className="mt-2">
-					<CardContent className="px-3 pb-3 pt-0">
+				<Card>
+					<CardContent className="px-4 pb-4 pt-0">
 						{busy && (
 							<p className="py-3 text-[13px] text-muted-foreground">
-								loading transcript…
+								Loading transcript…
 							</p>
 						)}
 						{err && (
 							<p className="py-3 text-[13px] text-danger">
-								no readable transcript for this trial ({err})
+								No readable transcript for this trial ({err}).
 							</p>
 						)}
 						{data && (
@@ -653,47 +738,51 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 									<button
 										type="button"
 										onClick={() => jumpTo("sec-conversation")}
-										className="rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-primary-hover"
+										className="h-6 rounded-md border border-border px-2 text-[11.5px] text-muted-foreground hover:bg-secondary hover:text-foreground"
 									>
-										⊤ top
+										Top
 									</button>
 									{data.sessions.map((s, si) => (
 										<button
 											type="button"
 											key={`pill-${si}`}
 											onClick={() => jumpTo(`sess-${si}`)}
-											className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground hover:bg-muted hover:text-primary-hover"
+											className="h-6 rounded-md border border-border px-2 font-mono text-[11.5px] text-muted-foreground hover:bg-secondary hover:text-foreground"
 										>
 											S{si}
 										</button>
 									))}
 									{errors.length > 0 && (
-										<span className="ml-1 inline-flex items-center gap-1 rounded border border-danger-bg px-1 py-0.5 text-[11px]">
+										<span className="ml-1 inline-flex h-6 items-center gap-1 rounded-md border border-danger/30 bg-danger-bg px-1 text-[11.5px]">
 											<button
 												type="button"
+												aria-label="Previous error"
 												onClick={() => cycleError(-1)}
-												className="hover:text-primary-hover"
+												className="grid place-items-center text-danger hover:text-foreground"
 											>
-												◀
+												<ChevronLeft className="size-3.5" />
 											</button>
-											<span className="text-danger">
-												⚠ {errors.length} error{errors.length > 1 ? "s" : ""}
+											<span className="inline-flex items-center gap-1 text-danger">
+												<TriangleAlert className="size-3" />
+												{errors.length} error{errors.length > 1 ? "s" : ""}
 											</span>
 											<button
 												type="button"
+												aria-label="Next error"
 												onClick={() => cycleError(1)}
-												className="hover:text-primary-hover"
+												className="grid place-items-center text-danger hover:text-foreground"
 											>
-												▶
+												<ChevronRight className="size-3.5" />
 											</button>
 										</span>
 									)}
 									<button
 										type="button"
 										onClick={() => setShowOutline((v) => !v)}
-										className="ml-auto rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-primary-hover"
+										className="ml-auto inline-flex h-6 items-center gap-1 rounded-md border border-border px-2 text-[11.5px] text-muted-foreground hover:bg-secondary hover:text-foreground"
 									>
-										☰ outline
+										<ListTree className="size-3" />
+										Outline
 									</button>
 								</div>
 								{showOutline && (
@@ -706,24 +795,23 @@ function Conversation({ convo }: { convo: TranscriptCtl }) {
 													convo.highlight(o.id);
 													jumpTo(o.id);
 												}}
-												className={`block w-full truncate text-left hover:text-primary-hover ${
+												className={`block w-full truncate text-left hover:text-foreground ${
 													o.kind === "session"
 														? "mt-1.5 font-mono font-semibold text-foreground"
 														: "pl-3"
 												} ${o.kind === "error" ? "text-danger" : o.kind === "session" ? "" : "text-muted-foreground"}`}
 											>
-												{o.kind === "chapter"
-													? "• "
-													: o.kind === "prompt"
-														? "▶ "
-														: ""}
+												{o.kind === "prompt" ? "Prompt: " : ""}
 												{o.label}
 											</button>
 										))}
 									</div>
 								)}
 								{data.sessions.map((s, si) => (
-									<div key={`sess-block-${si}`} className={si > 0 ? "mt-5" : ""}>
+									<div
+										key={`sess-block-${si}`}
+										className={si > 0 ? "mt-5" : ""}
+									>
 										<p
 											id={`sess-${si}`}
 											className="mb-2 scroll-mt-24 font-mono text-[12px] font-semibold text-muted-foreground"
@@ -825,12 +913,10 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 						stableHits++;
 					}
 					const settled = all.length > 0 && stableHits >= 2;
-					if (!settled && attempt < MAX_ATTEMPTS)
-						setTimeout(poll, 700);
+					if (!settled && attempt < MAX_ATTEMPTS) setTimeout(poll, 700);
 				})
 				.catch(() => {
-					if (aliveRef.current && attempt < MAX_ATTEMPTS)
-						setTimeout(poll, 700);
+					if (aliveRef.current && attempt < MAX_ATTEMPTS) setTimeout(poll, 700);
 				});
 		};
 		poll();
@@ -876,7 +962,8 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 
 	// Terminal with nothing to show → step aside (the page's archived Conversation,
 	// if any, stands in).
-	if ((state === "done" || state === "error") && turns.length === 0) return null;
+	if ((state === "done" || state === "error") && turns.length === 0)
+		return null;
 
 	const live =
 		state === "streaming" || state === "connecting" || state === "connected";
@@ -885,13 +972,13 @@ function LiveStream({ runId, trialId }: { runId: string; trialId: string }) {
 			? "streaming"
 			: state === "remote"
 				? "remote run"
-			: state === "done"
-				? "✓ finished"
-				: state === "error"
-					? "stream ended"
-					: state === "connected"
-						? "waiting"
-						: "connecting…";
+				: state === "done"
+					? "Finished"
+					: state === "error"
+						? "stream ended"
+						: state === "connected"
+							? "waiting"
+							: "connecting…";
 
 	return (
 		<>
@@ -934,32 +1021,33 @@ function TurnBlock({ turn }: { turn: Turn }) {
 		case "init":
 			return (
 				<p className="text-[12px] text-muted-foreground">
-					⚙ model <span className="font-mono">{turn.model}</span> ·{" "}
+					<Cpu className="mr-1 inline size-3 align-[-2px]" />
+					Model <span className="font-mono">{turn.model}</span> ·{" "}
 					{turn.tools.length} tools{turn.cwd ? ` · ${turn.cwd}` : ""}
 				</p>
 			);
 		case "prompt":
 			return (
-				<Lane side="request" label="▶ PROMPT · user → agent" tone="prompt">
+				<Lane side="request" label="Prompt · user to agent" tone="prompt">
 					<pre className="whitespace-pre-wrap text-[12px]">{turn.text}</pre>
 				</Lane>
 			);
 		case "thinking":
 			return (
 				<details className="text-[12px] text-muted-foreground">
-					<summary className="cursor-pointer">💭 thinking</summary>
+					<summary className="cursor-pointer">Thinking</summary>
 					<pre className="mt-1 whitespace-pre-wrap">{turn.text}</pre>
 				</details>
 			);
 		case "assistant":
 			return (
-				<Lane side="response" label="🟢 assistant" tone="assistant">
+				<Lane side="response" label="Assistant" tone="assistant">
 					<p className="whitespace-pre-wrap text-[13px]">{turn.text}</p>
 				</Lane>
 			);
 		case "tool_use":
 			return (
-				<Lane side="request" label={`→ REQUEST · ${turn.tool}`} tone="request">
+				<Lane side="request" label={`Request · ${turn.tool}`} tone="request">
 					<Payload text={JSON.stringify(turn.input, null, 2)} />
 				</Lane>
 			);
@@ -967,7 +1055,7 @@ function TurnBlock({ turn }: { turn: Turn }) {
 			return (
 				<Lane
 					side="response"
-					label={`← RESPONSE · ${turn.tool ?? "tool"}${turn.isError ? " · ✗ error" : ""}`}
+					label={`Response · ${turn.tool ?? "tool"}${turn.isError ? " · error" : ""}`}
 					tone={turn.isError ? "error" : "response"}
 				>
 					<Payload text={turn.output} />
@@ -976,7 +1064,7 @@ function TurnBlock({ turn }: { turn: Turn }) {
 		case "result":
 			return (
 				<p className="mt-1 border-t border-border pt-2 text-[12px] text-muted-foreground">
-					■ result: <span className="font-semibold">{turn.status}</span> ·{" "}
+					Result: <span className="font-semibold">{turn.status}</span> ·{" "}
 					{turn.numTurns} turns · {(turn.durationMs / 1000).toFixed(1)}s · $
 					{turn.costUsd.toFixed(4)}
 					{turn.usage
@@ -987,12 +1075,13 @@ function TurnBlock({ turn }: { turn: Turn }) {
 	}
 }
 
+/** Role dot per lane (shape-plus-label, never a coloured side stripe). */
 const TONES: Record<string, string> = {
-	prompt: "border-l-primary",
-	assistant: "border-l-ok",
-	request: "border-l-primary/60",
-	response: "border-l-muted-foreground/40",
-	error: "border-l-danger",
+	prompt: "bg-primary",
+	assistant: "bg-success-mark",
+	request: "bg-primary/60",
+	response: "bg-muted-foreground/50",
+	error: "bg-danger-mark",
 };
 
 function Lane({
@@ -1008,8 +1097,14 @@ function Lane({
 }) {
 	return (
 		<div className={side === "response" ? "ml-6" : ""}>
-			<div className={`border-l-2 ${TONES[tone]} pl-2`}>
-				<p className="font-mono text-[11px] font-semibold text-muted-foreground">
+			<div
+				className={`rounded-md border px-3 py-2 ${tone === "error" ? "border-danger/30 bg-danger-bg/40" : "border-border"}`}
+			>
+				<p className="m-0 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-muted-foreground">
+					<span
+						aria-hidden="true"
+						className={`size-1.5 rounded-full ${TONES[tone]}`}
+					/>
 					{label}
 				</p>
 				<div className="mt-0.5">{children}</div>
@@ -1090,13 +1185,19 @@ function Artifacts({ runId, trialId }: { runId: string; trialId: string }) {
 					<Demo runId={runId} trialId={trialId} web={inv.web} />
 
 					<div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[13px] sm:grid-cols-4">
-						<Stat label="Files" value={`${inv.files.length}${inv.truncated ? "+" : ""}`} />
+						<Stat
+							label="Files"
+							value={`${inv.files.length}${inv.truncated ? "+" : ""}`}
+						/>
 						<Stat label="Size" value={fmtBytes(inv.totalBytes)} />
 						<Stat
 							label="Cold-start"
 							value={`${inv.hasSetupScript ? "setup.sh" : "—"} / ${inv.hasStartScript ? "start.sh" : "—"}`}
 						/>
-						<Stat label="Blind copy" value={inv.blindCopyPresent ? "✓ scrubbed" : "—"} />
+						<Stat
+							label="Blind copy"
+							value={inv.blindCopyPresent ? "Scrubbed" : "—"}
+						/>
 					</div>
 
 					{inv.vendoredPresent.length > 0 && (
@@ -1121,9 +1222,13 @@ function Artifacts({ runId, trialId }: { runId: string; trialId: string }) {
 					<button
 						type="button"
 						onClick={() => setShowFiles((v) => !v)}
-						className="mt-3 text-[12px] text-muted-foreground hover:text-primary-hover"
+						aria-expanded={showFiles}
+						className="mt-3 inline-flex items-center gap-1 text-[12.5px] text-muted-foreground hover:text-foreground"
 					>
-						{showFiles ? "▼" : "▶"} file tree ({inv.files.length})
+						<ChevronRight
+							className={`size-3.5 transition-transform ${showFiles ? "rotate-90" : ""}`}
+						/>
+						File tree ({inv.files.length})
 					</button>
 					{showFiles && (
 						<div className="mt-1 max-h-72 overflow-y-auto rounded border border-border bg-muted/30 p-2 font-mono text-[11px]">
@@ -1146,9 +1251,7 @@ function Artifacts({ runId, trialId }: { runId: string; trialId: string }) {
 function Stat({ label, value }: { label: string; value: string }) {
 	return (
 		<div>
-			<div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-				{label}
-			</div>
+			<div className="text-[12px] text-muted-foreground">{label}</div>
 			<div className="font-medium">{value}</div>
 		</div>
 	);
@@ -1205,9 +1308,10 @@ function Demo({
 					type="button"
 					disabled={busy}
 					onClick={start}
-					className="rounded-md bg-primary px-2.5 py-1 text-[12px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+					className="inline-flex h-8 items-center gap-1.5 rounded-md bg-foreground px-3 text-[13px] font-medium text-background hover:opacity-90 disabled:opacity-50"
 				>
-					{busy ? "starting…" : web ? "▶ Start demo" : "▶ Run cold-start"}
+					{!busy && <Play className="size-3.5" />}
+					{busy ? "Starting…" : web ? "Start demo" : "Run cold-start"}
 				</button>
 			) : (
 				<>
@@ -1216,9 +1320,10 @@ function Demo({
 							href={rec.url}
 							target="_blank"
 							rel="noreferrer"
-							className="rounded-md border border-border px-2.5 py-1 text-[12px] text-primary-hover hover:bg-muted"
+							className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-[13px] text-foreground no-underline hover:bg-secondary"
 						>
-							open {rec.url} ↗
+							Open {rec.url}
+							<ExternalLink className="size-3.5" />
 						</a>
 					) : (
 						<Badge variant="ok">cold-start captured</Badge>

@@ -79,3 +79,35 @@ test("an assistant fetch of the project's PR disqualifies", () => {
 		"disqualified:solution-reach",
 	);
 });
+
+const edit = (input: Record<string, unknown>) =>
+	JSON.stringify({
+		type: "assistant",
+		message: { content: [{ type: "tool_use", name: "Edit", input }] },
+	});
+const issueUrl = "https://github.com/Future-House/paper-qa/issues/693";
+
+test("editing a line that already cites a project issue is not reaching", () => {
+	const r = auditTranscript(
+		edit({
+			file_path: "tests/test_litqa.py",
+			old_string: `# See ${issueUrl}\nfor answer, expected in (`,
+			new_string: "for answer, expected in (",
+		}),
+		opts,
+	);
+	expect(r.verdict).toBe("clean");
+	expect(r.findings).toEqual([]);
+});
+
+test("a project URL the worker writes into an edit still disqualifies", () => {
+	const r = auditTranscript(
+		edit({
+			file_path: "src/paperqa/core.py",
+			old_string: "x = 1",
+			new_string: "# https://github.com/Future-House/paper-qa/pull/1262\nx = 2",
+		}),
+		opts,
+	);
+	expect(r.verdict).toBe("disqualified:solution-reach");
+});

@@ -28,6 +28,18 @@ const WEB_TOOL_RE = /"(WebSearch|WebFetch|web_search|web_fetch)"/;
 const PR_URL_RE = /github\.com\/([\w.-]+\/[\w.-]+)\/(pull|issues)\/\d+/i;
 
 /**
+ * An edit's `old_string` is text the file already holds, not something the worker
+ * reached for: editing a line that cites a project issue is not fetching that issue.
+ */
+function withoutOldText(input: unknown): unknown {
+	return JSON.parse(
+		JSON.stringify(input ?? null, (key, value) =>
+			key === "old_string" ? undefined : value,
+		),
+	);
+}
+
+/**
  * Text the worker actually emitted (assistant tool calls), not content it read.
  * Repository files often quote the project's own issue URLs; only fetching them
  * counts as reaching. Falls back to the whole text for non-JSON transcripts.
@@ -51,7 +63,9 @@ export function actionText(text: string): string {
 		for (const c of content) {
 			const block = c as { type?: string; name?: string; input?: unknown };
 			if (block.type === "tool_use")
-				actions.push(JSON.stringify({ name: block.name, input: block.input }));
+				actions.push(
+					JSON.stringify({ name: block.name, input: withoutOldText(block.input) }),
+				);
 		}
 	}
 	if (sawTranscript) return actions.join("\n");

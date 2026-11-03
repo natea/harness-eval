@@ -391,6 +391,20 @@ reviews, and they disagree (diagnosis vs symptom), so human–human agreement is
 unmeasured. Test fairness: 9 yes, 4 unsure, 1 no (pr1186: hidden tests extend
 dedup beyond the field the issue names).
 
+**Re-review (2026-11-03, issue #93).** The same reviewer re-checked every
+disagreement against the rubric (judge against the reference fix; wrong guesses
+are symptom). Most first-pass labels were reviewer error, not classifier error:
+agreement is now 0.86, κ 0.79, quadratic-weighted κ 0.91, and the residual
+disagreements no longer lean one way. The "classifier under-reports leaks"
+conclusion above does not hold; whether xarray/zarr still need human labels
+should be revisited. Fairness is now 5 yes, 8 no, 1 unsure. Most "no" tasks
+have hidden tests that depend on the reference implementation rather than the
+issue's behavior (exact hashes, enum-valued test IDs, new symbol names imported
+by the test module, prompt-specific cassettes, whole-README audits), so
+fail-before/pass-after validation cannot catch them; grading an independent
+fix would. The review page does not show the issue title (workers see it), so
+all human labels were made without it.
+
 ### D16. Original PR baseline
 Computed at mining time from data the miner already fetches (PR commits,
 reviews, timeline) and stored in `task.yaml`:

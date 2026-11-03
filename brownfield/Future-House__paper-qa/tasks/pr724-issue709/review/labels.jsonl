@@ -1,1 +1,2 @@
 {"reviewer":"Justin","at":"2026-11-01T04:22:14.692Z","items":[{"id":"body","label":"diagnosis"}],"fairness":{"verdict":"yes","note":"test hits the case in question, other cases are on the same axis"}}
+{"reviewer":"Justin","at":"2026-11-03T22:57:56.415Z","items":[{"id":"body","label":"symptom"}],"fairness":{"verdict":"no","note":"Revised (#93): single F2P replays a cassette recorded with the PR's reworded prompt; any other prompt wording misses the cassette and fails on live egress. Body relabeled symptom: shows the eval LLM's answer only, no cause."}}
